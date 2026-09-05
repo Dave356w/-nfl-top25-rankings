@@ -67,7 +67,13 @@ jobs:
           done
           exit 1
 
+      # enablement:true has the action turn Pages on via the API using this
+      # job's `pages: write` permission. Without it the first run fails with
+      # "Get Pages site failed ... Not Found" until someone sets the source by
+      # hand, which is a setup step that can silently never happen.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

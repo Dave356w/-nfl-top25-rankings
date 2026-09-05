@@ -29,14 +29,17 @@ Every row on the page shows which of the three produced it.
 
 ## Setup (one time)
 
-1. **Enable Pages.** Settings → Pages → *Build and deployment* → Source:
-   **GitHub Actions**. Nothing is published until this is set.
-2. **Allow Actions to write.** Settings → Actions → General → *Workflow
+1. **Allow Actions to write.** Settings → Actions → General → *Workflow
    permissions* → **Read and write permissions**. The daily job commits each
    run's data back to `main` so the archive accumulates.
-3. **Run it once.** Actions → *Daily rankings* → *Run workflow*. Until the
+2. **Run it once.** Actions → *Daily rankings* → *Run workflow*. Until the
    first run finishes the page shows a "waiting for the first run" state
    rather than stale or fabricated numbers.
+
+Pages itself needs no manual step: `configure-pages` runs with
+`enablement: true`, so the first build turns it on and sets the source to
+GitHub Actions. If that ever fails, set it by hand under Settings → Pages →
+*Build and deployment* → Source: **GitHub Actions**.
 
 The site then lives at <https://dave356w.github.io/-nfl-top25-rankings/>.
 
