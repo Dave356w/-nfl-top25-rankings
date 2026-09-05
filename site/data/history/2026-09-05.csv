@@ -16,12 +16,12 @@ QB,14,Kyler Murray,MIN,GB,17.73,16.16,30,0.591,1,2026-09-13 20:25,market good: B
 QB,15,Jordan Love,GB,MIN,17.69,16.95,34,0.52,1,2026-09-13 20:25,market good: Bovada+Underdog
 QB,16,Tyler Shough,NO,DET,17.48,14.91,30,0.583,1,2026-09-13 17:00,market good: Bovada+Underdog
 QB,17,Matthew Stafford,LA,SF,17.47,21.02,35,0.499,1,2026-09-11 00:35,market good: Bovada+Underdog
-QB,18,Drake Maye,NE,SEA,17.44,20.4,34,0.513,1,2026-09-10 00:20,market good: Bovada+Underdog
+QB,18,Drake Maye,NE,SEA,17.43,20.4,34,0.513,1,2026-09-10 00:20,market good: Bovada+Underdog
 QB,19,Patrick Mahomes,KC,DEN,16.84,21.16,33,0.51,1,2026-09-15 00:15,market good: Underdog
 QB,20,Bryce Young,CAR,CHI,16.74,14.76,27,0.62,1,2026-09-13 17:00,market good: Bovada+Underdog
 QB,21,Malik Willis,MIA,LV,16.46,12.79,24,0.686,1,2026-09-13 20:25,market good: Bovada+Underdog
 QB,22,Daniel Jones,IND,BAL,16.2,18.03,30,0.54,1,2026-09-13 17:00,market good: Bovada+Underdog
-QB,23,Sam Darnold,SEA,NE,16.07,14.88,29,0.554,1,2026-09-10 00:20,market good: Bovada+Underdog
+QB,23,Sam Darnold,SEA,NE,16.01,14.88,29,0.552,1,2026-09-10 00:20,market good: Bovada+Underdog
 QB,24,Bo Nix,DEN,KC,15.76,18.94,32,0.492,1,2026-09-15 00:15,market good: Underdog
 QB,25,C.J. Stroud,HOU,BUF,15.41,14.69,29,0.531,1,2026-09-13 17:00,market good: Bovada+Underdog
 RB,1,De'Von Achane,MIA,LV,23.84,18.08,36,0.662,1,2026-09-13 20:25,market good: Bovada+Underdog
@@ -33,7 +33,7 @@ RB,6,Jonathan Taylor,IND,BAL,17.1,19.96,37,0.462,1,2026-09-13 17:00,market good:
 RB,7,Saquon Barkley,PHI,WAS,15.62,13.44,34,0.459,1,2026-09-13 20:25,market good: Bovada+Underdog
 RB,8,Javonte Williams,DAL,NYG,15.3,14.08,29,0.528,1,2026-09-14 00:20,market good: Bovada+Underdog
 RB,9,Derrick Henry,BAL,IND,15.28,16.0,38,0.402,1,2026-09-13 17:00,market good: Bovada+Underdog
-RB,10,Omarion Hampton,LAC,ARI,14.83,11.96,29,0.511,1,2026-09-13 20:25,market good: Bovada+Underdog
+RB,10,Omarion Hampton,LAC,ARI,14.82,11.96,29,0.511,1,2026-09-13 20:25,market good: Bovada+Underdog
 RB,11,Ashton Jeanty,LV,MIA,14.74,12.8,33,0.447,1,2026-09-13 20:25,market good: Bovada+Underdog
 RB,12,James Cook III,BUF,HOU,14.46,16.05,31,0.466,1,2026-09-13 17:00,market good: Bovada+Underdog
 RB,13,D'Andre Swift,CHI,CAR,14.27,13.08,28,0.51,1,2026-09-13 17:00,market good: Bovada+Underdog
@@ -47,13 +47,13 @@ RB,20,Cam Skattebo,NYG,DAL,11.79,14.46,31,0.38,1,2026-09-14 00:20,market good: B
 RB,21,Jaylen Warren,PIT,ATL,11.52,11.9,27,0.427,1,2026-09-13 17:00,market good: Bovada+Underdog
 RB,22,David Montgomery,HOU,BUF,11.51,9.11,20,0.576,1,2026-09-13 17:00,market good: Bovada+Underdog
 RB,23,Rhamondre Stevenson,NE,SEA,11.48,11.62,26,0.442,1,2026-09-10 00:20,market good: Bovada+Underdog
-RB,24,MarShawn Lloyd,GB,MIN,11.33,0.0,10,1.133,1,2026-09-13 20:25,market good: Bovada+Underdog
+RB,24,MarShawn Lloyd,GB,MIN,11.35,0.0,10,1.135,1,2026-09-13 20:25,market good: Bovada+Underdog
 RB,25,Quinshon Judkins,CLE,JAC,11.3,11.2,24,0.471,1,2026-09-13 17:00,market good: Bovada+Underdog
 WR,1,Malik Nabers,NYG,DAL,18.13,12.02,26,0.697,1,2026-09-14 00:20,market good: Bovada+Underdog
 WR,2,Ja'Marr Chase,CIN,TB,16.84,15.69,39,0.432,1,2026-09-13 17:00,market good: Bovada+Underdog
 WR,3,Puka Nacua,LA,SF,16.47,19.79,38,0.433,1,2026-09-11 00:35,market good: Bovada+Underdog
 WR,4,Amon-Ra St. Brown,DET,NO,15.62,15.62,38,0.411,1,2026-09-13 17:00,market good: Bovada+Underdog
-WR,5,Jaxon Smith-Njigba,SEA,NE,15.49,17.04,35,0.443,1,2026-09-10 00:20,market good: Bovada+Underdog
+WR,5,Jaxon Smith-Njigba,SEA,NE,15.55,17.04,35,0.444,1,2026-09-10 00:20,market good: Bovada+Underdog
 WR,6,CeeDee Lamb,DAL,NYG,14.43,11.67,29,0.498,1,2026-09-14 00:20,market good: Bovada+Underdog
 WR,7,Chris Olave,NO,DET,14.21,13.69,34,0.418,1,2026-09-13 17:00,market good: Bovada+Underdog
 WR,8,Justin Jefferson,MIN,GB,13.71,9.38,28,0.49,1,2026-09-13 20:25,market good: Bovada+Underdog
@@ -64,16 +64,16 @@ WR,12,Zay Flowers,BAL,IND,12.26,11.78,33,0.372,1,2026-09-13 17:00,market good: B
 WR,13,Stefon Diggs,WAS,PHI,12.23,9.13,18,0.679,2,2026-09-13 20:25,market good: Bovada+Underdog
 WR,14,DeVonta Smith,PHI,WAS,12.21,9.68,27,0.452,1,2026-09-13 20:25,market good: Bovada+Underdog
 WR,15,Rashee Rice,KC,DEN,12.11,15.45,29,0.418,1,2026-09-15 00:15,market good: Underdog
-WR,16,A.J. Brown,NE,SEA,11.82,11.58,26,0.455,1,2026-09-10 00:20,market good: Bovada+Underdog
-WR,17,Drake London,ATL,PIT,11.79,13.99,32,0.368,1,2026-09-13 17:00,market good: Bovada+Underdog
-WR,18,Garrett Wilson,NYJ,TEN,11.5,11.64,25,0.46,1,2026-09-13 17:00,market good: Bovada+Underdog
-WR,19,Tetairoa McMillan,CAR,CHI,11.37,10.39,25,0.455,1,2026-09-13 17:00,market good: Bovada+Underdog
-WR,20,Jameson Williams,DET,NO,11.36,11.02,27,0.421,2,2026-09-13 17:00,market good: Bovada+Underdog
-WR,21,Ladd McConkey,LAC,ARI,11.26,8.98,24,0.469,1,2026-09-13 20:25,market good: Bovada+Underdog
-WR,22,Luther Burden III,CHI,CAR,11.1,6.68,22,0.505,2,2026-09-13 17:00,market good: Bovada+Underdog
-WR,23,Emeka Egbuka,TB,CIN,10.89,9.66,20,0.544,1,2026-09-13 17:00,market good: Bovada+Underdog
-WR,24,Jaylen Waddle,DEN,KC,10.68,10.13,21,0.509,1,2026-09-15 00:15,market good: Underdog
-WR,25,Davante Adams,LA,SF,10.51,13.11,27,0.389,2,2026-09-11 00:35,market good: Bovada+Underdog
+WR,16,Jayden Reed,GB,MIN,11.9,7.53,20,0.595,2,2026-09-13 20:25,market good: Bovada+Underdog
+WR,17,A.J. Brown,NE,SEA,11.82,11.58,26,0.455,1,2026-09-10 00:20,market good: Bovada+Underdog
+WR,18,Drake London,ATL,PIT,11.79,13.99,32,0.368,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,19,Garrett Wilson,NYJ,TEN,11.5,11.64,25,0.46,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,20,Tetairoa McMillan,CAR,CHI,11.37,10.39,25,0.455,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,21,Jameson Williams,DET,NO,11.36,11.02,27,0.421,2,2026-09-13 17:00,market good: Bovada+Underdog
+WR,22,Ladd McConkey,LAC,ARI,11.26,8.98,24,0.469,1,2026-09-13 20:25,market good: Bovada+Underdog
+WR,23,Luther Burden III,CHI,CAR,11.1,6.68,22,0.505,2,2026-09-13 17:00,market good: Bovada+Underdog
+WR,24,Emeka Egbuka,TB,CIN,10.89,9.66,20,0.544,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,25,Jaylen Waddle,DEN,KC,10.68,10.13,21,0.509,1,2026-09-15 00:15,market good: Underdog
 TE,1,Brock Bowers,LV,MIA,12.09,12.02,26,0.465,1,2026-09-13 20:25,market good: Bovada+Underdog
 TE,2,Trey McBride,ARI,LAC,11.68,14.88,28,0.417,1,2026-09-13 20:25,market good: Bovada+Underdog
 TE,3,Dalton Schultz,HOU,BUF,10.83,7.64,14,0.774,1,2026-09-13 17:00,market good: Bovada+Underdog
@@ -89,15 +89,15 @@ TE,12,George Kittle,SF,LA,8.04,11.18,21,0.383,1,2026-09-11 00:35,market good: Bo
 TE,13,Dalton Kincaid,BUF,HOU,7.9,9.59,16,0.494,1,2026-09-13 17:00,market good: Bovada+Underdog
 TE,14,Brenton Strange,JAC,CLE,7.59,7.45,15,0.506,1,2026-09-13 17:00,market good: Bovada+Underdog
 TE,15,Dallas Goedert,PHI,WAS,7.53,10.78,19,0.396,1,2026-09-13 20:25,market good: Bovada+Underdog
-TE,16,Hunter Henry,NE,SEA,7.48,8.12,15,0.499,1,2026-09-10 00:20,market good: Bovada+Underdog
+TE,16,Hunter Henry,NE,SEA,7.49,8.12,15,0.499,1,2026-09-10 00:20,market good: Bovada+Underdog
 TE,17,Isaiah Likely,NYG,DAL,7.42,4.38,16,0.464,1,2026-09-14 00:20,market good: Bovada+Underdog
 TE,18,Tyler Warren,IND,BAL,7.39,8.85,17,0.435,1,2026-09-13 17:00,market fair: Bovada+Underdog
 TE,19,Jake Ferguson,DAL,NYG,6.55,8.65,14,0.468,1,2026-09-14 00:20,market good: Bovada+Underdog
 TE,20,Cade Otton,TB,CIN,6.22,6.18,13,0.478,1,2026-09-13 17:00,market good: Bovada+Underdog
 TE,21,T.J. Hockenson,MIN,GB,6.2,5.82,13,0.477,1,2026-09-13 20:25,market good: Bovada+Underdog
 TE,22,Pat Freiermuth,PIT,ATL,6.07,5.96,12,0.506,1,2026-09-13 17:00,market good: Bovada+Underdog
-TE,23,AJ Barner,SEA,NE,5.97,6.86,12,0.498,1,2026-09-10 00:20,market good: Bovada+Underdog
-TE,24,Ja'Tavion Sanders,CAR,CHI,5.82,3.59,10,0.582,4,2026-09-13 17:00,market td-estimate: Bovada
+TE,23,AJ Barner,SEA,NE,6.03,6.86,12,0.503,1,2026-09-10 00:20,market good: Bovada+Underdog
+TE,24,Ja'Tavion Sanders,CAR,CHI,5.86,3.59,10,0.586,4,2026-09-13 17:00,market td-estimate: Bovada
 TE,25,Chig Okonkwo,WAS,PHI,5.76,5.65,13,0.443,1,2026-09-13 20:25,market good: Bovada+Underdog
 DEF,1,Seattle Seahawks,SEA,NE,6.84,0.0,19,0.36,1,2026-09-10 00:20,80% salary prior; zero/low FPPG
 DEF,2,Houston Texans,HOU,BUF,6.48,0.0,18,0.36,1,2026-09-13 17:00,80% salary prior; zero/low FPPG

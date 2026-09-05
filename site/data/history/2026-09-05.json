@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-05T04:28:13Z",
+  "generated_utc": "2026-09-05T04:34:37Z",
   "run_date": "2026-09-05",
   "top_n": 25,
   "positions": [
@@ -358,7 +358,7 @@
         "player": "Drake Maye",
         "team": "NE",
         "opponent": "SEA",
-        "fp": 17.44,
+        "fp": 17.43,
         "fppg": 20.4,
         "salary": 34,
         "fp_per_salary": 0.513,
@@ -423,10 +423,10 @@
         "player": "Sam Darnold",
         "team": "SEA",
         "opponent": "NE",
-        "fp": 16.07,
+        "fp": 16.01,
         "fppg": 14.88,
         "salary": 29,
-        "fp_per_salary": 0.554,
+        "fp_per_salary": 0.552,
         "depth": 1,
         "kickoff_utc": "2026-09-10 00:20",
         "method": "market good: Bovada+Underdog"
@@ -581,7 +581,7 @@
         "player": "Omarion Hampton",
         "team": "LAC",
         "opponent": "ARI",
-        "fp": 14.83,
+        "fp": 14.82,
         "fppg": 11.96,
         "salary": 29,
         "fp_per_salary": 0.511,
@@ -763,10 +763,10 @@
         "player": "MarShawn Lloyd",
         "team": "GB",
         "opponent": "MIN",
-        "fp": 11.33,
+        "fp": 11.35,
         "fppg": 0.0,
         "salary": 10,
-        "fp_per_salary": 1.133,
+        "fp_per_salary": 1.135,
         "depth": 1,
         "kickoff_utc": "2026-09-13 20:25",
         "method": "market good: Bovada+Underdog"
@@ -843,10 +843,10 @@
         "player": "Jaxon Smith-Njigba",
         "team": "SEA",
         "opponent": "NE",
-        "fp": 15.49,
+        "fp": 15.55,
         "fppg": 17.04,
         "salary": 35,
-        "fp_per_salary": 0.443,
+        "fp_per_salary": 0.444,
         "depth": 1,
         "kickoff_utc": "2026-09-10 00:20",
         "method": "market good: Bovada+Underdog"
@@ -983,6 +983,19 @@
       },
       {
         "rank": 16,
+        "player": "Jayden Reed",
+        "team": "GB",
+        "opponent": "MIN",
+        "fp": 11.9,
+        "fppg": 7.53,
+        "salary": 20,
+        "fp_per_salary": 0.595,
+        "depth": 2,
+        "kickoff_utc": "2026-09-13 20:25",
+        "method": "market good: Bovada+Underdog"
+      },
+      {
+        "rank": 17,
         "player": "A.J. Brown",
         "team": "NE",
         "opponent": "SEA",
@@ -995,7 +1008,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 17,
+        "rank": 18,
         "player": "Drake London",
         "team": "ATL",
         "opponent": "PIT",
@@ -1008,7 +1021,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 18,
+        "rank": 19,
         "player": "Garrett Wilson",
         "team": "NYJ",
         "opponent": "TEN",
@@ -1021,7 +1034,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 19,
+        "rank": 20,
         "player": "Tetairoa McMillan",
         "team": "CAR",
         "opponent": "CHI",
@@ -1034,7 +1047,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 20,
+        "rank": 21,
         "player": "Jameson Williams",
         "team": "DET",
         "opponent": "NO",
@@ -1047,7 +1060,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 21,
+        "rank": 22,
         "player": "Ladd McConkey",
         "team": "LAC",
         "opponent": "ARI",
@@ -1060,7 +1073,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 22,
+        "rank": 23,
         "player": "Luther Burden III",
         "team": "CHI",
         "opponent": "CAR",
@@ -1073,7 +1086,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 23,
+        "rank": 24,
         "player": "Emeka Egbuka",
         "team": "TB",
         "opponent": "CIN",
@@ -1086,7 +1099,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 24,
+        "rank": 25,
         "player": "Jaylen Waddle",
         "team": "DEN",
         "opponent": "KC",
@@ -1097,19 +1110,6 @@
         "depth": 1,
         "kickoff_utc": "2026-09-15 00:15",
         "method": "market good: Underdog"
-      },
-      {
-        "rank": 25,
-        "player": "Davante Adams",
-        "team": "LA",
-        "opponent": "SF",
-        "fp": 10.51,
-        "fppg": 13.11,
-        "salary": 27,
-        "fp_per_salary": 0.389,
-        "depth": 2,
-        "kickoff_utc": "2026-09-11 00:35",
-        "method": "market good: Bovada+Underdog"
       }
     ],
     "TE": [
@@ -1313,7 +1313,7 @@
         "player": "Hunter Henry",
         "team": "NE",
         "opponent": "SEA",
-        "fp": 7.48,
+        "fp": 7.49,
         "fppg": 8.12,
         "salary": 15,
         "fp_per_salary": 0.499,
@@ -1404,10 +1404,10 @@
         "player": "AJ Barner",
         "team": "SEA",
         "opponent": "NE",
-        "fp": 5.97,
+        "fp": 6.03,
         "fppg": 6.86,
         "salary": 12,
-        "fp_per_salary": 0.498,
+        "fp_per_salary": 0.503,
         "depth": 1,
         "kickoff_utc": "2026-09-10 00:20",
         "method": "market good: Bovada+Underdog"
@@ -1417,10 +1417,10 @@
         "player": "Ja'Tavion Sanders",
         "team": "CAR",
         "opponent": "CHI",
-        "fp": 5.82,
+        "fp": 5.86,
         "fppg": 3.59,
         "salary": 10,
-        "fp_per_salary": 0.582,
+        "fp_per_salary": 0.586,
         "depth": 4,
         "kickoff_utc": "2026-09-13 17:00",
         "method": "market td-estimate: Bovada"
@@ -1875,16 +1875,16 @@
     "12    13        Stefon Diggs  ...  2026-09-13 20:25  market good: Bovada+Underdog",
     "13    14       DeVonta Smith  ...  2026-09-13 20:25  market good: Bovada+Underdog",
     "14    15         Rashee Rice  ...  2026-09-15 00:15         market good: Underdog",
-    "15    16          A.J. Brown  ...  2026-09-10 00:20  market good: Bovada+Underdog",
-    "16    17        Drake London  ...  2026-09-13 17:00  market good: Bovada+Underdog",
-    "17    18      Garrett Wilson  ...  2026-09-13 17:00  market good: Bovada+Underdog",
-    "18    19   Tetairoa McMillan  ...  2026-09-13 17:00  market good: Bovada+Underdog",
-    "19    20    Jameson Williams  ...  2026-09-13 17:00  market good: Bovada+Underdog",
-    "20    21       Ladd McConkey  ...  2026-09-13 20:25  market good: Bovada+Underdog",
-    "21    22   Luther Burden III  ...  2026-09-13 17:00  market good: Bovada+Underdog",
-    "22    23        Emeka Egbuka  ...  2026-09-13 17:00  market good: Bovada+Underdog",
-    "23    24       Jaylen Waddle  ...  2026-09-15 00:15         market good: Underdog",
-    "24    25       Davante Adams  ...  2026-09-11 00:35  market good: Bovada+Underdog",
+    "15    16         Jayden Reed  ...  2026-09-13 20:25  market good: Bovada+Underdog",
+    "16    17          A.J. Brown  ...  2026-09-10 00:20  market good: Bovada+Underdog",
+    "17    18        Drake London  ...  2026-09-13 17:00  market good: Bovada+Underdog",
+    "18    19      Garrett Wilson  ...  2026-09-13 17:00  market good: Bovada+Underdog",
+    "19    20   Tetairoa McMillan  ...  2026-09-13 17:00  market good: Bovada+Underdog",
+    "20    21    Jameson Williams  ...  2026-09-13 17:00  market good: Bovada+Underdog",
+    "21    22       Ladd McConkey  ...  2026-09-13 20:25  market good: Bovada+Underdog",
+    "22    23   Luther Burden III  ...  2026-09-13 17:00  market good: Bovada+Underdog",
+    "23    24        Emeka Egbuka  ...  2026-09-13 17:00  market good: Bovada+Underdog",
+    "24    25       Jaylen Waddle  ...  2026-09-15 00:15         market good: Underdog",
     "[25 rows x 11 columns]",
     "TOP 25 TE",
     "    Rank             Player  ...       Kickoff UTC             Projection method",
@@ -1942,6 +1942,6 @@
     "23    24  ...  80% salary prior; zero/low FPPG",
     "24    25  ...  80% salary prior; zero/low FPPG",
     "[25 rows x 11 columns]",
-    "Ranking run time: 9.9s"
+    "Ranking run time: 9.6s"
   ]
 }
