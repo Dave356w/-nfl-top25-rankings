@@ -61,10 +61,11 @@ a UI change reaches Pages without waiting for the next slate.
 ```
 pipeline/notebook.py   the notebook's code, one module, cell banners intact
 run_daily.py           entry point: run the pipeline, write site/data/*
+lineup_optimizer.py    separate tool: set a season-long lineup (see below)
 site/index.html        the page (no build step, no dependencies)
 site/data/latest.json  what the page reads
 site/data/history/     one archived JSON + CSV per run date
-tests/                 shape tests for the published JSON
+tests/                 shape tests for the published JSON and the optimizer
 ```
 
 ## Running it locally
@@ -78,7 +79,8 @@ python -m http.server -d site 8000    # then open http://localhost:8000
 `--positions QB,RB,WR` limits what gets published. The run needs outbound
 network access to Yahoo, the two sportsbooks and the nflverse release CDN.
 
-Tests do not need the network:
+Tests do not need the network, and cover the optimizer as well as the
+published JSON:
 
 ```bash
 python -m unittest discover -s tests -v
@@ -94,6 +96,57 @@ Softer failures degrade instead of stopping: an unreachable sportsbook falls
 back to Yahoo FPPG and salary priors, and an unreachable nflverse release falls
 back to the salary-order depth heuristic. Both are recorded in the run log,
 which the page renders under *Run details*.
+
+## Weekly lineup optimizer
+
+`lineup_optimizer.py` is a separate, standalone tool. It answers a different
+question from the site: not *who are the best 25 players at this position*, but
+*which of my players should I start this week*. It shares no code with the
+daily pipeline and is not part of the Pages build.
+
+```bash
+pip install -r requirements.txt nflreadpy   # nflreadpy is optimizer-only
+python lineup_optimizer.py
+```
+
+It reads two public feeds and needs no key. Yahoo's DFS feed supplies the
+current week's FPPG, salary, opponent and kickoff; nflverse supplies the
+schedule, its newest depth-chart snapshot, the week's injury report when one is
+published, and historical game logs. It then fills `QB / RB / RB / WR / WR / TE
+/ K` plus one RB/WR/TE flex and prints the starters, the bench, and a review
+note per player.
+
+Configure it by editing the constants at the top of the file:
+
+| Setting | What it does |
+| --- | --- |
+| `MY_TEAM_ROSTER` | your players — Yahoo's season-long roster API needs OAuth, so this is typed in |
+| `STARTING_POSITIONS`, `FLEX_ELIGIBLE` | your league's slots |
+| `LINEUP_OBJECTIVE` | `FP` (mean, the default), `Floor_P25`, or `Ceiling_P90` |
+| `EXCLUDED_PLAYERS` | `None` prompts for benchings; a list (even empty) skips the prompt |
+| `MANUAL_DEPTH_OVERRIDES` | override a stale depth chart |
+| `AUTO_EXCLUDE_REPORTED_OUT` | drop anyone the injury report lists as *Out* |
+
+Projections are Yahoo's FPPG blended with a within-position salary prior fitted
+that week, so a player with no game history still gets a number rather than a
+zero. Kickers come from rolling nflverse kicking logs instead, since Yahoo's
+DFS feed does not price them. A rostered player whose team is playing but whom
+Yahoo omits — a Monday-only slate, say — falls back to a rolling half-PPR
+average rather than reading as a zero.
+
+`Floor_P25` and `Ceiling_P90` come from a lognormal band around the mean, using
+depth-calibrated coefficients of variation (`CALIBRATED_CV`). They are
+diagnostics: depth widens the band but does not haircut the mean a second time,
+because the weekly Yahoo salary the projection is built from already reflects
+the player's current role.
+
+Yahoo prices this feed for **DFS half-PPR**. Check it against your league's
+scoring before trusting a close call, and check the injury news yourself — the
+nflverse report is only as current as its last publish.
+
+```bash
+python lineup_optimizer.py --self-test    # offline sanity checks, no network
+```
 
 ## How this maps to the notebook
 
