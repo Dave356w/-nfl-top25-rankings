@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Showdown lineup lab</title>
+<meta name="description" content="Interactive Yahoo single-game lineup optimizer: the correlation model is published daily, the Monte Carlo and the enumeration run in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+<style>
+:root{
+  color-scheme: light dark;
+  --bg:#f6f7f9; --panel:#ffffff; --panel-2:#fbfbfd; --line:#e3e6ec; --line-soft:#eef0f4;
+  --ink:#12151c; --ink-2:#525a6b; --ink-3:#858d9e;
+  --accent:#1f5fd8; --accent-soft:#e8f0ff; --accent-ink:#1a4fb4;
+  --good:#0f7a4f; --good-soft:#e3f5ec;
+  --warn:#9a6207; --warn-soft:#fdf2dc;
+  --bad:#b4362f; --bad-soft:#fbe9e7;
+  --mute-soft:#eef0f4;
+  --bar:#c9d9f7; --bar-top:#1f5fd8;
+  --shadow:0 1px 2px rgba(18,21,28,.06), 0 8px 24px -12px rgba(18,21,28,.18);
+  --radius:14px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1017; --panel:#151922; --panel-2:#1a1f2a; --line:#262c39; --line-soft:#1f2430;
+    --ink:#eef1f6; --ink-2:#a3acbd; --ink-3:#79839a;
+    --accent:#6d9bff; --accent-soft:#1b2740; --accent-ink:#9dbcff;
+    --good:#4ecb8f; --good-soft:#12301f;
+    --warn:#e6b662; --warn-soft:#332612;
+    --bad:#f08b80; --bad-soft:#3a1c19;
+    --mute-soft:#1f2430;
+    --bar:#26355a; --bar-top:#6d9bff;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1017; --panel:#151922; --panel-2:#1a1f2a; --line:#262c39; --line-soft:#1f2430;
+  --ink:#eef1f6; --ink-2:#a3acbd; --ink-3:#79839a;
+  --accent:#6d9bff; --accent-soft:#1b2740; --accent-ink:#9dbcff;
+  --good:#4ecb8f; --good-soft:#12301f;
+  --warn:#e6b662; --warn-soft:#332612;
+  --bad:#f08b80; --bad-soft:#3a1c19;
+  --mute-soft:#1f2430;
+  --bar:#26355a; --bar-top:#6d9bff;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:24px 20px 72px}
+a{color:var(--accent)}
+.mono{font-family:var(--mono); font-size:13px}
+
+.top{display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px}
+.brand{flex:1 1 320px; min-width:0}
+h1{font-size:clamp(24px,3.4vw,34px); line-height:1.15; margin:0 0 6px;
+   letter-spacing:-.02em; font-weight:680}
+.sub{color:var(--ink-2); font-size:14.5px; margin:0}
+.top-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  height:36px; padding:0 13px; border:1px solid var(--line); border-radius:9px;
+  background:var(--panel); color:var(--ink); font:inherit; font-size:13.5px;
+  font-weight:520; cursor:pointer; text-decoration:none; white-space:nowrap;
+}
+.btn:hover{background:var(--panel-2); border-color:var(--ink-3)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
+.btn.primary:hover{background:var(--accent-ink); border-color:var(--accent-ink)}
+.btn:disabled{opacity:.55; cursor:not-allowed}
+
+.status{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:11px 14px; margin-bottom:18px; background:var(--panel);
+  border:1px solid var(--line); border-radius:11px;
+  font-size:13.5px; color:var(--ink-2); box-shadow:var(--shadow);
+}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--good); flex:none;
+     box-shadow:0 0 0 3px var(--good-soft)}
+.dot.busy{background:var(--warn); box-shadow:0 0 0 3px var(--warn-soft)}
+.dot.bad{background:var(--bad); box-shadow:0 0 0 3px var(--bad-soft)}
+.status strong{color:var(--ink); font-weight:600}
+.sep{color:var(--ink-3)}
+
+.layout{display:grid; gap:16px; grid-template-columns:minmax(0,340px) minmax(0,1fr)}
+@media (max-width:960px){ .layout{grid-template-columns:1fr} }
+
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.card h2{
+  margin:0; padding:13px 16px; font-size:12px; font-weight:660;
+  text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3);
+  border-bottom:1px solid var(--line-soft); background:var(--panel-2);
+}
+.card .body{padding:14px 16px}
+.card + .card{margin-top:16px}
+
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-2);
+             margin-bottom:5px}
+.field .hint{font-size:12px; color:var(--ink-3); margin-top:4px; line-height:1.45}
+select, input[type="number"]{
+  width:100%; height:36px; padding:0 9px; font:inherit; font-size:13.5px;
+  color:var(--ink); background:var(--panel); border:1px solid var(--line);
+  border-radius:9px;
+}
+input[type="range"]{width:100%; accent-color:var(--accent)}
+.range-row{display:flex; align-items:center; gap:10px}
+.range-row output{font-family:var(--mono); font-size:12.5px; color:var(--ink-2);
+                  min-width:52px; text-align:right}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+
+.pool{max-height:420px; overflow:auto; border-top:1px solid var(--line-soft)}
+.pool-row{
+  display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:9px;
+  align-items:center; padding:7px 16px; border-bottom:1px solid var(--line-soft);
+  font-size:13.5px;
+}
+.pool-row:last-child{border-bottom:0}
+.pool-row.out{opacity:.45}
+.pool-row .who{min-width:0}
+.pool-row .who b{display:block; font-weight:600; white-space:nowrap;
+                 overflow:hidden; text-overflow:ellipsis}
+.pool-row .who span{font-size:11.5px; color:var(--ink-3)}
+.pool-row .num{font-family:var(--mono); font-size:12.5px; color:var(--ink-2);
+               text-align:right; white-space:nowrap}
+.pool-actions{display:flex; gap:8px; padding:10px 16px; border-bottom:1px solid var(--line-soft)}
+.pool-actions .btn{height:30px; font-size:12.5px; flex:1}
+
+.progress{height:4px; background:var(--mute-soft); border-radius:3px; overflow:hidden;
+          margin-top:10px}
+.progress i{display:block; height:100%; width:0; background:var(--bar-top);
+            transition:width .15s linear}
+
+.lineup{border-bottom:1px solid var(--line-soft); padding:12px 16px}
+.lineup:last-child{border-bottom:0}
+.lineup-head{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin-bottom:7px}
+.rank{font-family:var(--mono); font-size:12px; color:var(--ink-3); font-weight:600;
+      min-width:24px}
+.lineup-head .score{font-weight:660; font-size:15px}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px}
+.chip{
+  display:inline-flex; align-items:baseline; gap:5px; padding:3px 9px;
+  border-radius:999px; background:var(--mute-soft); font-size:12.5px;
+  border:1px solid transparent;
+}
+.chip.star{background:var(--accent-soft); color:var(--accent-ink); font-weight:600;
+           border-color:var(--accent)}
+.chip small{color:var(--ink-3); font-size:11px}
+.chip.star small{color:var(--accent-ink); opacity:.8}
+.metrics{display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--ink-2);
+         font-family:var(--mono)}
+.badge{
+  display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px;
+  font-weight:600; background:var(--mute-soft); color:var(--ink-2);
+}
+.badge.match{background:var(--good-soft); color:var(--good)}
+
+.note{
+  padding:12px 16px; font-size:13px; color:var(--ink-2);
+  border-bottom:1px solid var(--line-soft); background:var(--panel-2);
+}
+.note.bad{color:var(--bad); background:var(--bad-soft)}
+.empty{padding:44px 20px; text-align:center; color:var(--ink-2)}
+.empty h3{margin:0 0 6px; color:var(--ink); font-size:17px; font-weight:620}
+
+table{width:100%; border-collapse:collapse; font-size:13px}
+th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+   color:var(--ink-3); font-weight:650; padding:8px 16px;
+   border-bottom:1px solid var(--line-soft)}
+td{padding:7px 16px; border-bottom:1px solid var(--line-soft)}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono); text-align:right; color:var(--ink-2)}
+
+details.panel{margin-top:16px; background:var(--panel); border:1px solid var(--line);
+              border-radius:var(--radius); box-shadow:var(--shadow)}
+details.panel summary{padding:13px 16px; cursor:pointer; font-size:13.5px;
+                      font-weight:600; color:var(--ink-2)}
+details.panel .panel-body{padding:0 16px 16px; font-size:13.5px; color:var(--ink-2)}
+details.panel h4{margin:14px 0 6px; font-size:12px; text-transform:uppercase;
+                 letter-spacing:.06em; color:var(--ink-3)}
+pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-radius:9px;
+        padding:11px 13px; overflow:auto; max-height:240px; font-family:var(--mono);
+        font-size:12px; color:var(--ink-2); white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1>Showdown lineup lab</h1>
+      <p class="sub">
+        The correlation model is built daily by the pipeline. The enumeration and
+        the Monte Carlo run here, in your browser, so every control re-solves the
+        slate without touching a feed.
+      </p>
+    </div>
+    <div class="top-actions">
+      <a class="btn" href="./index.html">Rankings</a>
+      <a class="btn" href="./lineup.html">My lineup</a>
+      <button class="btn" id="theme" type="button">Theme</button>
+    </div>
+  </header>
+
+  <div class="status">
+    <span class="dot" id="dot"></span>
+    <span id="status-text">Loading published models…</span>
+  </div>
+
+  <div class="layout">
+    <div>
+      <section class="card">
+        <h2>Slate</h2>
+        <div class="body">
+          <div class="field">
+            <label for="game">Game</label>
+            <select id="game"></select>
+            <div class="hint" id="game-hint"></div>
+          </div>
+          <div class="field">
+            <label for="detail">Detail</label>
+            <select id="detail">
+              <option value="fast">Fast — 5,000 scenarios, 4,000 candidates</option>
+              <option value="balanced" selected>Balanced — 10,000 / 10,000</option>
+              <option value="full">Full — matches the published run</option>
+            </select>
+            <div class="hint" id="detail-hint"></div>
+          </div>
+          <button class="btn primary" id="run" style="width:100%" type="button">
+            Optimize
+          </button>
+          <div class="progress" id="progress" hidden><i id="progress-bar"></i></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Rules and strategy</h2>
+        <div class="body">
+          <div class="field">
+            <label for="objective">Rank entries by</label>
+            <select id="objective">
+              <option value="tournament">Tournament score</option>
+              <option value="mean">Simulated mean</option>
+              <option value="ceiling">Ceiling (P90)</option>
+              <option value="floor">Floor (P25)</option>
+              <option value="expected">Analytic expectation</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="floor">Minimum salary used <span id="floor-value" class="mono"></span></label>
+            <div class="range-row">
+              <input type="range" id="floor" min="0" max="100" step="1">
+            </div>
+            <div class="hint">
+              A strategy filter, not a Yahoo rule. Lower it to allow lineups that
+              leave salary on the table.
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="entries">Entries</label>
+              <input type="number" id="entries" min="1" max="150" step="1">
+            </div>
+            <div class="field">
+              <label for="shared">Max shared players</label>
+              <input type="number" id="shared" min="1" max="4" step="1">
+            </div>
+            <div class="field">
+              <label for="player-exposure">Max player exposure</label>
+              <input type="number" id="player-exposure" min="0.05" max="1" step="0.05">
+            </div>
+            <div class="field">
+              <label for="superstar-exposure">Max Superstar exposure</label>
+              <input type="number" id="superstar-exposure" min="0.05" max="1" step="0.05">
+            </div>
+          </div>
+          <div class="field">
+            <label>Position limits per lineup</label>
+            <div id="limits" class="grid-2"></div>
+            <div class="hint">
+              Yahoo imposes none. Leave a maximum at 5 to leave the position
+              unrestricted.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Player pool</h2>
+        <div class="pool-actions">
+          <button class="btn" id="all" type="button">All in</button>
+          <button class="btn" id="none" type="button">Clear</button>
+        </div>
+        <div class="pool" id="pool"></div>
+      </section>
+    </div>
+
+    <div>
+      <section class="card">
+        <h2>Portfolio</h2>
+        <div id="result-note" class="note" hidden></div>
+        <div id="portfolio"></div>
+        <div class="empty" id="portfolio-empty">
+          <h3>Nothing solved yet</h3>
+          <p>Pick a game and press Optimize. Everything runs on this device.</p>
+        </div>
+      </section>
+
+      <section class="card" id="diversity-card" hidden>
+        <h2>How different the entries are</h2>
+        <div class="body"><div id="diversity"></div></div>
+      </section>
+
+      <section class="card" id="reference-card" hidden>
+        <h2>Published reference run</h2>
+        <div class="note" id="reference-note"></div>
+        <div id="reference"></div>
+      </section>
+    </div>
+  </div>
+
+  <details class="panel" id="detail-panel">
+    <summary>How this works, and what the numbers mean</summary>
+    <div class="panel-body">
+      <h4>Where the split falls</h4>
+      <p>
+        A GitHub Actions run fetches Yahoo, the two sportsbook feeds and the
+        nflverse depth chart, builds the market-implied means and the fitted
+        coefficients of variation, and publishes the PSD-repaired latent
+        correlation matrix for each game. That payload is about 7 KB. This page
+        downloads it and does the rest: it draws the scenarios, enumerates every
+        Yahoo-valid roster, screens them on the analytic ceiling, scores the
+        survivors against shared scenarios, and applies the exposure caps.
+      </p>
+      <p>
+        The feeds never need to be touched again, which is the point: they do not
+        answer cross-origin requests from a Pages origin, and pointing every
+        visitor's IP at a sportsbook is what got the pipeline's own VM blocked.
+      </p>
+      <h4>Why excluding a player is cheap</h4>
+      <p>
+        Removing a player is a principal submatrix of a positive semi-definite
+        matrix, which is still positive semi-definite. So there is no
+        eigendecomposition and no PSD repair here, and the scenarios are not even
+        redrawn — an exclusion only changes which lineups are legal.
+      </p>
+      <h4>Why your numbers differ from the published run</h4>
+      <p>
+        This page draws its own scenarios from its own generator, so simulated
+        means and percentiles land within Monte Carlo error of the published ones
+        rather than on top of them. The analytic quantities — salary, expected
+        points, the analytic standard deviation, the count of valid rosters —
+        are computed from the same model and match exactly.
+      </p>
+      <p>
+        Entries marked <span class="badge match">also published</span> were
+        selected by both runs. On a portfolio this deep that overlap is itself
+        information: an entry that survives two independent scenario sets is one
+        the ranking actually prefers, rather than one that won a near-tie on
+        sampling noise.
+      </p>
+      <h4>Model</h4>
+      <div id="model-info"></div>
+      <h4>Reliability of the published run</h4>
+      <div id="reliability"></div>
+      <h4>Feeds</h4>
+      <p id="feeds"></p>
+      <h4>Export log</h4>
+      <pre class="log" id="log"></pre>
+      <h4>Caveats</h4>
+      <p>
+        These are market-derived estimates, not predictions with a guarantee.
+        Check the injury news yourself; the depth chart is only as current as its
+        last publish.
+      </p>
+    </div>
+  </details>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DATA = "./data/showdown/";
+  var LINEUP_SIZE = 5;
+  var POSITIONS = ["QB", "RB", "WR", "TE", "DEF"];
+  var PRESETS = {
+    fast: { simulations: 5000, candidates: 4000 },
+    balanced: { simulations: 10000, candidates: 10000 },
+    full: null   // taken from the payload's own settings
+  };
+
+  var state = {
+    index: null,
+    payload: null,
+    excluded: new Set(),
+    result: null,
+    running: false
+  };
+  var worker = null;
+
+  function el(id) { return document.getElementById(id); }
+  function text(value) {
+    return String(value === null || value === undefined ? "" : value)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function num(value, places) {
+    if (value === null || value === undefined || !isFinite(value)) return "—";
+    return Number(value).toFixed(places === undefined ? 2 : places);
+  }
+  function money(value) {
+    return value === null || value === undefined ? "—" : "$" + Number(value).toFixed(0);
+  }
+  function setStatus(message, kind) {
+    el("status-text").innerHTML = message;
+    el("dot").className = "dot" + (kind ? " " + kind : "");
+  }
+
+  /* ---------- theme ---------- */
+  var THEME_KEY = "showdown-theme";
+  try {
+    var saved = localStorage.getItem(THEME_KEY);
+    if (saved) document.documentElement.dataset.theme = saved;
+  } catch (error) { /* private mode */ }
+  el("theme").addEventListener("click", function () {
+    var root = document.documentElement;
+    var isDark = root.dataset.theme === "dark" ||
+      (root.dataset.theme !== "light" &&
+       window.matchMedia("(prefers-color-scheme: dark)").matches);
+    root.dataset.theme = isDark ? "light" : "dark";
+    try { localStorage.setItem(THEME_KEY, root.dataset.theme); } catch (error) {}
+  });
+
+  /* ---------- loading ---------- */
+  function load(url) {
+    return fetch(url, { cache: "no-store" }).then(function (response) {
+      if (!response.ok) throw new Error(url + " returned " + response.status);
+      return response.json();
+    });
+  }
+
+  load(DATA + "index.json").then(function (index) {
+    state.index = index;
+    var picker = el("game");
+    picker.innerHTML = index.games.map(function (game) {
+      return '<option value="' + text(game.file) + '">' + text(game.matchup) + "</option>";
+    }).join("");
+    if (!index.games.length) {
+      setStatus("The last export published no usable games.", "bad");
+      return;
+    }
+    renderDetails(index);
+    return selectGame(index.games[0]);
+  }).catch(function (error) {
+    // A 404 here is almost always "the export workflow has not run yet on this
+    // deployment", which is a different problem from a broken payload.
+    var missing = /404/.test(error.message);
+    setStatus(missing
+      ? "No showdown models are published yet. They appear after the " +
+        "<strong>Showdown models</strong> workflow runs."
+      : "Could not load the published models: " + text(error.message), "bad");
+    el("portfolio-empty").innerHTML = missing
+      ? "<h3>Nothing published yet</h3><p>Run the <b>Showdown models</b> workflow " +
+        "(it is scheduled before Sunday and Thursday kickoffs) and reload.</p>"
+      : "<h3>Could not load the models</h3><p>" + text(error.message) + "</p>";
+  });
+
+  function selectGame(entry) {
+    return load(DATA + entry.file).then(function (payload) {
+      state.payload = payload;
+      state.excluded = new Set();
+      state.result = null;
+      applyDefaults(payload);
+      renderPool();
+      renderReference();
+      el("portfolio").innerHTML = "";
+      el("portfolio-empty").hidden = false;
+      el("diversity-card").hidden = true;
+      el("result-note").hidden = true;
+      el("game-hint").textContent =
+        payload.players.length + " players · cap " + money(payload.salary_cap) +
+        " · kickoff " + localTime(payload.kickoff_utc);
+      startWorker(payload);
+      setStatus(
+        "Model published <strong>" + text((state.index.generated_utc || "").replace("T", " ")) +
+        "</strong> <span class='sep'>·</span> " + text(payload.matchup) +
+        " <span class='sep'>·</span> ready");
+    });
+  }
+
+  function localTime(value) {
+    if (!value) return "—";
+    var when = new Date(value);
+    if (isNaN(when)) return String(value);
+    return when.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
+  }
+
+  function applyDefaults(payload) {
+    var settings = payload.settings;
+    el("entries").value = settings.tournament_lineups;
+    el("shared").value = settings.max_shared_players;
+    el("player-exposure").value = settings.max_player_exposure;
+    el("superstar-exposure").value = settings.max_superstar_exposure;
+    var floor = el("floor");
+    floor.value = Math.round(settings.min_salary_used_pct * 100);
+    el("floor-value").textContent = floor.value + "%";
+    el("limits").innerHTML = POSITIONS.map(function (position) {
+      return '<div class="field" style="margin:0">' +
+        "<label>" + position + "</label>" +
+        '<div class="range-row">' +
+        '<input type="number" class="limit-low" data-position="' + position +
+        '" min="0" max="5" step="1" value="0" title="Minimum ' + position +
+        ' per lineup" aria-label="' + position + ' minimum">' +
+        '<span class="sep">to</span>' +
+        '<input type="number" class="limit-high" data-position="' + position +
+        '" min="0" max="5" step="1" value="5" title="Maximum ' + position +
+        ' per lineup" aria-label="' + position + ' maximum">' +
+        "</div></div>";
+    }).join("");
+    updateDetailHint();
+  }
+
+  function updateDetailHint() {
+    var payload = state.payload;
+    if (!payload) return;
+    var preset = PRESETS[el("detail").value];
+    var simulations = preset ? preset.simulations : payload.settings.simulations;
+    var candidates = preset ? preset.candidates : payload.settings.max_candidate_lineups;
+    el("detail-hint").textContent =
+      simulations.toLocaleString() + " scenarios × " + candidates.toLocaleString() +
+      " candidates. More of either is steadier and slower.";
+  }
+
+  /* ---------- pool ---------- */
+  function renderPool() {
+    var payload = state.payload;
+    var order = payload.players.map(function (player, index) { return index; });
+    order.sort(function (a, b) {
+      var players = payload.players;
+      return players[a].team.localeCompare(players[b].team) ||
+             POSITIONS.indexOf(players[a].pos) - POSITIONS.indexOf(players[b].pos) ||
+             players[b].fp - players[a].fp;
+    });
+    el("pool").innerHTML = order.map(function (index) {
+      var player = payload.players[index];
+      var out = state.excluded.has(index);
+      return '<label class="pool-row' + (out ? " out" : "") + '" data-index="' + index + '">' +
+        '<input type="checkbox" ' + (out ? "" : "checked") + ' data-index="' + index + '">' +
+        '<span class="who"><b>' + text(player.name) + "</b>" +
+        "<span>" + text(player.team) + " " + text(player.pos) + " · " +
+        text(player.role) + "</span></span>" +
+        '<span class="num">' + money(player.salary) + "<br>" + num(player.fp, 1) + "</span>" +
+        "</label>";
+    }).join("");
+  }
+
+  el("pool").addEventListener("change", function (event) {
+    var box = event.target;
+    if (!box.matches('input[type="checkbox"]')) return;
+    var index = Number(box.dataset.index);
+    if (box.checked) state.excluded.delete(index); else state.excluded.add(index);
+    box.closest(".pool-row").classList.toggle("out", !box.checked);
+  });
+  el("all").addEventListener("click", function () {
+    state.excluded = new Set();
+    renderPool();
+  });
+  el("none").addEventListener("click", function () {
+    state.excluded = new Set(state.payload.players.map(function (_, i) { return i; }));
+    renderPool();
+  });
+  el("game").addEventListener("change", function () {
+    var entry = state.index.games.filter(function (game) {
+      return game.file === el("game").value;
+    })[0];
+    if (entry) selectGame(entry);
+  });
+  el("floor").addEventListener("input", function () {
+    el("floor-value").textContent = el("floor").value + "%";
+  });
+  el("detail").addEventListener("change", updateDetailHint);
+
+  /* ---------- worker ---------- */
+  function startWorker(payload) {
+    if (worker) worker.terminate();
+    worker = new Worker("./showdown-worker.js");
+    worker.onmessage = function (event) {
+      var message = event.data;
+      if (message.type === "stage") {
+        setStatus(text(message.stage) + "…", "busy");
+      } else if (message.type === "progress") {
+        el("progress-bar").style.width = (message.fraction * 100).toFixed(1) + "%";
+      } else if (message.type === "result") {
+        finish(message);
+      } else if (message.type === "error") {
+        state.running = false;
+        el("run").disabled = false;
+        el("progress").hidden = true;
+        setStatus(text(message.message), "bad");
+        var note = el("result-note");
+        note.hidden = false;
+        note.className = "note bad";
+        note.textContent = message.message;
+      }
+    };
+    worker.onerror = function (error) {
+      setStatus("The optimizer worker failed: " + text(error.message), "bad");
+      state.running = false;
+      el("run").disabled = false;
+    };
+    worker.postMessage({ type: "load", payload: payload });
+  }
+
+  function options() {
+    var payload = state.payload;
+    var preset = PRESETS[el("detail").value];
+    var limits = {};
+    Array.prototype.forEach.call(document.querySelectorAll(".limit-low"), function (low) {
+      var position = low.dataset.position;
+      var high = document.querySelector('.limit-high[data-position="' + position + '"]');
+      var lowValue = Math.max(0, Number(low.value) || 0);
+      var highValue = Math.min(LINEUP_SIZE, Number(high.value));
+      if (lowValue > 0 || highValue < LINEUP_SIZE) limits[position] = [lowValue, highValue];
+    });
+    return {
+      salaryCap: payload.salary_cap,
+      minSalaryPct: Number(el("floor").value) / 100,
+      ceilingWeight: payload.settings.candidate_ceiling_weight,
+      maxCandidates: preset ? preset.candidates : payload.settings.max_candidate_lineups,
+      meanReserve: payload.settings.mean_candidate_reserve,
+      nearOptimalRatio: payload.settings.near_optimal_ratio,
+      entries: Math.max(1, Number(el("entries").value) || 1),
+      maxPlayerExposure: Number(el("player-exposure").value),
+      maxSuperstarExposure: Number(el("superstar-exposure").value),
+      maxShared: Math.max(1, Number(el("shared").value) || 1),
+      simulations: preset ? preset.simulations : payload.settings.simulations,
+      seed: payload.settings.random_seed,
+      objective: el("objective").value,
+      positionLimits: limits
+    };
+  }
+
+  el("run").addEventListener("click", function () {
+    if (!state.payload || state.running) return;
+    var included = [];
+    state.payload.players.forEach(function (_, index) {
+      if (!state.excluded.has(index)) included.push(index);
+    });
+    state.running = true;
+    el("run").disabled = true;
+    el("progress").hidden = false;
+    el("progress-bar").style.width = "0%";
+    el("result-note").hidden = true;
+    worker.postMessage({ type: "solve", included: included, options: options() });
+  });
+
+  /* ---------- results ---------- */
+  function lineupKey(lineup) {
+    return lineup.ids.slice().sort(function (a, b) { return a - b; }).join(",") +
+      "|" + lineup.superstar;
+  }
+
+  function publishedKeys() {
+    var reference = state.payload && state.payload.reference;
+    if (!reference) return new Set();
+    return new Set(reference.portfolio.map(lineupKey));
+  }
+
+  function renderLineups(target, lineups, published) {
+    var players = state.payload.players;
+    target.innerHTML = lineups.map(function (lineup, position) {
+      var chips = lineup.ids.map(function (id) {
+        var player = players[id];
+        var star = id === lineup.superstar;
+        return '<span class="chip' + (star ? " star" : "") + '">' +
+          (star ? "★ " : "") + text(player.name) +
+          " <small>" + text(player.pos) + " " + money(player.salary) + "</small></span>";
+      }).join("");
+      var match = published.has(lineupKey(lineup))
+        ? ' <span class="badge match">also published</span>' : "";
+      return '<div class="lineup">' +
+        '<div class="lineup-head"><span class="rank">#' + (position + 1) + "</span>" +
+        '<span class="score">' + num(lineup.sim_mean, 2) + " proj</span>" +
+        '<span class="mono" style="color:var(--ink-3)">' + money(lineup.salary) + "</span>" +
+        match + "</div>" +
+        '<div class="chips">' + chips + "</div>" +
+        '<div class="metrics">' +
+        "<span>floor " + num(lineup.floor_p25, 1) + "</span>" +
+        "<span>ceiling " + num(lineup.ceiling_p90, 1) + "</span>" +
+        "<span>p95 " + num(lineup.ceiling_p95, 1) + "</span>" +
+        "<span>near-opt " + num(lineup.near_optimal_rate * 100, 2) + "%</span>" +
+        "<span>win " + num(lineup.win_rate * 100, 2) + "%</span>" +
+        "<span>score " + num(lineup.tournament_score, 2) + "</span>" +
+        "</div></div>";
+    }).join("");
+  }
+
+  function finish(message) {
+    state.running = false;
+    state.result = message;
+    el("run").disabled = false;
+    el("progress").hidden = true;
+    el("portfolio-empty").hidden = true;
+
+    var published = publishedKeys();
+    renderLineups(el("portfolio"), message.portfolio, published);
+
+    var shared = message.portfolio.filter(function (lineup) {
+      return published.has(lineupKey(lineup));
+    }).length;
+    var note = el("result-note");
+    note.hidden = false;
+    note.className = "note";
+    note.innerHTML =
+      message.valid_rosters.toLocaleString() + " valid rosters · " +
+      message.candidates_scored.toLocaleString() + " scored · " +
+      (message.timing.total / 1000).toFixed(1) + "s" +
+      (published.size ? " · " + shared + " of " + message.portfolio.length +
+        " also in the published run" : "");
+
+    var diversity = message.diversity;
+    el("diversity-card").hidden = !diversity;
+    if (diversity) {
+      el("diversity").innerHTML =
+        "<p>" + diversity.lineups + " entries drawn from " +
+        diversity.distinct_players + " distinct players. Any two share " +
+        num(diversity.mean_shared, 2) + " players on average and " +
+        diversity.max_shared + " at most, against a cap of " + diversity.cap + ".</p>" +
+        (diversity.near_duplicates
+          ? "<p style='color:var(--warn)'>" + diversity.near_duplicates +
+            " pair(s) differ by a single player. Lower the shared-player cap.</p>"
+          : "<p>Every pair of entries differs by at least " +
+            (LINEUP_SIZE - diversity.max_shared) + " player(s).</p>");
+    }
+    setStatus(
+      "Solved in <strong>" + (message.timing.total / 1000).toFixed(1) + "s</strong> " +
+      "<span class='sep'>·</span> " + text(state.payload.matchup) +
+      " <span class='sep'>·</span> " + message.candidates_scored.toLocaleString() +
+      " candidates scored");
+  }
+
+  function renderReference() {
+    var payload = state.payload;
+    var card = el("reference-card");
+    if (!payload.reference) { card.hidden = true; return; }
+    card.hidden = false;
+    el("reference-note").textContent =
+      "Built by the pipeline itself at " + payload.settings.simulations.toLocaleString() +
+      " scenarios over " + payload.reference.valid_rosters.toLocaleString() +
+      " valid rosters. This is the answer with no settings changed.";
+    renderLineups(el("reference"), payload.reference.portfolio.slice(0, 5), new Set());
+    var reliability = payload.reference.reliability || [];
+    el("reliability").innerHTML = reliability.length
+      ? "<table><thead><tr><th>Metric</th><th class='num'>Reliability</th>" +
+        "<th>Verdict</th></tr></thead><tbody>" +
+        reliability.map(function (row) {
+          return "<tr><td>" + text(row.metric) + "</td><td class='num'>" +
+            num(row.full_run_reliability, 3) + "</td><td>" + text(row.verdict) +
+            "</td></tr>";
+        }).join("") + "</tbody></table>"
+      : "<p>The published run did not report reliability.</p>";
+    el("model-info").innerHTML =
+      "<p>Largest PSD repair to a requested correlation: <span class='mono'>" +
+      num(payload.model.psd_max_score_adjustment, 4) + "</span>. Correlation targets " +
+      "outside the range two lognormals with these coefficients of variation can " +
+      "reach: <span class='mono'>" + payload.model.infeasible_pairs + "</span>." +
+      (payload.dropped_from_pool.length
+        ? " Trimmed from the pool before enumeration: " +
+          text(payload.dropped_from_pool.join(", ")) + "."
+        : "") + "</p>";
+  }
+
+  function renderDetails(index) {
+    var market = index.market || {};
+    el("feeds").textContent =
+      (market.feeds && market.feeds.length ? market.feeds.join(" + ") : "no market feed") +
+      (market.calibration_pairs ? " · " + market.calibration_pairs +
+        " local pairs used for the one-way vig calibration" : "") +
+      " · " + (index.availability_removed || 0) + " player(s) removed by the " +
+      "availability filter" +
+      (index.skipped && index.skipped.length
+        ? " · skipped: " + index.skipped.join("; ") : "");
+    el("log").textContent = (index.log || []).join("\n") || "No log was published.";
+  }
+})();
+</script>
+</body>
+</html>

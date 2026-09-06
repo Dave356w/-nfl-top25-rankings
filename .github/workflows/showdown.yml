@@ -1,0 +1,93 @@
+name: Showdown models
+
+on:
+  schedule:
+    # Sunday 15:00 UTC = 11:00 ET, two hours before the early kickoffs, and
+    # Thursday 21:00 UTC = 17:00 ET before TNF. The models only need to be
+    # fresher than the props they were built from; scheduled runs drift.
+    - cron: "0 15 * * 0"
+    - cron: "0 21 * * 4"
+  workflow_dispatch:
+    inputs:
+      max_games:
+        description: "Export only the first N games (blank = the whole slate)"
+        default: ""
+        required: false
+      simulations:
+        description: "Scenarios for the server-side reference portfolio"
+        default: "20000"
+        required: false
+  push:
+    branches: [main]
+    paths:
+      - "site/showdown.html"
+      - "site/showdown-worker.js"
+      - "pipeline/showdown.py"
+      - "run_showdown.py"
+      - ".github/workflows/showdown.yml"
+
+permissions:
+  contents: write   # commit the exported models back to the repo
+  pages: write
+  id-token: write
+
+# Shared with `Daily rankings` and `Weekly lineup`: all three deploy the whole
+# `site/` directory to one Pages site.
+concurrency:
+  group: pages-publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Each game costs roughly 25s of Monte Carlo on top of the feed fetches, so
+    # a full Sunday slate is several minutes. The margin is for a slow feed.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Export the single-game models
+        run: |
+          python run_showdown.py \
+            ${{ inputs.max_games && format('--max-games {0}', inputs.max_games) || '' }} \
+            --simulations "${{ inputs.simulations || '20000' }}"
+
+      - name: Commit this run's models
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/data/showdown
+          if git diff --cached --quiet; then
+            echo "No showdown change to commit."
+            exit 0
+          fi
+          git commit -m "data: showdown models for $(date -u +%Y-%m-%d)"
+          for attempt in 1 2 3 4; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            echo "push attempt $attempt failed; retrying"
+            sleep $((2 ** attempt))
+          done
+          exit 1
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -4344,11 +4344,18 @@ def _lineup_arrays(candidates, lineup_size):
 
 
 def _weight_matrix(ids, superstars, start, stop, player_count):
-    """Build the (players x candidates) 1.0/1.5 weight block for one batch."""
-    weights = np.zeros((player_count, stop - start), dtype=np.float32)
-    columns = np.arange(stop - start)
-    weights[ids[start:stop].T, columns] = 1.0
-    weights[superstars[start:stop], columns] += 0.5
+    """Build the (candidates x players) 1.0/1.5 weight block for one batch.
+
+    v3.5 returns the transpose of the v3.2 block. Scores are now carried as
+    (candidates x scenarios) so that every per-candidate reduction - and in
+    particular the quantile partition, which dominated the whole run - walks a
+    contiguous row instead of striding down a column of a 41 MB array. The
+    arithmetic is unchanged; only the memory layout moved.
+    """
+    weights = np.zeros((stop - start, player_count), dtype=np.float32)
+    rows = np.arange(stop - start)
+    weights[rows[:, None], ids[start:stop]] = 1.0
+    weights[rows, superstars[start:stop]] += 0.5
     return weights
 
 
@@ -4381,6 +4388,9 @@ def score_candidates_shared_scenarios(candidates, outcomes, cfg=None, batch_size
     half = n_scenarios // 2
     halves = {"": slice(None), "_A": slice(0, half), "_B": slice(half, 2 * half)}
     ids, superstars = _lineup_arrays(candidates, int(cfg.lineup_size))
+    # Built once. Every batch multiplies against this rather than transposing a
+    # fresh score block, which would give back the layout win it is here for.
+    scenarios = np.ascontiguousarray(outcomes.T)
 
     names = ["Sim_Mean", "Sim_SD", "Floor_P25", "Ceiling_P90", "Ceiling_P95"]
     metrics = {f"{name}{tag}": np.zeros(n_candidates) for name in names for tag in halves}
@@ -4388,27 +4398,34 @@ def score_candidates_shared_scenarios(candidates, outcomes, cfg=None, batch_size
 
     for start in range(0, n_candidates, batch_size):
         stop = min(start + batch_size, n_candidates)
-        scores = outcomes @ _weight_matrix(ids, superstars, start, stop, n_players)
+        scores = _weight_matrix(ids, superstars, start, stop, n_players) @ scenarios
         for tag, window in halves.items():
-            block = scores[window]
-            metrics[f"Sim_Mean{tag}"][start:stop] = block.mean(axis=0)
-            metrics[f"Sim_SD{tag}"][start:stop] = block.std(axis=0)
-            quantiles = np.quantile(block, [0.25, 0.90, 0.95], axis=0)
+            block = scores[:, window]
+            # float64 accumulators. The scores themselves are float32, and a
+            # float32 sum over 20,000 scenarios lands ~1e-5 relative away from
+            # the exact mean in an order that depends on the array layout - which
+            # was enough to reshuffle near-tied candidates when the layout above
+            # changed. Accumulating in float64 makes the reduction layout-
+            # independent, and makes these numbers reproducible by any float64
+            # implementation, the browser included.
+            metrics[f"Sim_Mean{tag}"][start:stop] = block.mean(axis=1, dtype=np.float64)
+            metrics[f"Sim_SD{tag}"][start:stop] = block.std(axis=1, dtype=np.float64)
+            quantiles = np.quantile(block, [0.25, 0.90, 0.95], axis=1)
             metrics[f"Floor_P25{tag}"][start:stop] = quantiles[0]
             metrics[f"Ceiling_P90{tag}"][start:stop] = quantiles[1]
             metrics[f"Ceiling_P95{tag}"][start:stop] = quantiles[2]
-        np.maximum(scenario_best, scores.max(axis=1), out=scenario_best)
+        np.maximum(scenario_best, scores.max(axis=0), out=scenario_best)
 
     rates = {f"{name}{tag}": np.zeros(n_candidates)
              for name in ("Near_Optimal_Rate", "Win_Rate") for tag in halves}
     for start in range(0, n_candidates, batch_size):
         stop = min(start + batch_size, n_candidates)
-        scores = outcomes @ _weight_matrix(ids, superstars, start, stop, n_players)
-        near = scores >= (scenario_best[:, None] * cfg.near_optimal_ratio)
-        won = np.isclose(scores, scenario_best[:, None], rtol=1e-6, atol=1e-5)
+        scores = _weight_matrix(ids, superstars, start, stop, n_players) @ scenarios
+        near = scores >= (scenario_best[None, :] * cfg.near_optimal_ratio)
+        won = np.isclose(scores, scenario_best[None, :], rtol=1e-6, atol=1e-5)
         for tag, window in halves.items():
-            rates[f"Near_Optimal_Rate{tag}"][start:stop] = near[window].mean(axis=0)
-            rates[f"Win_Rate{tag}"][start:stop] = won[window].mean(axis=0)
+            rates[f"Near_Optimal_Rate{tag}"][start:stop] = near[:, window].mean(axis=1)
+            rates[f"Win_Rate{tag}"][start:stop] = won[:, window].mean(axis=1)
 
     scored = candidates.copy()
     for name, values in {**metrics, **rates}.items():
@@ -5111,39 +5128,30 @@ def run_interactive(cfg=None):
 # ============================================================================
 # NOTEBOOK CELL 19 - Weekly top-N rankings by position
 # ============================================================================
-def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_csv=True):
-    """Build full-slate Yahoo rankings from the notebook's final estimated FP.
+def prepare_slate_pool(cfg=None, purpose=""):
+    """Build the priced, role-adjusted, availability-filtered pool for a slate.
 
-    Projection priority is unchanged from the showdown model:
-    manual override > accepted market mean > Yahoo FPPG/salary prior.
-    Current market/manual means are not depth-haircut; fallback estimates are.
+    Everything up to the point where a caller decides what to do with the pool:
+    the Yahoo feed, market-implied means, role tiers, opportunity ranks, the role
+    mean adjustment, the availability filter, the backup-QB filter and
+    EXCLUDE_PLAYERS, in that order. The order is load-bearing - role is assigned
+    from the unadjusted estimate so an adjusted mean cannot redefine the role that
+    chose its own adjustment.
+
+    The position rankings and the showdown export both need exactly this and had
+    started to drift apart as two copies of it.
     """
     cfg = _cfg(cfg)
-    top_n = int(top_n)
-    if top_n < 1:
-        raise ValueError("top_n must be at least 1")
-
-    requested_positions = []
-    for position in positions:
-        normalized = str(position).upper().replace("D/ST", "DEF").replace("DST", "DEF")
-        if normalized not in VALID_POSITIONS:
-            raise ValueError(
-                f"Unsupported position {position!r}; choose from {VALID_POSITIONS}"
-            )
-        if normalized not in requested_positions:
-            requested_positions.append(normalized)
-
-    started = time.perf_counter()
     payload = fetch_yahoo_data()
-    players, _ = normalize_yahoo_data(payload)
+    players, cap_map = normalize_yahoo_data(payload)
     players = add_projection_priors(players, PROJECTION_OVERRIDES)
     games = list_games(players)
     if games.empty:
         raise ValueError("Yahoo returned no usable NFL games")
 
     print(
-        f"Yahoo slate: {len(games)} game(s), {len(players)} priced player(s); "
-        f"ranking top {top_n} per position."
+        f"Yahoo slate: {len(games)} game(s), {len(players)} priced player(s)"
+        + (f"; {purpose}" if purpose else "")
     )
 
     # Pull the market once, then use the notebook's hard game-time guard for each game.
@@ -5182,7 +5190,7 @@ def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_
                 )
         else:
             warnings.warn(
-                "No market feed was usable; rankings use Yahoo FPPG/salary priors."
+                "No market feed was usable; continuing on Yahoo FPPG/salary priors."
             )
     else:
         print("  Market projections disabled; using Yahoo FPPG/salary priors.")
@@ -5237,6 +5245,53 @@ def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_
     excluded = set(EXCLUDE_PLAYERS)
     _warn_unmatched(excluded, "Exclusion", set(players["Name"]))
     players = players[~players["Name"].isin(excluded)].copy()
+    return {
+        "players": players.reset_index(drop=True),
+        "games": games,
+        "cap_map": cap_map,
+        "market_report": market_report,
+        "market_applied": market_applied,
+        "market_audit": market_audit,
+        "nflverse_report": nflverse_report,
+        "nflverse_applied": nflverse_applied,
+        "nflverse_removed": nflverse_blocked,
+        "backup_qbs_removed": backup_qbs_removed,
+        "excluded": sorted(excluded),
+    }
+
+
+def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_csv=True):
+    """Build full-slate Yahoo rankings from the notebook's final estimated FP.
+
+    Projection priority is unchanged from the showdown model:
+    manual override > accepted market mean > Yahoo FPPG/salary prior.
+    Current market/manual means are not depth-haircut; fallback estimates are.
+    """
+    cfg = _cfg(cfg)
+    top_n = int(top_n)
+    if top_n < 1:
+        raise ValueError("top_n must be at least 1")
+
+    requested_positions = []
+    for position in positions:
+        normalized = str(position).upper().replace("D/ST", "DEF").replace("DST", "DEF")
+        if normalized not in VALID_POSITIONS:
+            raise ValueError(
+                f"Unsupported position {position!r}; choose from {VALID_POSITIONS}"
+            )
+        if normalized not in requested_positions:
+            requested_positions.append(normalized)
+
+    started = time.perf_counter()
+    slate = prepare_slate_pool(cfg, f"ranking top {top_n} per position")
+    players = slate["players"]
+    games = slate["games"]
+    market_report = slate["market_report"]
+    market_applied = slate["market_applied"]
+    market_audit = slate["market_audit"]
+    nflverse_report = slate["nflverse_report"]
+    nflverse_applied = slate["nflverse_applied"]
+    nflverse_blocked = slate["nflverse_removed"]
     players["FP_per_Salary"] = players["Projected_FP"] / players["Salary"]
 
     # Stable tie-breaks make repeated runs deterministic when estimates are equal.

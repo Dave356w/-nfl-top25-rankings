@@ -616,3 +616,87 @@ class RankingRunTests(unittest.TestCase):
             float(players.loc["Mack Hollins", "Depth_Mean_Multiplier"]),
             nb.DEPTH_MEAN_MULTIPLIER["WR"][2],
         )
+
+
+class CandidateScoringTests(unittest.TestCase):
+    """The scoring kernel carries scores as (candidates x scenarios).
+
+    The layout change is a performance one, so what needs pinning is that the
+    numbers it produces still agree with an exact float64 computation of the
+    same quantities -- and that they no longer depend on the layout, which is
+    what lets a float64 implementation elsewhere reproduce them.
+    """
+
+    def setUp(self):
+        rng = np.random.default_rng(11)
+        self.n_players, self.n_scenarios = 9, 4_000
+        self.outcomes = rng.lognormal(
+            2.0, 0.6, size=(self.n_scenarios, self.n_players)
+        ).astype(np.float32)
+        combos = [(0, 1, 2, 3, 4), (0, 1, 2, 3, 5), (2, 3, 4, 5, 6),
+                  (1, 4, 5, 6, 7), (0, 2, 4, 6, 8)]
+        self.candidates = pd.DataFrame({
+            "Player_Ids": combos,
+            "Superstar_Id": [ids[0] for ids in combos],
+            "Salary": [100.0] * len(combos),
+            "Expected_FP": [50.0] * len(combos),
+            "Analytic_SD": [10.0] * len(combos),
+            "Pre_Sim_Score": [60.0] * len(combos),
+        })
+        self.cfg = nb.replace(nb.CFG, simulations=self.n_scenarios, lineup_size=5)
+
+    def exact_scores(self):
+        """Every lineup's score in every scenario, in full float64."""
+        weights = np.zeros((len(self.candidates), self.n_players))
+        for row, (ids, superstar) in enumerate(
+            zip(self.candidates["Player_Ids"], self.candidates["Superstar_Id"])
+        ):
+            weights[row, list(ids)] = 1.0
+            weights[row, superstar] += 0.5
+        return weights @ self.outcomes.T.astype(np.float64)
+
+    def test_the_weight_block_is_candidates_by_players(self):
+        ids, superstars = nb._lineup_arrays(self.candidates, 5)
+        block = nb._weight_matrix(ids, superstars, 0, len(self.candidates), self.n_players)
+        self.assertEqual(block.shape, (len(self.candidates), self.n_players))
+        # One 1.5 slot and four 1.0 slots per lineup.
+        self.assertTrue(np.allclose(block.sum(axis=1), 5.5))
+        self.assertAlmostEqual(float(block[0, self.candidates["Superstar_Id"].iloc[0]]), 1.5)
+
+    def test_the_summaries_match_an_exact_float64_computation(self):
+        scored = nb.score_candidates_shared_scenarios(
+            self.candidates, self.outcomes, self.cfg, batch_size=2
+        )
+        exact = self.exact_scores()
+        keyed = {tuple(ids): row for row, ids in enumerate(scored["Player_Ids"])}
+        for row, ids in enumerate(self.candidates["Player_Ids"]):
+            got = scored.iloc[keyed[tuple(ids)]]
+            self.assertAlmostEqual(float(got["Sim_Mean"]), exact[row].mean(), places=4)
+            self.assertAlmostEqual(float(got["Sim_SD"]), exact[row].std(), places=4)
+            self.assertAlmostEqual(
+                float(got["Ceiling_P90"]), np.quantile(exact[row], 0.90), places=3
+            )
+            self.assertAlmostEqual(
+                float(got["Floor_P25"]), np.quantile(exact[row], 0.25), places=3
+            )
+
+    def test_the_batch_size_does_not_change_the_answer(self):
+        def by_lineup(batch_size):
+            scored = nb.score_candidates_shared_scenarios(
+                self.candidates, self.outcomes, self.cfg, batch_size=batch_size
+            )
+            order = np.argsort([str(ids) for ids in scored["Player_Ids"]])
+            return scored.iloc[order].reset_index(drop=True)
+
+        small, large = by_lineup(1), by_lineup(512)
+        for column in ("Sim_Mean", "Sim_SD", "Ceiling_P90", "Near_Optimal_Rate"):
+            np.testing.assert_allclose(
+                small[column].to_numpy(), large[column].to_numpy(), rtol=1e-9, atol=1e-9
+            )
+
+    def test_win_rate_is_shared_across_the_same_scenarios(self):
+        scored = nb.score_candidates_shared_scenarios(
+            self.candidates, self.outcomes, self.cfg, batch_size=2
+        )
+        # Exactly one lineup wins each scenario, so the rates sum to one.
+        self.assertAlmostEqual(float(scored["Win_Rate"].sum()), 1.0, places=6)
