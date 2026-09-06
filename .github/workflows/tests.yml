@@ -18,6 +18,12 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+      # tests/test_showdown.py drives site/showdown-worker.js through Node to
+      # check the browser optimizer against the Python pipeline. Without Node
+      # those tests skip, which would quietly stop guarding that agreement.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - run: pip install -r requirements.txt
       - name: Import the pipeline
         run: python -c "import pipeline.notebook as nb; print(len(nb.VALID_POSITIONS), 'positions')"

@@ -96,6 +96,7 @@ class Settings:
     # Direct component sums are accepted at good/fair coverage. TD-only estimates
     # are full-FP slate regressions, so they are allowed but clearly labeled.
     # Partial component sums and bare TD components are never used as full means.
+    # See MARKET_QUALITY_WEIGHT for how much of each is actually believed.
     market_accepted_quality: tuple = ("good", "fair", "td-estimate")
     market_drop_unmatched: bool = False
 
@@ -109,14 +110,29 @@ class Settings:
     nflverse_availability_filter: bool = True
 
     # Statuses treated as available. ACT is the active roster; DEV is the practice
-    # squad, RES injured reserve, CUT released. Add "DEV" if you deliberately want
-    # practice-squad elevation candidates in the pool.
+    # squad, INA declared inactive for the game, RES injured reserve, CUT released.
+    # Add "DEV" if you deliberately want practice-squad elevation candidates in the
+    # pool, or name the individual in AVAILABILITY_OVERRIDES once his game-day
+    # elevation is confirmed.
     nflverse_available_status: tuple = ("ACT",)
 
-    # A player nflverse has no roster row for is kept by default. The match rate is
-    # high but not perfect, and dropping an unmatched star would be worse than
-    # keeping an unmatched fringe player who will not be selected anyway.
-    nflverse_drop_unmatched: bool = False
+    # v3.5: a player the weekly roster has no row for is now dropped. Keeping him
+    # was internally inconsistent - the run would print "allowed status: ACT" and
+    # then rate an unknown-status player as available - and it is the failure mode
+    # that eventually puts an ineligible player in a submitted lineup. Name anyone
+    # you know is playing in AVAILABILITY_OVERRIDES.
+    nflverse_drop_unmatched: bool = True
+
+    # Refuse to run the availability filter at all if the roster feed matched less
+    # of the pool than this. Below it the far likelier explanation is a join or
+    # schema problem, and dropping most of a slate on that basis is worse than
+    # keeping it.
+    nflverse_min_match_rate: float = 0.75
+
+    # Weight on the market ordering when blending the published chart's ordering
+    # with the current projection to get an expected-opportunity rank. 0.0 trusts
+    # the chart alone; 1.0 ignores it.
+    role_market_rank_weight: float = 0.5
 
     nflverse_season: int | None = None  # None infers the season from the slate
     nflverse_timeout: int = 30
@@ -150,6 +166,11 @@ PLAYER_STYLE_OVERRIDES = {}
 
 # Players to remove before optimization. Exact Yahoo names.
 EXCLUDE_PLAYERS = set()
+
+# Availability the roster feed cannot know about, e.g. {"Player Name": True} for a
+# confirmed game-day practice-squad elevation, or False for a late scratch the
+# weekly roster still lists as active. These win over the nflverse status.
+AVAILABILITY_OVERRIDES = {}
 
 # Exact backup-QB names to retain despite the default role filter.
 # Pair each name with DEPTH_OVERRIDES or PROJECTION_OVERRIDES; the run warns if you do not.
@@ -467,46 +488,83 @@ def _depth_bucket(depth):
 
 
 def apply_depth_mean_adjustments(players):
-    """Separate systematic depth bias from random game-level volatility.
+    """Separate systematic role bias from random game-level volatility.
 
     The calibration's deep-player forecast errors contained both dispersion and
     predictable mean overstatement. A mean-preserving lognormal cannot correct an
     inflated projection; increasing its CV only creates misleading cheap-player
-    ceilings. Therefore non-manual projections receive the observed depth mean
-    ratio before simulation. Exact manual projections and current market means
-    remain untouched because they already contain current role information.
+    ceilings. Therefore non-manual projections receive the observed mean ratio
+    before simulation. Exact manual projections and current market means remain
+    untouched because they already contain current role information.
+
+    v3.5 keys this on the role tier rather than the flat opportunity rank. The
+    haircut is a participation correction - it exists because a player deep in a
+    position group is often not on the field - and a receiver holding one of
+    three parallel starting slots *is* on the field, whatever number the flat
+    ranking happens to give him. Dispersion is a different question and stays on
+    the opportunity ordinal the CV table was fitted against. The tier is never
+    deeper than the flat rank, so this can only move a multiplier toward 1.0.
     """
     out = players.copy()
+    if "Role_Tier" not in out:
+        out["Role_Tier"] = out["Depth_Rank"].astype("Int64")
+    role_tier = pd.to_numeric(out["Role_Tier"], errors="coerce").fillna(
+        out["Depth_Rank"]
+    )
     out["Pre_Depth_Projected_FP"] = out["Projected_FP"].astype(float)
     out["Depth_Mean_Multiplier"] = [
-        DEPTH_MEAN_MULTIPLIER[row.Position].get(_depth_bucket(row.Depth_Rank), 1.0)
-        for row in out.itertuples()
+        DEPTH_MEAN_MULTIPLIER[position].get(_depth_bucket(tier), 1.0)
+        for position, tier in zip(out["Position"], role_tier)
     ]
     # Current market means already encode role through priced components.
-    # Applying the historical depth haircut again would double-count role.
-    # Depth still controls the calibrated CV and pair correlations.
-    authoritative = (
-        out["Projection_Source"].eq("manual override")
-        | out["Projection_Source"].astype(str).str.startswith("market ")
+    # Applying the historical role haircut again would double-count role. Role
+    # still controls the calibrated CV and the pair correlations.
+    #
+    # A partially weighted market mean is part prior, and the prior half has not
+    # been corrected for role, so the multiplier is blended by the same weight:
+    # a 35%-weight td-estimate keeps 65% of its haircut, a full-weight market
+    # mean keeps none of it.
+    market = out["Projection_Source"].astype(str).str.startswith("market ")
+    if "Market_Weight" in out:
+        weight = pd.to_numeric(out["Market_Weight"], errors="coerce").fillna(1.0)
+    else:
+        weight = pd.Series(1.0, index=out.index)
+    weight = weight.where(market, 0.0).clip(0.0, 1.0)
+    out["Market_Mean_Share"] = weight
+    out["Depth_Mean_Multiplier"] = (
+        weight + (1.0 - weight) * out["Depth_Mean_Multiplier"]
     )
-    out.loc[authoritative, "Depth_Mean_Multiplier"] = 1.0
+    manual = out["Projection_Source"].eq("manual override")
+    out.loc[manual, "Depth_Mean_Multiplier"] = 1.0
     out["Projected_FP"] = (
         out["Pre_Depth_Projected_FP"] * out["Depth_Mean_Multiplier"]
     ).clip(lower=0.05)
-    out["Projection_Adjustment"] = np.where(
-        authoritative,
-        np.where(
-            out["Projection_Source"].eq("manual override"),
+    adjusted = out["Depth_Mean_Multiplier"].lt(0.999)
+    out["Projection_Adjustment"] = np.select(
+        [
+            manual,
+            market & ~adjusted,
+            market & adjusted,
+            adjusted,
+        ],
+        [
             "manual projection retained",
             "market mean retained",
-        ),
-        np.where(
-            out["Depth_Mean_Multiplier"].lt(0.999),
-            "historical depth mean adjustment",
-            "none",
-        ),
+            "partial market mean; role adjustment on the prior share",
+            "historical role mean adjustment",
+        ],
+        default="none",
     )
     return out
+
+
+def effective_role_tier(players):
+    """Role tier where the chart supplied one, otherwise the opportunity rank."""
+    if "Role_Tier" not in players:
+        return players["Depth_Rank"].astype(float)
+    return pd.to_numeric(players["Role_Tier"], errors="coerce").fillna(
+        players["Depth_Rank"]
+    )
 
 
 def apply_default_role_filters(players, include_backup_qbs=None, cfg=None):
@@ -516,33 +574,38 @@ def apply_default_role_filters(players, include_backup_qbs=None, cfg=None):
     historical fit. That is primarily a participation problem, not useful upside.
     Default exclusion prevents a low-salary backup from entering a lineup solely
     because a high fitted CV produces a long simulated tail.
+
+    The test is the role tier, not the opportunity rank: quarterback has a single
+    alignment slot, so tier 1 is the starter and nothing else is. A DEPTH_OVERRIDES
+    entry sets both, which is how a confirmed replacement starter gets through.
     """
     cfg = _cfg(cfg)
     include_backup_qbs = set(include_backup_qbs or set())
     out = players.copy()
+    tier = effective_role_tier(out)
 
-    # v3.2: keeping a backup QB without also promoting its depth leaves the 0.37x
+    # v3.2: keeping a backup QB without also promoting its role leaves the 0.37x
     # historical multiplier in place, silently deleting ~63% of its projection. That
     # made INCLUDE_BACKUP_QBS look broken rather than misconfigured.
     demoted = out[
         out["Name"].isin(include_backup_qbs)
         & out["Position"].eq("QB")
-        & out["Depth_Rank"].gt(1)
+        & tier.gt(1)
         & ~out["Projection_Source"].eq("manual override")
     ]["Name"].tolist()
     if demoted:
         warnings.warn(
             "INCLUDE_BACKUP_QBS retained " + ", ".join(demoted)
-            + " but they still rank below QB1, so the 0.37x historical QB2 mean "
-            "multiplier is still applied. Add a DEPTH_OVERRIDES entry of 1, or a "
-            "PROJECTION_OVERRIDES value, if you expect them to start."
+            + " but the depth chart still lists them behind QB1, so the 0.37x "
+            "historical QB2 mean multiplier is still applied. Add a DEPTH_OVERRIDES "
+            "entry of 1, or a PROJECTION_OVERRIDES value, if you expect them to start."
         )
 
     if not cfg.exclude_backup_qbs:
         return out.reset_index(drop=True), []
     remove = (
         out["Position"].eq("QB")
-        & out["Depth_Rank"].gt(1)
+        & tier.gt(1)
         & ~out["Name"].isin(include_backup_qbs)
     )
     removed = out.loc[remove, "Name"].tolist()
@@ -554,8 +617,11 @@ def depth_sanity_report(players):
     rows = []
     for _, player in players.sort_values(["Team", "Position", "Depth_Rank"]).iterrows():
         flags = []
-        if player["Depth_Source"] != "manual override":
-            flags.append("heuristic depth")
+        source = str(player["Depth_Source"])
+        if source == "projection heuristic":
+            flags.append("no chart entry; role inferred from the projection")
+        elif source != "manual override":
+            flags.append("chart role")
         if (
             player["FPPG"] <= 0.25
             and player["Projection_Source"] != "manual override"
@@ -567,13 +633,15 @@ def depth_sanity_report(players):
         rows.append({
             "Team": player["Team"],
             "Position": player["Position"],
-            "Depth": int(player["Depth_Rank"]),
+            "Role": player.get("Role_Label", "unknown"),
+            "Slot": player.get("Role_Slot") or "-",
+            "Opportunity rank": int(player["Depth_Rank"]),
             "Player": player["Name"],
             "Salary": float(player["Salary"]),
             "Raw projection": round(float(player["Pre_Depth_Projected_FP"]), 2),
             "Mean factor": round(float(player["Depth_Mean_Multiplier"]), 2),
             "Adjusted projection": round(float(player["Projected_FP"]), 2),
-            "Depth source": player["Depth_Source"],
+            "Role source": player["Depth_Source"],
             "Review": "; ".join(flags) or "ok",
         })
     return pd.DataFrame(rows)
@@ -590,12 +658,13 @@ def apply_exclusions_interactive(players, preexcluded=None):
     display(view[[
         "Row", "Name", "Position", "Team", "Salary", "FPPG",
         "Pre_Depth_Projected_FP", "Depth_Mean_Multiplier", "Projected_FP",
-        "Depth_Rank", "Projection_Source",
+        "Role_Label", "Depth_Rank", "Projection_Source",
     ]].rename(columns={
         "Pre_Depth_Projected_FP": "Raw projection",
         "Depth_Mean_Multiplier": "Mean factor",
         "Projected_FP": "Adjusted projection",
-        "Depth_Rank": "Depth",
+        "Role_Label": "Role",
+        "Depth_Rank": "Opportunity rank",
     }))
     answer = input("Exclude more players? Enter comma-separated Row values, or press Enter: ").strip()
     if not answer:
@@ -3103,26 +3172,71 @@ def build_market_projection_report(yahoo_players, projections, selected_game, cf
     return pd.DataFrame(rows, columns=columns)
 
 
+# How much of an accepted market mean is believed, by the quality label
+# `projection_quality` assigned it.
+#
+# "good" is a direct component sum off well-covered props and replaces the prior
+# outright. "fair" is the same construction on thinner coverage. "td-estimate" is
+# something else entirely: no yardage or reception market was priced, so the
+# player's expected touchdowns were pushed through a slate-wide regression onto
+# full fantasy points. That regression is fitted per slate on whatever players do
+# have both, and for a deep-role player it is extrapolating well outside its own
+# support. Substituting it wholesale hands the optimizer a confident-looking mean
+# built from one number.
+#
+# So the accepted mean is blended against the Yahoo FPPG/salary prior at the
+# weight below. These weights are a judgement about how much each construction is
+# worth, not a fitted quantity; a backtest of realized error by quality label is
+# what should eventually set them.
+MARKET_QUALITY_WEIGHT = {
+    "good": 1.00,
+    "fair": 0.75,
+    "td-estimate": 0.35,
+}
+DEFAULT_MARKET_QUALITY_WEIGHT = 0.50
+
+
+def market_blend_weight(quality):
+    """Return the share of an accepted market mean that is actually used."""
+    return float(MARKET_QUALITY_WEIGHT.get(str(quality), DEFAULT_MARKET_QUALITY_WEIGHT))
+
+
 def apply_market_projection_means(players, report, cfg=None):
-    """Replace fallback means with accepted market means; preserve manual overrides."""
+    """Blend accepted market means into the fallback; preserve manual overrides.
+
+    v3.5 stopped substituting every accepted mean outright. A quality-weighted
+    blend keeps a fully priced player on his market number while a TD-only
+    estimate moves the prior instead of replacing it.
+    """
     cfg = _cfg(cfg)
     out = players.copy()
     if not len(report):
         return out, pd.DataFrame()
     accepted = report[report["Market accepted"]].copy()
+    accepted["Market weight"] = [
+        market_blend_weight(quality) for quality in accepted["Market quality"]
+    ]
+    accepted["Blended projection"] = (
+        accepted["Market weight"] * accepted["Market projection"]
+        + (1.0 - accepted["Market weight"]) * accepted["Yahoo projection"]
+    )
     by_identity = accepted.set_index(["Team", "Player"])
     for idx, player in out.iterrows():
         key = (player["Team"], player["Name"])
         if key not in by_identity.index:
             continue
         row = by_identity.loc[key]
+        weight = float(row["Market weight"])
         out.loc[idx, "Fallback_Projected_FP"] = float(player["Projected_FP"])
-        out.loc[idx, "Projected_FP"] = float(row["Market projection"])
+        out.loc[idx, "Projected_FP"] = float(row["Blended projection"])
         out.loc[idx, "Projection_Source"] = (
-            f"market {row['Market quality']}: {row['Market feeds']}"
+            f"market {row['Market quality']} {weight:.0%}: {row['Market feeds']}"
+            if weight < 1.0
+            else f"market {row['Market quality']}: {row['Market feeds']}"
         )
         out.loc[idx, "Market_Quality"] = row["Market quality"]
         out.loc[idx, "Market_Method"] = row["Market method"]
+        out.loc[idx, "Market_Weight"] = weight
     if cfg.market_drop_unmatched:
         accepted_keys = set(zip(accepted["Team"], accepted["Player"]))
         keep = out["Position"].eq("DEF") | pd.Series(
@@ -3137,6 +3251,16 @@ def market_projection_review(report):
     if not len(report):
         return report
     view = report.copy()
+    view["Market weight"] = [
+        market_blend_weight(quality) if accepted else 0.0
+        for quality, accepted in zip(view["Market quality"], view["Market accepted"])
+    ]
+    view["Blended projection"] = np.where(
+        view["Market accepted"],
+        view["Market weight"] * view["Market projection"]
+        + (1 - view["Market weight"]) * view["Yahoo projection"],
+        np.nan,
+    )
     view["Delta"] = view["Market projection"] - view["Yahoo projection"]
     view["Delta %"] = 100 * view["Delta"] / view["Yahoo projection"].replace(0, np.nan)
     return view.sort_values(
@@ -3178,17 +3302,27 @@ def rerank_aliased_positions(offense):
     )
     return out
 
-# Roster status codes seen in nflverse weekly rosters.
+# Roster status codes seen in nflverse weekly rosters. These are the codes the
+# 2024 and 2025 weekly assets actually carry; anything else is reported by its
+# raw code and treated as unavailable, because an unrecognized status is exactly
+# the case where guessing "probably fine" is most expensive. A practice-squad
+# player elevated for a game keeps his DEV row, so a confirmed elevation is an
+# AVAILABILITY_OVERRIDES entry rather than a status.
 NFLVERSE_STATUS_MEANING = {
     "ACT": "active",
     "DEV": "practice squad",
-    "CUT": "released",
+    "INA": "inactive for this game",
     "RES": "reserve / injured reserve",
+    "CUT": "released",
     "RET": "retired",
     "EXE": "exempt list",
+    "E01": "exempt / commissioner permission",
     "TRC": "reserve / did not report",
+    "TRD": "traded",
     "W04": "waived",
 }
+
+NO_ROSTER_ROW = "no roster row"
 
 _NAME_SUFFIXES = re.compile(r"\b(jr|sr|ii|iii|iv|v)\b")
 _NAME_NON_ALNUM = re.compile(r"[^a-z0-9]+")
@@ -3241,12 +3375,68 @@ def _read_nflverse_csv(dataset, filename, cfg):
     return pd.read_csv(target, low_memory=False)
 
 
+ROLE_TIER_LABELS = {1: "starter", 2: "rotation", 3: "backup"}
+DEEP_ROLE_LABEL = "reserve"
+SPECIALIST_LABEL = "specialist"
+
+
+def add_slot_role_tiers(offense):
+    """Derive a role tier per alignment slot instead of one flat position ladder.
+
+    An NFL depth chart is not a single ordered list per position. A team that
+    lines up in three-receiver personnel publishes three parallel starting
+    receiver spots, and nflverse encodes that in `pos_slot`: on a 2025 Washington
+    snapshot the WR rows carry slots 1, 2 and 8, and `pos_rank` walks across the
+    slots - McLaurin (slot 1) rank 1, Samuel (slot 2) rank 2, Brown (slot 8) rank
+    3, then McCaffrey (slot 1) rank 4 as the *second* man at the first slot.
+
+    Flattening that to WR1 > WR2 > WR3 > WR4 turns three starters into a starter
+    and two deep reserves, which then collects a mean haircut meant for players
+    who barely take the field. The tier below is the player's rank *within his
+    own slot*, so all three of those receivers are tier 1 and McCaffrey is the
+    tier-2 man behind McLaurin.
+    """
+    out = offense.copy()
+    if "pos_slot" not in out:
+        # Older season schemas have no slot column; the flat rank is all there is.
+        out["pos_slot"] = pd.NA
+        out["Role_Tier"] = pd.to_numeric(out["pos_rank"], errors="coerce")
+        out["Role_Slot"] = None
+        return out
+    out["pos_slot"] = pd.to_numeric(out["pos_slot"], errors="coerce")
+    out["pos_rank"] = pd.to_numeric(out["pos_rank"], errors="coerce")
+    ordered = out.sort_values(["team", "pos_abb", "pos_slot", "pos_rank"])
+    tiers = (ordered.groupby(["team", "pos_abb", "pos_slot"], dropna=False).cumcount() + 1)
+    out["Role_Tier"] = tiers.reindex(out.index)
+    # Fall back to the flat rank wherever the slot was missing or unparseable.
+    out["Role_Tier"] = out["Role_Tier"].fillna(out["pos_rank"])
+    out["Role_Slot"] = np.where(
+        out["pos_slot"].notna(),
+        out["pos_abb"].astype(str) + " slot " + out["pos_slot"].astype("Int64").astype(str),
+        None,
+    )
+    return out
+
+
+def role_label(position, tier, chart_position=None):
+    """Name a role in words rather than as an ordinal in a flattened list."""
+    if str(chart_position) == "FB":
+        # A fullback is not the third-best running back; he is a package player.
+        return SPECIALIST_LABEL
+    try:
+        tier = int(tier)
+    except (TypeError, ValueError):
+        return "unknown"
+    return ROLE_TIER_LABELS.get(tier, DEEP_ROLE_LABEL)
+
+
 def fetch_nflverse_depth_chart(season, cfg=None):
     """Return the most recent depth-chart snapshot for one season, plus its timestamp.
 
     The 2026 asset is a running log of snapshots rather than one row per week, so the
-    latest `dt` is taken. Only the offensive personnel group is kept, and `pos_rank`
-    is already the player's rank within his team and position.
+    latest `dt` is taken. Only the offensive personnel group is kept. `pos_rank` is
+    the flat rank within the team's position group; `add_slot_role_tiers` adds the
+    per-slot tier that says whether the player is actually a starter.
     """
     cfg = _cfg(cfg)
     frame = _read_nflverse_csv("depth_charts", f"depth_charts_{season}.csv.gz", cfg)
@@ -3261,6 +3451,7 @@ def fetch_nflverse_depth_chart(season, cfg=None):
             frame = frame[frame["week"].eq(frame["week"].max())]
     offense = frame[frame["pos_abb"].isin(["QB", "RB", "FB", "WR", "TE"])].copy()
     offense = rerank_aliased_positions(offense)
+    offense = add_slot_role_tiers(offense)
     offense["Position"] = offense["pos_abb"].replace(NFLVERSE_POSITION_ALIASES)
     return offense, as_of
 
@@ -3307,6 +3498,8 @@ def build_nflverse_role_report(players, depth_chart, roster_status, cfg=None):
     """
     cfg = _cfg(cfg)
     allowed = set(cfg.nflverse_available_status)
+    overrides = {str(name): bool(value) for name, value in (AVAILABILITY_OVERRIDES or {}).items()}
+    _warn_unmatched(overrides, "Availability override", set(players["Name"]))
     pool = players.copy()
     pool["_team"] = pool["Team"].astype(str).str.upper().replace(YAHOO_TO_NFLVERSE_TEAM)
     pool["_key"] = pool["_team"] + "|" + pool["Name"].map(normalize_person_name)
@@ -3325,23 +3518,39 @@ def build_nflverse_role_report(players, depth_chart, roster_status, cfg=None):
     for name, team, position, salary, yahoo_depth, key in columns:
         is_defense = position == "DEF"
         nfl_depth, nfl_position, status = None, None, None
+        role_slot, role_tier = None, None
         if depth_key is not None and not is_defense and key in depth_key.index:
             match = depth_key.loc[key]
             # Only accept the depth entry if the position agrees with Yahoo's.
             if str(match["Position"]) == str(position):
                 nfl_depth = int(match["pos_rank"])
                 nfl_position = str(match["pos_abb"])
+                role_slot = match.get("Role_Slot")
+                role_slot = None if pd.isna(role_slot) else str(role_slot)
+                tier = match.get("Role_Tier")
+                role_tier = None if pd.isna(tier) else int(tier)
         if status_key is not None and not is_defense and key in status_key.index:
             status = str(status_key.loc[key]["status"])
 
         if is_defense:
             available, reason = True, "team defense"
+        elif name in overrides:
+            available = bool(overrides[name])
+            reason = (
+                "manual availability override: "
+                + ("available" if available else "unavailable")
+            )
         elif status is None:
+            # An unknown roster status is not evidence of availability. A player
+            # the weekly roster has no row for may be a match failure, but he may
+            # equally be a cut, a practice-squad body or someone who was never on
+            # the 53. Treating that as "active" is how an invalid lineup gets
+            # built; AVAILABILITY_OVERRIDES is the way to say otherwise.
             available = not cfg.nflverse_drop_unmatched
-            reason = "no roster row" if available else "no roster row (dropped)"
+            reason = NO_ROSTER_ROW if available else f"{NO_ROSTER_ROW} (dropped)"
         else:
             available = status in allowed
-            reason = NFLVERSE_STATUS_MEANING.get(status, status)
+            reason = NFLVERSE_STATUS_MEANING.get(status, f"unrecognized status {status}")
 
         rows.append({
             "Player": name,
@@ -3351,6 +3560,12 @@ def build_nflverse_role_report(players, depth_chart, roster_status, cfg=None):
             "Yahoo depth": int(yahoo_depth),
             "nflverse depth": nfl_depth,
             "nflverse position": nfl_position,
+            "Role slot": role_slot,
+            "Role tier": role_tier,
+            "Role": (
+                role_label(position, role_tier, nfl_position)
+                if role_tier is not None else None
+            ),
             "Depth matched": nfl_depth is not None,
             "Depth agrees": (nfl_depth is not None and int(nfl_depth) == int(yahoo_depth)),
             "Roster status": status,
@@ -3358,12 +3573,23 @@ def build_nflverse_role_report(players, depth_chart, roster_status, cfg=None):
             "Available": available,
         })
     report = pd.DataFrame(rows)
+    report["Role tier"] = report["Role tier"].astype("Int64")
     report["Depth change"] = np.where(
         report["Depth matched"] & ~report["Depth agrees"],
         report["Yahoo depth"].astype(str) + " -> " + report["nflverse depth"].astype("Int64").astype(str),
         "",
     )
     return report
+
+
+def roster_match_rate(report):
+    """Share of non-defense players the weekly roster feed actually matched."""
+    if report is None or report.empty:
+        return 1.0
+    skill = report[report["Position"].ne("DEF")]
+    if skill.empty:
+        return 1.0
+    return float(skill["Roster status"].notna().mean())
 
 
 def load_nflverse_reference(players, season, cfg=None):
@@ -3390,36 +3616,133 @@ def load_nflverse_reference(players, season, cfg=None):
     return depth_chart, roster_status, as_of, notes
 
 
-def apply_nflverse_depth(players, report, cfg=None):
-    """Replace heuristic depth ranks with the published depth chart.
+def apply_nflverse_roles(players, report, cfg=None):
+    """Attach the published chart's role structure and the ordinal it implies.
 
-    A manual DEPTH_OVERRIDES entry always wins: the point of that dict is to encode
-    information the user has and the feed does not. Everything else that matched is
-    overwritten, because a salary-ordered guess is strictly weaker evidence than a
-    published depth chart.
+    Three different things used to share one integer, and collapsing them is what
+    made a starting slot receiver read as a deep reserve:
+
+    ``Chart_Rank``
+        Where the published chart puts the player in his team's position group.
+    ``Role_Tier`` / ``Role_Label``
+        His rank *within his own alignment slot*, and the word for it. Every
+        parallel starter is tier 1 no matter where he falls in the flat ranking.
+    ``Depth_Rank``
+        Expected opportunity, set later by `apply_opportunity_ranks`. This is the
+        quantity `CALIBRATED_CV` was fitted against, so it stays an ordinal.
+
+    A manual DEPTH_OVERRIDES entry still wins outright: the point of that dict is
+    to encode information the user has and the feed does not.
     """
     cfg = _cfg(cfg)
     out = players.copy()
+    out["Chart_Rank"] = pd.array([pd.NA] * len(out), dtype="Int64")
+    out["Role_Tier"] = pd.array([pd.NA] * len(out), dtype="Int64")
+    out["Role_Slot"] = None
+    out["Role_Label"] = "unknown"
     if not cfg.nflverse_apply_depth or report is None or report.empty:
         return out, pd.DataFrame()
-    usable = report[report["Depth matched"] & ~report["Depth agrees"]]
+
     manual = set(out.loc[out["Depth_Source"].eq("manual override"), "Name"])
-    applied = usable[~usable["Player"].isin(manual)]
-    lookup = dict(zip(applied["Player"], applied["nflverse depth"]))
-    for name, depth in lookup.items():
-        mask = out["Name"].eq(name)
-        out.loc[mask, "Depth_Rank"] = max(1, int(depth))
-        out.loc[mask, "Depth_Source"] = "nflverse depth chart"
-    confirmed = report[report["Depth agrees"] & ~report["Player"].isin(manual)]["Player"]
-    out.loc[out["Name"].isin(confirmed) & out["Depth_Source"].eq("projection heuristic"),
-            "Depth_Source"] = "nflverse depth chart (confirmed)"
-    skipped = usable[usable["Player"].isin(manual)]
+    matched = report[report["Depth matched"] & ~report["Player"].isin(manual)]
+    # Team plus name, not name alone: two players on a slate can share a name,
+    # and the report already carries one row per pool entry.
+    by_identity = {
+        (row["Team"], row["Player"]): row for row in matched.to_dict("records")
+    }
+    for index, team, name in zip(out.index, out["Team"], out["Name"]):
+        row = by_identity.get((team, name))
+        if row is None:
+            continue
+        out.at[index, "Chart_Rank"] = int(row["nflverse depth"])
+        if pd.notna(row["Role tier"]):
+            out.at[index, "Role_Tier"] = int(row["Role tier"])
+            out.at[index, "Role_Label"] = str(row["Role"])
+        if row["Role slot"] is not None and pd.notna(row["Role slot"]):
+            out.at[index, "Role_Slot"] = str(row["Role slot"])
+
+    skipped = report[
+        report["Depth matched"] & ~report["Depth agrees"] & report["Player"].isin(manual)
+    ]
     if len(skipped):
         warnings.warn(
             "Kept your manual DEPTH_OVERRIDES over the nflverse depth chart for: "
             + ", ".join(skipped["Player"])
         )
-    return out, applied
+    return out, matched
+
+
+def apply_opportunity_ranks(players, cfg=None):
+    """Rank expected opportunity by blending the published chart with the market.
+
+    A depth-chart label, an expected share of the work, and a fantasy mean are
+    three different quantities, and the chart is only the first of them. Seattle
+    can list one back first and still say publicly that two of them will split
+    the carries; the priced market mean knows that and the chart does not.
+
+    So the ordinal that keys the fitted CV and mean tables is a blend of two
+    orderings within each team-position group: where the chart puts the player,
+    and where his current projection puts him. `role_market_rank_weight` is the
+    weight on the market ordering; at the 0.5 default a straight swap of two
+    adjacent players ties, and the tie goes to the market, because a chart that
+    lists one back first while the team says publicly that two will split the
+    work is describing a formation, not a workload. The chart still wins any
+    disagreement wider than one place, and it keeps sole possession of the role
+    tier either way - Seattle's listed first back stays the starter even when the
+    priced expectation ranks the other back's opportunity above his.
+
+    Manual DEPTH_OVERRIDES are left exactly where the user put them.
+    """
+    cfg = _cfg(cfg)
+    weight = float(np.clip(cfg.role_market_rank_weight, 0.0, 1.0))
+    out = players.copy()
+    if "Chart_Rank" not in out:
+        out["Chart_Rank"] = pd.array([pd.NA] * len(out), dtype="Int64")
+    if "Role_Tier" not in out:
+        out["Role_Tier"] = pd.array([pd.NA] * len(out), dtype="Int64")
+        out["Role_Slot"] = None
+        out["Role_Label"] = "unknown"
+
+    manual = out["Depth_Source"].eq("manual override")
+    market_rank = out.groupby(["Team", "Position"])["Projected_FP"].rank(
+        method="first", ascending=False
+    )
+    chart = pd.to_numeric(out["Chart_Rank"], errors="coerce")
+    # An unmatched player has no chart opinion, so his own projection ordering
+    # stands in for it and the blend leaves him where the market put him.
+    chart_rank = out.assign(_c=chart.fillna(market_rank)).groupby(
+        ["Team", "Position"]
+    )["_c"].rank(method="first", ascending=True)
+    blended = (1.0 - weight) * chart_rank + weight * market_rank
+    # A tie goes to the market ordering first, then the chart, then salary and
+    # name, so the ordering is total and a rerun on identical inputs is identical.
+    order = out.assign(
+        _blend=blended, _market=market_rank, _chart=chart_rank
+    ).sort_values(
+        ["Team", "Position", "_blend", "_market", "_chart", "Salary", "Name"],
+        ascending=[True, True, True, True, True, False, True],
+    )
+    opportunity = (
+        order.groupby(["Team", "Position"]).cumcount() + 1
+    ).reindex(out.index).astype(int)
+
+    out.loc[~manual, "Depth_Rank"] = opportunity[~manual]
+    out["Depth_Rank"] = out["Depth_Rank"].astype(int)
+    out.loc[~manual & chart.notna(), "Depth_Source"] = "nflverse chart + market blend"
+    out.loc[~manual & chart.isna(), "Depth_Source"] = "projection heuristic"
+
+    # A player the chart never matched still needs a role word. His opportunity
+    # rank is the only evidence available, so it names the role, and the source
+    # column above already says the chart did not confirm it.
+    unknown = out["Role_Tier"].isna()
+    out.loc[unknown, "Role_Tier"] = out.loc[unknown, "Depth_Rank"].astype("Int64")
+    out.loc[unknown, "Role_Label"] = [
+        role_label(position, tier)
+        for position, tier in zip(
+            out.loc[unknown, "Position"], out.loc[unknown, "Depth_Rank"]
+        )
+    ]
+    return out
 
 
 def apply_nflverse_availability(players, report, cfg=None):
@@ -3432,6 +3755,19 @@ def apply_nflverse_availability(players, report, cfg=None):
     cfg = _cfg(cfg)
     if not cfg.nflverse_availability_filter or report is None or report.empty:
         return players.reset_index(drop=True), pd.DataFrame()
+
+    # Treating an unknown status as unavailable is only safe while the join is
+    # working. If most of the pool failed to match, the roster feed is telling us
+    # about our own name normalization, not about who is playing.
+    match_rate = roster_match_rate(report)
+    if match_rate < cfg.nflverse_min_match_rate:
+        warnings.warn(
+            f"nflverse weekly roster matched only {match_rate:.0%} of the skill-player "
+            f"pool, below the {cfg.nflverse_min_match_rate:.0%} floor. Skipping the "
+            "availability filter rather than dropping players on a broken join."
+        )
+        return players.reset_index(drop=True), pd.DataFrame()
+
     blocked = report[~report["Available"]]
     if blocked.empty:
         return players.reset_index(drop=True), blocked
@@ -3448,7 +3784,8 @@ def nflverse_disagreement_view(report):
     ]
     columns = [
         "Player", "Team", "Position", "Salary", "Yahoo depth", "nflverse depth",
-        "Depth change", "Roster status", "Status meaning", "Available",
+        "Role slot", "Role tier", "Role", "Depth change", "Roster status",
+        "Status meaning", "Available",
     ]
     return interesting[columns].sort_values(
         ["Available", "Salary"], ascending=[True, False]
@@ -3478,10 +3815,32 @@ OPPONENT_DEF_CORR = {
     "WR": {1: -0.112, 2: -0.100, 3: -0.029, 4: -0.052},
     "TE": {1: -0.059, 2: -0.013, 3: -0.021, 4: 0.000},
 }
+# Same-team running backs, by expected-opportunity rank. Fitted by
+# tools/calibrate_rb_correlation.py over 2016-2025 nflverse weekly stats: forecast
+# error against a lagged eight-game rolling expectation, ranked within the
+# team-week by lagged touch load so no in-game information leaks into the
+# grouping. Rank 4 is the 4-or-deeper bucket.
+#
+# These replace one pooled ("RB", "RB"): 0.013 that could not tell a bellcow and
+# his change-of-pace back apart from two deep reserves. The comment on each line
+# is the same correlation measured on carries + targets instead of points, and it
+# is the reason these numbers are small: the two backs really are splitting a
+# fixed pool of work (RB1-RB2 touch errors correlate -0.082), but touchdowns and
+# long gains are noisy enough that most of the cannibalization does not survive
+# into fantasy scoring. Every 95% interval here straddles zero, so read them as
+# the fitted point estimates they are, not as confident signs.
+SAME_TEAM_RB_RB_CORR = {
+    (1, 2): -0.015,  # 4,965 team-games, touches -0.082
+    (1, 3): -0.028,  # 3,276 team-games, touches -0.043
+    (1, 4): -0.000,  # 958 team-games, touches -0.106
+    (2, 3): +0.025,  # 3,276 team-games, touches +0.039
+    (2, 4): +0.003,  # 958 team-games, touches +0.040
+    (3, 4): +0.056,  # 958 team-games, touches +0.082
+}
+
 SAME_TEAM_OTHER_CORR = {
     ("QB", "QB"): -0.200,
     ("QB", "DEF"): -0.061,
-    ("RB", "RB"): 0.013,
     ("RB", "WR"): -0.002,
     ("RB", "TE"): -0.010,
     ("WR", "WR"): 0.011,
@@ -3515,6 +3874,19 @@ def _calibrated_cv(position, depth):
     return CALIBRATED_CV[position][_depth_bucket(depth)]
 
 
+def same_team_rb_rb_correlation(a, b):
+    """Fitted forecast-error correlation for two backs sharing a backfield."""
+    first = _depth_bucket(a["Depth_Rank"])
+    second = _depth_bucket(b["Depth_Rank"])
+    if first == second:
+        # Two players the model ranks identically are the same role twice over,
+        # which the fit has nothing to say about. Fall back to the shallowest
+        # published pair rather than inventing a value.
+        return SAME_TEAM_RB_RB_CORR[(1, 2)]
+    key = (min(first, second), max(first, second))
+    return SAME_TEAM_RB_RB_CORR[key]
+
+
 def target_score_correlation(a, b):
     """Return the fitted fantasy-score correlation for a player pair.
 
@@ -3523,6 +3895,10 @@ def target_score_correlation(a, b):
     of being forced upward by a shared team factor. Style overrides only affect
     QB-RB: the calibration did not separately identify role styles, so the
     pass-catching value is deliberately modest rather than presented as fitted.
+
+    Same-team RB pairs are the one relationship keyed on both players' ranks,
+    because that pair is splitting one pool of carries and goal-line work and a
+    single pooled number cannot say how much they overlap.
     """
     pa, pb = a["Position"], b["Position"]
     same_team = a["Team"] == b["Team"]
@@ -3541,6 +3917,8 @@ def target_score_correlation(a, b):
         if pair == ("RB", "DEF"):
             back = a if pa == "RB" else b
             return RB_OWN_DEF_CORR[_depth_bucket(back["Depth_Rank"])]
+        if pa == pb == "RB":
+            return same_team_rb_rb_correlation(a, b)
         return SAME_TEAM_OTHER_CORR.get(pair, 0.0)
 
     if "DEF" in pair:
@@ -3706,6 +4084,7 @@ CALIBRATION_SANITY_RELATIONSHIPS = [
     "Same team QB-TE",
     "Same team QB-RB",
     "Same team RB-DEF",
+    "Same team RB-RB",
     "Same team WR-WR",
     "Same team WR-TE",
     "Opponent QB-DEF",
@@ -3725,6 +4104,7 @@ def _pair_relationship(a, b):
         if pair == {"QB", "TE"}: return "Same team QB-TE"
         if pair == {"QB", "RB"}: return "Same team QB-RB"
         if pair == {"RB", "DEF"}: return "Same team RB-DEF"
+        if pa == pb == "RB": return "Same team RB-RB"
         if pa == pb == "WR": return "Same team WR-WR"
         if pair == {"WR", "TE"}: return "Same team WR-TE"
         ordered = _position_pair(pa, pb)
@@ -3964,11 +4344,18 @@ def _lineup_arrays(candidates, lineup_size):
 
 
 def _weight_matrix(ids, superstars, start, stop, player_count):
-    """Build the (players x candidates) 1.0/1.5 weight block for one batch."""
-    weights = np.zeros((player_count, stop - start), dtype=np.float32)
-    columns = np.arange(stop - start)
-    weights[ids[start:stop].T, columns] = 1.0
-    weights[superstars[start:stop], columns] += 0.5
+    """Build the (candidates x players) 1.0/1.5 weight block for one batch.
+
+    v3.5 returns the transpose of the v3.2 block. Scores are now carried as
+    (candidates x scenarios) so that every per-candidate reduction - and in
+    particular the quantile partition, which dominated the whole run - walks a
+    contiguous row instead of striding down a column of a 41 MB array. The
+    arithmetic is unchanged; only the memory layout moved.
+    """
+    weights = np.zeros((stop - start, player_count), dtype=np.float32)
+    rows = np.arange(stop - start)
+    weights[rows[:, None], ids[start:stop]] = 1.0
+    weights[rows, superstars[start:stop]] += 0.5
     return weights
 
 
@@ -4001,6 +4388,9 @@ def score_candidates_shared_scenarios(candidates, outcomes, cfg=None, batch_size
     half = n_scenarios // 2
     halves = {"": slice(None), "_A": slice(0, half), "_B": slice(half, 2 * half)}
     ids, superstars = _lineup_arrays(candidates, int(cfg.lineup_size))
+    # Built once. Every batch multiplies against this rather than transposing a
+    # fresh score block, which would give back the layout win it is here for.
+    scenarios = np.ascontiguousarray(outcomes.T)
 
     names = ["Sim_Mean", "Sim_SD", "Floor_P25", "Ceiling_P90", "Ceiling_P95"]
     metrics = {f"{name}{tag}": np.zeros(n_candidates) for name in names for tag in halves}
@@ -4008,27 +4398,34 @@ def score_candidates_shared_scenarios(candidates, outcomes, cfg=None, batch_size
 
     for start in range(0, n_candidates, batch_size):
         stop = min(start + batch_size, n_candidates)
-        scores = outcomes @ _weight_matrix(ids, superstars, start, stop, n_players)
+        scores = _weight_matrix(ids, superstars, start, stop, n_players) @ scenarios
         for tag, window in halves.items():
-            block = scores[window]
-            metrics[f"Sim_Mean{tag}"][start:stop] = block.mean(axis=0)
-            metrics[f"Sim_SD{tag}"][start:stop] = block.std(axis=0)
-            quantiles = np.quantile(block, [0.25, 0.90, 0.95], axis=0)
+            block = scores[:, window]
+            # float64 accumulators. The scores themselves are float32, and a
+            # float32 sum over 20,000 scenarios lands ~1e-5 relative away from
+            # the exact mean in an order that depends on the array layout - which
+            # was enough to reshuffle near-tied candidates when the layout above
+            # changed. Accumulating in float64 makes the reduction layout-
+            # independent, and makes these numbers reproducible by any float64
+            # implementation, the browser included.
+            metrics[f"Sim_Mean{tag}"][start:stop] = block.mean(axis=1, dtype=np.float64)
+            metrics[f"Sim_SD{tag}"][start:stop] = block.std(axis=1, dtype=np.float64)
+            quantiles = np.quantile(block, [0.25, 0.90, 0.95], axis=1)
             metrics[f"Floor_P25{tag}"][start:stop] = quantiles[0]
             metrics[f"Ceiling_P90{tag}"][start:stop] = quantiles[1]
             metrics[f"Ceiling_P95{tag}"][start:stop] = quantiles[2]
-        np.maximum(scenario_best, scores.max(axis=1), out=scenario_best)
+        np.maximum(scenario_best, scores.max(axis=0), out=scenario_best)
 
     rates = {f"{name}{tag}": np.zeros(n_candidates)
              for name in ("Near_Optimal_Rate", "Win_Rate") for tag in halves}
     for start in range(0, n_candidates, batch_size):
         stop = min(start + batch_size, n_candidates)
-        scores = outcomes @ _weight_matrix(ids, superstars, start, stop, n_players)
-        near = scores >= (scenario_best[:, None] * cfg.near_optimal_ratio)
-        won = np.isclose(scores, scenario_best[:, None], rtol=1e-6, atol=1e-5)
+        scores = _weight_matrix(ids, superstars, start, stop, n_players) @ scenarios
+        near = scores >= (scenario_best[None, :] * cfg.near_optimal_ratio)
+        won = np.isclose(scores, scenario_best[None, :], rtol=1e-6, atol=1e-5)
         for tag, window in halves.items():
-            rates[f"Near_Optimal_Rate{tag}"][start:stop] = near[window].mean(axis=0)
-            rates[f"Win_Rate{tag}"][start:stop] = won[window].mean(axis=0)
+            rates[f"Near_Optimal_Rate{tag}"][start:stop] = near[:, window].mean(axis=1)
+            rates[f"Win_Rate{tag}"][start:stop] = won[:, window].mean(axis=1)
 
     scored = candidates.copy()
     for name, values in {**metrics, **rates}.items():
@@ -4541,15 +4938,17 @@ def run_interactive(cfg=None):
             nflverse_report = build_nflverse_role_report(
                 players, depth_chart, roster_status, cfg
             )
-            players, nflverse_applied = apply_nflverse_depth(players, nflverse_report, cfg)
+            players, nflverse_applied = apply_nflverse_roles(players, nflverse_report, cfg)
             matched = int(nflverse_report["Depth matched"].sum())
             skill = int(nflverse_report["Position"].ne("DEF").sum())
             statused = int(nflverse_report["Roster status"].notna().sum())
             print(
                 f"  - matched {matched}/{skill} skill players to a depth-chart entry, "
-                f"{statused}/{skill} to a roster status"
+                f"{statused}/{skill} to a roster status ({roster_match_rate(nflverse_report):.0%})"
             )
-            print(f"  - depth ranks rewritten from the published chart: {len(nflverse_applied)}")
+            print(f"  - role tiers taken from the published chart: {len(nflverse_applied)}")
+            starters = int(nflverse_report["Role"].eq("starter").sum())
+            print(f"  - players the chart lists in a starting slot: {starters}")
             review = nflverse_disagreement_view(nflverse_report)
             if len(review):
                 print(
@@ -4560,10 +4959,11 @@ def run_interactive(cfg=None):
     else:
         print("\nnflverse cross-check disabled (Settings.use_nflverse = False).")
 
+    players = apply_opportunity_ranks(players, cfg)
     players = apply_depth_mean_adjustments(players)
     print(
-        "\nDepth controls both a fitted mean correction and volatility prior; "
-        "verify injuries, actives, and expected snaps."
+        "\nRole tier drives the fitted mean correction and expected-opportunity "
+        "rank drives the volatility prior; verify injuries, actives, and snaps."
     )
     display(depth_sanity_report(players))
 
@@ -4728,39 +5128,30 @@ def run_interactive(cfg=None):
 # ============================================================================
 # NOTEBOOK CELL 19 - Weekly top-N rankings by position
 # ============================================================================
-def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_csv=True):
-    """Build full-slate Yahoo rankings from the notebook's final estimated FP.
+def prepare_slate_pool(cfg=None, purpose=""):
+    """Build the priced, role-adjusted, availability-filtered pool for a slate.
 
-    Projection priority is unchanged from the showdown model:
-    manual override > accepted market mean > Yahoo FPPG/salary prior.
-    Current market/manual means are not depth-haircut; fallback estimates are.
+    Everything up to the point where a caller decides what to do with the pool:
+    the Yahoo feed, market-implied means, role tiers, opportunity ranks, the role
+    mean adjustment, the availability filter, the backup-QB filter and
+    EXCLUDE_PLAYERS, in that order. The order is load-bearing - role is assigned
+    from the unadjusted estimate so an adjusted mean cannot redefine the role that
+    chose its own adjustment.
+
+    The position rankings and the showdown export both need exactly this and had
+    started to drift apart as two copies of it.
     """
     cfg = _cfg(cfg)
-    top_n = int(top_n)
-    if top_n < 1:
-        raise ValueError("top_n must be at least 1")
-
-    requested_positions = []
-    for position in positions:
-        normalized = str(position).upper().replace("D/ST", "DEF").replace("DST", "DEF")
-        if normalized not in VALID_POSITIONS:
-            raise ValueError(
-                f"Unsupported position {position!r}; choose from {VALID_POSITIONS}"
-            )
-        if normalized not in requested_positions:
-            requested_positions.append(normalized)
-
-    started = time.perf_counter()
     payload = fetch_yahoo_data()
-    players, _ = normalize_yahoo_data(payload)
+    players, cap_map = normalize_yahoo_data(payload)
     players = add_projection_priors(players, PROJECTION_OVERRIDES)
     games = list_games(players)
     if games.empty:
         raise ValueError("Yahoo returned no usable NFL games")
 
     print(
-        f"Yahoo slate: {len(games)} game(s), {len(players)} priced player(s); "
-        f"ranking top {top_n} per position."
+        f"Yahoo slate: {len(games)} game(s), {len(players)} priced player(s)"
+        + (f"; {purpose}" if purpose else "")
     )
 
     # Pull the market once, then use the notebook's hard game-time guard for each game.
@@ -4799,7 +5190,7 @@ def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_
                 )
         else:
             warnings.warn(
-                "No market feed was usable; rankings use Yahoo FPPG/salary priors."
+                "No market feed was usable; continuing on Yahoo FPPG/salary priors."
             )
     else:
         print("  Market projections disabled; using Yahoo FPPG/salary priors.")
@@ -4824,10 +5215,16 @@ def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_
             nflverse_report = build_nflverse_role_report(
                 players, depth_chart, roster_status, cfg
             )
-            players, nflverse_applied = apply_nflverse_depth(
+            players, nflverse_applied = apply_nflverse_roles(
                 players, nflverse_report, cfg
             )
+            print(
+                f"  nflverse: role tiers for {len(nflverse_applied)} player(s); "
+                f"roster status matched {roster_match_rate(nflverse_report):.0%} "
+                "of the skill pool."
+            )
 
+    players = apply_opportunity_ranks(players, cfg)
     players = apply_depth_mean_adjustments(players)
 
     if cfg.use_nflverse and not nflverse_report.empty:
@@ -4848,6 +5245,53 @@ def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_
     excluded = set(EXCLUDE_PLAYERS)
     _warn_unmatched(excluded, "Exclusion", set(players["Name"]))
     players = players[~players["Name"].isin(excluded)].copy()
+    return {
+        "players": players.reset_index(drop=True),
+        "games": games,
+        "cap_map": cap_map,
+        "market_report": market_report,
+        "market_applied": market_applied,
+        "market_audit": market_audit,
+        "nflverse_report": nflverse_report,
+        "nflverse_applied": nflverse_applied,
+        "nflverse_removed": nflverse_blocked,
+        "backup_qbs_removed": backup_qbs_removed,
+        "excluded": sorted(excluded),
+    }
+
+
+def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_csv=True):
+    """Build full-slate Yahoo rankings from the notebook's final estimated FP.
+
+    Projection priority is unchanged from the showdown model:
+    manual override > accepted market mean > Yahoo FPPG/salary prior.
+    Current market/manual means are not depth-haircut; fallback estimates are.
+    """
+    cfg = _cfg(cfg)
+    top_n = int(top_n)
+    if top_n < 1:
+        raise ValueError("top_n must be at least 1")
+
+    requested_positions = []
+    for position in positions:
+        normalized = str(position).upper().replace("D/ST", "DEF").replace("DST", "DEF")
+        if normalized not in VALID_POSITIONS:
+            raise ValueError(
+                f"Unsupported position {position!r}; choose from {VALID_POSITIONS}"
+            )
+        if normalized not in requested_positions:
+            requested_positions.append(normalized)
+
+    started = time.perf_counter()
+    slate = prepare_slate_pool(cfg, f"ranking top {top_n} per position")
+    players = slate["players"]
+    games = slate["games"]
+    market_report = slate["market_report"]
+    market_applied = slate["market_applied"]
+    market_audit = slate["market_audit"]
+    nflverse_report = slate["nflverse_report"]
+    nflverse_applied = slate["nflverse_applied"]
+    nflverse_blocked = slate["nflverse_removed"]
     players["FP_per_Salary"] = players["Projected_FP"] / players["Salary"]
 
     # Stable tie-breaks make repeated runs deterministic when estimates are equal.
@@ -4869,10 +5313,13 @@ def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_
         ).dt.strftime("%Y-%m-%d %H:%M")
         group["Projection method"] = group["Projection_Source"].astype(str)
 
+        group["Role"] = group["Role_Label"].astype(str)
+        group["Role slot"] = group["Role_Slot"].astype("string").fillna("")
+
         columns = [
             "Rank", "Name", "Team", "Opponent", "Estimated FP", "Yahoo FPPG",
-            "Salary", "FP / salary", "Depth_Rank", "Kickoff UTC",
-            "Projection method",
+            "Salary", "FP / salary", "Role", "Role slot", "Depth_Rank",
+            "Kickoff UTC", "Projection method",
         ]
         view = group[columns].rename(
             columns={"Name": "Player", "Depth_Rank": "Depth"}

@@ -28,14 +28,14 @@ def _view(rows):
 
 def _results():
     qb = _view([
-        [1, "Josh Allen", "BUF", "@MIA", 22.41, 21.0, 40, 0.56, 1,
-         "2026-09-07 17:00", "market"],
-        [2, "Lamar Jackson", "BAL", "vs KC", 21.02, np.nan, 38, 0.553, 1,
-         "2026-09-07 20:25", "yahoo-prior"],
+        [1, "Josh Allen", "BUF", "@MIA", 22.41, 21.0, 40, 0.56, "starter",
+         "QB slot 9", 1, "2026-09-07 17:00", "market"],
+        [2, "Lamar Jackson", "BAL", "vs KC", 21.02, np.nan, 38, 0.553, "starter",
+         "", 1, "2026-09-07 20:25", "yahoo-prior"],
     ])
     rb = _view([
-        [1, "Bijan Robinson", "ATL", "vs TB", 18.9, 17.4, 35, 0.54, 1,
-         "2026-09-07 17:00", "market"],
+        [1, "Bijan Robinson", "ATL", "vs TB", 18.9, 17.4, 35, 0.54, "starter",
+         "RB slot 11", 1, "2026-09-07 17:00", "market"],
     ])
     games = pd.DataFrame([
         {"Game ID": "g1", "Game Time": "2026-09-07 17:00", "Away Team": "BUF",

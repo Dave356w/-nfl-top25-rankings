@@ -43,6 +43,8 @@ FIELDS = {
     "Yahoo FPPG": "fppg",
     "Salary": "salary",
     "FP / salary": "fp_per_salary",
+    "Role": "role",
+    "Role slot": "role_slot",
     "Depth": "depth",
     "Kickoff UTC": "kickoff_utc",
     "Projection method": "method",
