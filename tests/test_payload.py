@@ -115,6 +115,38 @@ class PayloadTests(unittest.TestCase):
             self.assertEqual(index["runs"], entries)
 
 
+class CleanTests(unittest.TestCase):
+    """`_clean` is the only thing standing between pandas and invalid JSON."""
+
+    def test_every_pandas_missing_value_becomes_null(self):
+        # pandas has three, and which one a column yields depends on its dtype:
+        # pandas 3's string columns hand back NA where pandas 2 handed back NaN.
+        # A live run died on exactly this, publishing nothing.
+        for missing in (None, float("nan"), np.nan, pd.NA, pd.NaT,
+                        np.float64("nan"), float("inf"), float("-inf")):
+            with self.subTest(missing=repr(missing)):
+                self.assertIsNone(run_daily._clean(missing))
+                json.dumps(run_daily._clean(missing))
+
+    def test_real_values_survive_unchanged(self):
+        self.assertEqual(run_daily._clean("market good"), "market good")
+        self.assertEqual(run_daily._clean(np.int64(3)), 3)
+        self.assertEqual(run_daily._clean(np.float64(1.5)), 1.5)
+        self.assertEqual(run_daily._clean(0), 0)
+        self.assertIs(run_daily._clean(False), False)
+
+    def test_list_likes_are_not_mistaken_for_missing(self):
+        # `pd.isna` returns an array for anything list-like; calling it without
+        # the scalar guard raises rather than returning a value.
+        self.assertEqual(run_daily._clean([1, 2]), [1, 2])
+        self.assertEqual(run_daily._clean({"a": 1}), {"a": 1})
+
+    def test_timestamps_are_stringified_and_nat_is_null(self):
+        stamp = pd.Timestamp("2026-09-13 17:00", tz="UTC")
+        self.assertEqual(run_daily._clean(stamp), str(stamp))
+        self.assertIsNone(run_daily._clean(pd.NaT))
+
+
 class LogTeeTests(unittest.TestCase):
     def test_it_splits_lines_and_drops_blanks(self):
         import io as _io

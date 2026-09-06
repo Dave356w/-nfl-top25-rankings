@@ -118,6 +118,37 @@ class PayloadTests(unittest.TestCase):
         self.assertRegex(kickoff, r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
 
 
+class DegradedFeedTests(unittest.TestCase):
+    """What the first live run actually hit: nflverse had no 2026 injuries."""
+
+    def setUp(self):
+        context = _context()
+        context["injuries"] = pd.DataFrame()
+        context["notes"] = ["Injury report unavailable (Season must be between "
+                            "2009 and 2025); nobody was auto-benched."]
+        roster = lo.build_roster(CONFIGURED, _yahoo_frame(), context)
+        starters, bench = lo.optimize(roster, [])
+        self.payload = run_lineup.build_payload(
+            {"roster": roster, "starters": starters, "bench": bench,
+             "context": context, "market_audit": lo._empty_market_audit(),
+             "excluded": []}, "FP", ["line one"])
+
+    def test_a_missing_injury_feed_still_serializes(self):
+        # With no injury frame to merge, `report_status` is pandas' NA
+        # sentinel, which json.dumps rejects outright -- the run published
+        # nothing until `_clean` learned to treat it as null.
+        json.dumps(self.payload)
+        self.assertTrue(all(row["injury"] is None
+                            for row in self.payload["starters"]))
+
+    def test_the_degradation_is_published_not_just_warned(self):
+        # A warning goes to stderr, which the page never sees. A lineup built
+        # with no injury data can start a player who is already ruled out.
+        self.assertTrue(self.payload["notes"])
+        self.assertIn("Injury report unavailable", self.payload["notes"][0])
+        self.assertEqual(self.payload["benched_by_request"], [])
+
+
 class WriteOutputTests(unittest.TestCase):
     def setUp(self):
         self.payload = run_lineup.build_payload(_results(), "FP", ["line one"])

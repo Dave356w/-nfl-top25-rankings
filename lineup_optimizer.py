@@ -293,6 +293,7 @@ def load_nfl_context(yahoo: pd.DataFrame) -> dict:
     depth["Official_Depth"] = pd.to_numeric(depth["pos_rank"], errors="coerce")
     depth = depth.sort_values("Official_Depth").drop_duplicates(["Key", "Team"])
 
+    notes = []
     try:
         injuries = to_pandas(nfl.load_injuries(season))
         if week is not None:
@@ -301,6 +302,13 @@ def load_nfl_context(yahoo: pd.DataFrame) -> dict:
         injuries["Key"] = injuries["full_name"].map(normalize_name)
         injuries = injuries.drop_duplicates(["Key", "Team"], keep="last")
     except Exception as exc:
+        # A warning goes to stderr, which the published run log never sees. A
+        # lineup built with no injury data can start a player who is already
+        # ruled out, so this has to reach the page, not just the console.
+        notes.append(
+            f"Injury report unavailable ({exc}); nobody was auto-benched -- "
+            "check the injury news yourself."
+        )
         warnings.warn(f"Current injury report unavailable; verify manually: {exc}")
         injuries = pd.DataFrame()
 
@@ -314,7 +322,8 @@ def load_nfl_context(yahoo: pd.DataFrame) -> dict:
             "fg_made_40_49", "fg_made_50_59", "fg_made_60_", "pat_made"]
     stats = to_pandas(raw_stats.select([c for c in cols if c in raw_stats.columns]))
     return {"season": season, "week": week, "schedule": team_schedule, "depth": depth,
-            "depth_stamp": str(stamp), "injuries": injuries, "stats": stats}
+            "depth_stamp": str(stamp), "injuries": injuries, "stats": stats,
+            "notes": notes}
 
 
 def kicker_estimate(name: str, logs: pd.DataFrame) -> tuple[float, float, int]:
@@ -521,6 +530,8 @@ def run(use_market: bool | None = None, roster_path: str | None = None) -> dict:
     ctx = load_nfl_context(yahoo)
     roster = build_roster(load_roster(roster_path), yahoo, ctx)
     print(f"\nSeason {ctx['season']} week {ctx['week']}; depth snapshot {ctx['depth_stamp']}")
+    for note in ctx.get("notes", []):
+        print(f"  {note}")
     print("Yahoo projections use DFS half-PPR scoring; verify your league scoring and injury news.")
 
     if EXCLUDED_PLAYERS is None:

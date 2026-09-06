@@ -74,13 +74,18 @@ def _clean(value):
     """JSON has no NaN. Nulls render as an em dash on the page."""
     if value is None:
         return None
-    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
-        return None
     if isinstance(value, (pd.Timestamp,)):
         return None if pd.isna(value) else str(value)
     if hasattr(value, "item"):          # numpy scalar
         value = value.item()
-    if isinstance(value, float) and math.isnan(value):
+    # pandas has three missing values -- NaN, NaT and the NA sentinel -- and
+    # only `pd.isna` catches all three. Which one turns up depends on the
+    # column's dtype, so pandas 3's string columns hand back NA where pandas 2
+    # handed back NaN. It returns an array for anything list-like, hence the
+    # scalar guard.
+    if pd.api.types.is_scalar(value) and pd.isna(value):
+        return None
+    if isinstance(value, float) and math.isinf(value):
         return None
     return value
 

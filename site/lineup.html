@@ -329,6 +329,8 @@ footer{
       <p id="benched"></p>
       <h4>Market feeds</h4>
       <p id="feeds"></p>
+      <h4>Data notes</h4>
+      <p id="notes"></p>
       <h4>Run log</h4>
       <pre class="log" id="log"></pre>
       <h4>Caveats</h4>
@@ -564,6 +566,13 @@ footer{
           " skill-player rows and accepted " + m.accepted + " market means."
         : "No market feed was used; every projection fell back to Yahoo priors.") +
       (notes.length ? " " + notes.join(" ") : "");
+
+    // A feed that degraded (an unpublished injury report, say) changes what
+    // this lineup can promise, so it is stated rather than left in the log.
+    var notes = d.notes || [];
+    el("notes").textContent = notes.length
+      ? notes.join(" ")
+      : "Every feed this run needed was available.";
 
     el("log").textContent = (d.log || []).join("\n") || "No log recorded.";
     el("detail").hidden = false;

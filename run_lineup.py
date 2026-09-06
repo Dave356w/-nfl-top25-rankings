@@ -98,6 +98,7 @@ def build_payload(results: dict, objective: str, log_lines: list[str]) -> dict:
         "season": _clean(context.get("season")),
         "week": _clean(context.get("week")),
         "depth_snapshot": _clean(context.get("depth_stamp")),
+        "notes": list(context.get("notes") or []),
         "objective": objective,
         "slots": dict(lo.STARTING_POSITIONS),
         "flex_eligible": list(lo.FLEX_ELIGIBLE),
@@ -206,6 +207,8 @@ def main(argv=None):
             roster = lo.build_roster(configured, yahoo, context)
             print(f"Season {context['season']} week {context['week']}; "
                   f"depth snapshot {context['depth_stamp']}.")
+            for note in context.get("notes", []):
+                print(note)
 
             if lo.AUTO_EXCLUDE_REPORTED_OUT:
                 excluded = list(dict.fromkeys(excluded + lo.reported_out(roster)))
