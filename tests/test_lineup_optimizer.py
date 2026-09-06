@@ -1,17 +1,26 @@
 """Offline tests for the weekly lineup optimizer.
 
-`lineup_optimizer.run` needs the live Yahoo DFS feed and the nflverse releases,
-so the fetch path cannot be exercised here. What can be pinned without a
-network is everything downstream of the two feeds: the name and team keys the
-providers are joined on, the kicker and half-PPR arithmetic, the roster
-assembly `build_roster` performs on already-fetched frames, and the slot rules
+`lineup_optimizer.run` needs the live Yahoo DFS feed, the sportsbooks and the
+nflverse releases, so the fetch path cannot be exercised here. What can be
+pinned without a network is everything downstream of the feeds: the name and
+team keys the providers are joined on, the market means applied on top of the
+Yahoo blend, the kicker and half-PPR arithmetic, the roster assembly
+`build_roster` performs on already-fetched frames, and the slot rules
 `optimize` applies.
+
+The market tests drive the real pipeline matcher with hand-built `Projection`
+objects, so the acceptance and game-time rules are the shipped ones rather than
+a restatement of them.
 """
 
 from __future__ import annotations
 
+import json
 import sys
+import tempfile
 import unittest
+import unittest.mock
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -20,6 +29,17 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import lineup_optimizer as lo
+from pipeline import notebook as nb
+
+KICKOFF = "2026-09-13T17:00:00Z"
+
+
+def _projection(player, team, points, quality="good", start=KICKOFF, feed="bovada"):
+    return nb.Projection(
+        event_id="e-" + player, matchup=team, start_time_utc=start, team=team,
+        player=player, position="WR", fantasy_points=points, quality=quality,
+        stat_means={}, sources={"receiving_yards": feed + " total"},
+    )
 
 
 def _roster_frame():
@@ -313,6 +333,140 @@ class OptimizeTests(unittest.TestCase):
         starters, _ = lo.optimize(thin, [])
         self.assertEqual(len(starters), 7)
         self.assertTrue(starters[starters.Slot.eq("K")].empty)
+
+
+class MarketProjectionTests(unittest.TestCase):
+    """The market step, driven with hand-built projections instead of feeds."""
+
+    def setUp(self):
+        self.yahoo = _yahoo_frame()
+
+    def _apply(self, projections):
+        return lo.apply_market_projections(self.yahoo, projections=projections)
+
+    def test_an_accepted_mean_replaces_the_yahoo_blend(self):
+        out, audit = self._apply([_projection("Jaylen Waddle", "MIA", 17.25)])
+        row = out[out.Feed_Name.eq("Jaylen Waddle")].iloc[0]
+        self.assertAlmostEqual(row["Projected_FP"], 17.25)
+        self.assertIn("market good", row["Projection_Source"])
+        self.assertEqual(row["Market_Quality"], "good")
+        # The displaced Yahoo number is kept, not overwritten in place.
+        self.assertAlmostEqual(row["Fallback_Projected_FP"], 13.5)
+        self.assertEqual((audit["matched"], audit["accepted"]), (1, 1))
+
+    def test_a_projection_from_another_kickoff_never_crosses_games(self):
+        # Same team and name, four hours later: a namesake in a different game
+        # must not hand this player a line.
+        out, audit = self._apply([
+            _projection("Jaylen Waddle", "MIA", 40.0, start="2026-09-13T21:00:00Z"),
+        ])
+        row = out[out.Feed_Name.eq("Jaylen Waddle")].iloc[0]
+        self.assertAlmostEqual(row["Projected_FP"], 13.5)
+        self.assertEqual(audit["accepted"], 0)
+
+    def test_a_weak_projection_is_matched_but_not_accepted(self):
+        out, audit = self._apply([
+            _projection("Jaylen Waddle", "MIA", 17.25, quality="partial"),
+        ])
+        row = out[out.Feed_Name.eq("Jaylen Waddle")].iloc[0]
+        self.assertAlmostEqual(row["Projected_FP"], 13.5)
+        self.assertEqual((audit["matched"], audit["accepted"]), (1, 0))
+
+    def test_unpriced_players_are_kept_on_their_yahoo_numbers(self):
+        # Dropping an unmatched player is fine for a ranking pool and wrong for
+        # my own roster: he would vanish from the lineup with no explanation.
+        out, _ = self._apply([_projection("Jaylen Waddle", "MIA", 17.25)])
+        self.assertEqual(len(out), len(self.yahoo))
+        row = out[out.Feed_Name.eq("Tee Higgins")].iloc[0]
+        self.assertAlmostEqual(row["Projected_FP"], 12.0)
+        self.assertEqual(row["Projection_Source"], "Yahoo FPPG + weekly salary prior")
+
+    def test_the_depth_fallback_is_reranked_on_the_new_means(self):
+        # Yahoo has Waddle ahead of the second Miami receiver; the market does
+        # not. Salary-order depth has to follow the number actually used.
+        extra = pd.DataFrame([{
+            "Feed_Name": "Second Receiver", "Feed_Position": "WR", "Team": "MIA",
+            "Opponent": "BUF", "Salary": 20, "FPPG": 8.0, "Projected_FP": 9.0,
+            "Fallback_Depth": 2.0, "Key": lo.normalize_name("Second Receiver"),
+            "Game_Time": pd.to_datetime(KICKOFF), "Market_Quality": None,
+            "Projection_Source": "Yahoo FPPG + weekly salary prior",
+        }])
+        self.yahoo = pd.concat([self.yahoo, extra], ignore_index=True)
+        out, _ = self._apply([_projection("Second Receiver", "MIA", 21.0)])
+        depth = out.set_index("Feed_Name")["Fallback_Depth"]
+        self.assertEqual(depth["Second Receiver"], 1)
+        self.assertEqual(depth["Jaylen Waddle"], 2)
+
+    def test_no_projections_leaves_the_feed_untouched(self):
+        out, audit = self._apply([])
+        pd.testing.assert_frame_equal(out, self.yahoo)
+        self.assertEqual(audit["accepted"], 0)
+        self.assertTrue(any("no usable market" in n for n in audit["notes"]))
+
+    def test_a_broken_market_step_degrades_instead_of_stopping(self):
+        # One sportsbook outage must not cost the week's lineup.
+        with unittest.mock.patch.object(
+            nb, "load_market_projection_reference", side_effect=RuntimeError("feed down")
+        ):
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always")
+                out, audit = lo.apply_market_projections(self.yahoo)
+        pd.testing.assert_frame_equal(out, self.yahoo)
+        self.assertTrue(any("feed down" in str(w.message) for w in caught))
+        self.assertTrue(any("feed down" in n for n in audit["notes"]))
+
+    def test_settings_never_drop_a_rostered_player(self):
+        self.assertFalse(lo.market_settings(nb).market_drop_unmatched)
+
+    def test_market_columns_reach_the_roster(self):
+        out, _ = self._apply([_projection("Jaylen Waddle", "MIA", 17.25)])
+        roster = lo.build_roster(
+            [{"Name": "Jaylen Waddle", "Position": "WR"}], out, _context()
+        )
+        row = roster.iloc[0]
+        self.assertAlmostEqual(row["FP"], 17.25)
+        self.assertEqual(row["Market_Quality"], "good")
+
+
+class RosterFileTests(unittest.TestCase):
+    def test_no_path_uses_the_roster_in_the_module(self):
+        self.assertEqual(lo.load_roster(), list(lo.MY_TEAM_ROSTER))
+
+    def test_a_json_file_wins_and_positions_are_normalized(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "roster.json"
+            path.write_text(json.dumps({"roster": [
+                {"Name": "Someone Else", "Position": "wr"},
+            ]}), encoding="utf-8")
+            self.assertEqual(lo.load_roster(str(path)),
+                             [{"Name": "Someone Else", "Position": "WR"}])
+
+    def test_a_bare_list_is_accepted_and_an_empty_one_is_not(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "roster.json"
+            path.write_text(json.dumps([{"Name": "A Player", "Position": "TE"}]),
+                            encoding="utf-8")
+            self.assertEqual(len(lo.load_roster(str(path))), 1)
+            path.write_text("[]", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                lo.load_roster(str(path))
+
+    def test_the_shipped_roster_file_matches_the_module(self):
+        shipped = Path(__file__).resolve().parents[1] / "lineup_roster.json"
+        if shipped.exists():
+            self.assertEqual(lo.load_roster(str(shipped)), list(lo.MY_TEAM_ROSTER))
+
+
+class ReportedOutTests(unittest.TestCase):
+    def test_it_reads_the_injury_report_case_insensitively(self):
+        roster = pd.DataFrame({
+            "Name": ["A", "B", "C"],
+            "report_status": ["OUT", "Questionable", None],
+        })
+        self.assertEqual(lo.reported_out(roster), ["A"])
+
+    def test_a_roster_with_no_injury_column_reports_nobody(self):
+        self.assertEqual(lo.reported_out(pd.DataFrame({"Name": ["A"]})), [])
 
 
 class SelfTestTests(unittest.TestCase):

@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly Lineup</title>
+<meta name="description" content="This week's recommended fantasy football lineup, built from de-vigged sportsbook props, Yahoo salary priors and nflverse depth charts.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+<style>
+:root{
+  color-scheme: light dark;
+  --bg:#f6f7f9; --panel:#ffffff; --panel-2:#fbfbfd; --line:#e3e6ec; --line-soft:#eef0f4;
+  --ink:#12151c; --ink-2:#525a6b; --ink-3:#858d9e;
+  --accent:#1f5fd8; --accent-soft:#e8f0ff; --accent-ink:#1a4fb4;
+  --good:#0f7a4f; --good-soft:#e3f5ec;
+  --warn:#9a6207; --warn-soft:#fdf2dc;
+  --mute-soft:#eef0f4;
+  --bar:#c9d9f7; --bar-top:#1f5fd8;
+  --shadow:0 1px 2px rgba(18,21,28,.06), 0 8px 24px -12px rgba(18,21,28,.18);
+  --radius:14px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1017; --panel:#151922; --panel-2:#1a1f2a; --line:#262c39; --line-soft:#1f2430;
+    --ink:#eef1f6; --ink-2:#a3acbd; --ink-3:#79839a;
+    --accent:#6d9bff; --accent-soft:#1b2740; --accent-ink:#9dbcff;
+    --good:#4ecb8f; --good-soft:#12301f;
+    --warn:#e6b662; --warn-soft:#332612;
+    --mute-soft:#1f2430;
+    --bar:#26355a; --bar-top:#6d9bff;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1017; --panel:#151922; --panel-2:#1a1f2a; --line:#262c39; --line-soft:#1f2430;
+  --ink:#eef1f6; --ink-2:#a3acbd; --ink-3:#79839a;
+  --accent:#6d9bff; --accent-soft:#1b2740; --accent-ink:#9dbcff;
+  --good:#4ecb8f; --good-soft:#12301f;
+  --warn:#e6b662; --warn-soft:#332612;
+  --mute-soft:#1f2430;
+  --bar:#26355a; --bar-top:#6d9bff;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+/* A `display` rule on a class beats the user-agent [hidden] rule, so the stat
+   grid and the panels would still lay out while empty. */
+[hidden]{display:none !important}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1040px; margin:0 auto; padding:24px 20px 72px}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+.top{display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:20px}
+.brand{flex:1 1 320px; min-width:0}
+h1{
+  font-size:clamp(24px,3.4vw,34px); line-height:1.15; margin:0 0 6px;
+  letter-spacing:-.02em; font-weight:680;
+}
+.sub{color:var(--ink-2); font-size:14.5px; margin:0}
+.top-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+
+.btn{
+  display:inline-flex; align-items:center; gap:7px; height:36px; padding:0 13px;
+  border:1px solid var(--line); border-radius:9px; background:var(--panel);
+  color:var(--ink); font:inherit; font-size:13.5px; font-weight:520;
+  cursor:pointer; text-decoration:none; white-space:nowrap;
+  transition:background .12s ease, border-color .12s ease, transform .06s ease;
+}
+.btn:hover{background:var(--panel-2); border-color:var(--ink-3)}
+.btn:active{transform:translateY(1px)}
+.btn[hidden]{display:none}
+.btn svg{width:15px; height:15px; flex:none}
+
+/* ---------- status bar ---------- */
+.status{
+  display:flex; align-items:baseline; gap:10px;
+  padding:11px 14px; margin-bottom:18px;
+  background:var(--panel); border:1px solid var(--line); border-radius:11px;
+  font-size:13.5px; color:var(--ink-2); box-shadow:var(--shadow);
+}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--good);
+     flex:none; align-self:center; box-shadow:0 0 0 3px var(--good-soft)}
+#status-text{min-width:0}
+.status .sep{color:var(--ink-3)}
+.status strong{color:var(--ink); font-weight:600}
+
+/* ---------- stat cards ---------- */
+.stats{
+  display:grid; gap:10px; margin-bottom:22px;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+}
+.stat{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px 16px; box-shadow:var(--shadow);
+}
+.stat .k{font-size:11.5px; text-transform:uppercase; letter-spacing:.07em;
+         color:var(--ink-3); font-weight:600; margin-bottom:5px}
+.stat .v{font-size:23px; font-weight:660; letter-spacing:-.02em; line-height:1.15}
+.stat .n{font-size:12.5px; color:var(--ink-2); margin-top:3px}
+
+/* ---------- section heads + tables ---------- */
+h2{
+  font-size:12px; text-transform:uppercase; letter-spacing:.08em; font-weight:660;
+  color:var(--ink-3); margin:26px 0 9px; display:flex; align-items:baseline; gap:9px;
+}
+h2 .note{text-transform:none; letter-spacing:0; font-weight:500; font-size:12.5px;
+         color:var(--ink-3)}
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.scroll{overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:14px}
+thead th{
+  background:var(--panel-2); color:var(--ink-3);
+  font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:650;
+  text-align:left; padding:11px 14px; white-space:nowrap;
+  border-bottom:1px solid var(--line);
+}
+th.num,td.num{text-align:right}
+tbody td{padding:11px 14px; border-bottom:1px solid var(--line-soft); vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--panel-2)}
+tbody tr.out{opacity:.62}
+
+.slot{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:44px; height:24px; padding:0 8px; border-radius:7px;
+  background:var(--mute-soft); color:var(--ink-2);
+  font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.04em;
+}
+.slot.flex{background:var(--accent-soft); color:var(--accent-ink)}
+.who{display:flex; flex-direction:column; gap:2px; min-width:150px}
+.who b{font-weight:600; letter-spacing:-.01em}
+.who span{font-size:12.5px; color:var(--ink-2)}
+
+.fp{display:flex; flex-direction:column; align-items:flex-end; gap:5px; min-width:92px}
+.fp b{font-family:var(--mono); font-size:15px; font-weight:640; letter-spacing:-.02em}
+/* Spans in a flex column: width and height do nothing without a box. */
+.fp .track{display:block; width:78px; height:5px; border-radius:3px;
+           background:var(--bar); overflow:hidden}
+.fp .fill{display:block; height:100%; background:var(--bar-top); border-radius:3px}
+.mono{font-family:var(--mono); font-size:13px; color:var(--ink-2); white-space:nowrap}
+
+.badge{
+  display:inline-block; padding:3px 8px; border-radius:999px;
+  font-size:11.5px; font-weight:600; letter-spacing:.01em; white-space:nowrap;
+  background:var(--mute-soft); color:var(--ink-2);
+}
+.badge.market{background:var(--good-soft); color:var(--good)}
+.badge.override{background:var(--accent-soft); color:var(--accent-ink)}
+.badge.fallback{background:var(--warn-soft); color:var(--warn)}
+.badge.bad{background:var(--warn-soft); color:var(--warn)}
+.note-cell{font-size:12.5px; color:var(--ink-2); min-width:120px}
+
+.empty{padding:44px 20px; text-align:center; color:var(--ink-2)}
+.empty h3{margin:0 0 6px; color:var(--ink); font-size:17px; font-weight:620}
+.empty p{margin:0 auto; max-width:46ch; font-size:14px}
+.empty code{
+  font-family:var(--mono); font-size:12.5px; background:var(--mute-soft);
+  padding:2px 6px; border-radius:5px;
+}
+
+/* ---------- details ---------- */
+details.panel{
+  margin-top:22px; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+}
+details.panel>summary{
+  padding:14px 18px; cursor:pointer; font-weight:600; font-size:14px;
+  list-style:none; display:flex; align-items:center; gap:9px;
+}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel>summary::before{
+  content:""; width:0; height:0; flex:none;
+  border-top:4.5px solid transparent; border-bottom:4.5px solid transparent;
+  border-left:6px solid var(--ink-3); transition:transform .15s ease;
+}
+details.panel[open]>summary::before{transform:rotate(90deg)}
+details.panel>summary:hover{background:var(--panel-2)}
+.panel-body{padding:2px 18px 18px; border-top:1px solid var(--line-soft)}
+.panel-body h4{
+  margin:16px 0 7px; font-size:11.5px; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--ink-3); font-weight:650;
+}
+.panel-body p{margin:0 0 8px; font-size:13.5px; color:var(--ink-2)}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.log{
+  margin:0; padding:12px 14px; background:var(--panel-2); border:1px solid var(--line-soft);
+  border-radius:9px; font-family:var(--mono); font-size:12px; line-height:1.65;
+  color:var(--ink-2); max-height:280px; overflow:auto; white-space:pre-wrap;
+}
+.legend{display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--ink-2)}
+.legend div{display:flex; align-items:center; gap:7px}
+
+footer{
+  margin-top:28px; padding-top:18px; border-top:1px solid var(--line);
+  color:var(--ink-3); font-size:12.5px; display:flex; gap:8px;
+  flex-wrap:wrap; align-items:center;
+}
+
+/* ---------- mobile: table becomes cards ---------- */
+@media (max-width:760px){
+  .wrap{padding:18px 14px 56px}
+  thead{display:none}
+  tbody td{display:none; padding:0; border:0}
+  tbody tr{
+    display:grid; grid-template-columns:auto 1fr auto; gap:4px 12px;
+    align-items:center; padding:13px 14px; border-bottom:1px solid var(--line-soft);
+  }
+  tbody td[data-cell="slot"],tbody td[data-cell="player"],tbody td[data-cell="fp"]{display:block}
+  tbody td[data-cell="meta"]{display:block; grid-column:1 / -1; margin-top:4px}
+  .fp .track{width:66px}
+  .meta-line{display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px;
+             font-size:12.5px; color:var(--ink-2)}
+  .meta-line span{white-space:nowrap}
+}
+@media (min-width:761px){ td[data-cell="meta"]{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1>Weekly Lineup</h1>
+      <p class="sub" id="sub">Loading this week's lineup…</p>
+    </div>
+    <div class="top-actions">
+      <a class="btn" href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        Rankings
+      </a>
+      <a class="btn" id="csv" href="data/lineup/latest.csv" download hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        CSV
+      </a>
+      <button class="btn" id="theme" type="button" aria-label="Switch colour theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+        </svg>
+        Theme
+      </button>
+    </div>
+  </header>
+
+  <div class="status" id="status">
+    <span class="dot" id="dot"></span>
+    <span id="status-text">Fetching this week's lineup…</span>
+  </div>
+
+  <section class="stats" id="stats" hidden></section>
+
+  <h2 id="starters-head" hidden>Starters <span class="note" id="starters-note"></span></h2>
+  <div class="card" id="starters-card" hidden>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:76px">Slot</th>
+            <th>Player</th>
+            <th class="num">Proj FP</th>
+            <th class="num">P25</th>
+            <th class="num">P90</th>
+            <th class="num">Depth</th>
+            <th>Source</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="starters"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2 id="bench-head" hidden>Bench <span class="note" id="bench-note"></span></h2>
+  <div class="card" id="bench-card" hidden>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:76px">Slot</th>
+            <th>Player</th>
+            <th class="num">Proj FP</th>
+            <th class="num">P25</th>
+            <th class="num">P90</th>
+            <th class="num">Depth</th>
+            <th>Source</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="bench"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="empty-card" hidden>
+    <div class="empty" id="empty"></div>
+  </div>
+
+  <details class="panel" id="detail" hidden>
+    <summary>Run details, data sources and caveats</summary>
+    <div class="panel-body">
+      <h4>How the lineup is picked</h4>
+      <p id="how"></p>
+      <div class="legend">
+        <div><span class="badge market">market</span> de-vigged sportsbook props</div>
+        <div><span class="badge fallback">fallback</span> Yahoo FPPG / salary prior</div>
+        <div><span class="badge">nflverse</span> rolling game logs (kickers, missing games)</div>
+      </div>
+      <h4>Projection sources in this lineup</h4>
+      <div class="chips" id="methods"></div>
+      <h4>Forced to the bench</h4>
+      <p id="benched"></p>
+      <h4>Market feeds</h4>
+      <p id="feeds"></p>
+      <h4>Run log</h4>
+      <pre class="log" id="log"></pre>
+      <h4>Caveats</h4>
+      <p>Yahoo prices its feed for DFS half-PPR, so check a close call against
+         your own league's scoring. The injury report is only as current as its
+         last nflverse publish, and P25/P90 are a lognormal band around the mean
+         rather than a simulated outcome. Kickoffs show in your local timezone.</p>
+    </div>
+  </details>
+
+  <footer>
+    <span id="foot">Rebuilt by GitHub Actions.</span>
+    <span class="sep">·</span>
+    <a href="data/lineup/latest.json">latest.json</a>
+    <span class="sep">·</span>
+    <a href="data/lineup/index.json">run archive</a>
+    <span class="sep">·</span>
+    <a href="index.html">position rankings</a>
+  </footer>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  // Shared with the rankings page: one theme choice for the whole site.
+  var THEME_KEY = "nfl-top25-theme";
+  var SLOT_ORDER = ["QB", "RB", "WR", "TE", "FLEX", "K", "DEF"];
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement;
+  try {
+    var saved = localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "dark") root.setAttribute("data-theme", saved);
+  } catch (e) { /* private mode: keep the system theme */ }
+
+  document.getElementById("theme").addEventListener("click", function () {
+    var now = root.getAttribute("data-theme");
+    var dark = now === "dark" ||
+      (now !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  /* ---------- helpers ---------- */
+  function el(id) { return document.getElementById(id); }
+
+  function num(v) { return typeof v === "number" && isFinite(v); }
+
+  function fmt(v, digits) {
+    return num(v) ? v.toFixed(digits === undefined ? 2 : digits) : "—";
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // Stored kickoffs are "YYYY-MM-DD HH:MM" in UTC. Safari will not parse that
+  // form, so build the Date explicitly rather than handing it to the parser.
+  function parseUtc(text) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(text || ""));
+    if (!m) return null;
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]));
+  }
+
+  function localKickoff(text) {
+    var d = parseUtc(text);
+    if (!d) return "";
+    return d.toLocaleString(undefined, {
+      weekday: "short", hour: "numeric", minute: "2-digit"
+    });
+  }
+
+  function ago(text) {
+    var d = parseUtc(text);
+    if (!d) return "";
+    var mins = Math.round((Date.now() - d.getTime()) / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return mins + " min ago";
+    var hours = Math.round(mins / 60);
+    if (hours < 24) return hours + (hours === 1 ? " hour ago" : " hours ago");
+    var days = Math.round(hours / 24);
+    return days + (days === 1 ? " day ago" : " days ago");
+  }
+
+  // The projection source is a sentence, not an enum. Badge it by what
+  // produced the number and keep the full text in the tooltip.
+  function source(text) {
+    var s = String(text || "").toLowerCase();
+    if (s.indexOf("market") >= 0) return { cls: "market", label: "market" };
+    if (s.indexOf("override") >= 0) return { cls: "override", label: "override" };
+    if (s.indexOf("nflverse") >= 0) return { cls: "", label: "nflverse" };
+    if (s.indexOf("no weekly projection") >= 0) return { cls: "bad", label: "none" };
+    return { cls: "fallback", label: "yahoo" };
+  }
+
+  function setStatus(text, tone) {
+    el("status-text").innerHTML = text;
+    el("dot").style.background = tone === "bad" ? "var(--warn)" : "var(--good)";
+    el("dot").style.boxShadow = "0 0 0 3px " +
+      (tone === "bad" ? "var(--warn-soft)" : "var(--good-soft)");
+  }
+
+  function showEmpty(title, body) {
+    el("empty").innerHTML = "<h3>" + title + "</h3><p>" + body + "</p>";
+    el("empty-card").hidden = false;
+  }
+
+  function objectiveLabel(objective) {
+    if (objective === "Floor_P25") return "Floor (P25)";
+    if (objective === "Ceiling_P90") return "Ceiling (P90)";
+    return "Expected points";
+  }
+
+  function slotRank(slot) {
+    var i = SLOT_ORDER.indexOf(String(slot || "").toUpperCase());
+    return i < 0 ? SLOT_ORDER.length : i;
+  }
+
+  /* ---------- rendering ---------- */
+  function rowHtml(r, slot, top) {
+    var src = source(r.source);
+    var pct = top > 0 && num(r.mean) ? Math.max(3, (r.mean / top) * 100) : 0;
+    var isFlex = String(slot).toUpperCase() === "FLEX";
+    var kickoff = localKickoff(r.kickoff_utc);
+    var where = [r.team, r.opponent ? "vs " + r.opponent : ""].filter(Boolean).join(" ");
+    var meta = [
+      '<span class="badge ' + src.cls + '">' + src.label + "</span>",
+      "<span>P25 " + fmt(r.floor) + " · P90 " + fmt(r.ceiling) + "</span>",
+      "<span>Depth " + (num(r.depth) ? r.depth : "—") + "</span>",
+      kickoff ? "<span>" + escapeHtml(kickoff) + "</span>" : "",
+      r.review && r.review !== "ok" ? "<span>" + escapeHtml(r.review) + "</span>" : ""
+    ].join("");
+
+    return '<tr class="' + (r.review && r.review.indexOf("injury Out") >= 0 ? "out" : "") + '">' +
+      '<td data-cell="slot"><span class="slot' + (isFlex ? " flex" : "") + '">' +
+        escapeHtml(slot) + "</span></td>" +
+      '<td data-cell="player"><span class="who"><b>' + escapeHtml(r.player) + "</b><span>" +
+        escapeHtml(where) + (kickoff ? " · " + escapeHtml(kickoff) : "") + "</span></span></td>" +
+      '<td class="num" data-cell="fp"><span class="fp"><b>' + fmt(r.mean) +
+        '</b><span class="track"><span class="fill" style="width:' +
+        pct.toFixed(1) + '%"></span></span></span></td>' +
+      '<td class="num mono">' + fmt(r.floor) + "</td>" +
+      '<td class="num mono">' + fmt(r.ceiling) + "</td>" +
+      '<td class="num mono">' + (num(r.depth) ? r.depth : "—") + "</td>" +
+      '<td><span class="badge ' + src.cls + '" title="' + escapeHtml(r.source) + '">' +
+        src.label + "</span></td>" +
+      '<td class="note-cell">' + escapeHtml(r.review === "ok" ? "—" : r.review) + "</td>" +
+      '<td data-cell="meta"><span class="meta-line">' + meta + "</span></td>" +
+      "</tr>";
+  }
+
+  function renderTable(id, rows, slotOf) {
+    var top = rows.reduce(function (m, r) { return num(r.mean) && r.mean > m ? r.mean : m; }, 0);
+    el(id).innerHTML = rows.map(function (r) {
+      return rowHtml(r, slotOf(r), top);
+    }).join("");
+  }
+
+  function renderStats(d) {
+    var t = d.totals || {};
+    var m = d.market || {};
+    var band = num(t.floor) && num(t.ceiling)
+      ? "P25 " + fmt(t.floor, 1) + " → P90 " + fmt(t.ceiling, 1)
+      : "range unavailable";
+    var coverage = num(m.accepted) && num(m.skill_rows) && m.skill_rows > 0
+      ? m.accepted + " / " + m.skill_rows
+      : "—";
+    var slots = Object.keys(d.slots || {}).map(function (k) {
+      return d.slots[k] + " " + k;
+    }).join(" · ");
+
+    el("stats").innerHTML = [
+      { k: "Projected total", v: fmt(t.mean, 1), n: band },
+      { k: "Week", v: num(d.week) ? "Week " + d.week : "—",
+        n: d.season ? d.season + " season" : "" },
+      { k: "Objective", v: objectiveLabel(d.objective), n: slots },
+      { k: "Market means", v: coverage,
+        n: (m.feeds && m.feeds.length ? m.feeds.join(" + ") : "Yahoo priors only") }
+    ].map(function (s) {
+      return '<div class="stat"><div class="k">' + escapeHtml(s.k) + '</div><div class="v">' +
+        escapeHtml(s.v) + '</div><div class="n">' + escapeHtml(s.n) + "</div></div>";
+    }).join("");
+    el("stats").hidden = false;
+  }
+
+  function renderMeta(d) {
+    var m = d.market || {};
+    var counts = d.counts || {};
+
+    el("sub").textContent =
+      (num(d.week) ? "Week " + d.week + " " : "") + "lineup from " +
+      counts.roster + " rostered player(s), maximizing " +
+      objectiveLabel(d.objective).toLowerCase() + ".";
+
+    setStatus(
+      "Published <strong>" + escapeHtml(d.generated_utc) + "</strong> (" +
+      escapeHtml(ago(d.generated_utc)) + ") <span class=\"sep\">·</span> " +
+      escapeHtml(counts.projected + " of " + counts.roster) + " players projected",
+      "ok"
+    );
+
+    el("how").textContent =
+      "Each player's mean is an accepted de-vigged sportsbook mean where the books " +
+      "price them, and a Yahoo FPPG and salary prior otherwise. Kickers, and anyone " +
+      "whose game Yahoo omits, come from rolling nflverse game logs. P25 and P90 are a " +
+      "lognormal band whose width comes from the player's depth-chart role; depth widens " +
+      "the band but never haircuts the mean a second time.";
+
+    var methods = {};
+    (d.starters || []).concat(d.bench || []).forEach(function (r) {
+      var key = r.source || "unknown";
+      methods[key] = (methods[key] || 0) + 1;
+    });
+    el("methods").innerHTML = Object.keys(methods).sort(function (a, b) {
+      return methods[b] - methods[a];
+    }).map(function (key) {
+      return '<span class="badge ' + source(key).cls + '">' + escapeHtml(key) +
+        " · " + methods[key] + "</span>";
+    }).join("") || "<span class=\"badge\">none</span>";
+
+    var benched = d.benched_by_request || [];
+    el("benched").textContent = benched.length
+      ? benched.join(", ") + " — kept out of the lineup before it was optimized."
+      : "Nobody was forced to the bench; every player was eligible.";
+
+    var notes = (m.notes || []).slice();
+    el("feeds").textContent =
+      (m.feeds && m.feeds.length
+        ? m.feeds.join(" + ") + "; matched " + m.matched + " of " + m.skill_rows +
+          " skill-player rows and accepted " + m.accepted + " market means."
+        : "No market feed was used; every projection fell back to Yahoo priors.") +
+      (notes.length ? " " + notes.join(" ") : "");
+
+    el("log").textContent = (d.log || []).join("\n") || "No log recorded.";
+    el("detail").hidden = false;
+    el("csv").hidden = false;
+    el("foot").textContent = "Rebuilt by GitHub Actions · run " + d.run_date;
+  }
+
+  function render(d) {
+    var starters = (d.starters || []).slice().sort(function (a, b) {
+      var diff = slotRank(a.slot) - slotRank(b.slot);
+      return diff !== 0 ? diff : (b.mean || 0) - (a.mean || 0);
+    });
+    var bench = (d.bench || []).slice();
+
+    renderStats(d);
+    renderMeta(d);
+
+    if (!starters.length) {
+      showEmpty("No lineup published",
+        "The last run produced no starters. The run log under " +
+        "<em>Run details</em> says why.");
+      return;
+    }
+
+    renderTable("starters", starters, function (r) { return r.slot || r.pos; });
+    el("starters-note").textContent =
+      starters.length + " slots · " + fmt((d.totals || {}).mean, 1) + " projected";
+    el("starters-head").hidden = false;
+    el("starters-card").hidden = false;
+
+    if (bench.length) {
+      renderTable("bench", bench, function (r) { return r.pos; });
+      el("bench-note").textContent = bench.length + " player(s)";
+      el("bench-head").hidden = false;
+      el("bench-card").hidden = false;
+    }
+  }
+
+  /* ---------- load ---------- */
+  fetch("data/lineup/latest.json", { cache: "no-store" })
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(render)
+    .catch(function (err) {
+      el("sub").textContent = "No published lineup yet.";
+      setStatus("Could not load <strong>data/lineup/latest.json</strong> (" +
+        escapeHtml(err.message) + ")", "bad");
+      showEmpty("Waiting for the first run",
+        "The lineup workflow has not published anything yet. Run the " +
+        "<code>Weekly lineup</code> workflow from the Actions tab, or wait for " +
+        "the next scheduled build.");
+    });
+})();
+</script>
+</body>
+</html>

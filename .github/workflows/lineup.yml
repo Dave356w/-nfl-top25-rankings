@@ -1,0 +1,100 @@
+name: Weekly lineup
+
+on:
+  schedule:
+    # Sunday 15:30 UTC = 11:30 ET, about 90 minutes before the early kickoffs:
+    # late enough for the props to be sharp, early enough to still set a lineup
+    # if GitHub queues the run. Thursday 21:00 UTC = 17:00 ET, three hours
+    # before TNF. Both times are approximate; scheduled runs drift under load.
+    - cron: "30 15 * * 0"
+    - cron: "0 21 * * 4"
+  workflow_dispatch:
+    inputs:
+      objective:
+        description: "What the lineup maximizes"
+        type: choice
+        default: "FP"
+        options: ["FP", "Floor_P25", "Ceiling_P90"]
+      exclude:
+        description: "Players to force to the bench (comma-separated)"
+        default: ""
+        required: false
+  push:
+    branches: [main]
+    paths:
+      - "site/lineup.html"
+      - "lineup_optimizer.py"
+      - "run_lineup.py"
+      - "lineup_roster.json"
+      - ".github/workflows/lineup.yml"
+
+permissions:
+  contents: write   # commit the week's lineup back to the repo
+  pages: write
+  id-token: write
+
+# Shared with `Daily rankings`: both jobs deploy the whole `site/` directory to
+# one Pages site, so a concurrent deploy would publish whichever finished last
+# and silently drop the other's data. cancel-in-progress stays false so a run
+# already talking to the sportsbooks is never thrown away.
+concurrency:
+  group: pages-publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # nflreadpy is only needed here, so it is not in requirements.txt.
+      - run: pip install -r requirements.txt nflreadpy
+
+      - name: Build the lineup
+        run: |
+          python run_lineup.py \
+            --objective "${{ inputs.objective || 'FP' }}" \
+            --exclude "${{ inputs.exclude || '' }}"
+
+      - name: Commit this run's lineup
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/data/lineup
+          if git diff --cached --quiet; then
+            echo "No lineup change to commit."
+            exit 0
+          fi
+          git commit -m "data: lineup for $(date -u +%Y-%m-%d)"
+          # The daily rankings job may have landed while this one was building.
+          for attempt in 1 2 3 4; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            echo "push attempt $attempt failed; retrying"
+            sleep $((2 ** attempt))
+          done
+          exit 1
+
+      # Pages must already be enabled with Source: GitHub Actions -- see the
+      # README. The same manual step the daily build needs; it is per repo, not
+      # per workflow, so enabling it once covers both.
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
