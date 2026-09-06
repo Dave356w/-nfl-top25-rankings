@@ -681,6 +681,16 @@ class CandidateScoringTests(unittest.TestCase):
             )
 
     def test_the_batch_size_does_not_change_the_answer(self):
+        """Batching is a memory decision, not a modelling one.
+
+        Not bit-for-bit, though, and the tolerances say why. The scores are a
+        float32 matrix product, and BLAS reaches a one-row product by a
+        different path than a five-row one, so the two batchings can differ in
+        the last couple of float32 digits. The summaries inherit that. The rates
+        inherit something coarser: they count scenarios against a threshold, so
+        a difference far below float32 precision can still move a scenario
+        across it and change a rate by one scenario's worth.
+        """
         def by_lineup(batch_size):
             scored = nb.score_candidates_shared_scenarios(
                 self.candidates, self.outcomes, self.cfg, batch_size=batch_size
@@ -689,14 +699,26 @@ class CandidateScoringTests(unittest.TestCase):
             return scored.iloc[order].reset_index(drop=True)
 
         small, large = by_lineup(1), by_lineup(512)
-        for column in ("Sim_Mean", "Sim_SD", "Ceiling_P90", "Near_Optimal_Rate"):
+        for column in ("Sim_Mean", "Sim_SD", "Ceiling_P90", "Floor_P25"):
             np.testing.assert_allclose(
-                small[column].to_numpy(), large[column].to_numpy(), rtol=1e-9, atol=1e-9
+                small[column].to_numpy(), large[column].to_numpy(),
+                rtol=1e-5, atol=1e-7, err_msg=column,
+            )
+        one_scenario = 1.0 / self.n_scenarios
+        for column in ("Near_Optimal_Rate", "Win_Rate"):
+            np.testing.assert_allclose(
+                small[column].to_numpy(), large[column].to_numpy(),
+                rtol=0, atol=3 * one_scenario, err_msg=column,
             )
 
     def test_win_rate_is_shared_across_the_same_scenarios(self):
         scored = nb.score_candidates_shared_scenarios(
             self.candidates, self.outcomes, self.cfg, batch_size=2
         )
-        # Exactly one lineup wins each scenario, so the rates sum to one.
-        self.assertAlmostEqual(float(scored["Win_Rate"].sum()), 1.0, places=6)
+        # One lineup wins each scenario, so the rates sum to one -- except that
+        # the winner is decided by np.isclose, so two lineups within its
+        # tolerance in the same scenario are both counted. That can only push
+        # the total above one, and only by whole scenarios.
+        total = float(scored["Win_Rate"].sum())
+        self.assertGreaterEqual(total, 1.0 - 1e-9)
+        self.assertLessEqual(total, 1.0 + 10.0 / self.n_scenarios)
