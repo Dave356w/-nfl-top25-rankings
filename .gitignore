@@ -9,3 +9,6 @@ nflverse_cache/
 # Local scratch exports from the showdown runner.
 yahoo_showdown_export*/
 *.zip
+
+# Offline calibration downloads (tools/calibrate_*.py)
+tools/.nflverse_calibration_cache/

@@ -211,6 +211,10 @@ tr[data-rank="1"] .rank,tr[data-rank="2"] .rank,tr[data-rank="3"] .rank{
 .badge.override{background:var(--accent-soft); color:var(--accent-ink)}
 .badge.fallback{background:var(--warn-soft); color:var(--warn)}
 
+/* Role reads as a word, not an ordinal: a slot receiver is a starter even when
+   he is third in a flattened depth list. */
+.role{font-size:12.5px; color:var(--ink-2); white-space:nowrap; cursor:help}
+
 .empty{padding:44px 20px; text-align:center; color:var(--ink-2)}
 .empty h3{margin:0 0 6px; color:var(--ink); font-size:17px; font-weight:620}
 .empty p{margin:0 auto; max-width:44ch; font-size:14px}
@@ -329,6 +333,7 @@ footer{
         <option value="salary">Salary</option>
         <option value="fp_per_salary">FP per $</option>
         <option value="player">Player name</option>
+        <option value="role">Role</option>
         <option value="kickoff_utc">Kickoff</option>
       </select>
     </label>
@@ -354,6 +359,7 @@ footer{
             <th data-sort="fppg" class="num">Yahoo FPPG</th>
             <th data-sort="salary" class="num">Salary</th>
             <th data-sort="fp_per_salary" class="num">FP / $</th>
+            <th data-sort="role">Role</th>
             <th data-sort="depth" class="num">Depth</th>
             <th data-sort="kickoff_utc">Kickoff</th>
             <th data-sort="method">Source</th>
@@ -370,9 +376,16 @@ footer{
     <div class="panel-body">
       <h4>What the numbers mean</h4>
       <p><b>Proj FP</b> is the projection this pipeline settled on for the player, in
-         Yahoo half-PPR scoring. Priority is: manual override, then an accepted
-         market-implied mean from sportsbook props, then a Yahoo FPPG and
-         salary prior. Only the fallback estimates carry the historical depth haircut.</p>
+         Yahoo half-PPR scoring. Priority is: manual override, then a market-implied
+         mean from sportsbook props, then a Yahoo FPPG and salary prior. Market means
+         are blended in by how completely the props covered the player, so a
+         touchdown-only estimate moves the prior rather than replacing it.</p>
+      <p><b>Role</b> is the player's rank within his own alignment slot on the
+         published depth chart, so all three receivers in a three-wide set read as
+         starters rather than as a starter and two reserves. <b>Depth</b> is the
+         separate expected-opportunity rank, which blends that chart ordering with
+         the market projection and is what the volatility model is keyed on. Only
+         the prior share of a projection carries the historical role haircut.</p>
       <div class="legend">
         <div><span class="badge market">market</span> de-vigged sportsbook props</div>
         <div><span class="badge override">override</span> manual value</div>
@@ -552,6 +565,8 @@ footer{
         "<span>" + fmt(r.fppg) + " FPPG</span>",
         "<span>" + money(r.salary) + "</span>",
         "<span>" + fmt(r.fp_per_salary, 3) + " FP/$</span>",
+        "<span>" + escapeHtml(r.role || "role unknown") +
+          (r.role_slot ? " · " + escapeHtml(r.role_slot) : "") + "</span>",
         "<span>Depth " + (num(r.depth) ? r.depth : "—") + "</span>",
         "<span>" + escapeHtml(localKickoff(r.kickoff_utc)) + "</span>"
       ].join("");
@@ -569,6 +584,8 @@ footer{
         '<td class="num mono">' + fmt(r.fppg) + "</td>" +
         '<td class="num mono">' + money(r.salary) + "</td>" +
         '<td class="num mono">' + fmt(r.fp_per_salary, 3) + "</td>" +
+        '<td><span class="role" title="' + escapeHtml(r.role_slot || "") + '">' +
+          escapeHtml(r.role || "—") + "</span></td>" +
         '<td class="num mono">' + (num(r.depth) ? r.depth : "—") + "</td>" +
         '<td class="mono">' + escapeHtml(localKickoff(r.kickoff_utc)) + "</td>" +
         '<td><span class="badge ' + methodClass(r.method) + '">' +
@@ -686,7 +703,7 @@ footer{
   // Bigger is better for the value columns; ranks, names and times read forwards.
   function defaultDir(key) {
     return (key === "rank" || key === "player" || key === "method" ||
-            key === "kickoff_utc" || key === "depth") ? 1 : -1;
+            key === "role" || key === "kickoff_utc" || key === "depth") ? 1 : -1;
   }
 
   Array.prototype.forEach.call(
