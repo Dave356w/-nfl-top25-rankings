@@ -1,0 +1,61 @@
+{
+  "_comment": "Edit this file to change the team. Positions: QB, RB, WR, TE, K.",
+  "roster": [
+    {
+      "Name": "Dak Prescott",
+      "Position": "QB"
+    },
+    {
+      "Name": "Sam Darnold",
+      "Position": "QB"
+    },
+    {
+      "Name": "James Cook III",
+      "Position": "RB"
+    },
+    {
+      "Name": "Breece Hall",
+      "Position": "RB"
+    },
+    {
+      "Name": "Jaylen Waddle",
+      "Position": "WR"
+    },
+    {
+      "Name": "Tee Higgins",
+      "Position": "WR"
+    },
+    {
+      "Name": "Harold Fannin Jr",
+      "Position": "TE"
+    },
+    {
+      "Name": "Brandon Aubrey",
+      "Position": "K"
+    },
+    {
+      "Name": "Jameson Williams",
+      "Position": "WR"
+    },
+    {
+      "Name": "Brenton Strange",
+      "Position": "TE"
+    },
+    {
+      "Name": "Quentin Johnston",
+      "Position": "WR"
+    },
+    {
+      "Name": "Jaylen Warren",
+      "Position": "RB"
+    },
+    {
+      "Name": "Rashid Shaheed",
+      "Position": "WR"
+    },
+    {
+      "Name": "Isaac TeSlaa",
+      "Position": "WR"
+    }
+  ]
+}
