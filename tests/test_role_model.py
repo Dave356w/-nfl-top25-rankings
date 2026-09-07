@@ -414,11 +414,11 @@ class MarketBlendTests(unittest.TestCase):
             "Market reason": ["accepted", "accepted"],
         })
 
-    def test_a_fully_priced_player_takes_the_market_mean_outright(self):
+    def test_an_extreme_single_feed_good_mean_is_calibrated(self):
         out, _ = nb.apply_market_projection_means(self.players, self.report)
         row = out.set_index("Name").loc["Priced Player"]
-        self.assertAlmostEqual(float(row["Projected_FP"]), 12.0)
-        self.assertEqual(row["Projection_Source"], "market good: Bovada")
+        self.assertAlmostEqual(float(row["Projected_FP"]), 0.65 * 12.0 + 0.35 * 6.0)
+        self.assertEqual(row["Projection_Source"], "market good 65% audit: Bovada")
 
     def test_a_touchdown_only_estimate_moves_the_prior_instead(self):
         out, _ = nb.apply_market_projection_means(self.players, self.report)
@@ -434,7 +434,7 @@ class MarketBlendTests(unittest.TestCase):
     def test_the_weight_is_recorded_for_the_downstream_haircut(self):
         out, accepted = nb.apply_market_projection_means(self.players, self.report)
         weights = out.set_index("Name")["Market_Weight"]
-        self.assertAlmostEqual(float(weights.loc["Priced Player"]), 1.0)
+        self.assertAlmostEqual(float(weights.loc["Priced Player"]), 0.65)
         self.assertAlmostEqual(float(weights.loc["Touchdown Only"]), 0.35)
         self.assertIn("Blended projection", accepted.columns)
 

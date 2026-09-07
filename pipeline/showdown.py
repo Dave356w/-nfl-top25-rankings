@@ -250,6 +250,7 @@ def build_slate(cfg=None, optimize=True, max_games=None):
             "feeds": list(audit.get("feeds") or []),
             "notes": list(audit.get("notes") or []),
             "calibration_pairs": _clean(audit.get("calibration_pairs")),
+            "projection_audit": dict(audit.get("projection_audit") or {}),
         },
         "availability_removed": int(len(slate["nflverse_removed"])),
     }

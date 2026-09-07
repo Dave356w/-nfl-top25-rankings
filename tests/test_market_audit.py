@@ -67,6 +67,16 @@ class ProjectionAuditTests(unittest.TestCase):
         self.assertAlmostEqual(out["Projected_FP"], 13.9)
         self.assertIn("extreme-prior-gap", out["Market_Audit_Flag"])
 
+    def test_tiny_high_percentage_gap_is_not_extreme(self):
+        out = ma.apply_projection_audit(pd.DataFrame([row(prior=2.0, market=3.0)])).iloc[0]
+        self.assertAlmostEqual(out["Market_Weight"], 1.0)
+        self.assertEqual(out["Market_Audit_Flag"], "pass")
+
+    def test_pct_extreme_requires_two_absolute_points(self):
+        out = ma.apply_projection_audit(pd.DataFrame([row(prior=4.0, market=6.0)])).iloc[0]
+        self.assertAlmostEqual(out["Market_Weight"], 0.65)
+        self.assertIn("extreme-prior-gap", out["Market_Audit_Flag"])
+
     def test_one_feed_good_projection_keeps_a_small_prior_share(self):
         frame = pd.DataFrame([row(prior=19.0, market=20.0, feeds="Underdog")])
         out = ma.apply_projection_audit(frame).iloc[0]

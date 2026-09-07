@@ -32,6 +32,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+import market_audit as projection_audit
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -3237,6 +3239,8 @@ def apply_market_projection_means(players, report, cfg=None):
         out.loc[idx, "Market_Quality"] = row["Market quality"]
         out.loc[idx, "Market_Method"] = row["Market method"]
         out.loc[idx, "Market_Weight"] = weight
+    # Shared confidence calibration for lineup, rankings and showdown.
+    out = projection_audit.apply_projection_audit(out)
     if cfg.market_drop_unmatched:
         accepted_keys = set(zip(accepted["Team"], accepted["Player"]))
         keep = out["Position"].eq("DEF") | pd.Series(
@@ -5187,6 +5191,14 @@ def prepare_slate_pool(cfg=None, purpose=""):
                 print(
                     f"  Market: {feeds}; matched {matched}/{skill} skill-player rows; "
                     f"accepted {accepted} estimated means."
+                )
+                projection_summary = projection_audit.audit_summary(players)
+                market_audit["projection_audit"] = projection_summary
+                print(
+                    "  Market audit: "
+                    f"{projection_summary['flagged']}/{projection_summary['audited']} flagged, "
+                    f"{projection_summary['shrunk']} shrunk, "
+                    f"{projection_summary['extreme']} extreme."
                 )
         else:
             warnings.warn(
