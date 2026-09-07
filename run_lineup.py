@@ -268,7 +268,6 @@ def main(argv=None):
             # engine. It never changes de-vigging or the fitted stat distributions;
             # it only shrinks a market mean toward the independent Yahoo prior when
             # disagreement is large enough to deserve skepticism.
-            yahoo = projection_audit.apply_projection_audit(yahoo)
             audit_summary = projection_audit.audit_summary(yahoo)
             market_audit["projection_audit"] = audit_summary
             if audit_summary["audited"]:

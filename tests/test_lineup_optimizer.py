@@ -403,11 +403,11 @@ class MarketProjectionTests(unittest.TestCase):
     def _apply(self, projections):
         return lo.apply_market_projections(self.yahoo, projections=projections)
 
-    def test_an_accepted_mean_replaces_the_yahoo_blend(self):
+    def test_an_accepted_outlier_is_audited_before_it_reaches_the_optimizer(self):
         out, audit = self._apply([_projection("Jaylen Waddle", "MIA", 17.25)])
         row = out[out.Feed_Name.eq("Jaylen Waddle")].iloc[0]
-        self.assertAlmostEqual(row["Projected_FP"], 17.25)
-        self.assertIn("market good", row["Projection_Source"])
+        self.assertAlmostEqual(row["Projected_FP"], 0.8 * 17.25 + 0.2 * 13.5)
+        self.assertIn("market good 80% audit", row["Projection_Source"])
         self.assertEqual(row["Market_Quality"], "good")
         # The displaced Yahoo number is kept, not overwritten in place.
         self.assertAlmostEqual(row["Fallback_Projected_FP"], 13.5)
@@ -483,7 +483,7 @@ class MarketProjectionTests(unittest.TestCase):
             [{"Name": "Jaylen Waddle", "Position": "WR"}], out, _context()
         )
         row = roster.iloc[0]
-        self.assertAlmostEqual(row["FP"], 17.25)
+        self.assertAlmostEqual(row["FP"], 0.8 * 17.25 + 0.2 * 13.5)
         self.assertEqual(row["Market_Quality"], "good")
 
 

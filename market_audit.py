@@ -42,10 +42,12 @@ OUTLIER_MIN_FP = 2.50
 OUTLIER_MIN_PCT = 0.25
 OUTLIER_WEIGHT_CAP = 0.80
 
-# Extreme disagreement clears either gate. At that point the prior is useful as
+# Extreme disagreement is >=5 FP, or >=40% with at least a 2-FP absolute gap.
+# At that point the prior is useful as
 # a stabilizer even when the market construction received a ``good`` label.
 EXTREME_MIN_FP = 5.00
 EXTREME_MIN_PCT = 0.40
+EXTREME_MIN_FP_FOR_PCT = 2.00
 EXTREME_WEIGHT_CAP = 0.65
 
 # ``good`` describes component coverage, not independent-provider agreement.
@@ -124,7 +126,9 @@ def _audit_decision(
             flags.append("single-feed")
             reasons.append("good projection has one market provider")
 
-    if abs_delta >= EXTREME_MIN_FP or abs_pct >= EXTREME_MIN_PCT:
+    if abs_delta >= EXTREME_MIN_FP or (
+        abs_delta >= EXTREME_MIN_FP_FOR_PCT and abs_pct >= EXTREME_MIN_PCT
+    ):
         new_weight = min(final_weight, EXTREME_WEIGHT_CAP)
         if new_weight < final_weight:
             final_weight = new_weight
@@ -252,8 +256,9 @@ def calibration_rules() -> dict:
         "extreme": {
             "min_abs_fp": EXTREME_MIN_FP,
             "min_abs_pct": EXTREME_MIN_PCT,
+            "min_abs_fp_for_pct": EXTREME_MIN_FP_FOR_PCT,
             "weight_cap": EXTREME_WEIGHT_CAP,
-            "logic": "either",
+            "logic": "abs_fp OR (pct AND min_abs_fp_for_pct)",
         },
         "single_feed_good_weight_cap": SINGLE_FEED_GOOD_WEIGHT_CAP,
     }

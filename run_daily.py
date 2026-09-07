@@ -124,6 +124,7 @@ def _market_summary(results):
         "accepted": None,
         "skill_rows": None,
         "calibration_pairs": _clean(audit.get("calibration_pairs")),
+        "projection_audit": dict(audit.get("projection_audit") or {}),
     }
     if isinstance(report, pd.DataFrame) and not report.empty:
         summary["matched"] = int(report["Market matched"].sum())
