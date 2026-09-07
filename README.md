@@ -5,7 +5,9 @@ and DEF, published as a static web page. GitHub Actions runs the pipeline once
 a day; GitHub Pages serves the result.
 
 Two more pages share the same projections: [My lineup](#weekly-lineup-optimizer)
-starts one team's own roster each week, and the
+starts one team's own roster each week and can be
+[re-picked in the browser](#changing-the-roster-on-the-page) for a roster you
+edit there, and the
 [Showdown lineup lab](#showdown-lineup-lab) is an interactive single-game
 optimizer that runs its Monte Carlo in your browser.
 
@@ -105,10 +107,12 @@ run_showdown.py             entry point: showdown models -> site/data/showdown/*
 lineup_roster.json          the team the lineup is picked from
 site/index.html             the rankings page (no build step, no dependencies)
 site/lineup.html            the lineup page
+site/lineup-picker.js       the slot rules, re-run in the browser when you edit the roster
 site/showdown.html          the showdown lab
 site/showdown-worker.js     the optimizer that runs in the visitor's browser
 site/data/latest.json       what the rankings page reads
 site/data/lineup/latest.json  what the lineup page reads
+site/data/lineup/pool.json    the players the page's roster editor can add
 site/data/showdown/index.json one entry per game, plus one file per game
 site/data/history/          one archived JSON + CSV per run date
 tools/                      offline calibration scripts (see below)
@@ -258,8 +262,8 @@ market line already reflect the player's current role.
 
 ### Setting your team
 
-`lineup_roster.json` is the roster the lineup is picked from — edit that, not
-the Python:
+`lineup_roster.json` is the roster the lineup is picked from — edit that (or
+paste in what the page's editor hands you), not the Python:
 
 ```json
 { "roster": [ { "Name": "Dak Prescott", "Position": "QB" } ] }
@@ -277,6 +281,34 @@ constants at the top of `lineup_optimizer.py`:
 | `EXCLUDED_PLAYERS` | `None` prompts for benchings; a list (even empty) skips the prompt |
 | `MANUAL_DEPTH_OVERRIDES` | override a stale depth chart |
 | `AUTO_EXCLUDE_REPORTED_OUT` | drop anyone the injury report lists as *Out* |
+| `POOL_LIMITS` | how many players per position the page's roster editor can add from |
+
+### Changing the roster on the page
+
+The published lineup answers the question for one roster. **Edit roster** on the
+page asks it again for a different one — a waiver add, a drop, a benching an
+hour before kickoff — without waiting for the next scheduled run:
+
+- **Add** anyone from `site/data/lineup/pool.json`, the week's best players at
+  each slot, priced by the same run that published the lineup. `POOL_LIMITS` in
+  `lineup_optimizer.py` sets how deep it goes.
+- **Drop** a player, or **bench** one so the optimizer has to fill his slot from
+  somewhere else. The run's own benchings — anyone the injury report lists as
+  *Out* — start out applied, and can be undone.
+- The lineup, the totals and the CSV button all switch to the edited roster, and
+  a badge in the status bar says the lineup on screen is no longer the published
+  one.
+
+Re-picking happens in `site/lineup-picker.js`, which runs the same slot rules
+`lineup_optimizer.optimize` runs. `tests/test_lineup_picker.py` drives that
+JavaScript from Node against the Python optimizer on the same rows, so the two
+cannot drift into disagreement.
+
+Edits live in the browser's `localStorage`, not in the repo, so they change what
+you see and not what the workflow builds. A roster change survives the next run;
+a benching expires with the run it was made against, because it was a call about
+one week's kickoff. **Copy roster JSON** hands back a `lineup_roster.json` —
+commit that and the scheduled run picks from it too.
 
 ### Running it
 
@@ -288,12 +320,14 @@ python lineup_optimizer.py --self-test      # offline checks, no network
 ```
 
 `run_lineup.py` is what the workflow runs: same optimizer, no prompt, and it
-writes `site/data/lineup/latest.json`, a flat CSV, and one archived copy per run
-date. Its flags are `--roster`, `--objective`, `--exclude`, `--no-market` and
-`--out`. As with the daily build, a hard failure writes **nothing** and exits
-non-zero, so the published lineup stays live rather than being replaced by a
-half-built one. A sportsbook outage is not a hard failure: the market step
-degrades to Yahoo priors and says so in the run log the page renders.
+writes `site/data/lineup/latest.json`, the `pool.json` the roster editor adds
+from, a flat CSV, and one archived copy per run date. Its flags are `--roster`,
+`--objective`, `--exclude`, `--no-market`, `--no-pool` and `--out`. As with the
+daily build, a hard failure writes **nothing** and exits non-zero, so the
+published lineup stays live rather than being replaced by a half-built one. A
+sportsbook outage is not a hard failure: the market step degrades to Yahoo
+priors and says so in the run log the page renders. Nor is a failed pool: the
+page loses its add list, says why, and still drops and benches.
 
 Yahoo prices this feed for **DFS half-PPR**. Check a close call against your
 league's scoring, and check the injury news yourself — the nflverse report is

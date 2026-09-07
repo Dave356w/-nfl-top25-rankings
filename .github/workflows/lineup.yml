@@ -23,6 +23,7 @@ on:
     branches: [main]
     paths:
       - "site/lineup.html"
+      - "site/lineup-picker.js"
       - "lineup_optimizer.py"
       - "run_lineup.py"
       - "lineup_roster.json"

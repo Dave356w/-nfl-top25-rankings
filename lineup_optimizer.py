@@ -61,6 +61,9 @@ EXCLUDED_PLAYERS: list[str] | None = None  # None prompts; [] skips prompt.
 MANUAL_DEPTH_OVERRIDES: dict[str, int] = {}
 AUTO_EXCLUDE_REPORTED_OUT = True
 AUTO_INSTALL_NFLREADPY = True
+# How deep the page's add pool goes per position. Deep enough to cover a real
+# waiver claim, shallow enough that `pool.json` stays a small download.
+POOL_LIMITS = {"QB": 40, "RB": 70, "WR": 90, "TE": 45, "K": 32}
 
 # Market-implied means, from the same Bovada + Underdog engine the daily
 # rankings use. Any failure degrades to the Yahoo blend rather than stopping.
@@ -440,6 +443,58 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
     roster.loc[fitted, "Ceiling_P90"] = mean*np.exp(1.28155*sigma-.5*sigma**2)
     roster["Projection_Available"] = roster["FP"].gt(0)
     return roster
+
+
+def pool_entries(yahoo: pd.DataFrame, ctx: dict, limits: dict[str, int] | None = None) -> list[dict]:
+    """Name the adds worth resolving: this week's best players at each slot.
+
+    The lineup page's roster editor needs a player who is *not* on the roster to
+    carry the same resolved projection a rostered player carries, and only
+    `build_roster` produces that. Ranking on the Yahoo/market mean before
+    resolving is safe, because `build_roster` leaves a skill player's mean
+    alone -- the top of this list is the top of the built pool. Kickers are the
+    exception: the DFS feed does not price them at all, so they come off the
+    depth chart and are ranked only once their rolling-log means exist.
+    """
+    limits = dict(limits or POOL_LIMITS)
+    entries: list[dict] = []
+    for position, limit in limits.items():
+        if position == "K" or not limit:
+            continue
+        rows = yahoo[yahoo["Feed_Position"].eq(position)].nlargest(int(limit), "Projected_FP")
+        entries += [{"Name": str(name), "Position": position} for name in rows["Feed_Name"]]
+
+    depth = ctx.get("depth")
+    if not limits.get("K") or depth is None or "player_name" not in depth:
+        return entries
+    kickers = depth[depth["pos_abb"].astype(str).str.upper().isin(["K", "PK"])]
+    playing = set(ctx["schedule"]["Team"]) if len(ctx.get("schedule", [])) else set()
+    if playing:
+        kickers = kickers[kickers["Team"].isin(playing)]
+    # One kicker per team: a depth chart's second placekicker is a camp body,
+    # and his rolling logs would price him like the starter he is not.
+    kickers = kickers.sort_values("Official_Depth").drop_duplicates("Team").drop_duplicates("Key")
+    entries += [{"Name": str(name), "Position": "K"} for name in kickers["player_name"]]
+    return entries
+
+
+def build_pool(yahoo: pd.DataFrame, ctx: dict, limits: dict[str, int] | None = None) -> pd.DataFrame:
+    """Resolve the replacement pool the lineup page can add a player from.
+
+    Same columns `build_roster` gives the roster, so a player swapped in on the
+    page is scored by the numbers this run produced rather than by a stale
+    snapshot the browser kept.
+    """
+    limits = dict(limits or POOL_LIMITS)
+    entries = pool_entries(yahoo, ctx, limits)
+    if not entries:
+        return pd.DataFrame()
+    pool = build_roster(entries, yahoo, ctx).drop_duplicates("Key")
+    pool = pool.sort_values("FP", ascending=False)
+    kept = [group.head(int(limits.get(position, 0)))
+            for position, group in pool.groupby("Position", sort=False)]
+    pool = pd.concat(kept) if kept else pool.iloc[:0]
+    return pool.sort_values("FP", ascending=False).reset_index(drop=True)
 
 
 def load_roster(path: str | None = None) -> list[dict]:

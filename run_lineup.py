@@ -6,6 +6,7 @@ at a terminal and wrong in a workflow. This runs the same optimizer with no
 prompt and writes into `site/`, which GitHub Pages serves:
 
     site/data/lineup/latest.json          this week's lineup, read by lineup.html
+    site/data/lineup/pool.json            the add pool the page's roster editor draws from
     site/data/lineup/latest.csv           the same rows as a flat download
     site/data/lineup/history/<date>.json  one archived copy per run date
     site/data/lineup/index.json           the archive listing, newest first
@@ -41,6 +42,9 @@ def _player_row(player: pd.Series, slot: str | None = None) -> dict:
     row = {
         "slot": slot,
         "player": _clean(player.get("Name")),
+        # The page's roster editor matches a dropped or added player against
+        # this key rather than reimplementing `normalize_name` in JavaScript.
+        "key": _clean(player.get("Key")),
         "pos": _clean(player.get("Position")),
         "team": _clean(player.get("Team")),
         "opponent": _clean(player.get("Opponent")),
@@ -100,6 +104,9 @@ def build_payload(results: dict, objective: str, log_lines: list[str]) -> dict:
         "depth_snapshot": _clean(context.get("depth_stamp")),
         "notes": list(context.get("notes") or []),
         "objective": objective,
+        # The page re-optimizes an edited roster in the browser, so it needs the
+        # slot rules and the auto-bench rule this run used, not a copy of them.
+        "auto_exclude_out": bool(lo.AUTO_EXCLUDE_REPORTED_OUT),
         "slots": dict(lo.STARTING_POSITIONS),
         "flex_eligible": list(lo.FLEX_ELIGIBLE),
         "totals": {
@@ -129,13 +136,37 @@ def build_payload(results: dict, objective: str, log_lines: list[str]) -> dict:
     }
 
 
+def build_pool_payload(pool: pd.DataFrame, lineup: dict, note: str | None = None) -> dict:
+    """Publish the players the page may add, stamped with the run they came from.
+
+    Kept out of `latest.json` on purpose: it is an order of magnitude bigger
+    than the lineup, only the roster editor reads it, and archiving one copy per
+    run would grow the history for nothing.
+    """
+    rows = [_player_row(p) for _, p in pool.iterrows()] if len(pool) else []
+    return {
+        "schema": 1,
+        "generated_utc": lineup["generated_utc"],
+        "run_date": lineup["run_date"],
+        "season": lineup["season"],
+        "week": lineup["week"],
+        "limits": dict(lo.POOL_LIMITS),
+        "note": note,
+        "counts": {"players": len(rows)},
+        "players": rows,
+    }
+
+
 def _csv_frame(payload: dict) -> pd.DataFrame:
     rows = [dict(row, slot=row.get("slot") or "BENCH")
             for row in payload["starters"] + payload["bench"]]
-    return pd.DataFrame(rows)
+    # `key` exists for the page's benefit; a downloaded sheet does not want a
+    # normalization artefact as a column.
+    return pd.DataFrame(rows).drop(columns=["key"], errors="ignore")
 
 
-def write_outputs(payload: dict, data_dir: Path = None) -> list[dict]:
+def write_outputs(payload: dict, data_dir: Path = None,
+                  pool: dict | None = None) -> list[dict]:
     data = Path(data_dir or DATA)
     history = data / "history"
     data.mkdir(parents=True, exist_ok=True)
@@ -144,6 +175,11 @@ def write_outputs(payload: dict, data_dir: Path = None) -> list[dict]:
     text = json.dumps(payload, indent=2, sort_keys=False)
     (data / "latest.json").write_text(text + "\n", encoding="utf-8")
     (history / f"{payload['run_date']}.json").write_text(text + "\n", encoding="utf-8")
+
+    if pool is not None:
+        (data / "pool.json").write_text(
+            json.dumps(pool, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+        )
 
     frame = _csv_frame(payload)
     frame.to_csv(data / "latest.csv", index=False)
@@ -180,6 +216,8 @@ def main(argv=None):
                         help="comma-separated players to force to the bench")
     parser.add_argument("--no-market", action="store_true",
                         help="skip the sportsbook feeds and use Yahoo priors only")
+    parser.add_argument("--no-pool", action="store_true",
+                        help="skip the add pool the page's roster editor reads")
     parser.add_argument("--out", default=None, help="output directory")
     args = parser.parse_args(argv)
 
@@ -218,6 +256,20 @@ def main(argv=None):
             results = {"roster": roster, "starters": starters, "bench": bench,
                        "context": context, "market_audit": market_audit,
                        "excluded": excluded}
+
+            # The add pool only feeds the page's roster editor, so it degrades
+            # the way the market step does: an empty pool costs the editor its
+            # add list, and taking the whole lineup down with it would cost far
+            # more than that.
+            pool, pool_note = pd.DataFrame(), None
+            if not args.no_pool:
+                try:
+                    pool = lo.build_pool(yahoo, context)
+                    print(f"Add pool: {len(pool)} player(s) resolved for the "
+                          "page's roster editor.")
+                except Exception as exc:
+                    pool_note = f"Add pool unavailable ({exc}); the page can bench but not add."
+                    print(pool_note)
     except Exception:
         traceback.print_exc()
         print("\nRun failed; no files were written. The previously published "
@@ -229,9 +281,12 @@ def main(argv=None):
         print("Run produced no starters; refusing to publish.", file=sys.stderr)
         return 1
 
-    entries = write_outputs(payload, Path(args.out) if args.out else None)
+    pool_payload = None if args.no_pool else build_pool_payload(pool, payload, pool_note)
+    entries = write_outputs(payload, Path(args.out) if args.out else None, pool_payload)
     print(f"\nPublished a {len(payload['starters'])}-player lineup "
-          f"({payload['totals']['mean']} projected); {len(entries)} run(s) archived.")
+          f"({payload['totals']['mean']} projected) and a "
+          f"{0 if pool_payload is None else pool_payload['counts']['players']}-player "
+          f"add pool; {len(entries)} run(s) archived.")
     return 0
 
 
