@@ -453,7 +453,78 @@ function orderBy(scored, objective) {
   return index;
 }
 
-/* Exposure and overlap caps, mirroring `select_tournament_portfolio`. */
+function constructionRules(options) {
+  if (Object.prototype.hasOwnProperty.call(options, "constructionRules")) {
+    return options.constructionRules || [];
+  }
+  return (model && model.settings && model.settings.portfolio_construction_rules) || [];
+}
+
+function ruleLimits(spec) {
+  if (typeof spec === "number") return [spec, spec];
+  return [Number(spec[0]), Number(spec[1])];
+}
+
+function apportionedRuleCounts(rules, target) {
+  if (!rules.length || target <= 0) return [];
+  const weights = rules.map((rule) => Math.max(0, Number(rule.count) || 0));
+  const total = weights.reduce((a, b) => a + b, 0);
+  if (!(total > 0)) return rules.map(() => 0);
+  const raw = weights.map((weight) => target * weight / total);
+  const counts = raw.map((value) => Math.floor(value));
+  let remaining = target - counts.reduce((a, b) => a + b, 0);
+  const order = rules.map((_, index) => ({
+    index,
+    fraction: raw[index] - counts[index],
+    weight: weights[index],
+  }));
+  order.sort((a, b) =>
+    (b.fraction - a.fraction) || (b.weight - a.weight) || (a.index - b.index)
+  );
+  for (let i = 0; i < remaining; i++) counts[order[i].index]++;
+  return counts;
+}
+
+function constructionSchedule(rules, target) {
+  const counts = apportionedRuleCounts(rules, target);
+  const remaining = counts.slice();
+  const schedule = [];
+  while (schedule.length < target && remaining.some((value) => value > 0)) {
+    for (let i = 0; i < rules.length && schedule.length < target; i++) {
+      if (remaining[i] <= 0) continue;
+      schedule.push(rules[i]);
+      remaining[i]--;
+    }
+  }
+  return schedule;
+}
+
+function matchesConstructionRule(scored, candidate, rule) {
+  const base = candidate * LINEUP_SIZE;
+  const counts = new Map();
+  for (let i = 0; i < LINEUP_SIZE; i++) {
+    const position = model.players[scored.ids[base + i]].pos;
+    counts.set(position, (counts.get(position) || 0) + 1);
+  }
+  const limits = rule.positions || {};
+  for (const position of Object.keys(limits)) {
+    const [low, high] = ruleLimits(limits[position]);
+    const value = counts.get(position) || 0;
+    if (value < low || value > high) return false;
+  }
+  return true;
+}
+
+function overlapsPrior(set, sets, maxShared) {
+  for (const prior of sets) {
+    let shared = 0;
+    for (const id of set) if (prior.has(id)) shared++;
+    if (shared > maxShared) return true;
+  }
+  return false;
+}
+
+/* Exposure and overlap caps, plus optional per-entry construction archetypes. */
 function portfolio(scored, order, options) {
   const target = options.entries;
   const maxPlayer = Math.max(1, Math.ceil(target * options.maxPlayerExposure));
@@ -462,37 +533,62 @@ function portfolio(scored, order, options) {
   const superstarCounts = new Map();
   const chosen = [];
   const sets = [];
+  const assignedRules = [];
+  const usedCandidates = new Set();
+  const unfilled = {};
 
-  for (const candidate of order) {
+  function tryCandidate(candidate, rule) {
+    if (usedCandidates.has(candidate)) return false;
+    if (rule && !matchesConstructionRule(scored, candidate, rule)) return false;
     const base = candidate * LINEUP_SIZE;
     const members = [];
     for (let i = 0; i < LINEUP_SIZE; i++) members.push(scored.ids[base + i]);
-    if (members.some((id) => (playerCounts.get(id) || 0) >= maxPlayer)) continue;
+    if (members.some((id) => (playerCounts.get(id) || 0) >= maxPlayer)) return false;
     const superstar = scored.superstars[candidate];
-    if ((superstarCounts.get(superstar) || 0) >= maxSuperstar) continue;
+    if ((superstarCounts.get(superstar) || 0) >= maxSuperstar) return false;
     const set = new Set(members);
-    let overlaps = false;
-    for (const prior of sets) {
-      let shared = 0;
-      for (const id of set) if (prior.has(id)) shared++;
-      if (shared > options.maxShared) { overlaps = true; break; }
-    }
-    if (overlaps) continue;
+    if (overlapsPrior(set, sets, options.maxShared)) return false;
+
     chosen.push(candidate);
     sets.push(set);
+    usedCandidates.add(candidate);
+    assignedRules.push(rule ? String(rule.name || "Construction rule") : null);
     for (const id of members) playerCounts.set(id, (playerCounts.get(id) || 0) + 1);
     superstarCounts.set(superstar, (superstarCounts.get(superstar) || 0) + 1);
-    if (chosen.length === target) break;
+    return true;
   }
-  return { chosen, sets };
+
+  const rules = constructionRules(options);
+  if (!rules.length) {
+    for (const candidate of order) {
+      if (tryCandidate(candidate, null) && chosen.length === target) break;
+    }
+    return { chosen, sets, rules: assignedRules, unfilled };
+  }
+
+  const schedule = constructionSchedule(rules, target);
+  for (const rule of schedule) {
+    let picked = false;
+    for (const candidate of order) {
+      if (tryCandidate(candidate, rule)) {
+        picked = true;
+        break;
+      }
+    }
+    if (!picked) {
+      const name = String(rule.name || "Construction rule");
+      unfilled[name] = (unfilled[name] || 0) + 1;
+    }
+  }
+  return { chosen, sets, rules: assignedRules, unfilled };
 }
 
-function describe(scored, indices) {
-  return indices.map((c) => {
+function describe(scored, indices, construction) {
+  return indices.map((c, position) => {
     const base = c * LINEUP_SIZE;
     const ids = [];
     for (let i = 0; i < LINEUP_SIZE; i++) ids.push(scored.ids[base + i]);
-    return {
+    const result = {
       ids,
       superstar: scored.superstars[c],
       salary: scored.salary[c],
@@ -506,6 +602,10 @@ function describe(scored, indices) {
       win_rate: scored.winRate[c],
       tournament_score: scored.tournament[c],
     };
+    if (construction && construction[position]) {
+      result.construction_rule = construction[position];
+    }
+    return result;
   });
 }
 
@@ -547,6 +647,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     LINEUP_SIZE, setModel, simulate, enumerate, screen, score, orderBy,
     portfolio, describe, diversity, latentMatrix, cholesky, scoreCorrelation,
+    constructionSchedule, matchesConstructionRule,
     covarianceMatrix: () => covariance,
   };
 }
@@ -600,8 +701,13 @@ self.onmessage = (event) => {
       type: "result",
       valid_rosters: rosters.salary.length,
       candidates_scored: scored.total,
-      portfolio: describe(scored, built.chosen),
+      portfolio: describe(scored, built.chosen, built.rules),
       strongest: describe(scored, order.slice(0, 10)),
+      construction: {
+        requested: options.entries,
+        selected: built.chosen.length,
+        unfilled: built.unfilled,
+      },
       diversity: diversity(built.sets, options.maxShared),
       timing: {
         simulate: Math.round(simulated - started),
