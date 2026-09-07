@@ -24,6 +24,7 @@ on:
       - "site/showdown-worker.js"
       - "pipeline/notebook.py"
       - "pipeline/showdown.py"
+      - "pipeline/market_tail_guard.py"
       - "market_audit.py"
       - "run_showdown.py"
       - ".github/workflows/showdown.yml"

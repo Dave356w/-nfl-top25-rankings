@@ -29,6 +29,7 @@ on:
       - "lineup_roster.json"
       - "market_audit.py"
       - "pipeline/notebook.py"
+      - "pipeline/market_tail_guard.py"
       - ".github/workflows/lineup.yml"
 
 permissions:
