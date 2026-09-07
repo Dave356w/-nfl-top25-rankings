@@ -35,7 +35,10 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
+from pipeline import market_tail_guard
 from pipeline import notebook as nb
+
+market_tail_guard.install(nb)
 
 SCHEMA = 1
 
