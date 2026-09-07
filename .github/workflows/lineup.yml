@@ -27,6 +27,8 @@ on:
       - "lineup_optimizer.py"
       - "run_lineup.py"
       - "lineup_roster.json"
+      - "market_audit.py"
+      - "pipeline/notebook.py"
       - ".github/workflows/lineup.yml"
 
 permissions:
