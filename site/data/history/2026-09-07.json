@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-07T06:19:04Z",
+  "generated_utc": "2026-09-07T06:24:28Z",
   "run_date": "2026-09-07",
   "top_n": 25,
   "positions": [
@@ -2220,6 +2220,6 @@
     "23    24  ...  80% salary prior; zero/low FPPG",
     "24    25  ...  80% salary prior; zero/low FPPG",
     "[25 rows x 13 columns]",
-    "Ranking run time: 15.5s"
+    "Ranking run time: 7.6s"
   ]
 }
