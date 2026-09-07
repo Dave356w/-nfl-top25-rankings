@@ -22,7 +22,9 @@ on:
     paths:
       - "site/showdown.html"
       - "site/showdown-worker.js"
+      - "pipeline/notebook.py"
       - "pipeline/showdown.py"
+      - "market_audit.py"
       - "run_showdown.py"
       - ".github/workflows/showdown.yml"
 
