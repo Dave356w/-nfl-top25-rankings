@@ -109,13 +109,17 @@ def _stats_frame():
 
 
 def _context():
+    # `player_name` is what `pool_entries` reads kickers off, and the second DAL
+    # kicker is the camp body that must not reach the add pool.
+    names = ["Jaylen Waddle", "Tee Higgins", "Dak Prescott", "Breece Hall",
+             "Harold Fannin Jr.", "Monday Guy", "Brandon Aubrey", "Backup Kicker",
+             "Bye Kicker"]
     depth = pd.DataFrame({
-        "Key": [lo.normalize_name(n) for n in
-                ["Jaylen Waddle", "Tee Higgins", "Dak Prescott", "Breece Hall",
-                 "Harold Fannin Jr.", "Monday Guy"]],
-        "Team": ["MIA", "CIN", "DAL", "NYJ", "CLE", "BUF"],
-        "Official_Depth": [1, 1, 1, 1, 3, 2],
-        "pos_abb": ["WR", "WR", "QB", "RB", "TE", "WR"],
+        "player_name": names,
+        "Key": [lo.normalize_name(n) for n in names],
+        "Team": ["MIA", "CIN", "DAL", "NYJ", "CLE", "BUF", "DAL", "DAL", "SEA"],
+        "Official_Depth": [1, 1, 1, 1, 3, 2, 1, 2, 1],
+        "pos_abb": ["WR", "WR", "QB", "RB", "TE", "WR", "PK", "PK", "PK"],
     })
     teams = ["MIA", "CIN", "DAL", "NYJ", "CLE", "BUF", "PHI", "NE"]
     schedule = pd.DataFrame({
@@ -333,6 +337,61 @@ class OptimizeTests(unittest.TestCase):
         starters, _ = lo.optimize(thin, [])
         self.assertEqual(len(starters), 7)
         self.assertTrue(starters[starters.Slot.eq("K")].empty)
+
+
+class AddPoolTests(unittest.TestCase):
+    """The pool `site/lineup.html` adds a player from.
+
+    A player swapped in on the page has to be priced by the run that published
+    the lineup, not by a snapshot the browser kept, so the pool is built through
+    `build_roster` rather than lifted out of the Yahoo feed.
+    """
+
+    def setUp(self):
+        self.yahoo, self.context = _yahoo_frame(), _context()
+
+    def test_entries_are_the_best_at_each_position_within_the_limit(self):
+        entries = lo.pool_entries(self.yahoo, self.context, {"QB": 1, "WR": 1, "K": 0})
+        self.assertEqual(entries, [{"Name": "Dak Prescott", "Position": "QB"},
+                                   {"Name": "Jaylen Waddle", "Position": "WR"}])
+
+    def test_kickers_come_off_the_depth_chart_the_dfs_feed_omits(self):
+        # Yahoo prices no kickers at all, so a K the page can add exists only if
+        # the depth chart supplies the name.
+        entries = lo.pool_entries(self.yahoo, self.context, {"K": 32})
+        self.assertEqual(entries, [{"Name": "Brandon Aubrey", "Position": "K"}])
+
+    def test_a_depth_chart_without_names_costs_the_kickers_not_the_pool(self):
+        context = dict(self.context, depth=self.context["depth"].drop(columns=["player_name"]))
+        entries = lo.pool_entries(self.yahoo, context, {"QB": 1, "K": 32})
+        self.assertEqual(entries, [{"Name": "Dak Prescott", "Position": "QB"}])
+
+    def test_the_pool_is_priced_and_banded_like_the_roster(self):
+        pool = lo.build_pool(self.yahoo, self.context,
+                             {"QB": 5, "RB": 5, "WR": 5, "TE": 5, "K": 5})
+        aubrey = pool[pool.Name.eq("Brandon Aubrey")].iloc[0]
+        self.assertAlmostEqual(aubrey["FP"], 10.0)          # rolling kicker logs
+        self.assertIn("kicker", aubrey["Projection_Source"])
+        waddle = pool[pool.Name.eq("Jaylen Waddle")].iloc[0]
+        self.assertAlmostEqual(waddle["FP"], 13.5)
+        self.assertLess(waddle["Floor_P25"], waddle["FP"])
+        self.assertGreater(waddle["Ceiling_P90"], waddle["FP"])
+        self.assertEqual(waddle["Team"], "MIA")
+        self.assertEqual(waddle["Opponent"], "BUF")
+
+    def test_limits_are_applied_per_position_after_pricing(self):
+        pool = lo.build_pool(self.yahoo, self.context,
+                             {"QB": 1, "RB": 1, "WR": 1, "TE": 1, "K": 1})
+        counts = pool["Position"].value_counts().to_dict()
+        self.assertEqual(counts, {"QB": 1, "RB": 1, "WR": 1, "TE": 1, "K": 1})
+        # Ranked on the mean, so the WR that survives is the better one.
+        self.assertEqual(pool[pool.Position.eq("WR")].iloc[0]["Name"], "Jaylen Waddle")
+        self.assertTrue(pool["FP"].is_monotonic_decreasing)
+
+    def test_an_empty_feed_gives_an_empty_pool_rather_than_raising(self):
+        empty = self.yahoo.iloc[:0]
+        context = dict(self.context, depth=self.context["depth"].iloc[:0])
+        self.assertTrue(lo.build_pool(empty, context).empty)
 
 
 class MarketProjectionTests(unittest.TestCase):

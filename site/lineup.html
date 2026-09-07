@@ -199,6 +199,51 @@ details.panel>summary:hover{background:var(--panel-2)}
 .legend{display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--ink-2)}
 .legend div{display:flex; align-items:center; gap:7px}
 
+/* ---------- roster editor ---------- */
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
+.btn.primary:hover{background:var(--accent-ink); border-color:var(--accent-ink)}
+.btn.sm{height:29px; padding:0 10px; font-size:12.5px; gap:5px}
+.btn.sm.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent-ink)}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+
+.edit-grid{display:grid; gap:18px; grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:760px){ .edit-grid{grid-template-columns:1fr} }
+
+/* Both lists scroll at the same height, so the panel stays a fixed, scannable
+   block whether the roster is 8 players or 16. */
+.roster-list{border:1px solid var(--line-soft); border-radius:10px;
+             max-height:466px; overflow:auto}
+.roster-row{
+  display:grid; grid-template-columns:44px minmax(0,1fr) auto; gap:10px;
+  align-items:center; padding:8px 11px; border-bottom:1px solid var(--line-soft);
+}
+.roster-row:last-child{border-bottom:0}
+.roster-row.benched{opacity:.55}
+.roster-row .who b{font-size:13.5px}
+.roster-row .who span{font-size:12px}
+.row-actions{display:flex; gap:6px; align-items:center}
+.roster-list .empty-row{padding:16px 12px; font-size:13px; color:var(--ink-3)}
+
+.search{
+  width:100%; height:36px; padding:0 11px; font:inherit; font-size:13.5px;
+  color:var(--ink); background:var(--panel); border:1px solid var(--line);
+  border-radius:9px; margin-bottom:9px;
+}
+.search:focus{outline:2px solid var(--accent-soft); border-color:var(--accent)}
+.filters{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px}
+.results{max-height:466px; overflow:auto; border:1px solid var(--line-soft); border-radius:10px}
+.result-row{
+  display:grid; grid-template-columns:44px minmax(0,1fr) auto auto; gap:10px;
+  align-items:center; padding:8px 11px; border-bottom:1px solid var(--line-soft);
+}
+.result-row:last-child{border-bottom:0}
+.result-row:hover{background:var(--panel-2)}
+.result-row .mean{font-family:var(--mono); font-size:13px; font-weight:640}
+.edit-actions{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:16px}
+.edit-actions .said{font-size:12.5px; color:var(--good)}
+.custom{background:var(--accent-soft); color:var(--accent-ink)}
+.warn-note{color:var(--warn); font-weight:600}
+
 footer{
   margin-top:28px; padding-top:18px; border-top:1px solid var(--line);
   color:var(--ink-3); font-size:12.5px; display:flex; gap:8px;
@@ -233,6 +278,14 @@ footer{
       <p class="sub" id="sub">Loading this week's lineup…</p>
     </div>
     <div class="top-actions">
+      <button class="btn" id="open-editor" type="button" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>
+        </svg>
+        Edit roster
+      </button>
       <a class="btn" href="showdown.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -275,6 +328,34 @@ footer{
   </div>
 
   <section class="stats" id="stats" hidden></section>
+
+  <details class="panel" id="editor" hidden>
+    <summary>Edit roster &mdash; add, drop or bench players</summary>
+    <div class="panel-body">
+      <p id="edit-intro"></p>
+      <div class="edit-grid">
+        <div>
+          <h4>Your roster <span id="roster-count"></span></h4>
+          <div class="roster-list" id="roster-list"></div>
+        </div>
+        <div>
+          <h4>Add a player</h4>
+          <input class="search" id="search" type="search" autocomplete="off"
+                 placeholder="Search this week's players&hellip;"
+                 aria-label="Search this week's players">
+          <div class="filters" id="filters"></div>
+          <div class="results" id="results"></div>
+        </div>
+      </div>
+      <div class="edit-actions">
+        <button class="btn" id="reset" type="button">Reset to published</button>
+        <button class="btn" id="copy" type="button">Copy roster JSON</button>
+        <a class="btn" id="download" download="lineup_roster.json">Download</a>
+        <span class="said" id="said" hidden></span>
+      </div>
+      <p id="edit-footnote"></p>
+    </div>
+  </details>
 
   <h2 id="starters-head" hidden>Starters <span class="note" id="starters-note"></span></h2>
   <div class="card" id="starters-card" hidden>
@@ -360,6 +441,7 @@ footer{
     <a href="index.html">position rankings</a>
   </footer>
 </div>
+<script src="lineup-picker.js"></script>
 <script>
 (function () {
   "use strict";
@@ -461,7 +543,299 @@ footer{
     return i < 0 ? SLOT_ORDER.length : i;
   }
 
-  /* ---------- rendering ---------- */
+  /* ---------- roster state ---------- */
+  // The published lineup is one roster's answer. Everything below lets the page
+  // ask the same question of a different roster -- a waiver add, a drop, a
+  // game-time benching -- without waiting for the next workflow run. The edit
+  // lives in this browser; `lineup_roster.json` is still what the workflow reads.
+  var STORE_KEY = "nfl-lineup-roster-v1";
+  var published = null;    // latest.json, exactly as the workflow published it
+  var known = {};          // player key -> the row this run priced him at
+  var pool = [];           // pool.json, fetched the first time the editor needs it
+  var poolNote = "";
+  var poolLoad = null;     // in-flight fetch, so two openings share one request
+  var edits = null;        // null while the published roster stands untouched
+  var canEdit = false;     // false against a lineup published before `key` existed
+  var filterPos = "ALL";
+  var query = "";
+
+  function remember(rows) {
+    (rows || []).forEach(function (r) { if (r && r.key) known[r.key] = r; });
+  }
+
+  function entryOf(row) {
+    return { key: row.key, name: row.player, pos: row.pos };
+  }
+
+  function publishedRows() {
+    return (published.starters || []).concat(published.bench || []);
+  }
+
+  // A player kept on the roster whom this run never priced: he has dropped out
+  // of the pool since the edit was stored, or the pool failed to load. Showing
+  // him at zero with a note beats dropping him behind the user's back.
+  function rowFor(entry) {
+    return known[entry.key] || {
+      key: entry.key, player: entry.name, pos: entry.pos,
+      team: null, opponent: null, kickoff_utc: null,
+      mean: 0, floor: null, ceiling: null, depth: null,
+      source: "No projection in this run", review: "not in this week's player pool"
+    };
+  }
+
+  function rosterRows() {
+    return edits ? edits.roster.map(rowFor) : publishedRows();
+  }
+
+  // Whom the run itself kept out, so an edited lineup starts from the same
+  // benchings rather than quietly starting someone the workflow benched.
+  function benchedByRun(row) {
+    if ((published.benched_by_request || []).indexOf(row.player) >= 0) return true;
+    return !!published.auto_exclude_out &&
+      String(row.injury || "").toLowerCase() === "out";
+  }
+
+  function isBenched(row) {
+    if (edits && Object.prototype.hasOwnProperty.call(edits.bench, row.key)) {
+      return edits.bench[row.key];
+    }
+    return benchedByRun(row);
+  }
+
+  function buildView() {
+    if (!edits) {
+      return {
+        starters: published.starters || [], bench: published.bench || [],
+        totals: published.totals || {}, counts: published.counts || {},
+        custom: false
+      };
+    }
+    var rows = rosterRows();
+    var picked = LineupPicker.pick(rows, {
+      slots: published.slots,
+      flexEligible: published.flex_eligible,
+      objective: published.objective,
+      excluded: rows.filter(isBenched).map(function (r) { return r.key; })
+    });
+    return {
+      starters: picked.starters, bench: picked.bench,
+      totals: {
+        mean: LineupPicker.total(picked.starters, "mean"),
+        floor: LineupPicker.total(picked.starters, "floor"),
+        ceiling: LineupPicker.total(picked.starters, "ceiling")
+      },
+      counts: {
+        roster: rows.length,
+        projected: rows.filter(function (r) { return num(r.mean) && r.mean > 0; }).length,
+        starters: picked.starters.length
+      },
+      custom: true
+    };
+  }
+
+  /* ---------- stored edits ---------- */
+  function loadEdits() {
+    var raw;
+    try {
+      raw = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    } catch (e) { return null; }
+    if (!raw || !raw.roster) return null;
+    var roster = raw.roster.filter(function (e) { return e && e.key && e.pos; });
+    if (!roster.length) return null;
+    // A benching is a call about one week's kickoff, so it expires with the run
+    // it was made against. A roster change is not week-scoped and survives.
+    return {
+      roster: roster,
+      bench: raw.run === published.run_date && raw.bench ? raw.bench : {}
+    };
+  }
+
+  function saveEdits() {
+    try {
+      if (!edits) {
+        localStorage.removeItem(STORE_KEY);
+      } else {
+        localStorage.setItem(STORE_KEY, JSON.stringify({
+          roster: edits.roster, bench: edits.bench, run: published.run_date
+        }));
+      }
+    } catch (e) { /* private mode: the edit lasts for this page view only */ }
+  }
+
+  function beginEdit() {
+    if (!edits) edits = { roster: publishedRows().map(entryOf), bench: {} };
+  }
+
+  function commit() {
+    saveEdits();
+    renderAll();
+  }
+
+  function addPlayer(key) {
+    var row = known[key];
+    if (!row) return;
+    beginEdit();
+    if (edits.roster.some(function (e) { return e.key === key; })) return;
+    edits.roster.push(entryOf(row));
+    commit();
+  }
+
+  function dropPlayer(key) {
+    beginEdit();
+    edits.roster = edits.roster.filter(function (e) { return e.key !== key; });
+    delete edits.bench[key];
+    commit();
+  }
+
+  function toggleBench(key) {
+    beginEdit();
+    var row = rosterRows().filter(function (r) { return r.key === key; })[0];
+    if (!row) return;
+    edits.bench[key] = !isBenched(row);
+    commit();
+  }
+
+  /* ---------- the add pool ---------- */
+  function ensurePool() {
+    if (poolLoad) return poolLoad;
+    poolLoad = fetch("data/lineup/pool.json", { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        pool = (d.players || []).filter(function (r) { return r && r.key; });
+        remember(pool);
+        // Second, so a rostered player is always described by the row the
+        // lineup was actually built from.
+        remember(publishedRows());
+        if (d.run_date && published.run_date && d.run_date !== published.run_date) {
+          poolNote = "This add list is from the " + d.run_date + " run, not the " +
+            "one above; an added player is priced off that run's lines.";
+        } else if (d.note) {
+          poolNote = d.note;
+        } else {
+          poolNote = "";
+        }
+      })
+      .catch(function (err) {
+        pool = [];
+        poolNote = "Could not load the add list (" + err.message +
+          "). Dropping and benching still work.";
+      });
+    return poolLoad;
+  }
+
+
+  /* ---------- the editor ---------- */
+  function matchup(r) {
+    return [r.team, r.opponent ? "vs " + r.opponent : ""].filter(Boolean).join(" ") ||
+      "no game this week";
+  }
+
+  function rosterRowHtml(r) {
+    var benched = isBenched(r);
+    var line = [matchup(r), fmt(r.mean, 1) + " proj"];
+    if (r.review && r.review !== "ok") line.push(r.review);
+    return '<div class="roster-row' + (benched ? " benched" : "") + '">' +
+      '<span class="slot">' + escapeHtml(r.pos) + "</span>" +
+      '<span class="who"><b>' + escapeHtml(r.player) + "</b><span>" +
+        escapeHtml(line.join(" · ")) + "</span></span>" +
+      '<span class="row-actions">' +
+        '<button class="btn sm' + (benched ? " on" : "") + '" type="button" data-bench="' +
+          escapeHtml(r.key) + '">' + (benched ? "Benched" : "Bench") + "</button>" +
+        '<button class="btn sm" type="button" data-drop="' + escapeHtml(r.key) +
+          '">Drop</button>' +
+      "</span></div>";
+  }
+
+  function resultRowHtml(r) {
+    return '<div class="result-row">' +
+      '<span class="slot">' + escapeHtml(r.pos) + "</span>" +
+      '<span class="who"><b>' + escapeHtml(r.player) + "</b><span>" +
+        escapeHtml(matchup(r) + (r.review && r.review !== "ok" ? " · " + r.review : "")) +
+        "</span></span>" +
+      '<span class="mean">' + fmt(r.mean, 1) + "</span>" +
+      '<button class="btn sm" type="button" data-add="' + escapeHtml(r.key) +
+        '">Add</button>' +
+      "</div>";
+  }
+
+  function renderFilters() {
+    var positions = ["ALL"].concat(Object.keys(published.slots || {}).filter(
+      function (p) { return p !== "FLEX"; }));
+    el("filters").innerHTML = positions.map(function (p) {
+      return '<button class="btn sm' + (p === filterPos ? " on" : "") +
+        '" type="button" data-pos="' + p + '">' + (p === "ALL" ? "All" : p) + "</button>";
+    }).join("");
+  }
+
+  function renderResults() {
+    var rostered = {};
+    rosterRows().forEach(function (r) { rostered[r.key] = true; });
+    var needle = query.trim().toLowerCase();
+    var rows = pool.filter(function (r) {
+      if (rostered[r.key]) return false;
+      if (filterPos !== "ALL" && r.pos !== filterPos) return false;
+      if (!needle) return true;
+      return String(r.player).toLowerCase().indexOf(needle) >= 0 ||
+        String(r.team || "").toLowerCase().indexOf(needle) >= 0;
+    });
+    // The pool arrives ranked by projection, so the head of it is the useful
+    // part of a 250-player list; a search narrows it rather than scrolling.
+    var shown = rows.slice(0, 40);
+    var nothing = !poolLoad ? "Loading this week's players…"
+      : !pool.length ? "No add list published for this run."
+      : "Nobody left to add here.";
+    el("results").innerHTML = shown.length
+      ? shown.map(resultRowHtml).join("") +
+        (rows.length > shown.length
+          ? '<div class="empty-row">' + (rows.length - shown.length) +
+            " more — keep typing to narrow it.</div>"
+          : "")
+      : '<div class="empty-row">' + nothing + "</div>";
+  }
+
+  function rosterJson() {
+    return JSON.stringify({
+      _comment: "Edit this file to change the team. Positions: QB, RB, WR, TE, K.",
+      roster: rosterRows().map(function (r) {
+        return { Name: r.player, Position: r.pos };
+      })
+    }, null, 2) + "\n";
+  }
+
+  function flash(message) {
+    var said = el("said");
+    said.textContent = message;
+    said.hidden = false;
+    window.clearTimeout(flash.timer);
+    flash.timer = window.setTimeout(function () { said.hidden = true; }, 2400);
+  }
+
+  function renderEditor() {
+    var rows = rosterRows();
+    var benched = rows.filter(isBenched).length;
+    el("roster-count").textContent = "· " + rows.length + " player" +
+      (rows.length === 1 ? "" : "s") + (benched ? ", " + benched + " benched" : "");
+    el("roster-list").innerHTML = rows.length
+      ? rows.map(rosterRowHtml).join("")
+      : '<div class="empty-row">No players left. Add one from the list beside this.</div>';
+
+    // The explanation always stands; a degraded pool is a warning on top of it
+    // rather than a replacement for it.
+    el("edit-intro").innerHTML =
+      "Add, drop or bench a player and the lineup above is re-picked in your " +
+      "browser, by the same slot rules and this run's projections." +
+      (poolNote ? ' <strong class="warn-note">' + escapeHtml(poolNote) + "</strong>" : "");
+    renderFilters();
+    renderResults();
+    el("reset").disabled = !edits;
+    el("download").href = "data:application/json;charset=utf-8," +
+      encodeURIComponent(rosterJson());
+  }
+
+  /* ---------- rendering the lineup ---------- */
   function rowHtml(r, slot, top) {
     var src = source(r.source);
     var pct = top > 0 && num(r.mean) ? Math.max(3, (r.mean / top) * 100) : 0;
@@ -501,8 +875,8 @@ footer{
     }).join("");
   }
 
-  function renderStats(d) {
-    var t = d.totals || {};
+  function renderStats(d, view) {
+    var t = view.totals || {};
     var m = d.market || {};
     var band = num(t.floor) && num(t.ceiling)
       ? "P25 " + fmt(t.floor, 1) + " → P90 " + fmt(t.ceiling, 1)
@@ -528,19 +902,24 @@ footer{
     el("stats").hidden = false;
   }
 
-  function renderMeta(d) {
+  function renderMeta(d, view) {
     var m = d.market || {};
-    var counts = d.counts || {};
+    var counts = view.counts || {};
+    var rows = view.starters.concat(view.bench);
 
     el("sub").textContent =
       (num(d.week) ? "Week " + d.week + " " : "") + "lineup from " +
       counts.roster + " rostered player(s), maximizing " +
-      objectiveLabel(d.objective).toLowerCase() + ".";
+      objectiveLabel(d.objective).toLowerCase() + "." +
+      (view.custom ? " Re-picked in your browser from your edited roster." : "");
 
     setStatus(
       "Published <strong>" + escapeHtml(d.generated_utc) + "</strong> (" +
       escapeHtml(ago(d.generated_utc)) + ") <span class=\"sep\">·</span> " +
-      escapeHtml(counts.projected + " of " + counts.roster) + " players projected",
+      escapeHtml(counts.projected + " of " + counts.roster) + " players projected" +
+      (view.custom
+        ? " <span class=\"badge custom\">edited roster</span>"
+        : ""),
       "ok"
     );
 
@@ -552,7 +931,7 @@ footer{
       "the band but never haircuts the mean a second time.";
 
     var methods = {};
-    (d.starters || []).concat(d.bench || []).forEach(function (r) {
+    rows.forEach(function (r) {
       var key = r.source || "unknown";
       methods[key] = (methods[key] || 0) + 1;
     });
@@ -563,18 +942,19 @@ footer{
         " · " + methods[key] + "</span>";
     }).join("") || "<span class=\"badge\">none</span>";
 
-    var benched = d.benched_by_request || [];
+    var benched = view.custom
+      ? rows.filter(isBenched).map(function (r) { return r.player; })
+      : (d.benched_by_request || []);
     el("benched").textContent = benched.length
       ? benched.join(", ") + " — kept out of the lineup before it was optimized."
       : "Nobody was forced to the bench; every player was eligible.";
 
-    var notes = (m.notes || []).slice();
     el("feeds").textContent =
       (m.feeds && m.feeds.length
         ? m.feeds.join(" + ") + "; matched " + m.matched + " of " + m.skill_rows +
           " skill-player rows and accepted " + m.accepted + " market means."
         : "No market feed was used; every projection fell back to Yahoo priors.") +
-      (notes.length ? " " + notes.join(" ") : "");
+      ((m.notes || []).length ? " " + m.notes.join(" ") : "");
 
     // A feed that degraded (an unpublished injury report, say) changes what
     // this lineup can promise, so it is stated rather than left in the log.
@@ -585,40 +965,156 @@ footer{
 
     el("log").textContent = (d.log || []).join("\n") || "No log recorded.";
     el("detail").hidden = false;
-    el("csv").hidden = false;
     el("foot").textContent = "Rebuilt by GitHub Actions · run " + d.run_date;
   }
 
-  function render(d) {
-    var starters = (d.starters || []).slice().sort(function (a, b) {
+  /* ---------- downloads ---------- */
+  var CSV_COLUMNS = ["slot", "player", "pos", "team", "opponent", "kickoff_utc",
+                     "mean", "floor", "ceiling", "depth", "source", "review"];
+
+  function csvCell(value) {
+    if (value === null || value === undefined) return "";
+    var text = String(value);
+    return /[",\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  }
+
+  function csvFor(view) {
+    var rows = view.starters.map(function (r) {
+      return Object.assign({}, r, { slot: r.slot || r.pos });
+    }).concat(view.bench.map(function (r) {
+      return Object.assign({}, r, { slot: "BENCH" });
+    }));
+    return [CSV_COLUMNS.join(",")].concat(rows.map(function (r) {
+      return CSV_COLUMNS.map(function (c) { return csvCell(r[c]); }).join(",");
+    })).join("\n") + "\n";
+  }
+
+  // An edited lineup is not the one in `latest.csv`, and handing over the
+  // published file under the same button would be a quiet lie.
+  function renderDownload(view) {
+    var csv = el("csv");
+    if (view.custom) {
+      csv.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csvFor(view));
+      csv.setAttribute("download", "lineup-edited.csv");
+    } else {
+      csv.href = "data/lineup/latest.csv";
+      csv.setAttribute("download", "");
+    }
+    csv.hidden = false;
+  }
+
+  /* ---------- render ---------- */
+  function renderAll() {
+    var d = published;
+    var view = buildView();
+    var starters = view.starters.slice().sort(function (a, b) {
       var diff = slotRank(a.slot) - slotRank(b.slot);
       return diff !== 0 ? diff : (b.mean || 0) - (a.mean || 0);
     });
-    var bench = (d.bench || []).slice();
 
-    renderStats(d);
-    renderMeta(d);
+    renderStats(d, view);
+    renderMeta(d, view);
+    renderDownload(view);
+    if (canEdit) {
+      renderEditor();
+      el("editor").hidden = false;
+      el("open-editor").hidden = false;
+    }
 
     if (!starters.length) {
-      showEmpty("No lineup published",
-        "The last run produced no starters. The run log under " +
-        "<em>Run details</em> says why.");
+      el("starters-head").hidden = true;
+      el("starters-card").hidden = true;
+      el("bench-head").hidden = true;
+      el("bench-card").hidden = true;
+      showEmpty(view.custom ? "No lineup from this roster" : "No lineup published",
+        view.custom
+          ? "Nobody on the edited roster is startable. Add a player, or unbench one."
+          : "The last run produced no starters. The run log under " +
+            "<em>Run details</em> says why.");
       return;
     }
+    el("empty-card").hidden = true;
 
     renderTable("starters", starters, function (r) { return r.slot || r.pos; });
     el("starters-note").textContent =
-      starters.length + " slots · " + fmt((d.totals || {}).mean, 1) + " projected";
+      starters.length + " slots · " + fmt(view.totals.mean, 1) + " projected" +
+      (view.custom ? " · re-picked in your browser" : "");
     el("starters-head").hidden = false;
     el("starters-card").hidden = false;
 
-    if (bench.length) {
-      renderTable("bench", bench, function (r) { return r.pos; });
-      el("bench-note").textContent = bench.length + " player(s)";
+    if (view.bench.length) {
+      renderTable("bench", view.bench, function (r) { return r.pos; });
+      el("bench-note").textContent = view.bench.length + " player(s)";
       el("bench-head").hidden = false;
       el("bench-card").hidden = false;
+    } else {
+      el("bench-head").hidden = true;
+      el("bench-card").hidden = true;
     }
   }
+
+  /* ---------- editor wiring ---------- */
+  el("open-editor").addEventListener("click", function () {
+    el("editor").open = true;
+    el("editor").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // Fetched on first open rather than on load: the pool is many times the size
+  // of the lineup, and most visits only read the lineup.
+  el("editor").addEventListener("toggle", function () {
+    if (el("editor").open) ensurePool().then(renderEditor);
+  });
+
+  el("roster-list").addEventListener("click", function (event) {
+    var drop = event.target.closest("[data-drop]");
+    if (drop) return dropPlayer(drop.getAttribute("data-drop"));
+    var bench = event.target.closest("[data-bench]");
+    if (bench) toggleBench(bench.getAttribute("data-bench"));
+  });
+
+  el("results").addEventListener("click", function (event) {
+    var add = event.target.closest("[data-add]");
+    if (add) addPlayer(add.getAttribute("data-add"));
+  });
+
+  el("filters").addEventListener("click", function (event) {
+    var chip = event.target.closest("[data-pos]");
+    if (!chip) return;
+    filterPos = chip.getAttribute("data-pos");
+    renderFilters();
+    renderResults();
+  });
+
+  el("search").addEventListener("input", function (event) {
+    query = event.target.value;
+    renderResults();
+  });
+
+  el("reset").addEventListener("click", function () {
+    edits = null;
+    commit();
+    flash("Back to the published roster.");
+  });
+
+  el("copy").addEventListener("click", function () {
+    var text = rosterJson();
+    var done = function () { flash("Copied — paste it into lineup_roster.json."); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { flash("Copy failed."); });
+      return;
+    }
+    // No clipboard API over plain http, or in an older browser: fall back to a
+    // selection the browser will still copy.
+    var box = document.createElement("textarea");
+    box.value = text;
+    box.setAttribute("readonly", "");
+    box.style.position = "fixed";
+    box.style.opacity = "0";
+    document.body.appendChild(box);
+    box.select();
+    try { document.execCommand("copy"); done(); } catch (e) { flash("Copy failed."); }
+    document.body.removeChild(box);
+  });
 
   /* ---------- load ---------- */
   fetch("data/lineup/latest.json", { cache: "no-store" })
@@ -626,7 +1122,24 @@ footer{
       if (!r.ok) throw new Error("HTTP " + r.status);
       return r.json();
     })
-    .then(render)
+    .then(function (d) {
+      published = d;
+      remember(publishedRows());
+      // Every row carries the key an edit is matched on, or none do: `key`
+      // arrived with the editor. Against an older run the page still renders
+      // the lineup and simply offers no editing, rather than matching an edit
+      // to the wrong player.
+      canEdit = publishedRows().every(function (r) { return !!r.key; });
+      edits = canEdit ? loadEdits() : null;
+      el("edit-footnote").innerHTML =
+        "Edits live in this browser only. To make one stick — so the next " +
+        "scheduled run picks from it — copy the JSON into " +
+        "<code>lineup_roster.json</code> and commit it.";
+      renderAll();
+      // A stored edit can name a player the lineup itself never mentions, so
+      // his projection has to be on hand before the first render settles.
+      if (edits) ensurePool().then(renderAll);
+    })
     .catch(function (err) {
       el("sub").textContent = "No published lineup yet.";
       setStatus("Could not load <strong>data/lineup/latest.json</strong> (" +
