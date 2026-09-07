@@ -27,7 +27,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from pipeline import market_tail_guard
 from pipeline import notebook as nb
+
+market_tail_guard.install(nb)
 
 SITE = Path(__file__).resolve().parent / "site"
 DATA = SITE / "data"
