@@ -29,21 +29,13 @@ on:
       - ".github/workflows/showdown.yml"
 
 permissions:
-  contents: write   # commit the exported models back to the repo
+  contents: write
   pages: write
   id-token: write
-
-# Shared with `Daily rankings` and `Weekly lineup`: all three deploy the whole
-# `site/` directory to one Pages site.
-concurrency:
-  group: pages-publish
-  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Each game costs roughly 25s of Monte Carlo on top of the feed fetches, so
-    # a full Sunday slate is several minutes. The margin is for a slow feed.
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -78,18 +70,27 @@ jobs:
           done
           exit 1
 
+  # Builds run independently. Pages deploys are coalesced and always publish a
+  # fresh checkout of latest main, so a stale model artifact cannot win a race.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
