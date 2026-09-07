@@ -17,6 +17,7 @@ on:
     paths:
       - "site/**"
       - "pipeline/**"
+      - "market_audit.py"
       - "run_daily.py"
       - "requirements.txt"
       - ".github/workflows/daily.yml"
