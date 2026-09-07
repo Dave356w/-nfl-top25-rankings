@@ -37,6 +37,7 @@ import pandas as pd
 
 from pipeline import market_tail_guard
 from pipeline import notebook as nb
+from pipeline import portfolio_construction
 
 market_tail_guard.install(nb)
 
@@ -125,6 +126,8 @@ def lineup_rows(frame, limit=None):
             "ids": [int(value) for value in lineup["Player_Ids"]],
             "superstar": int(lineup["Superstar_Id"]),
         }
+        if lineup.get("Construction_Rule"):
+            row["construction_rule"] = str(lineup["Construction_Rule"])
         for metric in LINEUP_METRICS:
             if metric in lineup:
                 row[metric.lower()] = _clean(round(float(lineup[metric]), 5))
@@ -147,6 +150,8 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True):
         return None, problem
 
     model = nb.build_correlation_model(pool)
+    settings = {name: _clean(getattr(cfg, name)) for name in EXPOSED_SETTINGS}
+    settings["portfolio_construction_rules"] = portfolio_construction.serializable_rules()
     payload = {
         "schema": SCHEMA,
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -156,7 +161,7 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True):
         "home": str(game["Home Team"]),
         "kickoff_utc": _clean(game["Game Time"]),
         "salary_cap": round(float(salary_cap), 2),
-        "settings": {name: _clean(getattr(cfg, name)) for name in EXPOSED_SETTINGS},
+        "settings": settings,
         "players": player_rows(pool, model["cv"]),
         "latent": upper_triangle(model["latent_corr"]),
         "model": {
@@ -176,7 +181,7 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True):
         pool, salary_cap, covariance, cfg
     )
     scored = nb.score_candidates_shared_scenarios(candidates, outcomes, cfg)
-    portfolio = nb.select_tournament_portfolio(scored, cfg)
+    portfolio = portfolio_construction.select_portfolio(scored, pool, cfg)
     strongest = nb.select_strongest_lineups(scored, count=10)
     reliability = nb.reliability_report(scored)
 
@@ -185,6 +190,11 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True):
         "candidates_scored": int(len(scored)),
         "portfolio": lineup_rows(portfolio),
         "strongest": lineup_rows(strongest),
+        "construction": {
+            "requested": int(portfolio.attrs.get("construction_requested", cfg.tournament_lineups)),
+            "selected": int(portfolio.attrs.get("construction_selected", len(portfolio))),
+            "unfilled": dict(portfolio.attrs.get("construction_unfilled") or {}),
+        },
         "reliability": [
             {_json_key(key): _clean(value) for key, value in row.items()}
             for row in reliability.to_dict("records")
