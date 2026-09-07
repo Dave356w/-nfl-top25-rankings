@@ -22,6 +22,7 @@ jobs:
         with:
           node-version: "20"
       - run: python tools/apply_shared_audit_patch.py
+      - run: python tools/fix_role_tests.py
       - run: pip install -r requirements.txt
       - name: Run full test suite
         run: python -m unittest discover -s tests -v
