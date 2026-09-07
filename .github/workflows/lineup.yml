@@ -32,17 +32,9 @@ on:
       - ".github/workflows/lineup.yml"
 
 permissions:
-  contents: write   # commit the week's lineup back to the repo
+  contents: write
   pages: write
   id-token: write
-
-# Shared with `Daily rankings`: both jobs deploy the whole `site/` directory to
-# one Pages site, so a concurrent deploy would publish whichever finished last
-# and silently drop the other's data. cancel-in-progress stays false so a run
-# already talking to the sportsbooks is never thrown away.
-concurrency:
-  group: pages-publish
-  cancel-in-progress: false
 
 jobs:
   build:
@@ -75,7 +67,6 @@ jobs:
             exit 0
           fi
           git commit -m "data: lineup for $(date -u +%Y-%m-%d)"
-          # The daily rankings job may have landed while this one was building.
           for attempt in 1 2 3 4; do
             git pull --rebase origin main && git push origin HEAD:main && exit 0
             echo "push attempt $attempt failed; retrying"
@@ -83,21 +74,29 @@ jobs:
           done
           exit 1
 
-      # Pages must already be enabled with Source: GitHub Actions -- see the
-      # README. The same manual step the daily build needs; it is per repo, not
-      # per workflow, so enabling it once covers both.
+  # Builds must never share one concurrency group: GitHub retains only one
+  # pending run per group and can silently cancel another publisher. Deploys
+  # may be coalesced because each one checks out the latest main after all data
+  # produced by its own build has been committed.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
