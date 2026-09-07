@@ -29,6 +29,7 @@ from pathlib import Path
 import pandas as pd
 
 import lineup_optimizer as lo
+import market_audit as projection_audit
 # The daily entry point already solved log capture and NaN-safe JSON, and the
 # page contract is the same one. Sharing them keeps the two payloads honest.
 from run_daily import _Tee, _clean
@@ -58,15 +59,35 @@ def _player_row(player: pd.Series, slot: str | None = None) -> dict:
         "depth_source": _clean(player.get("Depth_Source")),
         "source": _clean(player.get("Projection_Source")),
         "market_quality": _clean(player.get("Market_Quality")),
+        # Runtime confidence audit. `market_raw` is the sportsbook component
+        # sum before shrinkage; `market_prior` is the displaced Yahoo/salary
+        # estimate. Publishing both makes every adjustment reproducible.
+        "market_raw": _clean(player.get("Market_Raw_FP")),
+        "market_prior": _clean(player.get("Market_Prior_FP")),
+        "market_delta": _clean(player.get("Market_Delta_FP")),
+        "market_delta_pct": _clean(player.get("Market_Delta_Pct")),
+        "market_base_weight": _clean(player.get("Market_Base_Weight")),
+        "market_weight": _clean(player.get("Market_Weight")),
+        "market_audit_flag": _clean(player.get("Market_Audit_Flag")),
+        "market_audit_reason": _clean(player.get("Market_Audit_Reason")),
+        "market_feed_count": _clean(player.get("Market_Feed_Count")),
         "injury": _clean(player.get("report_status")),
         "review": lo.review(player),
     }
     kickoff = player.get("Game_Time")
     if isinstance(kickoff, pd.Timestamp) and pd.notna(kickoff):
         row["kickoff_utc"] = kickoff.strftime("%Y-%m-%d %H:%M")
-    for key in ("floor", "ceiling", "fppg"):
+    for key in (
+        "floor", "ceiling", "fppg", "market_raw", "market_prior", "market_delta"
+    ):
         if isinstance(row[key], float):
             row[key] = round(row[key], 2)
+    if isinstance(row["market_delta_pct"], float):
+        row["market_delta_pct"] = round(row["market_delta_pct"], 4)
+    if isinstance(row["market_base_weight"], float):
+        row["market_base_weight"] = round(row["market_base_weight"], 3)
+    if isinstance(row["market_weight"], float):
+        row["market_weight"] = round(row["market_weight"], 3)
     if slot is None:
         row.pop("slot")
     return row
@@ -131,6 +152,7 @@ def build_payload(results: dict, objective: str, log_lines: list[str]) -> dict:
             "skill_rows": _clean(audit.get("skill_rows")),
             "logit_vig": _clean(audit.get("logit_vig")),
             "calibration_pairs": _clean(audit.get("calibration_pairs")),
+            "projection_audit": dict(audit.get("projection_audit") or {}),
         },
         "log": log_lines,
     }
@@ -241,8 +263,25 @@ def main(argv=None):
                 print(f"Market: {', '.join(market_audit['feeds']) or 'none'}; "
                       f"matched {market_audit['matched']}/{market_audit['skill_rows']} "
                       f"skill-player rows; accepted {market_audit['accepted']} means.")
+
+            # Confidence audit is deliberately downstream of the shared market
+            # engine. It never changes de-vigging or the fitted stat distributions;
+            # it only shrinks a market mean toward the independent Yahoo prior when
+            # disagreement is large enough to deserve skepticism.
+            yahoo = projection_audit.apply_projection_audit(yahoo)
+            audit_summary = projection_audit.audit_summary(yahoo)
+            market_audit["projection_audit"] = audit_summary
+            if audit_summary["audited"]:
+                print(
+                    "Market audit: "
+                    f"{audit_summary['flagged']}/{audit_summary['audited']} flagged, "
+                    f"{audit_summary['shrunk']} shrunk, "
+                    f"{audit_summary['extreme']} extreme."
+                )
+
             context = lo.load_nfl_context(yahoo)
             roster = lo.build_roster(configured, yahoo, context)
+            roster = projection_audit.attach_audit_columns(roster, yahoo)
             print(f"Season {context['season']} week {context['week']}; "
                   f"depth snapshot {context['depth_stamp']}.")
             for note in context.get("notes", []):
@@ -265,6 +304,7 @@ def main(argv=None):
             if not args.no_pool:
                 try:
                     pool = lo.build_pool(yahoo, context)
+                    pool = projection_audit.attach_audit_columns(pool, yahoo)
                     print(f"Add pool: {len(pool)} player(s) resolved for the "
                           "page's roster editor.")
                 except Exception as exc:
