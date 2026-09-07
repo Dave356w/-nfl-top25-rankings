@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-07T05:48:20Z",
+  "generated_utc": "2026-09-07T06:24:31Z",
   "run_date": "2026-09-07",
   "season": 2026,
   "week": 1,
@@ -451,13 +451,13 @@
     "matched": 416,
     "accepted": 416,
     "skill_rows": 883,
-    "logit_vig": 0.1403690101014298,
+    "logit_vig": 0.13976194237515843,
     "calibration_pairs": 367,
     "projection_audit": {
       "audited": 416,
-      "flagged": 139,
-      "shrunk": 44,
-      "extreme": 118,
+      "flagged": 68,
+      "shrunk": 37,
+      "extreme": 47,
       "rules": {
         "moderate": {
           "min_abs_fp": 2.5,
@@ -468,8 +468,9 @@
         "extreme": {
           "min_abs_fp": 5.0,
           "min_abs_pct": 0.4,
+          "min_abs_fp_for_pct": 2.0,
           "weight_cap": 0.65,
-          "logic": "either"
+          "logic": "abs_fp OR (pct AND min_abs_fp_for_pct)"
         },
         "single_feed_good_weight_cap": 0.9
       }
@@ -480,7 +481,7 @@
     "Market: bovada: 393 player-market records (live)",
     "Market: underdog: 575 player-market records (live)",
     "Market: Bovada, Underdog; matched 416/883 skill-player rows; accepted 416 means.",
-    "Market audit: 139/416 flagged, 44 shrunk, 118 extreme.",
+    "Market audit: 68/416 flagged, 37 shrunk, 47 extreme.",
     "Season 2026 week 1; depth snapshot 2026-09-06T11:29:30Z.",
     "Injury report unavailable (Season must be between 2009 and 2025); nobody was auto-benched -- check the injury news yourself.",
     "Add pool: 277 player(s) resolved for the page's roster editor."
