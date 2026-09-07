@@ -72,10 +72,15 @@ class MarketTailGuardTests(unittest.TestCase):
 
     def test_rushing_yards_are_not_changed_by_receiving_guard(self):
         market = self._shape_market("rushing_yards", shape=0.9, anchored=True)
+        observations, _ = nb.fair_observations(market, global_logit_vig=0.0)
+        baseline = nb.fit_weibull(
+            observations, nb.DEFAULT_WEIBULL_SHAPES["rushing_yards"]
+        )
         distribution, _ = guard.guarded_fit_stat_distribution(
             nb, "rushing_yards", market, global_logit_vig=0.0
         )
-        self.assertAlmostEqual(distribution.parameter_1, 0.9, places=5)
+        self.assertAlmostEqual(distribution.parameter_1, baseline.parameter_1, places=12)
+        self.assertAlmostEqual(distribution.mean, baseline.mean, places=12)
 
     def test_install_is_idempotent(self):
         original = nb.fit_stat_distribution
