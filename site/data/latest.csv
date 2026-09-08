@@ -1,104 +1,104 @@
 Position,Rank,Player,Team,Opponent,Estimated FP,Yahoo FPPG,Salary,FP / salary,Role,Role slot,Depth,Kickoff UTC,Projection method
-QB,1,Justin Herbert,LAC,ARI,20.98,18.23,35,0.599,starter,QB slot 9,1,2026-09-13 20:25,market good 90% audit: Bovada
-QB,2,Lamar Jackson,BAL,IND,20.95,17.07,36,0.582,starter,QB slot 9,1,2026-09-13 17:00,market good 90% audit: Bovada
-QB,3,Joe Burrow,CIN,TB,20.81,17.43,38,0.548,starter,QB slot 9,1,2026-09-13 17:00,market fair 75%: Bovada
-QB,4,Jalen Hurts,PHI,WAS,20.59,18.66,36,0.572,starter,QB slot 9,1,2026-09-13 20:25,market good 90% audit: Bovada
-QB,5,Josh Allen,BUF,HOU,20.56,23.82,39,0.527,starter,QB slot 9,1,2026-09-13 17:00,market good 90% audit: Bovada
-QB,6,Patrick Mahomes,KC,DEN,20.09,21.16,33,0.609,starter,QB slot 9,1,2026-09-15 00:15,70% FPPG + 30% salary prior
-QB,7,Trevor Lawrence,JAC,CLE,19.6,20.64,37,0.53,starter,QB slot 9,1,2026-09-13 17:00,market good 90% audit: Bovada
-QB,8,Jaxson Dart,NYG,DAL,19.53,17.61,35,0.558,starter,QB slot 9,1,2026-09-14 00:20,market good 90% audit: Bovada
-QB,9,Caleb Williams,CHI,CAR,19.0,19.36,37,0.514,starter,QB slot 9,1,2026-09-13 17:00,market good 90% audit: Bovada
-QB,10,Dak Prescott,DAL,NYG,19.0,19.05,36,0.528,starter,QB slot 9,1,2026-09-14 00:20,market good 90% audit: Bovada
-QB,11,Jared Goff,DET,NO,19.0,17.94,35,0.543,starter,QB slot 9,1,2026-09-13 17:00,market good 90% audit: Bovada
-QB,12,Brock Purdy,SF,LA,18.57,19.32,27,0.688,starter,QB slot 9,1,2026-09-11 00:35,market good 90% audit: Bovada
-QB,13,Baker Mayfield,TB,CIN,18.55,16.64,33,0.562,starter,QB slot 9,1,2026-09-13 17:00,market fair 75%: Bovada
-QB,14,Kyler Murray,MIN,GB,18.54,16.16,30,0.618,starter,QB slot 9,1,2026-09-13 20:25,market good 90% audit: Bovada
-QB,15,Drake Maye,NE,SEA,18.38,20.4,34,0.541,starter,QB slot 9,1,2026-09-10 00:20,market good 90% audit: Bovada
-QB,16,Bo Nix,DEN,KC,18.31,18.94,32,0.572,starter,QB slot 9,1,2026-09-15 00:15,70% FPPG + 30% salary prior
-QB,17,Matthew Stafford,LA,SF,18.12,21.02,35,0.518,starter,QB slot 9,1,2026-09-11 00:35,market good 90% audit: Bovada
-QB,18,Tyler Shough,NO,DET,18.1,14.91,30,0.603,starter,QB slot 9,1,2026-09-13 17:00,market good 90% audit: Bovada
-QB,19,Jayden Daniels,WAS,PHI,17.91,16.75,32,0.56,starter,QB slot 9,1,2026-09-13 20:25,market good 90% audit: Bovada
-QB,20,Jordan Love,GB,MIN,17.5,16.95,34,0.515,starter,QB slot 9,1,2026-09-13 20:25,market good 90% audit: Bovada
-QB,21,Daniel Jones,IND,BAL,16.8,18.03,30,0.56,starter,QB slot 9,1,2026-09-13 17:00,market good 90% audit: Bovada
-QB,22,Bryce Young,CAR,CHI,16.44,14.76,27,0.609,starter,QB slot 9,1,2026-09-13 17:00,market good 90% audit: Bovada
-QB,23,Sam Darnold,SEA,NE,16.41,14.88,29,0.566,starter,QB slot 9,1,2026-09-10 00:20,market good 90% audit: Bovada
-QB,24,C.J. Stroud,HOU,BUF,15.69,14.69,29,0.541,starter,QB slot 9,1,2026-09-13 17:00,market good 90% audit: Bovada
-QB,25,Malik Willis,MIA,LV,15.41,12.79,24,0.642,starter,QB slot 9,1,2026-09-13 20:25,market good 80% audit: Bovada
-RB,1,Jahmyr Gibbs,DET,NO,22.02,19.32,40,0.551,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,2,Bijan Robinson,ATL,PIT,19.79,19.49,40,0.495,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,3,Christian McCaffrey,SF,LA,18.85,21.15,39,0.483,starter,RB slot 11,1,2026-09-11 00:35,market good 90% audit: Bovada
-RB,4,Jonathan Taylor,IND,BAL,17.68,19.96,37,0.478,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,5,De'Von Achane,MIA,LV,16.77,18.08,36,0.466,starter,RB slot 11,1,2026-09-13 20:25,market good 90% audit: Bovada
-RB,6,Saquon Barkley,PHI,WAS,16.16,13.44,34,0.475,starter,RB slot 11,1,2026-09-13 20:25,market good 90% audit: Bovada
-RB,7,Derrick Henry,BAL,IND,15.96,16.0,38,0.42,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,8,Javonte Williams,DAL,NYG,15.18,14.08,29,0.524,starter,RB slot 11,1,2026-09-14 00:20,market good 90% audit: Bovada
-RB,9,D'Andre Swift,CHI,CAR,15.0,13.08,28,0.536,starter,RB slot 11,1,2026-09-13 17:00,market td-estimate 35%: Bovada
-RB,10,Ashton Jeanty,LV,MIA,14.6,12.8,33,0.442,starter,RB slot 11,1,2026-09-13 20:25,market td-estimate 35%: Bovada
-RB,11,James Cook III,BUF,HOU,14.46,16.05,31,0.467,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,12,Rhamondre Stevenson,NE,SEA,13.98,11.62,26,0.538,starter,RB slot 11,1,2026-09-10 00:20,market good 90% audit: Bovada
-RB,13,Travis Etienne Jr.,NO,DET,13.86,14.22,30,0.462,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,14,Breece Hall,NYJ,TEN,13.81,11.85,27,0.511,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,15,Kenneth Walker III,KC,DEN,13.62,12.33,35,0.389,starter,RB slot 11,1,2026-09-15 00:15,70% FPPG + 30% salary prior
-RB,16,Kyren Williams,LA,SF,12.82,14.93,36,0.356,starter,RB slot 11,1,2026-09-11 00:35,market good 90% audit: Bovada
-RB,17,Cam Skattebo,NYG,DAL,12.58,14.46,31,0.406,starter,RB slot 11,1,2026-09-14 00:20,market good 90% audit: Bovada
-RB,18,Omarion Hampton,LAC,ARI,12.57,11.96,29,0.433,starter,RB slot 11,1,2026-09-13 20:25,market fair 75%: Bovada
-RB,19,Chase Brown,CIN,TB,12.09,14.59,37,0.327,starter,RB slot 11,1,2026-09-13 17:00,market fair 75%: Bovada
-RB,20,David Montgomery,HOU,BUF,11.67,9.11,20,0.583,starter,RB slot 11,1,2026-09-13 17:00,market good 80% audit: Bovada
-RB,21,Jaylen Warren,PIT,ATL,11.57,11.9,27,0.428,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,22,Quinshon Judkins,CLE,JAC,11.14,11.2,24,0.464,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,23,Tony Pollard,TEN,NYJ,10.84,9.96,22,0.493,starter,RB slot 11,1,2026-09-13 17:00,market good 90% audit: Bovada
-RB,24,Rico Dowdle,PIT,ATL,10.68,11.04,21,0.508,rotation,RB slot 11,2,2026-09-13 17:00,market good 90% audit: Bovada
-RB,25,J.K. Dobbins,DEN,KC,10.4,11.04,21,0.495,starter,RB slot 11,1,2026-09-15 00:15,70% FPPG + 30% salary prior
-WR,1,Ja'Marr Chase,CIN,TB,17.04,15.69,39,0.437,starter,WR slot 1,1,2026-09-13 17:00,market fair 75%: Bovada
-WR,2,Puka Nacua,LA,SF,17.02,19.79,38,0.448,starter,WR slot 1,1,2026-09-11 00:35,market good 90% audit: Bovada
-WR,3,Jaxon Smith-Njigba,SEA,NE,15.34,17.04,35,0.438,starter,WR slot 1,1,2026-09-10 00:20,market good 90% audit: Bovada
-WR,4,Amon-Ra St. Brown,DET,NO,15.3,15.62,38,0.403,starter,WR slot 1,1,2026-09-13 17:00,market good 90% audit: Bovada
-WR,5,Rashee Rice,KC,DEN,14.67,15.45,29,0.506,starter,WR slot 1,1,2026-09-15 00:15,70% FPPG + 30% salary prior
-WR,6,Chris Olave,NO,DET,14.49,13.69,34,0.426,starter,WR slot 1,1,2026-09-13 17:00,market good 90% audit: Bovada
-WR,7,CeeDee Lamb,DAL,NYG,14.47,11.67,29,0.499,starter,WR slot 1,1,2026-09-14 00:20,market good 90% audit: Bovada
-WR,8,Justin Jefferson,MIN,GB,13.05,9.38,28,0.466,starter,WR slot 1,1,2026-09-13 20:25,market good 80% audit: Bovada
-WR,9,George Pickens,DAL,NYG,12.8,14.44,27,0.474,starter,WR slot 2,2,2026-09-14 00:20,market good 90% audit: Bovada
-WR,10,Nico Collins,HOU,BUF,12.66,12.14,27,0.469,starter,WR slot 1,1,2026-09-13 17:00,market good 90% audit: Bovada
-WR,11,Tee Higgins,CIN,TB,12.59,12.14,33,0.381,starter,WR slot 2,2,2026-09-13 17:00,market fair 75%: Bovada
-WR,12,DeVonta Smith,PHI,WAS,12.2,9.68,27,0.452,starter,WR slot 1,1,2026-09-13 20:25,market good 90% audit: Bovada
-WR,13,Malik Nabers,NYG,DAL,12.2,12.02,26,0.469,starter,WR slot 1,1,2026-09-14 00:20,market good 90% audit: Bovada
-WR,14,Drake London,ATL,PIT,12.14,13.99,32,0.379,starter,WR slot 1,1,2026-09-13 17:00,market good 90% audit: Bovada
-WR,15,Zay Flowers,BAL,IND,12.07,11.78,33,0.366,starter,WR slot 1,1,2026-09-13 17:00,market good 90% audit: Bovada
-WR,16,A.J. Brown,NE,SEA,11.78,11.58,26,0.453,starter,WR slot 1,1,2026-09-10 00:20,market good 90% audit: Bovada
-WR,17,Tetairoa McMillan,CAR,CHI,11.47,10.39,25,0.459,starter,WR slot 1,1,2026-09-13 17:00,market good 90% audit: Bovada
-WR,18,Ladd McConkey,LAC,ARI,11.41,8.98,24,0.476,starter,WR slot 1,1,2026-09-13 20:25,market good 90% audit: Bovada
-WR,19,Garrett Wilson,NYJ,TEN,11.27,11.64,25,0.451,starter,WR slot 1,1,2026-09-13 17:00,market good 90% audit: Bovada
-WR,20,Davante Adams,LA,SF,10.98,13.11,27,0.407,starter,WR slot 2,2,2026-09-11 00:35,market good 90% audit: Bovada
-WR,21,Jameson Williams,DET,NO,10.96,11.02,27,0.406,starter,WR slot 2,2,2026-09-13 17:00,market good 90% audit: Bovada
-WR,22,Christian Watson,GB,MIN,10.75,11.45,22,0.489,starter,WR slot 1,1,2026-09-13 20:25,market good 90% audit: Bovada
-WR,23,Parker Washington,JAC,CLE,10.62,10.36,27,0.393,starter,WR slot 2,1,2026-09-13 17:00,market good 90% audit: Bovada
-WR,24,Emeka Egbuka,TB,CIN,10.51,9.66,20,0.526,starter,WR slot 1,1,2026-09-13 17:00,market fair 75%: Bovada
-WR,25,Luther Burden III,CHI,CAR,10.14,6.68,22,0.461,starter,WR slot 2,1,2026-09-13 17:00,market good 65% audit: Bovada
-TE,1,Brock Bowers,LV,MIA,12.84,12.02,26,0.494,starter,TE slot 10,1,2026-09-13 20:25,market good 90% audit: Bovada
-TE,2,Trey McBride,ARI,LAC,12.49,14.88,28,0.446,starter,TE slot 10,1,2026-09-13 20:25,market good 90% audit: Bovada
-TE,3,Colston Loveland,CHI,CAR,10.6,9.08,22,0.482,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,4,Tucker Kraft,GB,MIN,10.0,12.65,23,0.435,starter,TE slot 10,1,2026-09-13 20:25,market good 90% audit: Bovada
-TE,5,Tyler Warren,IND,BAL,9.36,8.85,17,0.551,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,6,Sam LaPorta,DET,NO,9.2,9.66,21,0.438,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,7,Kyle Pitts Sr.,ATL,PIT,8.77,9.81,21,0.417,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,8,Juwan Johnson,NO,DET,8.7,8.32,17,0.512,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,9,George Kittle,SF,LA,8.65,11.18,21,0.412,starter,TE slot 10,1,2026-09-11 00:35,market good 80% audit: Bovada
-TE,10,Travis Kelce,KC,DEN,8.32,9.13,15,0.555,starter,TE slot 10,1,2026-09-15 00:15,70% FPPG + 30% salary prior
-TE,11,Dallas Goedert,PHI,WAS,8.2,10.78,19,0.432,starter,TE slot 10,1,2026-09-13 20:25,market good 80% audit: Bovada
-TE,12,Mark Andrews,BAL,IND,8.0,6.29,14,0.572,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,13,Dalton Kincaid,BUF,HOU,7.88,9.59,16,0.492,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,14,Harold Fannin Jr.,CLE,JAC,7.82,9.4,20,0.391,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,15,Brenton Strange,JAC,CLE,7.69,7.45,15,0.513,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,16,Hunter Henry,NE,SEA,7.58,8.12,15,0.506,starter,TE slot 10,1,2026-09-10 00:20,market good 90% audit: Bovada
-TE,17,Dalton Schultz,HOU,BUF,7.17,7.64,14,0.512,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,18,Jake Ferguson,DAL,NYG,7.0,8.65,14,0.5,starter,TE slot 10,1,2026-09-14 00:20,market good 90% audit: Bovada
-TE,19,Isaiah Likely,NYG,DAL,6.95,4.38,16,0.434,starter,TE slot 10,1,2026-09-14 00:20,market good 90% audit: Bovada
-TE,20,T.J. Hockenson,MIN,GB,6.45,5.82,13,0.496,starter,TE slot 10,1,2026-09-13 20:25,market good 90% audit: Bovada
-TE,21,Cade Otton,TB,CIN,6.26,6.18,13,0.482,starter,TE slot 10,1,2026-09-13 17:00,market td-estimate 35%: Bovada
-TE,22,Darren Waller,CAR,CHI,6.16,9.59,13,0.474,backup,TE slot 10,1,2026-09-13 17:00,70% FPPG + 30% salary prior
-TE,23,AJ Barner,SEA,NE,6.07,6.86,12,0.506,starter,TE slot 10,1,2026-09-10 00:20,market good 90% audit: Bovada
-TE,24,Pat Freiermuth,PIT,ATL,5.88,5.96,12,0.49,starter,TE slot 10,1,2026-09-13 17:00,market good 90% audit: Bovada
-TE,25,Jake Tonges,SF,LA,5.86,7.05,14,0.419,rotation,TE slot 10,2,2026-09-11 00:35,market td-estimate 35%: Bovada
+QB,1,Justin Herbert,LAC,ARI,20.99,18.23,35,0.6,starter,QB slot 9,1,2026-09-13 20:25,market good: Bovada+Underdog
+QB,2,Lamar Jackson,BAL,IND,20.87,17.07,36,0.58,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,3,Joe Burrow,CIN,TB,20.44,17.43,38,0.538,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,4,Jalen Hurts,PHI,WAS,20.13,18.66,36,0.559,starter,QB slot 9,1,2026-09-13 20:25,market good: Bovada+Underdog
+QB,5,Jaxson Dart,NYG,DAL,19.04,17.61,35,0.544,starter,QB slot 9,1,2026-09-14 00:20,market good: Bovada+Underdog
+QB,6,Josh Allen,BUF,HOU,18.89,23.82,39,0.484,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,7,Trevor Lawrence,JAC,CLE,18.85,20.64,37,0.509,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,8,Jared Goff,DET,NO,18.67,17.94,35,0.533,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,9,Dak Prescott,DAL,NYG,18.63,19.05,36,0.518,starter,QB slot 9,1,2026-09-14 00:20,market good: Bovada+Underdog
+QB,10,Caleb Williams,CHI,CAR,18.47,19.36,37,0.499,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,11,Kyler Murray,MIN,GB,18.31,16.16,30,0.61,starter,QB slot 9,1,2026-09-13 20:25,market good: Bovada+Underdog
+QB,12,Tua Tagovailoa,ATL,PIT,18.03,12.55,21,0.858,starter,QB slot 9,1,2026-09-13 17:00,market good 65% audit: Bovada+Underdog
+QB,13,Brock Purdy,SF,LA,18.02,19.32,27,0.667,starter,QB slot 9,1,2026-09-11 00:35,market good: Bovada+Underdog
+QB,14,Jayden Daniels,WAS,PHI,17.85,16.75,32,0.558,starter,QB slot 9,1,2026-09-13 20:25,market good: Bovada+Underdog
+QB,15,Baker Mayfield,TB,CIN,17.84,16.64,33,0.541,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,16,Tyler Shough,NO,DET,17.65,14.91,30,0.588,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,17,Drake Maye,NE,SEA,17.63,20.4,34,0.519,starter,QB slot 9,1,2026-09-10 00:20,market good: Bovada+Underdog
+QB,18,Matthew Stafford,LA,SF,17.51,21.02,35,0.5,starter,QB slot 9,1,2026-09-11 00:35,market good: Bovada+Underdog
+QB,19,Patrick Mahomes,KC,DEN,16.98,21.16,33,0.514,starter,QB slot 9,1,2026-09-15 00:15,market good 90% audit: Underdog
+QB,20,Jordan Love,GB,MIN,16.92,16.95,34,0.498,starter,QB slot 9,1,2026-09-13 20:25,market good: Bovada+Underdog
+QB,21,Bo Nix,DEN,KC,16.33,18.94,32,0.51,starter,QB slot 9,1,2026-09-15 00:15,market good 90% audit: Underdog
+QB,22,Daniel Jones,IND,BAL,16.18,18.03,30,0.539,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,23,Bryce Young,CAR,CHI,16.14,14.76,27,0.598,starter,QB slot 9,1,2026-09-13 17:00,market good: Bovada+Underdog
+QB,24,Malik Willis,MIA,LV,16.12,12.79,24,0.672,starter,QB slot 9,1,2026-09-13 20:25,market good 65% audit: Bovada+Underdog
+QB,25,Sam Darnold,SEA,NE,16.01,14.88,29,0.552,starter,QB slot 9,1,2026-09-10 00:20,market good: Bovada+Underdog
+RB,1,Jahmyr Gibbs,DET,NO,21.64,19.32,40,0.541,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,2,Bijan Robinson,ATL,PIT,19.6,19.49,40,0.49,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,3,Christian McCaffrey,SF,LA,18.23,21.15,39,0.467,starter,RB slot 11,1,2026-09-11 00:35,market good: Bovada+Underdog
+RB,4,Travis Etienne Jr.,NO,DET,17.5,14.22,30,0.583,starter,RB slot 11,1,2026-09-13 17:00,market good 65% audit: Bovada+Underdog
+RB,5,Jonathan Taylor,IND,BAL,16.94,19.96,37,0.458,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,6,Rhamondre Stevenson,NE,SEA,16.69,11.62,26,0.642,starter,RB slot 11,1,2026-09-10 00:20,market good 65% audit: Bovada+Underdog
+RB,7,De'Von Achane,MIA,LV,16.44,18.08,36,0.457,starter,RB slot 11,1,2026-09-13 20:25,market good: Bovada+Underdog
+RB,8,Saquon Barkley,PHI,WAS,16.01,13.44,34,0.471,starter,RB slot 11,1,2026-09-13 20:25,market good: Bovada+Underdog
+RB,9,Derrick Henry,BAL,IND,15.28,16.0,38,0.402,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,10,Chase Brown,CIN,TB,15.23,14.59,37,0.412,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,11,Javonte Williams,DAL,NYG,15.07,14.08,29,0.52,starter,RB slot 11,1,2026-09-14 00:20,market good: Bovada+Underdog
+RB,12,Omarion Hampton,LAC,ARI,14.81,11.96,29,0.511,starter,RB slot 11,1,2026-09-13 20:25,market good: Bovada+Underdog
+RB,13,James Cook III,BUF,HOU,14.3,16.05,31,0.461,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,14,D'Andre Swift,CHI,CAR,14.13,13.08,28,0.505,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,15,Breece Hall,NYJ,TEN,13.89,11.85,27,0.514,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,16,Kenneth Walker III,KC,DEN,13.44,12.33,35,0.384,starter,RB slot 11,1,2026-09-15 00:15,market good 90% audit: Underdog
+RB,17,Kyren Williams,LA,SF,12.3,14.93,36,0.342,starter,RB slot 11,1,2026-09-11 00:35,market good: Bovada+Underdog
+RB,18,Cam Skattebo,NYG,DAL,11.8,14.46,31,0.381,starter,RB slot 11,1,2026-09-14 00:20,market good: Bovada+Underdog
+RB,19,Jaylen Warren,PIT,ATL,11.38,11.9,27,0.421,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,20,David Montgomery,HOU,BUF,11.27,9.11,20,0.564,starter,RB slot 11,1,2026-09-13 17:00,market good 80% audit: Bovada+Underdog
+RB,21,Quinshon Judkins,CLE,JAC,11.09,11.2,24,0.462,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,22,Bucky Irving,TB,CIN,10.99,12.35,25,0.44,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,23,Tony Pollard,TEN,NYJ,10.67,9.96,22,0.485,starter,RB slot 11,1,2026-09-13 17:00,market good: Bovada+Underdog
+RB,24,Rico Dowdle,PIT,ATL,10.58,11.04,21,0.504,rotation,RB slot 11,2,2026-09-13 17:00,market good: Bovada+Underdog
+RB,25,Jadarian Price,SEA,NE,9.76,0.0,22,0.444,starter,RB slot 11,1,2026-09-10 00:20,market good 80% audit: Bovada+Underdog
+WR,1,Ja'Marr Chase,CIN,TB,17.28,15.69,39,0.443,starter,WR slot 1,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,2,Puka Nacua,LA,SF,15.63,19.79,38,0.411,starter,WR slot 1,1,2026-09-11 00:35,market good: Bovada+Underdog
+WR,3,Amon-Ra St. Brown,DET,NO,15.49,15.62,38,0.408,starter,WR slot 1,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,4,Jaxon Smith-Njigba,SEA,NE,15.14,17.04,35,0.433,starter,WR slot 1,1,2026-09-10 00:20,market good: Bovada+Underdog
+WR,5,CeeDee Lamb,DAL,NYG,14.73,11.67,29,0.508,starter,WR slot 1,1,2026-09-14 00:20,market good: Bovada+Underdog
+WR,6,Chris Olave,NO,DET,14.46,13.69,34,0.425,starter,WR slot 1,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,7,Tee Higgins,CIN,TB,13.07,12.14,33,0.396,starter,WR slot 2,2,2026-09-13 17:00,market good: Bovada+Underdog
+WR,8,Justin Jefferson,MIN,GB,13.01,9.38,28,0.465,starter,WR slot 1,1,2026-09-13 20:25,market good 80% audit: Bovada+Underdog
+WR,9,George Pickens,DAL,NYG,12.72,14.44,27,0.471,starter,WR slot 2,2,2026-09-14 00:20,market good: Bovada+Underdog
+WR,10,Nico Collins,HOU,BUF,12.68,12.14,27,0.47,starter,WR slot 1,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,11,DeVonta Smith,PHI,WAS,12.63,9.68,27,0.468,starter,WR slot 1,1,2026-09-13 20:25,market good: Bovada+Underdog
+WR,12,Rashee Rice,KC,DEN,12.38,15.45,29,0.427,starter,WR slot 1,1,2026-09-15 00:15,market good 90% audit: Underdog
+WR,13,Zay Flowers,BAL,IND,12.15,11.78,33,0.368,starter,WR slot 1,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,14,Malik Nabers,NYG,DAL,12.04,12.02,26,0.463,starter,WR slot 1,1,2026-09-14 00:20,market good: Bovada+Underdog
+WR,15,Drake London,ATL,PIT,12.01,13.99,32,0.375,starter,WR slot 1,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,16,A.J. Brown,NE,SEA,11.81,11.58,26,0.454,starter,WR slot 1,1,2026-09-10 00:20,market good: Bovada+Underdog
+WR,17,Tetairoa McMillan,CAR,CHI,11.45,10.39,25,0.458,starter,WR slot 1,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,18,Garrett Wilson,NYJ,TEN,11.4,11.64,25,0.456,starter,WR slot 1,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,19,Jameson Williams,DET,NO,11.37,11.02,27,0.421,starter,WR slot 2,2,2026-09-13 17:00,market good: Bovada+Underdog
+WR,20,Ladd McConkey,LAC,ARI,11.17,8.98,24,0.465,starter,WR slot 1,1,2026-09-13 20:25,market good: Bovada+Underdog
+WR,21,Davante Adams,LA,SF,10.89,13.11,27,0.403,starter,WR slot 2,2,2026-09-11 00:35,market good: Bovada+Underdog
+WR,22,Christian Watson,GB,MIN,10.73,11.45,22,0.488,starter,WR slot 1,1,2026-09-13 20:25,market good: Bovada+Underdog
+WR,23,Emeka Egbuka,TB,CIN,10.58,9.66,20,0.529,starter,WR slot 1,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,24,Parker Washington,JAC,CLE,10.37,10.36,27,0.384,starter,WR slot 2,1,2026-09-13 17:00,market good: Bovada+Underdog
+WR,25,Jaylen Waddle,DEN,KC,10.3,10.13,21,0.491,starter,WR slot 1,1,2026-09-15 00:15,market good 90% audit: Underdog
+TE,1,Brock Bowers,LV,MIA,12.91,12.02,26,0.497,starter,TE slot 10,1,2026-09-13 20:25,market good: Bovada+Underdog
+TE,2,Trey McBride,ARI,LAC,11.62,14.88,28,0.415,starter,TE slot 10,1,2026-09-13 20:25,market good: Bovada+Underdog
+TE,3,Colston Loveland,CHI,CAR,10.61,9.08,22,0.482,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,4,Sam LaPorta,DET,NO,9.55,9.66,21,0.455,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,5,Tucker Kraft,GB,MIN,9.48,12.65,23,0.412,starter,TE slot 10,1,2026-09-13 20:25,market good: Bovada+Underdog
+TE,6,Tyler Warren,IND,BAL,9.45,8.85,17,0.556,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,7,Kyle Pitts Sr.,ATL,PIT,8.9,9.81,21,0.424,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,8,Juwan Johnson,NO,DET,8.89,8.32,17,0.523,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,9,George Kittle,SF,LA,8.58,11.18,21,0.409,starter,TE slot 10,1,2026-09-11 00:35,market good: Bovada+Underdog
+TE,10,Travis Kelce,KC,DEN,8.54,9.13,15,0.569,starter,TE slot 10,1,2026-09-15 00:15,market good 90% audit: Underdog
+TE,11,Mark Andrews,BAL,IND,8.15,6.29,14,0.582,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,12,Dalton Kincaid,BUF,HOU,7.99,9.59,16,0.499,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,13,Dallas Goedert,PHI,WAS,7.87,10.78,19,0.414,starter,TE slot 10,1,2026-09-13 20:25,market good: Bovada+Underdog
+TE,14,Harold Fannin Jr.,CLE,JAC,7.82,9.4,20,0.391,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,15,Brenton Strange,JAC,CLE,7.79,7.45,15,0.519,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,16,Hunter Henry,NE,SEA,7.52,8.12,15,0.501,starter,TE slot 10,1,2026-09-10 00:20,market good: Bovada+Underdog
+TE,17,Isaiah Likely,NYG,DAL,7.22,4.38,16,0.451,starter,TE slot 10,1,2026-09-14 00:20,market good: Bovada+Underdog
+TE,18,Dalton Schultz,HOU,BUF,7.21,7.64,14,0.515,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,19,Jake Ferguson,DAL,NYG,7.1,8.65,14,0.507,starter,TE slot 10,1,2026-09-14 00:20,market good: Bovada+Underdog
+TE,20,Cade Otton,TB,CIN,6.66,6.18,13,0.512,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,21,T.J. Hockenson,MIN,GB,6.66,5.82,13,0.512,starter,TE slot 10,1,2026-09-13 20:25,market good: Bovada+Underdog
+TE,22,AJ Barner,SEA,NE,5.94,6.86,12,0.495,starter,TE slot 10,1,2026-09-10 00:20,market good: Bovada+Underdog
+TE,23,Pat Freiermuth,PIT,ATL,5.92,5.96,12,0.493,starter,TE slot 10,1,2026-09-13 17:00,market good: Bovada+Underdog
+TE,24,Darren Waller,CAR,CHI,5.66,9.59,13,0.435,backup,TE slot 10,1,2026-09-13 17:00,market td-estimate 35%: Underdog
+TE,25,Colby Parkinson,LA,SF,5.41,7.85,15,0.36,starter,TE slot 10,1,2026-09-11 00:35,market good 80% audit: Bovada+Underdog
 DEF,1,Seattle Seahawks,SEA,NE,6.84,0.0,19,0.36,starter,,1,2026-09-10 00:20,80% salary prior; zero/low FPPG
 DEF,2,Houston Texans,HOU,BUF,6.48,0.0,18,0.36,starter,,1,2026-09-13 17:00,80% salary prior; zero/low FPPG
 DEF,3,Jacksonville Jaguars,JAC,CLE,6.12,0.0,17,0.36,starter,,1,2026-09-13 17:00,80% salary prior; zero/low FPPG
