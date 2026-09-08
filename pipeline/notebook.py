@@ -825,6 +825,8 @@ BOVADA_ENDPOINT = (
     "description/football/nfl"
 )
 UNDERDOG_ENDPOINTS = (
+    "https://api.underdogfantasy.com/v2/over_under_lines"
+    "?product=fantasy&sport_id=NFL",
     "https://api.underdogfantasy.com/beta/v6/over_under_lines",
     "https://api.underdogfantasy.com/beta/v5/over_under_lines",
 )
