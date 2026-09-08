@@ -5272,7 +5272,13 @@ def prepare_slate_pool(cfg=None, purpose=""):
     }
 
 
-def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_csv=True):
+def run_position_rankings(
+    top_n=25,
+    cfg=None,
+    positions=VALID_POSITIONS,
+    export_csv=True,
+    prepared_slate=None,
+):
     """Build full-slate Yahoo rankings from the notebook's final estimated FP.
 
     Projection priority is unchanged from the showdown model:
@@ -5295,7 +5301,16 @@ def run_position_rankings(top_n=25, cfg=None, positions=VALID_POSITIONS, export_
             requested_positions.append(normalized)
 
     started = time.perf_counter()
-    slate = prepare_slate_pool(cfg, f"ranking top {top_n} per position")
+    # A publisher that serves more than one page can prepare the live feeds once
+    # and hand the exact same frame to every view.  Keeping the default here
+    # preserves the standalone/Colab API, while `run_synced.py` uses the injected
+    # slate to prevent the rankings and weekly-lineup pages from capturing
+    # different sportsbook snapshots.
+    slate = (
+        prepared_slate
+        if prepared_slate is not None
+        else prepare_slate_pool(cfg, f"ranking top {top_n} per position")
+    )
     players = slate["players"]
     games = slate["games"]
     market_report = slate["market_report"]

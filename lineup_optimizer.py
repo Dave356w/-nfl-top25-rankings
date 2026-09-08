@@ -176,6 +176,46 @@ def fetch_yahoo(attempts: int = 3, timeout: int = 20) -> pd.DataFrame:
     return out.sort_values("Projected_FP", ascending=False).drop_duplicates("Key").reset_index(drop=True)
 
 
+def yahoo_from_prepared_slate(players: pd.DataFrame) -> pd.DataFrame:
+    """Adapt the rankings pipeline's final player pool for the lineup builder.
+
+    `pipeline.notebook.prepare_slate_pool` has already fetched Yahoo and the
+    sportsbooks, resolved nflverse roles, applied the confidence audit and
+    applied any prior-share role adjustment.  Re-fetching those inputs here is
+    what allowed two pages from one site publish to disagree.  This adapter
+    preserves that final `Projected_FP` verbatim and only adds the legacy column
+    aliases the season-long roster resolver expects.
+    """
+    required = {
+        "Name", "Position", "Team", "Opponent", "Game Time", "Home Team",
+        "Away Team", "Salary", "FPPG", "Projected_FP", "Projection_Source",
+    }
+    missing = sorted(required - set(players.columns))
+    if missing:
+        raise ValueError(f"Prepared slate is missing columns: {missing}")
+
+    out = players.copy()
+    out["Feed_Name"] = out["Name"].astype(str)
+    out["Feed_Position"] = out["Position"].astype(str).str.upper()
+    out["Game_Time"] = pd.to_datetime(out["Game Time"], errors="coerce", utc=True)
+    out["Game_Date"] = out["Game_Time"].dt.strftime("%Y-%m-%d")
+    out["Home_Team"] = out["Home Team"].map(normalize_team)
+    out["Away_Team"] = out["Away Team"].map(normalize_team)
+    out["Team"] = out["Team"].map(normalize_team)
+    out["Opponent"] = out["Opponent"].map(normalize_team)
+    out["Key"] = out["Feed_Name"].map(normalize_name)
+
+    if "Depth_Rank" in out:
+        depth = pd.to_numeric(out["Depth_Rank"], errors="coerce")
+    else:
+        depth = pd.Series(np.nan, index=out.index, dtype=float)
+    fallback = out.groupby(["Team", "Feed_Position"])["Projected_FP"].rank(
+        method="first", ascending=False
+    )
+    out["Fallback_Depth"] = depth.fillna(fallback)
+    return out.sort_values("Projected_FP", ascending=False).drop_duplicates("Key").reset_index(drop=True)
+
+
 def pipeline_module():
     """Import the daily pipeline's market engine, or None if it is not there.
 

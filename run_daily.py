@@ -145,8 +145,12 @@ def _method_counts(results):
     return counts
 
 
-def build_payload(results, top_n, log_lines):
-    now = datetime.now(timezone.utc)
+def build_payload(results, top_n, log_lines, generated_at=None, snapshot_id=None):
+    now = generated_at or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    now = now.astimezone(timezone.utc)
+    generated_utc = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     rankings = {
         position: _rows(view)
         for position, view in results.get("rankings", {}).items()
@@ -156,7 +160,8 @@ def build_payload(results, top_n, log_lines):
     return {
         "schema": 1,
         "status": "ok",
-        "generated_utc": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_utc": generated_utc,
+        "snapshot_id": snapshot_id or generated_utc,
         "run_date": now.strftime("%Y-%m-%d"),
         "top_n": int(top_n),
         "positions": [p for p in rankings if rankings[p]],
@@ -174,20 +179,22 @@ def build_payload(results, top_n, log_lines):
     }
 
 
-def write_outputs(payload, combined):
-    DATA.mkdir(parents=True, exist_ok=True)
-    HISTORY.mkdir(parents=True, exist_ok=True)
+def write_outputs(payload, combined, data_dir=None):
+    data = Path(data_dir or DATA)
+    history = data / "history"
+    data.mkdir(parents=True, exist_ok=True)
+    history.mkdir(parents=True, exist_ok=True)
 
     text = json.dumps(payload, indent=2, sort_keys=False)
-    (DATA / "latest.json").write_text(text + "\n", encoding="utf-8")
-    (HISTORY / f"{payload['run_date']}.json").write_text(text + "\n", encoding="utf-8")
+    (data / "latest.json").write_text(text + "\n", encoding="utf-8")
+    (history / f"{payload['run_date']}.json").write_text(text + "\n", encoding="utf-8")
 
     if isinstance(combined, pd.DataFrame) and not combined.empty:
-        combined.to_csv(DATA / "latest.csv", index=False)
-        combined.to_csv(HISTORY / f"{payload['run_date']}.csv", index=False)
+        combined.to_csv(data / "latest.csv", index=False)
+        combined.to_csv(history / f"{payload['run_date']}.csv", index=False)
 
     entries = []
-    for path in sorted(HISTORY.glob("*.json"), reverse=True):
+    for path in sorted(history.glob("*.json"), reverse=True):
         try:
             archived = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
@@ -197,9 +204,9 @@ def write_outputs(payload, combined):
             "generated_utc": archived.get("generated_utc"),
             "game_count": archived.get("slate", {}).get("game_count"),
             "json": f"history/{path.name}",
-            "csv": f"history/{path.stem}.csv" if (HISTORY / f"{path.stem}.csv").exists() else None,
+            "csv": f"history/{path.stem}.csv" if (history / f"{path.stem}.csv").exists() else None,
         })
-    (DATA / "index.json").write_text(
+    (data / "index.json").write_text(
         json.dumps({"runs": entries}, indent=2) + "\n", encoding="utf-8"
     )
     return entries

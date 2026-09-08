@@ -110,15 +110,26 @@ def _total(frame: pd.DataFrame, column: str) -> float | None:
     return round(float(values.sum()), 2)
 
 
-def build_payload(results: dict, objective: str, log_lines: list[str]) -> dict:
-    now = datetime.now(timezone.utc)
+def build_payload(
+    results: dict,
+    objective: str,
+    log_lines: list[str],
+    generated_at=None,
+    snapshot_id: str | None = None,
+) -> dict:
+    now = generated_at or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    now = now.astimezone(timezone.utc)
+    generated_utc = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     starters, bench = results["starters"], results["bench"]
     context, audit = results["context"], results["market_audit"]
     roster = results["roster"]
     return {
         "schema": 1,
         "status": "ok",
-        "generated_utc": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_utc": generated_utc,
+        "snapshot_id": snapshot_id or generated_utc,
         "run_date": now.strftime("%Y-%m-%d"),
         "season": _clean(context.get("season")),
         "week": _clean(context.get("week")),
@@ -169,6 +180,7 @@ def build_pool_payload(pool: pd.DataFrame, lineup: dict, note: str | None = None
     return {
         "schema": 1,
         "generated_utc": lineup["generated_utc"],
+        "snapshot_id": lineup.get("snapshot_id", lineup["generated_utc"]),
         "run_date": lineup["run_date"],
         "season": lineup["season"],
         "week": lineup["week"],
@@ -227,6 +239,102 @@ def write_outputs(payload: dict, data_dir: Path = None,
     return entries
 
 
+def _log_market_audit(market_audit: dict) -> None:
+    for note in market_audit.get("notes") or []:
+        print(f"Market: {note}")
+    print(
+        f"Market: {', '.join(market_audit.get('feeds') or []) or 'none'}; "
+        f"matched {market_audit.get('matched', 0)}/"
+        f"{market_audit.get('skill_rows', 0)} skill-player rows; "
+        f"accepted {market_audit.get('accepted', 0)} means."
+    )
+    summary = market_audit.get("projection_audit") or {}
+    if summary.get("audited"):
+        print(
+            "Market audit: "
+            f"{summary['flagged']}/{summary['audited']} flagged, "
+            f"{summary['shrunk']} shrunk, "
+            f"{summary['extreme']} extreme."
+        )
+
+
+def _finish_lineup(
+    configured: list[dict],
+    yahoo: pd.DataFrame,
+    market_audit: dict,
+    excluded: list[str],
+    objective: str,
+    no_pool: bool = False,
+) -> tuple[dict, pd.DataFrame, str | None]:
+    """Resolve, optimize and optionally build the editor pool from one projection frame."""
+    context = lo.load_nfl_context(yahoo)
+    roster = lo.build_roster(configured, yahoo, context)
+    roster = projection_audit.attach_audit_columns(roster, yahoo)
+    print(f"Season {context['season']} week {context['week']}; "
+          f"depth snapshot {context['depth_stamp']}.")
+    for note in context.get("notes", []):
+        print(note)
+
+    if lo.AUTO_EXCLUDE_REPORTED_OUT:
+        excluded = list(dict.fromkeys(excluded + lo.reported_out(roster)))
+    if excluded:
+        print(f"Benched before optimizing: {', '.join(excluded)}.")
+    starters, bench = lo.optimize(roster, excluded, objective)
+    results = {
+        "roster": roster,
+        "starters": starters,
+        "bench": bench,
+        "context": context,
+        "market_audit": market_audit,
+        "excluded": excluded,
+    }
+
+    # The add pool only feeds the page's roster editor, so it degrades without
+    # taking the published lineup down with it.
+    pool, pool_note = pd.DataFrame(), None
+    if not no_pool:
+        try:
+            pool = lo.build_pool(yahoo, context)
+            pool = projection_audit.attach_audit_columns(pool, yahoo)
+            print(f"Add pool: {len(pool)} player(s) resolved for the page's roster editor.")
+        except Exception as exc:
+            pool_note = f"Add pool unavailable ({exc}); the page can bench but not add."
+            print(pool_note)
+    return results, pool, pool_note
+
+
+def build_from_prepared_slate(
+    prepared_slate: dict,
+    configured: list[dict],
+    excluded: list[str] | None = None,
+    objective: str = lo.LINEUP_OBJECTIVE,
+    no_pool: bool = False,
+) -> tuple[dict, pd.DataFrame, str | None]:
+    """Build a lineup from the exact final projections used by the rankings page."""
+    yahoo = lo.yahoo_from_prepared_slate(prepared_slate["players"])
+    market_audit = dict(prepared_slate.get("market_audit") or {})
+    report = prepared_slate.get("market_report")
+    if isinstance(report, pd.DataFrame) and not report.empty:
+        market_audit["matched"] = int(report["Market matched"].sum())
+        market_audit["accepted"] = int(report["Market accepted"].sum())
+        market_audit["skill_rows"] = int(report["Position"].ne("DEF").sum())
+    else:
+        market_audit.setdefault("matched", 0)
+        market_audit.setdefault("accepted", 0)
+        market_audit.setdefault("skill_rows", 0)
+    if not market_audit.get("projection_audit"):
+        market_audit["projection_audit"] = projection_audit.audit_summary(yahoo)
+    _log_market_audit(market_audit)
+    return _finish_lineup(
+        configured,
+        yahoo,
+        market_audit,
+        list(excluded or []),
+        objective,
+        no_pool,
+    )
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--roster", default=None,
@@ -258,11 +366,6 @@ def main(argv=None):
             market_audit = lo._empty_market_audit("market projections disabled")
             if not args.no_market:
                 yahoo, market_audit = lo.apply_market_projections(yahoo)
-                for note in market_audit["notes"]:
-                    print(f"Market: {note}")
-                print(f"Market: {', '.join(market_audit['feeds']) or 'none'}; "
-                      f"matched {market_audit['matched']}/{market_audit['skill_rows']} "
-                      f"skill-player rows; accepted {market_audit['accepted']} means.")
 
             # Confidence audit is deliberately downstream of the shared market
             # engine. It never changes de-vigging or the fitted stat distributions;
@@ -270,45 +373,15 @@ def main(argv=None):
             # disagreement is large enough to deserve skepticism.
             audit_summary = projection_audit.audit_summary(yahoo)
             market_audit["projection_audit"] = audit_summary
-            if audit_summary["audited"]:
-                print(
-                    "Market audit: "
-                    f"{audit_summary['flagged']}/{audit_summary['audited']} flagged, "
-                    f"{audit_summary['shrunk']} shrunk, "
-                    f"{audit_summary['extreme']} extreme."
-                )
-
-            context = lo.load_nfl_context(yahoo)
-            roster = lo.build_roster(configured, yahoo, context)
-            roster = projection_audit.attach_audit_columns(roster, yahoo)
-            print(f"Season {context['season']} week {context['week']}; "
-                  f"depth snapshot {context['depth_stamp']}.")
-            for note in context.get("notes", []):
-                print(note)
-
-            if lo.AUTO_EXCLUDE_REPORTED_OUT:
-                excluded = list(dict.fromkeys(excluded + lo.reported_out(roster)))
-            if excluded:
-                print(f"Benched before optimizing: {', '.join(excluded)}.")
-            starters, bench = lo.optimize(roster, excluded, args.objective)
-            results = {"roster": roster, "starters": starters, "bench": bench,
-                       "context": context, "market_audit": market_audit,
-                       "excluded": excluded}
-
-            # The add pool only feeds the page's roster editor, so it degrades
-            # the way the market step does: an empty pool costs the editor its
-            # add list, and taking the whole lineup down with it would cost far
-            # more than that.
-            pool, pool_note = pd.DataFrame(), None
-            if not args.no_pool:
-                try:
-                    pool = lo.build_pool(yahoo, context)
-                    pool = projection_audit.attach_audit_columns(pool, yahoo)
-                    print(f"Add pool: {len(pool)} player(s) resolved for the "
-                          "page's roster editor.")
-                except Exception as exc:
-                    pool_note = f"Add pool unavailable ({exc}); the page can bench but not add."
-                    print(pool_note)
+            _log_market_audit(market_audit)
+            results, pool, pool_note = _finish_lineup(
+                configured,
+                yahoo,
+                market_audit,
+                excluded,
+                args.objective,
+                args.no_pool,
+            )
     except Exception:
         traceback.print_exc()
         print("\nRun failed; no files were written. The previously published "

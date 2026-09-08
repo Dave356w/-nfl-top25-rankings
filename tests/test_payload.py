@@ -77,7 +77,7 @@ class PayloadTests(unittest.TestCase):
         self.assertIsNone(self.payload["rankings"]["QB"][1]["fppg"])
 
     def test_it_carries_every_key_the_page_reads(self):
-        for key in ("status", "generated_utc", "run_date", "top_n", "positions",
+        for key in ("status", "generated_utc", "snapshot_id", "run_date", "top_n", "positions",
                     "slate", "rankings", "market", "method_counts", "log"):
             self.assertIn(key, self.payload)
         row = self.payload["rankings"]["QB"][0]

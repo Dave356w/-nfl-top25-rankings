@@ -18,9 +18,14 @@ on:
       - "site/**"
       - "pipeline/**"
       - "market_audit.py"
+      - "lineup_optimizer.py"
+      - "run_lineup.py"
       - "run_daily.py"
+      - "run_synced.py"
+      - "lineup_roster.json"
       - "requirements.txt"
       - ".github/workflows/daily.yml"
+      - ".github/workflows/lineup.yml"
 
 permissions:
   contents: write
@@ -39,12 +44,12 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt nflreadpy
 
-      - name: Build rankings
-        run: python run_daily.py --top-n "${{ inputs.top_n || '25' }}"
+      - name: Build synchronized rankings and lineup
+        run: python run_synced.py --top-n "${{ inputs.top_n || '25' }}"
 
-      - name: Commit today's data
+      - name: Commit today's synchronized data
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -53,7 +58,7 @@ jobs:
             echo "No data change to commit."
             exit 0
           fi
-          git commit -m "data: rankings for $(date -u +%Y-%m-%d)"
+          git commit -m "data: rankings and lineup for $(date -u +%Y-%m-%d)"
           for attempt in 1 2 3 4; do
             git pull --rebase origin main && git push origin HEAD:main && exit 0
             echo "push attempt $attempt failed; retrying"

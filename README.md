@@ -81,13 +81,15 @@ No secrets or API keys are needed. Every feed the pipeline reads is public.
 ## Schedule
 
 `.github/workflows/daily.yml` runs at **13:00 UTC** (09:00 ET) daily, and on
-demand from the Actions tab. Change the `cron` line to move it. GitHub queues
-scheduled runs under load, so the actual start time drifts by minutes.
+demand from the Actions tab. It publishes the rankings and weekly lineup from
+one in-memory projection snapshot. Change the `cron` line to move it. GitHub
+queues scheduled runs under load, so the actual start time drifts by minutes.
 
 `.github/workflows/lineup.yml` runs the lineup at **15:30 UTC Sunday** (11:30
 ET, about 90 minutes before the early kickoffs) and **21:00 UTC Thursday**
 (17:00 ET, three hours before TNF), and on demand with an objective and a bench
-list as inputs.
+list as inputs. Those sharper pre-kickoff runs refresh the rankings at the same
+time, so a player never carries two sportsbook snapshots across the two pages.
 
 `Showdown models` exports the single-game models on the same two pre-kickoff
 slots as the lineup build, at **15:00 UTC Sunday** and **21:00 UTC Thursday**.
@@ -103,6 +105,7 @@ pipeline/showdown.py        exports one single-game model per game
 run_daily.py                entry point: rankings -> site/data/*
 lineup_optimizer.py         the weekly lineup tool (see below)
 run_lineup.py               entry point: lineup -> site/data/lineup/*
+run_synced.py               workflow entry point: one slate -> rankings + lineup
 run_showdown.py             entry point: showdown models -> site/data/showdown/*
 lineup_roster.json          the team the lineup is picked from
 site/index.html             the rankings page (no build step, no dependencies)
@@ -119,17 +122,17 @@ tools/                      offline calibration scripts (see below)
 tests/                      shape tests for every published payload
 ```
 
-Three pages, three workflows, one Pages site: `Daily rankings` publishes
-`site/data/`, `Weekly lineup` publishes `site/data/lineup/`, `Showdown models`
-publishes `site/data/showdown/`, and all three deploy the whole `site/`
-directory. They share one `concurrency` group so the deploys serialize instead
-of overwriting each other.
+Three pages, three workflows, one Pages site: `Daily rankings` and `Weekly
+lineup` both run `run_synced.py`, which publishes `site/data/latest.*` and
+`site/data/lineup/*` together. `Showdown models` publishes
+`site/data/showdown/`. All three deploy the whole `site/` directory, and their
+deploys serialize instead of overwriting each other.
 
 ## Running it locally
 
 ```bash
-pip install -r requirements.txt
-python run_daily.py --top-n 25
+pip install -r requirements.txt nflreadpy
+python run_synced.py --top-n 25
 python -m http.server -d site 8000    # then open http://localhost:8000
 ```
 
@@ -156,8 +159,7 @@ pipeline. Without Node those tests skip.
 
 ## Failure behaviour
 
-If any feed fails hard, `run_daily.py` (and `run_lineup.py`) writes **nothing**
-and exits non-zero.
+If any feed fails hard, `run_synced.py` writes neither page and exits non-zero.
 The previously published page stays live rather than being replaced by a
 half-built one, and the failure shows up as a red run in the Actions tab.
 
@@ -233,8 +235,8 @@ one that won a near-tie on sampling noise.
 *who are the best 25 players at this position*, but *which of my players should
 I start this week*. It has its own page at
 [`/lineup.html`](https://dave356w.github.io/-nfl-top25-rankings/lineup.html) and
-its own workflow, and it reuses the daily pipeline's market engine for the
-numbers.
+its own workflow. The workflow prepares the daily pipeline once and derives
+both pages from that exact final player frame.
 
 Each run:
 
@@ -313,21 +315,20 @@ commit that and the scheduled run picks from it too.
 ### Running it
 
 ```bash
-pip install -r requirements.txt nflreadpy   # nflreadpy is optimizer-only
-python run_lineup.py                        # publish to site/data/lineup/
+pip install -r requirements.txt nflreadpy
+python run_synced.py                        # publish rankings + lineup together
+python run_lineup.py                        # standalone lineup-only diagnostic
 python lineup_optimizer.py                  # or print a lineup in the terminal
 python lineup_optimizer.py --self-test      # offline checks, no network
 ```
 
-`run_lineup.py` is what the workflow runs: same optimizer, no prompt, and it
-writes `site/data/lineup/latest.json`, the `pool.json` the roster editor adds
-from, a flat CSV, and one archived copy per run date. Its flags are `--roster`,
-`--objective`, `--exclude`, `--no-market`, `--no-pool` and `--out`. As with the
-daily build, a hard failure writes **nothing** and exits non-zero, so the
-published lineup stays live rather than being replaced by a half-built one. A
-sportsbook outage is not a hard failure: the market step degrades to Yahoo
-priors and says so in the run log the page renders. Nor is a failed pool: the
-page loses its add list, says why, and still drops and benches.
+`run_synced.py` is what both ranking and lineup workflows run. It stamps
+`data/latest.json`, `data/lineup/latest.json` and `data/lineup/pool.json` with
+one `snapshot_id`, verifies every overlapping player has the same projected FP,
+then writes the files. `run_lineup.py` remains available for lineup-only local
+diagnostics. A sportsbook outage is not a hard failure: the market step
+degrades to Yahoo priors and says so in the run log the page renders. Nor is a
+failed pool: the page loses its add list, says why, and still drops and benches.
 
 Yahoo prices this feed for **DFS half-PPR**. Check a close call against your
 league's scoring, and check the injury news yourself — the nflverse report is

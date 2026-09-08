@@ -75,7 +75,7 @@ class PayloadTests(unittest.TestCase):
         self.assertIsNone(bye["floor"])
 
     def test_it_carries_every_key_the_page_reads(self):
-        for key in ("status", "generated_utc", "run_date", "season", "week",
+        for key in ("status", "generated_utc", "snapshot_id", "run_date", "season", "week",
                     "objective", "slots", "totals", "counts", "starters", "bench",
                     "benched_by_request", "market", "log"):
             self.assertIn(key, self.payload)
@@ -142,7 +142,7 @@ class PoolPayloadTests(unittest.TestCase):
         self.payload = run_lineup.build_pool_payload(self.pool, self.lineup)
 
     def test_it_carries_every_key_the_editor_reads(self):
-        for key in ("schema", "generated_utc", "run_date", "season", "week",
+        for key in ("schema", "generated_utc", "snapshot_id", "run_date", "season", "week",
                     "limits", "note", "counts", "players"):
             self.assertIn(key, self.payload)
         for key in PLAYER_KEYS:
@@ -154,6 +154,7 @@ class PoolPayloadTests(unittest.TestCase):
         # off different market lines than the ones on screen.
         self.assertEqual(self.payload["run_date"], self.lineup["run_date"])
         self.assertEqual(self.payload["generated_utc"], self.lineup["generated_utc"])
+        self.assertEqual(self.payload["snapshot_id"], self.lineup["snapshot_id"])
         self.assertEqual(self.payload["week"], self.lineup["week"])
 
     def test_a_pool_player_carries_no_slot(self):
