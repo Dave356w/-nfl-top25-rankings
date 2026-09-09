@@ -80,22 +80,15 @@ No secrets or API keys are needed. Every feed the pipeline reads is public.
 
 ## Schedule
 
-`.github/workflows/daily.yml` runs at **13:00 UTC** (09:00 ET) daily, and on
-demand from the Actions tab. It publishes the rankings and weekly lineup from
-one in-memory projection snapshot. Change the `cron` line to move it. GitHub
-queues scheduled runs under load, so the actual start time drifts by minutes.
+`.github/workflows/daily.yml` refreshes all three pages at **13:00 and 21:00
+UTC daily**, plus **15:30 UTC Sunday**. The afternoon refresh also covers
+Wednesday, Monday and other evening games. GitHub can delay scheduled jobs;
+these times are approximate. This workflow also runs on relevant code pushes.
 
-`.github/workflows/lineup.yml` runs the lineup at **15:30 UTC Sunday** (11:30
-ET, about 90 minutes before the early kickoffs) and **21:00 UTC Thursday**
-(17:00 ET, three hours before TNF), and on demand with an objective and a bench
-list as inputs. Those sharper pre-kickoff runs refresh the rankings at the same
-time, so a player never carries two sportsbook snapshots across the two pages.
-
-`Showdown models` exports the single-game models on the same two pre-kickoff
-slots as the lineup build, at **15:00 UTC Sunday** and **21:00 UTC Thursday**.
-
-All three workflows also rebuild on a push that touches their own files, so a UI
-change reaches Pages without waiting for the next slate.
+`Weekly lineup` and `Showdown models` remain available for manual runs with
+their respective inputs. Every workflow runs `run_synced.py`, preparing the
+feeds once and publishing Rankings, My lineup and Showdown with one
+`snapshot_id`. Scheduled refreshes are centralized to avoid duplicate runs.
 
 ## Layout
 
@@ -105,7 +98,7 @@ pipeline/showdown.py        exports one single-game model per game
 run_daily.py                entry point: rankings -> site/data/*
 lineup_optimizer.py         the weekly lineup tool (see below)
 run_lineup.py               entry point: lineup -> site/data/lineup/*
-run_synced.py               workflow entry point: one slate -> rankings + lineup
+run_synced.py               workflow entry point: one slate -> all three pages
 run_showdown.py             entry point: showdown models -> site/data/showdown/*
 lineup_roster.json          the team the lineup is picked from
 site/index.html             the rankings page (no build step, no dependencies)
@@ -122,11 +115,9 @@ tools/                      offline calibration scripts (see below)
 tests/                      shape tests for every published payload
 ```
 
-Three pages, three workflows, one Pages site: `Daily rankings` and `Weekly
-lineup` both run `run_synced.py`, which publishes `site/data/latest.*` and
-`site/data/lineup/*` together. `Showdown models` publishes
-`site/data/showdown/`. All three deploy the whole `site/` directory, and their
-deploys serialize instead of overwriting each other.
+Three pages, three workflow entry points, one Pages site: all workflows publish
+`site/data/latest.*`, `site/data/lineup/*` and `site/data/showdown/*` together.
+All deploy the whole `site/` directory; deploys share one concurrency group.
 
 ## Running it locally
 
@@ -145,6 +136,12 @@ network access to Yahoo, the two sportsbooks and the nflverse release CDN.
 python run_showdown.py --max-games 1        # one game, for a quick look
 python run_showdown.py --no-optimize        # models only, no reference run
 ```
+
+Those standalone entry points are local diagnostics. Use `run_synced.py` for
+publication; `--showdown-no-optimize` skips only the reference simulation while
+still exporting shared models. If Yahoo supplies no usable single-game caps,
+the synchronized run publishes an empty Showdown index and removes stale game
+files without blocking the other pages.
 
 Tests do not need the network, and cover both optimizers as well as the
 published JSON:
@@ -183,8 +180,9 @@ GitHub Pages. Pages is static, so the interesting question was which half of the
 Colab showdown runner can live in a browser. The answer turned out to be: all of
 the part that matters.
 
-**What runs in Actions.** `run_showdown.py` fetches Yahoo, the two sportsbooks
-and the nflverse depth chart, builds the market-implied means and the fitted
+**What runs in Actions.** `run_synced.py` fetches Yahoo, the two sportsbooks
+and the nflverse depth chart once for all three pages. `pipeline/showdown.py`
+reuses those final means, builds the fitted
 coefficients of variation, and publishes the PSD-repaired latent correlation
 matrix for each game. That payload is about 7 KB for a 36-player pool — 36
 players plus the 630-term upper triangle — or 1 KB gzipped. A server-side
@@ -195,6 +193,14 @@ enumerates every Yahoo-valid roster, screens them on the analytic ceiling,
 scores the survivors against shared scenarios and applies the exposure caps.
 Exclusions, the salary floor, position limits, the objective and the portfolio
 size are all controls, and none of them touches a feed.
+
+Changing games cancels a running calculation; late responses from a previous
+selection are ignored. Changing a control clears the old result and asks for
+Optimize again. The page rejects game files with a different snapshot from the
+index. Entry numbers identify construction order, not performance ranks.
+Expected FP is analytic; the sampled mean is shown separately. Candidate-best
+and near-best rates compare only screened candidates in the sampled scenarios,
+depend on the selected detail level, and are not contest-win probabilities.
 
 The feeds are the reason for the split, not the compute. Yahoo and Bovada will
 not answer a cross-origin request from a Pages origin, and pointing every
@@ -322,8 +328,9 @@ python lineup_optimizer.py                  # or print a lineup in the terminal
 python lineup_optimizer.py --self-test      # offline checks, no network
 ```
 
-`run_synced.py` is what both ranking and lineup workflows run. It stamps
-`data/latest.json`, `data/lineup/latest.json` and `data/lineup/pool.json` with
+`run_synced.py` is what all three workflows run. It stamps
+`data/latest.json`, `data/lineup/latest.json`, `data/lineup/pool.json`, the
+Showdown index and every Showdown game with
 one `snapshot_id`, verifies every overlapping player has the same projected FP,
 then writes the files. `run_lineup.py` remains available for lineup-only local
 diagnostics. A sportsbook outage is not a hard failure: the market step
@@ -350,8 +357,8 @@ Two mechanical edits were made when the notebook was imported:
 - the `google.colab.files.download` cell is dropped.
 
 The market engine and the showdown lineup code are otherwise carried over
-verbatim. The showdown/lineup half is unused by the daily run but kept so the
-correlation model has one home.
+verbatim. The synchronized daily publisher uses the showdown and lineup paths
+alongside the rankings, keeping the correlation model in one place.
 
 Four model changes have since been made here and are **not** in the notebook. To
 keep a Colab copy in step, port these:

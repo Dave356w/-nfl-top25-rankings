@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-"""Publish the rankings and weekly lineup from one canonical projection slate.
+"""Publish rankings, the weekly lineup and Showdown from one projection slate.
 
-The two pages used to run hours apart and independently fetch live sportsbook
-props.  That made both pages internally valid but allowed the same player to
-show two different projections.  This entry point fetches and prepares the
-slate once, derives both views from that in-memory frame, validates their common
-players, and only then writes either page's files.
+Fetch and prepare the feeds once, derive all three views from the same frame,
+and validate their shared projections and snapshot IDs before writing files.
 """
 
 from __future__ import annotations
@@ -21,8 +18,10 @@ from pathlib import Path
 import lineup_optimizer as lo
 from pipeline import market_tail_guard
 from pipeline import notebook as nb
+from pipeline import showdown
 import run_daily
 import run_lineup
+import run_showdown
 
 market_tail_guard.install(nb)
 
@@ -33,7 +32,7 @@ SITE = ROOT / "site"
 def _projection_map(rows):
     mapped = {}
     for row in rows:
-        player = row.get("player")
+        player = row.get("player") or row.get("name")
         position = row.get("pos") or row.get("position")
         value = row.get("mean") if "mean" in row else row.get("fp")
         if player and position and value is not None:
@@ -45,6 +44,8 @@ def validate_page_consistency(
     rankings_payload: dict,
     lineup_payload: dict,
     pool_payload: dict | None = None,
+    showdown_payloads: list[dict] | None = None,
+    showdown_index: dict | None = None,
 ) -> int:
     """Reject a publish if two page payloads price a shared player differently."""
     ranking_rows = [
@@ -64,19 +65,33 @@ def validate_page_consistency(
     }
     if pool_payload is not None:
         snapshots.add(pool_payload.get("snapshot_id"))
+    if showdown_index is not None:
+        snapshots.add(showdown_index.get("snapshot_id"))
+        indexed = {game["game_id"] for game in showdown_index.get("games", [])}
+        exported = {game["game_id"] for game in showdown_payloads or []}
+        if indexed != exported:
+            raise ValueError("Showdown index does not match exported games")
+    for game in showdown_payloads or []:
+        snapshots.add(game.get("snapshot_id"))
     if None in snapshots or len(snapshots) != 1:
-        raise ValueError("Rankings, lineup and editor pool do not share one snapshot_id")
+        raise ValueError("Published pages do not share one snapshot_id")
 
     mismatches = []
     compared = 0
-    for label, other in (("lineup", lineup), ("editor pool", pool)):
-        for key in sorted(ranking.keys() & other.keys()):
+    known = dict(ranking)
+    views = [("lineup", lineup), ("editor pool", pool)]
+    views.extend((f"showdown {game['game_id']}", _projection_map(game["players"]))
+                 for game in showdown_payloads or [])
+    for label, other in views:
+        for key in sorted(known.keys() & other.keys()):
             compared += 1
-            if abs(ranking[key] - other[key]) > 0.005:
+            # Rankings/lineup round to two decimals; Showdown retains four.
+            if abs(known[key] - other[key]) > 0.00501:
                 mismatches.append(
-                    f"{key[0]} ({key[1]}): rankings {ranking[key]:.2f}, "
+                    f"{key[0]} ({key[1]}): shared projection {known[key]:.2f}, "
                     f"{label} {other[key]:.2f}"
                 )
+        known.update(other)
     if mismatches:
         raise ValueError(
             "Cross-page projection mismatch: " + "; ".join(mismatches[:12])
@@ -93,16 +108,25 @@ def build_synced_payloads(
     excluded: list[str] | None = None,
     no_market: bool = False,
     no_pool: bool = False,
+    showdown_simulations: int | None = None,
+    showdown_max_games: int | None = None,
+    showdown_optimize: bool = True,
 ):
-    """Build both page contracts without writing partial output."""
+    """Build all page contracts without writing partial output."""
     generated_at = datetime.now(timezone.utc)
     snapshot_id = generated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
     cfg = nb.replace(nb.CFG, use_market_projections=not no_market)
+    if showdown_simulations is not None:
+        if showdown_simulations < 1:
+            raise ValueError("Showdown simulations must be positive")
+        cfg = nb.replace(cfg, simulations=showdown_simulations)
+    if showdown_max_games is not None and showdown_max_games < 1:
+        raise ValueError("Showdown max games must be positive")
 
     ranking_tee = run_daily._Tee(sys.stdout)
     with contextlib.redirect_stdout(ranking_tee):
         prepared = nb.prepare_slate_pool(
-            cfg, f"publishing synchronized rankings and lineup (snapshot {snapshot_id})"
+            cfg, f"publishing rankings, lineup and Showdown (snapshot {snapshot_id})"
         )
         ranking_results = nb.run_position_rankings(
             top_n=top_n,
@@ -150,18 +174,32 @@ def build_synced_payloads(
         else run_lineup.build_pool_payload(pool, lineup_payload, pool_note)
     )
 
+    showdown_tee = run_daily._Tee(sys.stdout)
+    with contextlib.redirect_stdout(showdown_tee):
+        showdown_payloads, showdown_index = showdown.build_slate(
+            cfg, optimize=showdown_optimize, max_games=showdown_max_games,
+            prepared_slate=prepared, generated_at=generated_at,
+            snapshot_id=snapshot_id,
+        )
+    showdown_index["log"] = ranking_tee.lines + showdown_tee.lines
+
     if not any(rankings_payload["rankings"].values()):
         raise ValueError("Run produced no ranked players; refusing to publish")
     if not lineup_payload["starters"]:
         raise ValueError("Run produced no lineup starters; refusing to publish")
 
-    # Validate strict JSON before touching either page's current files.
+    # Validate all contracts before touching any page's current files. An empty
+    # Showdown slate publishes an empty index, replacing stale games while the
+    # rankings remain usable when Yahoo has not supplied single-game caps.
     json.dumps(rankings_payload, allow_nan=False)
     json.dumps(lineup_payload, allow_nan=False)
     if pool_payload is not None:
         json.dumps(pool_payload, allow_nan=False)
+    json.dumps(showdown_payloads, allow_nan=False)
+    json.dumps(showdown_index, allow_nan=False)
     compared = validate_page_consistency(
-        rankings_payload, lineup_payload, pool_payload
+        rankings_payload, lineup_payload, pool_payload,
+        showdown_payloads, showdown_index,
     )
     return {
         "generated_at": generated_at,
@@ -170,6 +208,8 @@ def build_synced_payloads(
         "ranking_results": ranking_results,
         "lineup": lineup_payload,
         "pool": pool_payload,
+        "showdown": showdown_payloads,
+        "showdown_index": showdown_index,
         "compared": compared,
     }
 
@@ -187,6 +227,10 @@ def main(argv=None):
     parser.add_argument("--exclude", default="")
     parser.add_argument("--no-market", action="store_true")
     parser.add_argument("--no-pool", action="store_true")
+    parser.add_argument("--showdown-simulations", type=int, default=None)
+    parser.add_argument("--showdown-max-games", type=int, default=None)
+    parser.add_argument("--showdown-no-optimize", action="store_true",
+                        help="Publish shared models without a reference simulation")
     parser.add_argument("--site-dir", default=str(SITE))
     args = parser.parse_args(argv)
 
@@ -201,11 +245,14 @@ def main(argv=None):
             excluded=excluded,
             no_market=args.no_market,
             no_pool=args.no_pool,
+            showdown_simulations=args.showdown_simulations,
+            showdown_max_games=args.showdown_max_games,
+            showdown_optimize=not args.showdown_no_optimize,
         )
     except Exception:
         traceback.print_exc()
         print(
-            "\nSynchronized run failed; neither page should be committed.",
+            "\nSynchronized run failed; no page should be committed.",
             file=sys.stderr,
         )
         return 1
@@ -221,10 +268,14 @@ def main(argv=None):
         site / "data" / "lineup",
         built["pool"],
     )
+    showdown_files = run_showdown.write_outputs(
+        built["showdown"], built["showdown_index"], site / "data" / "showdown"
+    )
     print(
         f"\nPublished synchronized snapshot {built['snapshot_id']}: "
         f"{sum(len(rows) for rows in built['rankings']['rankings'].values())} ranked "
         f"players, {len(built['lineup']['starters'])} lineup starters, "
+        f"{len(showdown_files)} Showdown games, "
         f"{built['compared']} cross-page projections verified; "
         f"{len(ranking_entries)} ranking and {len(lineup_entries)} lineup run(s) archived."
     )

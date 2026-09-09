@@ -1,13 +1,8 @@
 name: Weekly lineup
 
 on:
-  schedule:
-    # Sunday 15:30 UTC = 11:30 ET, about 90 minutes before the early kickoffs:
-    # late enough for the props to be sharp, early enough to still set a lineup
-    # if GitHub queues the run. Thursday 21:00 UTC = 17:00 ET, three hours
-    # before TNF. Both times are approximate; scheduled runs drift under load.
-    - cron: "30 15 * * 0"
-    - cron: "0 21 * * 4"
+  # Scheduled refreshes live in daily.yml; this entry point keeps manual
+  # lineup controls while publishing the same snapshot to every page.
   workflow_dispatch:
     inputs:
       objective:
@@ -27,7 +22,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +34,7 @@ jobs:
       # nflreadpy is only needed here, so it is not in requirements.txt.
       - run: pip install -r requirements.txt nflreadpy
 
-      - name: Build synchronized rankings and lineup
+      - name: Build synchronized rankings, lineup and Showdown
         run: |
           python run_synced.py \
             --objective "${{ inputs.objective || 'FP' }}" \
@@ -54,7 +49,7 @@ jobs:
             echo "No lineup change to commit."
             exit 0
           fi
-          git commit -m "data: rankings and lineup for $(date -u +%Y-%m-%d)"
+          git commit -m "data: shared projection snapshot for $(date -u +%Y-%m-%d)"
           for attempt in 1 2 3 4; do
             git pull --rebase origin main && git push origin HEAD:main && exit 0
             echo "push attempt $attempt failed; retrying"
