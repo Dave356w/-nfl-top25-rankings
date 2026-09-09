@@ -135,7 +135,8 @@ def lineup_rows(frame, limit=None):
     return rows
 
 
-def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True):
+def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True,
+                       *, generated_at=None, snapshot_id=None):
     """Model one game and, by default, solve it once so the page opens on an answer.
 
     Returns `(payload, note)`. A game that cannot produce a Yahoo-valid roster --
@@ -152,9 +153,13 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True):
     model = nb.build_correlation_model(pool)
     settings = {name: _clean(getattr(cfg, name)) for name in EXPOSED_SETTINGS}
     settings["portfolio_construction_rules"] = portfolio_construction.serializable_rules()
+    generated_utc = (generated_at or datetime.now(timezone.utc)).astimezone(
+        timezone.utc
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
     payload = {
         "schema": SCHEMA,
-        "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_utc": generated_utc,
+        "snapshot_id": snapshot_id or generated_utc,
         "game_id": str(game["Game ID"]),
         "matchup": str(game["Matchup"]),
         "away": str(game["Away Team"]),
@@ -203,14 +208,22 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True):
     return payload, None
 
 
-def build_slate(cfg=None, optimize=True, max_games=None):
-    """Fetch the slate once and export every game on it.
+def build_slate(cfg=None, optimize=True, max_games=None, *, prepared_slate=None,
+                generated_at=None, snapshot_id=None):
+    """Export every game from a shared slate, fetching only for standalone runs.
 
     Returns `(payloads, index)`. The index is what the page loads first: it names
     the games, so the page can offer a picker without downloading every model.
     """
     cfg = nb._cfg(cfg)
-    slate = nb.prepare_slate_pool(cfg, "exporting single-game models")
+    generated_at = generated_at or datetime.now(timezone.utc)
+    if generated_at.tzinfo is None:
+        generated_at = generated_at.replace(tzinfo=timezone.utc)
+    generated_at = generated_at.astimezone(timezone.utc)
+    generated_utc = generated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+    snapshot_id = snapshot_id or generated_utc
+    slate = (prepared_slate if prepared_slate is not None
+             else nb.prepare_slate_pool(cfg, "exporting single-game models"))
     players = slate["players"]
     games = slate["games"]
 
@@ -232,7 +245,8 @@ def build_slate(cfg=None, optimize=True, max_games=None):
             continue
 
         payload, problem = build_game_payload(
-            game_players, game, float(salary_cap), cfg, optimize=optimize
+            game_players, game, float(salary_cap), cfg, optimize=optimize,
+            generated_at=generated_at, snapshot_id=snapshot_id,
         )
         if payload is None:
             notes.append(f"{game['Matchup']}: {problem}")
@@ -254,9 +268,10 @@ def build_slate(cfg=None, optimize=True, max_games=None):
     audit = slate["market_audit"]
     index = {
         "schema": SCHEMA,
-        "status": "ok",
-        "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "run_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "status": "ok" if entries else "empty",
+        "generated_utc": generated_utc,
+        "snapshot_id": snapshot_id,
+        "run_date": generated_at.strftime("%Y-%m-%d"),
         "games": entries,
         "skipped": notes,
         "market": {

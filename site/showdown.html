@@ -201,9 +201,8 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     <div class="brand">
       <h1>Showdown lineup lab</h1>
       <p class="sub">
-        The correlation model is built daily by the pipeline. The enumeration and
-        the Monte Carlo run here, in your browser, so every control re-solves the
-        slate without touching a feed.
+        Player projections share a snapshot with Rankings and My lineup.
+        Change the controls, then press Optimize to recalculate on this device.
       </p>
     </div>
     <div class="top-actions">
@@ -237,7 +236,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
             </select>
             <div class="hint" id="detail-hint"></div>
           </div>
-          <button class="btn primary" id="run" style="width:100%" type="button">
+          <button class="btn primary" id="run" style="width:100%" type="button" disabled>
             Optimize
           </button>
           <div class="progress" id="progress" hidden><i id="progress-bar"></i></div>
@@ -248,7 +247,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         <h2>Rules and strategy</h2>
         <div class="body">
           <div class="field">
-            <label for="objective">Rank entries by</label>
+            <label for="objective">Select entries using</label>
             <select id="objective">
               <option value="tournament">Tournament score</option>
               <option value="mean">Simulated mean</option>
@@ -309,6 +308,10 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     <div>
       <section class="card">
         <h2>Portfolio</h2>
+        <div class="note">
+          Entry numbers follow portfolio construction order. They are not performance ranks.
+          Expected FP is the model total; sim mean is the sampled average.
+        </div>
         <div id="result-note" class="note" hidden></div>
         <div id="portfolio"></div>
         <div class="empty" id="portfolio-empty">
@@ -370,6 +373,15 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         the ranking actually prefers, rather than one that won a near-tie on
         sampling noise.
       </p>
+      <h4>Candidate comparison rates</h4>
+      <p>
+        Candidate-best rate is the share of simulations in which an entry ties
+        for the highest score among the screened candidates. Near-best rate is
+        the share within the model's threshold of that best score. These rates
+        depend on the candidate pool and detail setting; they are not estimates
+        of contest-winning probability. Candidate-best rate is especially noisy
+        when there are few matching simulations.
+      </p>
       <h4>Model</h4>
       <div id="model-info"></div>
       <h4>Reliability of the published run</h4>
@@ -406,7 +418,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     payload: null,
     excluded: new Set(),
     result: null,
-    running: false
+    running: false,
+    loading: true,
+    loadId: 0
   };
   var worker = null;
 
@@ -457,11 +471,15 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     picker.innerHTML = index.games.map(function (game) {
       return '<option value="' + text(game.file) + '">' + text(game.matchup) + "</option>";
     }).join("");
+    renderDetails(index);
     if (!index.games.length) {
+      state.loading = false;
       setStatus("The last export published no usable games.", "bad");
+      el("portfolio-empty").innerHTML =
+        "<h3>No usable games in this snapshot</h3><p>See Feeds below for " +
+        "the reasons games were skipped.</p>";
       return;
     }
-    renderDetails(index);
     return selectGame(index.games[0]);
   }).catch(function (error) {
     // A 404 here is almost always "the export workflow has not run yet on this
@@ -472,14 +490,36 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         "<strong>Showdown models</strong> workflow runs."
       : "Could not load the published models: " + text(error.message), "bad");
     el("portfolio-empty").innerHTML = missing
-      ? "<h3>Nothing published yet</h3><p>Run the <b>Showdown models</b> workflow " +
-        "(it is scheduled before Sunday and Thursday kickoffs) and reload.</p>"
+      ? "<h3>Nothing published yet</h3><p>Run a projection refresh workflow " +
+        "and reload. Scheduled refreshes run daily.</p>"
       : "<h3>Could not load the models</h3><p>" + text(error.message) + "</p>";
   });
 
   function selectGame(entry) {
+    var requestId = ++state.loadId;
+    state.loading = true;
+    state.payload = null;
+    state.result = null;
+    stopWorker();
+    el("pool").innerHTML = "";
+    el("portfolio").innerHTML = "";
+    el("portfolio-empty").hidden = false;
+    el("portfolio-empty").innerHTML = "<h3>Loading game…</h3>";
+    el("reference-card").hidden = true;
+    el("model-info").innerHTML = "";
+    el("reliability").innerHTML = "";
+    el("diversity-card").hidden = true;
+    el("result-note").hidden = true;
+    el("game-hint").textContent = "";
+    setStatus("Loading " + text(entry.matchup) + "…", "busy");
     return load(DATA + entry.file).then(function (payload) {
+      // A slower response from an earlier selection must not replace this game.
+      if (requestId !== state.loadId) return;
+      if (state.index.snapshot_id && payload.snapshot_id !== state.index.snapshot_id) {
+        throw new Error("The game and index belong to different snapshots. Reload the page.");
+      }
       state.payload = payload;
+      state.loading = false;
       state.excluded = new Set();
       state.result = null;
       applyDefaults(payload);
@@ -487,16 +527,29 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       renderReference();
       el("portfolio").innerHTML = "";
       el("portfolio-empty").hidden = false;
+      el("portfolio-empty").innerHTML =
+        "<h3>Nothing solved yet</h3><p>Press Optimize to calculate entries.</p>";
       el("diversity-card").hidden = true;
       el("result-note").hidden = true;
       el("game-hint").textContent =
         payload.players.length + " players · cap " + money(payload.salary_cap) +
         " · kickoff " + localTime(payload.kickoff_utc);
       startWorker(payload);
+      el("run").disabled = false;
       setStatus(
-        "Model published <strong>" + text((state.index.generated_utc || "").replace("T", " ")) +
+        "Projection snapshot <strong>" + text((payload.generated_utc || "").replace("T", " ")) +
         "</strong> <span class='sep'>·</span> " + text(payload.matchup) +
         " <span class='sep'>·</span> ready");
+    }).catch(function (error) {
+      if (requestId !== state.loadId) return;
+      state.loading = false;
+      state.payload = null;
+      stopWorker();
+      el("pool").innerHTML = "";
+      el("reference-card").hidden = true;
+      setStatus("Could not load this game: " + text(error.message), "bad");
+      el("portfolio-empty").innerHTML =
+        "<h3>Could not load this game</h3><p>" + text(error.message) + "</p>";
     });
   }
 
@@ -546,6 +599,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   /* ---------- pool ---------- */
   function renderPool() {
     var payload = state.payload;
+    if (!payload) return;
     var order = payload.players.map(function (player, index) { return index; });
     order.sort(function (a, b) {
       var players = payload.players;
@@ -572,14 +626,18 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     var index = Number(box.dataset.index);
     if (box.checked) state.excluded.delete(index); else state.excluded.add(index);
     box.closest(".pool-row").classList.toggle("out", !box.checked);
+    settingsChanged();
   });
   el("all").addEventListener("click", function () {
     state.excluded = new Set();
     renderPool();
+    settingsChanged();
   });
   el("none").addEventListener("click", function () {
+    if (!state.payload) return;
     state.excluded = new Set(state.payload.players.map(function (_, i) { return i; }));
     renderPool();
+    settingsChanged();
   });
   el("game").addEventListener("change", function () {
     var entry = state.index.games.filter(function (game) {
@@ -589,14 +647,47 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   });
   el("floor").addEventListener("input", function () {
     el("floor-value").textContent = el("floor").value + "%";
+    settingsChanged();
   });
-  el("detail").addEventListener("change", updateDetailHint);
+  el("detail").addEventListener("change", function () {
+    updateDetailHint();
+    settingsChanged();
+  });
+  ["objective", "entries", "shared", "player-exposure", "superstar-exposure", "limits"]
+    .forEach(function (id) { el(id).addEventListener("change", settingsChanged); });
+
+  function settingsChanged() {
+    if (!state.payload || state.loading) return;
+    if (state.running) {
+      stopWorker();
+      startWorker(state.payload);
+    }
+    state.result = null;
+    el("portfolio").innerHTML = "";
+    el("portfolio-empty").hidden = false;
+    el("portfolio-empty").innerHTML =
+      "<h3>Settings changed</h3><p>Press Optimize to calculate entries with these settings.</p>";
+    el("diversity-card").hidden = true;
+    el("result-note").hidden = true;
+    setStatus("Settings changed · press Optimize to recalculate");
+  }
 
   /* ---------- worker ---------- */
+  function stopWorker() {
+    if (worker) worker.terminate();
+    worker = null;
+    state.running = false;
+    el("run").disabled = state.loading || !state.payload;
+    el("progress").hidden = true;
+    el("progress-bar").style.width = "0%";
+  }
+
   function startWorker(payload) {
     if (worker) worker.terminate();
     worker = new Worker("./showdown-worker.js");
+    var activeWorker = worker;
     worker.onmessage = function (event) {
+      if (worker !== activeWorker) return;
       var message = event.data;
       if (message.type === "stage") {
         setStatus(text(message.stage) + "…", "busy");
@@ -616,9 +707,11 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       }
     };
     worker.onerror = function (error) {
+      if (worker !== activeWorker) return;
       setStatus("The optimizer worker failed: " + text(error.message), "bad");
       state.running = false;
       el("run").disabled = false;
+      el("progress").hidden = true;
     };
     worker.postMessage({ type: "load", payload: payload });
   }
@@ -653,7 +746,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   }
 
   el("run").addEventListener("click", function () {
-    if (!state.payload || state.running) return;
+    if (!state.payload || state.loading || state.running || !worker) return;
     var included = [];
     state.payload.players.forEach(function (_, index) {
       if (!state.excluded.has(index)) included.push(index);
@@ -691,17 +784,18 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       var match = published.has(lineupKey(lineup))
         ? ' <span class="badge match">also published</span>' : "";
       return '<div class="lineup">' +
-        '<div class="lineup-head"><span class="rank">#' + (position + 1) + "</span>" +
-        '<span class="score">' + num(lineup.sim_mean, 2) + " proj</span>" +
+        '<div class="lineup-head"><span class="rank">Entry ' + (position + 1) + "</span>" +
+        '<span class="score">' + num(lineup.expected_fp, 2) + " expected FP</span>" +
         '<span class="mono" style="color:var(--ink-3)">' + money(lineup.salary) + "</span>" +
         match + "</div>" +
         '<div class="chips">' + chips + "</div>" +
         '<div class="metrics">' +
+        "<span>sim mean " + num(lineup.sim_mean, 2) + "</span>" +
         "<span>floor " + num(lineup.floor_p25, 1) + "</span>" +
         "<span>ceiling " + num(lineup.ceiling_p90, 1) + "</span>" +
         "<span>p95 " + num(lineup.ceiling_p95, 1) + "</span>" +
-        "<span>near-opt " + num(lineup.near_optimal_rate * 100, 2) + "%</span>" +
-        "<span>win " + num(lineup.win_rate * 100, 2) + "%</span>" +
+        "<span>near-best " + num(lineup.near_optimal_rate * 100, 2) + "%</span>" +
+        "<span>candidate-best " + num(lineup.win_rate * 100, 2) + "%</span>" +
         "<span>score " + num(lineup.tournament_score, 2) + "</span>" +
         "</div></div>";
     }).join("");
@@ -759,7 +853,8 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     el("reference-note").textContent =
       "Built by the pipeline itself at " + payload.settings.simulations.toLocaleString() +
       " scenarios over " + payload.reference.valid_rosters.toLocaleString() +
-      " valid rosters. This is the answer with no settings changed.";
+      " valid rosters. Showing the first five reference entries in construction order; " +
+      "the browser uses the selected detail setting.";
     renderLineups(el("reference"), payload.reference.portfolio.slice(0, 5), new Set());
     var reliability = payload.reference.reliability || [];
     el("reliability").innerHTML = reliability.length

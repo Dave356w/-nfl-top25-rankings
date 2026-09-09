@@ -56,25 +56,27 @@ def _atomic_write(path, payload):
     """Write JSON through a temporary file so a reader never sees a half file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+    temporary.write_text(json.dumps(payload, separators=(",", ":"), allow_nan=False),
+                         encoding="utf-8")
     temporary.replace(path)
     return path
 
 
-def write_outputs(payloads, index):
+def write_outputs(payloads, index, data_dir=None):
     """Replace the published set atomically enough for a static host.
 
     Games are written first and the index last, so a reader that fetches the
     index can always fetch every file it names. Stale game files from a previous
     slate are removed after the index no longer references them.
     """
-    DATA.mkdir(parents=True, exist_ok=True)
+    data_dir = Path(data_dir) if data_dir is not None else DATA
+    data_dir.mkdir(parents=True, exist_ok=True)
     written = set()
     for payload in payloads:
-        path = _atomic_write(DATA / f"{payload['game_id']}.json", payload)
+        path = _atomic_write(data_dir / f"{payload['game_id']}.json", payload)
         written.add(path.name)
-    _atomic_write(DATA / "index.json", index)
-    for stale in DATA.glob("*.json"):
+    _atomic_write(data_dir / "index.json", index)
+    for stale in data_dir.glob("*.json"):
         if stale.name != "index.json" and stale.name not in written:
             stale.unlink()
     return sorted(written)
