@@ -167,3 +167,62 @@ test("incomplete published portfolios are not displayed as valid entries", async
   assert.equal(p.node("reference").innerHTML, "");
   assert.match(p.node("reference-note").textContent, /partial portfolio is hidden/);
 });
+
+/* Yahoo does not price every single-game slate. Those games publish a full model
+ * with no cap, and the page has to collect one before it will solve -- a guessed
+ * cap silently changes which lineups are legal. */
+
+test("a game with no published cap cannot be solved until one is entered", async () => {
+  const p = await page();
+  p.routesData["B.json"] = { ...payload("B"), salary_cap: null };
+  p.choose("B"); await flush();
+  assert.equal(p.node("cap-field").hidden, false);
+  assert.equal(p.node("run").disabled, true);
+  assert.match(p.node("cap-hint").textContent, /Yahoo published no cap/);
+  assert.match(p.node("game-hint").textContent, /not published by Yahoo/);
+
+  p.node("cap").value = "130";
+  p.node("cap").handlers.input();
+  assert.equal(p.node("run").disabled, false);
+  assert.match(p.node("cap-hint").textContent, /a cap you entered/);
+
+  p.node("run").handlers.click();
+  assert.equal(p.workers.at(-1).messages.at(-1).options.salaryCap, 130);
+});
+
+test("a non-positive cap does not unlock solving", async () => {
+  const p = await page();
+  p.routesData["B.json"] = { ...payload("B"), salary_cap: null };
+  p.choose("B"); await flush();
+  for (const bad of ["0", "-5", "", "abc"]) {
+    p.node("cap").value = bad;
+    p.node("cap").handlers.input();
+    assert.equal(p.node("run").disabled, true, `cap ${bad} should not unlock Optimize`);
+  }
+});
+
+test("an entered cap does not leak across games", async () => {
+  const p = await page();
+  p.routesData["B.json"] = { ...payload("B"), salary_cap: null };
+  p.routesData["C.json"] = { ...payload("C"), salary_cap: null };
+  p.choose("B"); await flush();
+  p.node("cap").value = "130";
+  p.node("cap").handlers.input();
+  assert.equal(p.node("run").disabled, false);
+
+  p.choose("C"); await flush();
+  assert.equal(p.node("run").disabled, true, "C must ask for its own cap");
+  assert.equal(p.node("cap").value, "");
+
+  p.choose("B"); await flush();
+  assert.equal(p.node("run").disabled, false, "B keeps the cap already entered for it");
+  assert.equal(p.node("cap").value, 130);
+});
+
+test("a priced game hides the cap field entirely", async () => {
+  const p = await page();
+  assert.equal(p.node("cap-field").hidden, true);
+  assert.equal(p.node("run").disabled, false);
+  p.node("run").handlers.click();
+  assert.equal(p.workers.at(-1).messages.at(-1).options.salaryCap, 100);
+});

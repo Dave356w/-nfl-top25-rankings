@@ -182,13 +182,41 @@ class PayloadShapeTests(unittest.TestCase):
         files = {f"{payload['game_id']}.json" for payload in self.payloads}
         self.assertEqual({game["file"] for game in self.index["games"]}, files)
 
-    def test_a_game_with_no_cap_is_skipped_rather_than_guessed(self):
+    def test_a_game_with_no_cap_still_publishes_its_model(self):
+        # Nothing in the model depends on the cap, so dropping the game threw
+        # away a complete pool, its fitted CVs, its zero rates and its latent
+        # matrix over one missing number the page can ask for.
         original = yahoo_payload()
         original["salaryCapInfo"]["result"][0]["singleGameSalaryCapMap"] = {}
         nb.fetch_yahoo_data = lambda *a, **k: original
+        payloads, index = build_payload(optimize=True)
+        self.assertEqual(len(payloads), 1)
+        payload = payloads[0]
+        self.assertIsNone(payload["salary_cap"])
+        self.assertTrue(payload["players"])
+        self.assertTrue(payload["latent"])
+        for player in payload["players"]:
+            for key in ("fp", "cv", "zero", "depth"):
+                self.assertIn(key, player)
+
+    def test_a_game_with_no_cap_publishes_no_reference_portfolio(self):
+        # A guessed cap would silently change which lineups are legal, so the
+        # reference run is skipped rather than invented.
+        original = yahoo_payload()
+        original["salaryCapInfo"]["result"][0]["singleGameSalaryCapMap"] = {}
+        nb.fetch_yahoo_data = lambda *a, **k: original
+        payloads, index = build_payload(optimize=True)
+        self.assertIsNone(payloads[0]["reference"])
+        self.assertFalse(index["games"][0]["optimized"])
+        self.assertTrue(index["games"][0]["needs_salary_cap"])
+        self.assertEqual(index["awaiting_salary_cap"], [payloads[0]["matchup"]])
+        self.assertEqual(index["skipped"], [])
+
+    def test_a_priced_game_is_not_marked_as_needing_a_cap(self):
         payloads, index = build_payload(optimize=False)
-        self.assertEqual(payloads, [])
-        self.assertTrue(any("salary cap" in note for note in index["skipped"]))
+        self.assertFalse(index["games"][0]["needs_salary_cap"])
+        self.assertEqual(index["awaiting_salary_cap"], [])
+        self.assertIsNotNone(payloads[0]["salary_cap"])
 
     def test_it_can_publish_without_a_reference_run(self):
         payloads, _ = build_payload(optimize=False)
@@ -223,8 +251,10 @@ class WriteOutputTests(unittest.TestCase):
         self.assertFalse(stale.exists())
 
     def test_nothing_is_written_when_no_game_is_usable(self):
+        # A missing cap no longer makes a game unusable -- the model is published
+        # without one -- so this needs a pool that genuinely cannot seat a roster.
         original = yahoo_payload()
-        original["salaryCapInfo"]["result"][0]["singleGameSalaryCapMap"] = {}
+        original["players"]["result"] = original["players"]["result"][:3]
         nb.fetch_yahoo_data = lambda *a, **k: original
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

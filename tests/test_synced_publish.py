@@ -160,9 +160,12 @@ class SharedShowdownTests(unittest.TestCase):
         self.assertEqual(index["generated_utc"], payloads[0]["generated_utc"])
 
     def test_empty_shared_slate_replaces_stale_models_in_the_requested_directory(self):
+        # An empty cap map no longer empties the slate: those games publish a
+        # model and the page collects the cap. A slate is empty when no game has
+        # a priced pool at all.
         with contextlib.redirect_stdout(io.StringIO()):
             prepared = nb.prepare_slate_pool(nb.CFG)
-            prepared["cap_map"] = {}
+            prepared["players"] = prepared["players"].iloc[0:0]
             payloads, index = showdown.build_slate(prepared_slate=prepared, optimize=False)
         self.assertEqual(index["status"], "empty")
         with tempfile.TemporaryDirectory() as directory:
