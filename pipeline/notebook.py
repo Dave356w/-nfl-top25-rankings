@@ -4109,12 +4109,43 @@ def build_correlation_model(players):
     }
 
 
+def latent_root(latent_corr, jitter=1e-10, attempts=6):
+    """Return the unique lower-triangular factor R with R @ R.T == latent_corr.
+
+    v3.6 replaced an eigendecomposition root. The correlation targets are looked
+    up by (position, depth bucket, team), so players sharing all three get
+    identical rows and the matrix carries exactly degenerate eigenvalues -- a
+    typical showdown pool has a six-fold one. Eigenvectors spanning a degenerate
+    eigenspace are arbitrary, so `eigh` returned a basis that depended on the
+    LAPACK build, and `random_seed` did not actually pin the scenario set: a
+    1e-13 perturbation of the same matrix re-based that eigenspace and dropped
+    the per-player correlation between the two scenario sets to a median of 0.08.
+    A Cholesky factor is unique for a positive-definite matrix, so the same seed
+    now reproduces the same draws -- and it is the factorization
+    `site/showdown-worker.js` already uses.
+
+    `repair_correlation_matrix` floors the eigenvalues, so the input is positive
+    definite by construction; the jitter loop only covers the case where that
+    floor is thin enough for the factorization to fail in floating point.
+    """
+    matrix = np.asarray(latent_corr, dtype=np.float64)
+    for attempt in range(attempts):
+        try:
+            return np.linalg.cholesky(matrix)
+        except np.linalg.LinAlgError:
+            matrix = np.asarray(latent_corr, dtype=np.float64) + np.eye(
+                len(matrix)
+            ) * jitter * (10.0 ** attempt)
+    raise np.linalg.LinAlgError(
+        "Latent correlation matrix is not positive definite even with jitter."
+    )
+
+
 def simulate_player_outcomes(players, cfg=None):
     """Simulate mean-preserving lognormal scores under the repaired joint model."""
     cfg = _cfg(cfg)
     model = build_correlation_model(players)
-    eigenvalues, eigenvectors = np.linalg.eigh(model["latent_corr"])
-    root = eigenvectors @ np.diag(np.sqrt(np.maximum(eigenvalues, 0.0)))
+    root = latent_root(model["latent_corr"])
     rng = np.random.default_rng(cfg.random_seed)
     latent = rng.normal(size=(cfg.simulations, len(players))) @ root.T
     sigma = np.sqrt(np.log1p(np.square(model["cv"])))

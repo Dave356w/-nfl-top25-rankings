@@ -242,7 +242,9 @@ smaller presets; at 5,000 scenarios it is well under a second.
 
 **Why your numbers differ from the published run.** The page seeds its own
 generator, so simulated means and percentiles land within Monte Carlo error of
-the published ones rather than on top of them. Everything analytic — salary,
+the published ones rather than on top of them. The page also defaults to a
+smaller detail setting than the published run; *Full* matches its scenario and
+candidate counts. Everything analytic — salary,
 expected points, the analytic standard deviation, the count of valid rosters —
 matches exactly, and `tests/test_showdown.py` pins that agreement by driving the
 worker through Node against the same payload.
@@ -392,6 +394,14 @@ keep a Colab copy in step, port these:
   `apply_market_projection_means` a blend rather than a substitution (cell 8);
 - `Settings.nflverse_drop_unmatched` defaults to `True`, with
   `AVAILABILITY_OVERRIDES` and the `nflverse_min_match_rate` guard (cells 2 and 9);
+- `simulate_player_outcomes` factors the latent matrix with `latent_root`
+  (Cholesky) rather than an eigendecomposition. The correlation targets are
+  looked up by (position, depth bucket, team), so a pool with several players
+  sharing all three carries exactly degenerate eigenvalues — a typical showdown
+  pool has a six-fold one — and any eigenvector basis of that eigenspace is a
+  valid decomposition. The old root therefore depended on the LAPACK build and
+  `random_seed` did not pin the scenario set; a Cholesky factor is unique, and
+  it is the factorization `site/showdown-worker.js` already used (cell 11);
 - `score_candidates_shared_scenarios` carries scores as (candidates × scenarios)
   against a pre-transposed outcomes array and accumulates the mean and standard
   deviation in float64 (cell 13). Same arithmetic, ~1.75x faster, and the

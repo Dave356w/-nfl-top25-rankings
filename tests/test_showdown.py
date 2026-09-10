@@ -342,3 +342,68 @@ class BrowserAgreementTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ScenarioReproducibilityTests(unittest.TestCase):
+    """The seed has to pin the scenarios, on any LAPACK build.
+
+    The correlation targets are looked up by (position, depth bucket, team), so
+    a pool with several players sharing all three carries exactly degenerate
+    eigenvalues. Any eigenvector basis of a degenerate eigenspace is a valid
+    eigendecomposition, so a root built from one is not a function of the matrix.
+    A Cholesky factor is, and the browser worker already uses it.
+    """
+
+    POOL = pd.DataFrame({
+        # Four receivers per team at the same depth bucket: four identical rows
+        # per side, so the latent matrix has repeated eigenvalues by construction.
+        "Name": [f"{team} WR{n}" for team in ("NE", "SEA") for n in range(1, 5)]
+                + ["NE QB", "SEA QB"],
+        "Team": ["NE"] * 4 + ["SEA"] * 4 + ["NE", "SEA"],
+        "Position": ["WR"] * 8 + ["QB", "QB"],
+        "Salary": [20.0] * 8 + [30.0, 30.0],
+        "Projected_FP": [10.0] * 8 + [18.0, 17.0],
+        "Depth_Rank": [2, 2, 2, 2, 2, 2, 2, 2, 1, 1],
+    })
+
+    def _perturbed_root(self, latent, size):
+        rng = np.random.default_rng(0)
+        noise = rng.standard_normal((size, size)) * 1e-13
+        noise = 0.5 * (noise + noise.T)
+        np.fill_diagonal(noise, 0.0)
+        return nb.latent_root(latent + noise)
+
+    def test_the_pool_really_does_have_a_degenerate_eigenspace(self):
+        model = nb.build_correlation_model(self.POOL)
+        eigenvalues = np.sort(np.linalg.eigvalsh(model["latent_corr"]))
+        self.assertLess(np.diff(eigenvalues).min(), 1e-12)
+
+    def test_a_negligible_perturbation_leaves_the_draws_alone(self):
+        cfg = nb.replace(nb.CFG, simulations=4_000, random_seed=356)
+        outcomes, model = nb.simulate_player_outcomes(self.POOL, cfg)
+        size = len(self.POOL)
+        root = self._perturbed_root(model["latent_corr"], size)
+        latent = np.random.default_rng(cfg.random_seed).normal(
+            size=(cfg.simulations, size)
+        ) @ root.T
+        sigma = np.sqrt(np.log1p(np.square(model["cv"])))
+        means = self.POOL["Projected_FP"].to_numpy(float)
+        again = means * np.exp(latent * sigma - 0.5 * np.square(sigma))
+        # Under the old eigendecomposition root this correlation collapsed to
+        # about 0.08 -- a different scenario set from the same seed.
+        for index in range(size):
+            correlation = np.corrcoef(
+                np.asarray(outcomes, dtype=float)[:, index], again[:, index]
+            )[0, 1]
+            self.assertGreater(correlation, 1 - 1e-9, self.POOL["Name"][index])
+
+    def test_the_root_reproduces_the_requested_correlation(self):
+        model = nb.build_correlation_model(self.POOL)
+        root = nb.latent_root(model["latent_corr"])
+        np.testing.assert_allclose(root @ root.T, model["latent_corr"], atol=1e-12)
+
+    def test_the_same_seed_gives_the_same_scenarios(self):
+        cfg = nb.replace(nb.CFG, simulations=2_000, random_seed=356)
+        first, _ = nb.simulate_player_outcomes(self.POOL, cfg)
+        second, _ = nb.simulate_player_outcomes(self.POOL, cfg)
+        np.testing.assert_array_equal(first, second)
