@@ -431,6 +431,36 @@ of that survives into fantasy scoring, and every 95% interval straddles zero.
 Representing the cannibalization is the right thing to do; expecting it to
 reshuffle a portfolio is not.
 
+`tools/calibrate_game_correlations.py` does the same job for every *other* pair
+in the showdown target matrix — every same-team and opposing offensive
+relationship — which previously rested on asserted fits with no script behind
+them.
+
+```bash
+python tools/calibrate_game_correlations.py --seasons 2016-2025
+```
+
+On 2016-2025, 51,874 player-games and 500,463 same-game pairs, the table holds
+up. Same-team QB-WR measures **0.215** against a published 0.217; opposing QB-QB
+measures 0.164 against 0.175; 14 of 20 relationships sit inside the 95% interval
+of the measurement and no gap anywhere exceeds 0.033.
+
+That answers a question the live pool invites. Mean absolute off-diagonal score
+correlation on a published 32-player game is 0.023, and cross-player covariance
+supplies only 10-15% of a lineup's variance, which looks at first like a model
+treating one football game as thirty-two independent players. It is not a bug:
+on the forecast-error scale the model works in, same-game fantasy errors really
+are close to uncorrelated once each player's own expectation is subtracted.
+
+Read the printed gaps as an **upper bound**. The expectation there is a lagged
+eight-game rolling average, which does not know the game total, so a shootout is
+a surprise to it and part of what it books as correlated error is really the
+shared game environment. The pipeline's means are market-implied and already
+price that environment, so the correlation left for its residuals is if anything
+lower. A positive gap is therefore not a licence to raise a constant. Team
+defenses are not covered: weekly player stats carry no DST scoring, so the DEF
+entries still rest on their original fit.
+
 ## Caveats
 
 These are market-derived estimates, not predictions with a guarantee. The
