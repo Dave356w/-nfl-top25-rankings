@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "as_of_utc": "2026-09-10T14:22:41.544461+00:00",
+  "trained_through_season": 2025,
+  "holdout_season": 2025,
+  "scoring": "yahoo",
+  "validation": {
+    "QB": {
+      "approved": false,
+      "n": 498,
+      "alpha": 0.15,
+      "baseline_mae": 6.7397640562248995,
+      "candidate_mae": 6.712351286987704,
+      "improvement_pct": 0.4067318827263257
+    },
+    "RB": {
+      "approved": false,
+      "n": 1266,
+      "alpha": 0.15,
+      "baseline_mae": 4.403264218009479,
+      "candidate_mae": 4.364562523780806,
+      "improvement_pct": 0.8789319085232781
+    },
+    "WR": {
+      "approved": false,
+      "n": 2020,
+      "alpha": 0.15,
+      "baseline_mae": 4.012878712871287,
+      "candidate_mae": 3.9888246676702157,
+      "improvement_pct": 0.5994211866887013
+    },
+    "TE": {
+      "approved": false,
+      "n": 1060,
+      "alpha": 0.15,
+      "baseline_mae": 3.275728773584906,
+      "candidate_mae": 3.26108452188868,
+      "improvement_pct": 0.4470532424514287
+    }
+  },
+  "priors": [],
+  "limitations": [
+    "Conditional on a recorded weekly appearance; not an availability model.",
+    "Validation compares historical point priors, not market blends or Yahoo salary priors.",
+    "Only earlier weekly observations enter each prediction; holdout does not select alpha.",
+    "Retrospective nflverse files may contain later corrections; original publication timestamps are not available."
+  ]
+}
+

@@ -75,6 +75,7 @@ class Settings:
     max_superstar_exposure: float = 0.35
     max_shared_players: int = 3
     use_construction_quotas: bool = False
+    showdown_objective: str = "auto"
 
     # Historical backup-QB projections were badly biased. Keep them out unless
     # the user explicitly confirms a package or replacement-starter role.
@@ -103,6 +104,7 @@ class Settings:
     # See MARKET_QUALITY_WEIGHT for how much of each is actually believed.
     market_accepted_quality: tuple = ("good", "fair", "td-estimate")
     market_drop_unmatched: bool = False
+    capture_market_inputs: bool = False
 
     # --- nflverse role and availability feed (v3.3) ---------------------------------
     # Salary order is a weak proxy for a depth chart and says nothing at all about
@@ -520,6 +522,8 @@ def apply_depth_mean_adjustments(players):
         DEPTH_MEAN_MULTIPLIER[position].get(_depth_bucket(tier), 1.0)
         for position, tier in zip(out["Position"], role_tier)
     ]
+    if "Baseline_Projected_FP" in out:
+        out["Role_Adjusted_Baseline_FP"] = (out["Baseline_Projected_FP"] * out["Depth_Mean_Multiplier"]).clip(lower=0.05)
     # Current market means already encode role through priced components.
     # Applying the historical role haircut again would double-count role. Role
     # still controls the calibrated CV and the pair correlations.
@@ -3071,9 +3075,13 @@ def load_market_projection_reference(cfg=None):
     collections = []
     feed_notes = []
     loaded = []
+    raw_feeds = {}
+    feed_observations = {}
     for feed in requested:
         try:
             payload, mode = _load_market_feed(feed, cfg)
+            raw_feeds[feed] = payload
+            feed_observations[feed] = {"mode": mode, "observed_utc": datetime.now(timezone.utc).isoformat()}
             parsed = (
                 parse_bovada_payload(payload)
                 if feed == "bovada"
@@ -3103,6 +3111,8 @@ def load_market_projection_reference(cfg=None):
     )
     return projections, {
         "feeds": loaded,
+        "raw_feeds": raw_feeds if cfg.capture_market_inputs else {},
+        "feed_observations": feed_observations,
         "notes": feed_notes,
         "logit_vig": float(logit_vig),
         "calibration_pairs": int(calibration_pairs),
@@ -5179,6 +5189,9 @@ def prepare_slate_pool(cfg=None, purpose=""):
     payload = fetch_yahoo_data()
     players, cap_map = normalize_yahoo_data(payload)
     players = add_projection_priors(players, PROJECTION_OVERRIDES)
+    players["Baseline_Projected_FP"] = players["Projected_FP"]
+    raw_inputs = {"yahoo": payload}
+    market_projections = []
     games = list_games(players)
     if games.empty:
         raise ValueError("Yahoo returned no usable NFL games")
@@ -5193,7 +5206,11 @@ def prepare_slate_pool(cfg=None, purpose=""):
     market_applied = pd.DataFrame()
     market_audit = {"feeds": [], "notes": [], "logit_vig": np.nan, "calibration_pairs": 0}
     if cfg.use_market_projections:
-        market_projections, market_audit = load_market_projection_reference(cfg)
+        market_projections, market_audit = load_market_projection_reference(
+            replace(cfg, capture_market_inputs=True)
+        )
+        market_audit = dict(market_audit)
+        raw_inputs.update(market_audit.pop("raw_feeds", {}))
         for note in market_audit["notes"]:
             print(f"  Market: {note}")
         if market_projections:
@@ -5289,6 +5306,9 @@ def prepare_slate_pool(cfg=None, purpose=""):
     players = players[~players["Name"].isin(excluded)].copy()
     return {
         "players": players.reset_index(drop=True),
+        "raw_inputs": raw_inputs,
+        "market_projections": [asdict(p) for p in market_projections],
+        "inputs_captured_utc": datetime.now(timezone.utc).isoformat(),
         "games": games,
         "cap_map": cap_map,
         "market_report": market_report,
@@ -5417,3 +5437,4 @@ def run_position_rankings(
         "nflverse_removed": nflverse_blocked,
         "csv": csv_path,
     }
+

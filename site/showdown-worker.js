@@ -202,7 +202,12 @@ function enumerate(included, options) {
 
 /* ---------- candidate screen -------------------------------------------- */
 
+function resolvedObjective(options) {
+  return options.objective === "auto" ? (options.entries === 1 ? "expected" : "portfolio") : options.objective;
+}
+
 function screen(rosters, options) {
+  options = {...options, objective: resolvedObjective(options)};
   const players = model.players;
   const n = players.length;
   const count = rosters.salary.length;
@@ -642,8 +647,107 @@ function selectionAttempt(scored, order, options, rules, ruleCounts, ruleData, v
   return { chosen, sets, rules: assignedRules, unfilled, quality };
 }
 
+/* Greedy marginal expected-best gain; evaluation draws are never used to select. */
+function scenarioPortfolio(scored, options, data = scenarios, count = simCount) {
+  const target = options.entries;
+  if (target > 1 && constructionRules(options).length) {
+    throw new Error("Disable roster-shape quotas for shared-scenario portfolio selection.");
+  }
+  const split = Math.floor(count / 2);
+  if (target > 1 && split < 2) throw new Error("At least four scenarios are required.");
+  const maxPlayer = exposureLimit(target, options.maxPlayerExposure);
+  const maxStar = exposureLimit(target, options.maxSuperstarExposure);
+  const order = orderBy(scored, "expected");
+  const chosen = [], sets = [], playerCounts = new Map(), starCounts = new Map();
+  let best = new Float64Array(split);
+  function scores(i, start, stop) {
+    const out = new Float64Array(stop - start), ids = candidateMembers(scored, i);
+    for (let s = start; s < stop; s++) {
+      let value = 0.5 * data[scored.superstars[i] * count + s];
+      for (const id of ids) value += data[id * count + s];
+      out[s - start] = value;
+    }
+    return out;
+  }
+  function feasible(i) {
+    const members = candidateMembers(scored, i);
+    return !members.some(id => (playerCounts.get(id) || 0) >= maxPlayer) &&
+      (starCounts.get(scored.superstars[i]) || 0) < maxStar &&
+      !overlapsPrior(new Set(members), sets, options.maxShared);
+  }
+  function take(i) {
+    const members = candidateMembers(scored, i);
+    chosen.push(i); sets.push(new Set(members));
+    for (const id of members) playerCounts.set(id, (playerCounts.get(id) || 0) + 1);
+    const star = scored.superstars[i]; starCounts.set(star, (starCounts.get(star) || 0) + 1);
+  }
+  if (target > 0 && order.length && feasible(order[0])) {
+    take(order[0]);
+    if (target > 1) best = scores(order[0], 0, split);
+  }
+  const heap = [];
+  const higher = (a,b) => a.bound > b.bound || (a.bound === b.bound && a.id < b.id);
+  function push(item) {
+    let i = heap.length; heap.push(item);
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (!higher(item, heap[p])) break;
+      heap[i] = heap[p]; i = p;
+    }
+    heap[i] = item;
+  }
+  function pop() {
+    const top = heap[0], last = heap.pop();
+    if (heap.length) {
+      let i = 0;
+      while (i * 2 + 1 < heap.length) {
+        let j = i * 2 + 1;
+        if (j + 1 < heap.length && higher(heap[j + 1], heap[j])) j++;
+        if (!higher(heap[j], last)) break;
+        heap[i] = heap[j]; i = j;
+      }
+      heap[i] = last;
+    }
+    return top;
+  }
+  if (target > 1) for (const id of order) {
+    if (!chosen.includes(id)) push({id, bound: Infinity, epoch: -1});
+  }
+  while (heap.length && chosen.length < target) {
+    const item = pop();
+    if (!feasible(item.id)) continue;
+    const values = scores(item.id, 0, split);
+    if (item.epoch !== chosen.length) {
+      let gain = 0;
+      for (let s = 0; s < split; s++) gain += Math.max(values[s] - best[s], 0);
+      push({id:item.id, bound:gain / split, epoch:chosen.length});
+      continue;
+    }
+    take(item.id);
+    for (let s = 0; s < split; s++) best[s] = Math.max(best[s], values[s]);
+  }
+  const evaluation = {objective: target === 1 ? "expected_points" : "expected_best",
+    selection_scenarios: target === 1 ? 0 : split, evaluation_scenarios: count - split};
+  if (chosen.length && count > split) {
+    const baseline = scores(order[0], split, count), held = new Float64Array(baseline);
+    for (const id of chosen.slice(1)) {
+      const values = scores(id, split, count);
+      for (let s = 0; s < held.length; s++) held[s] = Math.max(held[s], values[s]);
+    }
+    evaluation.evaluation_best_mean = held.reduce((a,b)=>a+b,0) / held.length;
+    evaluation.evaluation_gain_over_single = held.reduce((a,b,i)=>a+b-baseline[i],0) / held.length;
+    const ordered = Array.from(held).sort((a,b)=>a-b), q = .25 * (ordered.length - 1);
+    evaluation.evaluation_best_p25 = ordered[Math.floor(q)] +
+      (q % 1) * (ordered[Math.ceil(q)] - ordered[Math.floor(q)]);
+  }
+  return {chosen, sets, rules:chosen.map(()=>null), unfilled:{}, evaluation};
+}
+
 /* Reserve mandatory future exposure and try several rule schedules. */
 function portfolio(scored, order, options) {
+  if (options.objective === "auto" || options.objective === "portfolio") {
+    return scenarioPortfolio(scored, options);
+  }
   const target = options.entries;
   if (target <= 0) return { chosen: [], sets: [], rules: [], unfilled: {} };
 
@@ -720,7 +824,7 @@ function setModel(payload) {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
-    LINEUP_SIZE, exposureLimit, setModel, simulate, enumerate, screen, score, orderBy,
+    LINEUP_SIZE, exposureLimit, scenarioPortfolio, setModel, simulate, enumerate, screen, score, orderBy,
     portfolio, describe, diversity, latentMatrix, cholesky, scoreCorrelation,
     constructionSchedule, apportionedRuleCounts, matchesConstructionRule,
     covarianceMatrix: () => covariance,
@@ -776,7 +880,7 @@ self.onmessage = (event) => {
       self.postMessage({ type: "progress", fraction });
     });
 
-    const order = orderBy(scored, options.objective);
+    const order = orderBy(scored, ["auto", "portfolio"].includes(options.objective) ? "expected" : options.objective);
     const built = portfolio(scored, order, options);
     if (built.chosen.length < options.entries) {
       const details = Object.entries(built.unfilled)
@@ -795,6 +899,7 @@ self.onmessage = (event) => {
       valid_rosters: rosters.salary.length,
       candidates_scored: scored.total,
       portfolio: describe(scored, built.chosen, built.rules),
+      scenario_evaluation: built.evaluation || null,
       strongest: describe(scored, order.slice(0, 10)),
       construction: {
         requested: options.entries,
@@ -812,3 +917,4 @@ self.onmessage = (event) => {
   }
 };
 }
+

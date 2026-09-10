@@ -450,3 +450,66 @@ The experimental upside score retains its existing screening and 40% P90 / 25%
 near-best / 25% mean / 10% volatility weights. All screens reserve high-mean
 candidates. Greedy selection enforces exposure and overlap limits; it does not
 optimize joint scenario coverage. Compare detail settings to assess stability.
+
+
+### Default projection and portfolio process
+
+`Settings.showdown_objective = "auto"` is the default. A single entry selects the
+highest analytic expectation among eligible candidates (the screen preserves the
+highest expected-points candidate). Multiple entries start with that same anchor
+and greedily maximize the average best score of the selected set over shared
+scenarios. Exposure and overlap caps remain enforced. This mode requires
+construction quotas off; the experimental upside objective still supports them.
+
+The first half of the draws selects the portfolio. The other half reports its
+average best score, P25 and gain over the single-lineup anchor. Changing evaluation
+draws cannot change selection. This checks performance within the simulation;
+it does not establish historical accuracy or a probability of winning a contest.
+Candidate screening and constrained greedy selection can miss a global optimum.
+
+The simulator remains the existing correlated lognormal approximation. Explicit
+participation, zero scores, negative defense scores and discrete touchdowns are
+not yet represented. Those changes require availability and component-level
+calibration; their probabilities are not invented from depth-chart labels.
+
+### Historical component-prior gate
+
+Run `python tools/build_component_priors.py --holdout 2025 --start 2021` to reproduce
+`model/component_priors.json`. The script tunes recency weighting on earlier
+seasons, then compares total Yahoo-scored point error on 2025 against a lagged
+eight-appearance average. Approval requires at least 200 holdout observations and
+at least 2% lower MAE. Results were QB 0.41%, RB 0.88%, WR 0.60%, TE 0.45% lower
+MAE: **no position passed**. No component priors were promoted into live forecasts.
+The existing market-coverage/fallback process therefore remains in production.
+
+This is a conditional-on-appearance historical-prior comparison, not a test of
+Yahoo salary priors, the market blend or participation probabilities. Archived
+pregame data is required for those comparisons. Merely changing the approval flag
+in the JSON does not enable a live model; integration requires a reviewed change.
+
+### Pregame archive and evaluation
+
+Every synchronized publish now retains a compressed immutable snapshot under
+`site/data/projection_archive/`. Raw Yahoo and available market payloads are
+content-addressed and deduplicated. Forecasts include identity, kickoff, capture
+time, final mean, role-adjusted fallback baseline, marginal percentiles, scoring
+settings, code hash, market component estimates, role reports and Showdown models.
+Snapshots are captured conservatively after feed/role preparation; any captured
+at or after kickoff is excluded from evaluation. Existing daily summaries cannot
+reconstruct missing historical inputs; this archive starts with the new publisher.
+
+Grade forecasts using:
+
+```bash
+python tools/evaluate_projection_archive.py \
+  --actuals actual_results.csv \
+  --output model/projection_evaluation.json
+```
+
+Actuals require `game_id`, `player_key`, `actual_fp`, `realized_at_utc`. Use the
+archived keys (Yahoo IDs where present); name matching is not guessed. The grader
+uses one latest pregame forecast per game/player, rejects duplicate outcomes,
+excludes manual overrides, and never converts an unmatched actual into zero.
+It reports MAE, RMSE, bias, paired fallback comparison, P25/P90 coverage and the
+observed zero/negative-score rate. There are no graded market-blend results yet.
+
