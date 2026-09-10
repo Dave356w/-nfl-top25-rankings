@@ -428,3 +428,25 @@ Yahoo and sportsbook feeds are public but undocumented and can change shape
 without notice. DEF has no dependable player-prop market and always uses the
 Yahoo fallback, and neither does a kicker, who is estimated from rolling
 nflverse game logs on the lineup page.
+
+
+### Showdown selection controls
+
+Exposure percentages round down to whole appearances among the requested entries:
+70% across five entries allows three appearances. Single-entry selection bypasses
+exposure caps and construction quotas. The page displays the permitted counts and
+refuses to present an incomplete portfolio as a completed result; incomplete
+published reference portfolios are hidden for the same reason.
+
+Roster-shape quotas are optional. New builds default `use_construction_quotas` to
+`False`; the page can enable the existing preset mix. These quotas can exclude
+higher-ranked lineups and are not required for a legal roster.
+
+Expected-points objectives screen by analytic mean. Floor and ceiling screen by
+approximate P25 and P90 from a lognormal matched to lineup mean and variance,
+then rank retained candidates using simulated quantiles. This is an approximation
+to a sum of correlated lognormals; screening can still miss the global optimum.
+The experimental upside score retains its existing screening and 40% P90 / 25%
+near-best / 25% mean / 10% volatility weights. All screens reserve high-mean
+candidates. Greedy selection enforces exposure and overlap limits; it does not
+optimize joint scenario coverage. Compare detail settings to assess stability.

@@ -208,6 +208,7 @@ function screen(rosters, options) {
   const count = rosters.salary.length;
   const expected = new Float64Array(count * LINEUP_SIZE);
   const ceiling = new Float64Array(count * LINEUP_SIZE);
+  const priority = new Float64Array(count * LINEUP_SIZE);
   const rowsum = new Float64Array(LINEUP_SIZE);
 
   for (let r = 0; r < count; r++) {
@@ -230,12 +231,23 @@ function screen(rosters, options) {
       const mean = projection + 0.5 * players[idS].fp;
       expected[base + s] = mean;
       ceiling[base + s] = mean + options.ceilingWeight * Math.sqrt(variance);
+      // A sum of correlated lognormals is not itself lognormal. Moment matching
+      // is an objective-aware screen only; retained candidates use simulated
+      // quantiles below. More candidates reduce screening approximation error.
+      priority[base + s] = ceiling[base + s];
+      if (options.objective === "expected" || options.objective === "mean") {
+        priority[base + s] = mean;
+      } else if (options.objective === "floor" || options.objective === "ceiling") {
+        const sigma2 = mean > 0 ? Math.log1p(variance / (mean * mean)) : 0;
+        const z = options.objective === "floor" ? -0.6744897501960817 : 1.2815515655446004;
+        priority[base + s] = mean * Math.exp(z * Math.sqrt(sigma2) - 0.5 * sigma2);
+      }
     }
   }
 
   const population = count * LINEUP_SIZE;
   const keep = new Set();
-  topInto(keep, ceiling, Math.min(options.maxCandidates, population));
+  topInto(keep, priority, Math.min(options.maxCandidates, population));
   topInto(keep, expected, Math.min(options.meanReserve, population));
   const selected = Int32Array.from(keep).sort();
   return { selected, expected, ceiling };
@@ -389,15 +401,19 @@ function tournamentScore(p90, near, mean, sd) {
 
 /* ---------- selection ---------------------------------------------------- */
 
-function orderBy(scored, objective) {
-  const index = Array.from({ length: scored.total }, (_, i) => i);
-  const key = {
+function objectiveValues(scored, objective) {
+  return {
     tournament: scored.tournament,
     mean: scored.mean,
     floor: scored.p25,
     ceiling: scored.p90,
     expected: scored.expected,
   }[objective] || scored.tournament;
+}
+
+function orderBy(scored, objective) {
+  const index = Array.from({ length: scored.total }, (_, i) => i);
+  const key = objectiveValues(scored, objective);
   index.sort((a, b) => (key[b] - key[a]) || (a - b));
   return index;
 }
@@ -406,7 +422,8 @@ function constructionRules(options) {
   if (Object.prototype.hasOwnProperty.call(options, "constructionRules")) {
     return options.constructionRules || [];
   }
-  return (model && model.settings && model.settings.portfolio_construction_rules) || [];
+  const settings = (model && model.settings) || {};
+  return settings.use_construction_quotas === false ? [] : settings.portfolio_construction_rules || [];
 }
 
 function ruleLimits(spec) {
@@ -508,9 +525,18 @@ function futureMandatoryDemand(ruleData, remaining) {
   return demand;
 }
 
+function exposureLimit(entries, fraction) {
+  if (!Number.isFinite(fraction) || fraction < 0 || fraction > 1) {
+    throw new Error("Exposure must be a finite fraction between 0 and 1.");
+  }
+  if (entries <= 0) return 0;
+  if (entries === 1) return 1; // There is no multi-entry exposure to diversify.
+  return Math.min(entries, Math.floor(entries * fraction + 1e-9));
+}
+
 function unrestrictedPortfolio(scored, order, options, target) {
-  const maxPlayer = Math.max(1, Math.ceil(target * options.maxPlayerExposure));
-  const maxSuperstar = Math.max(1, Math.ceil(target * options.maxSuperstarExposure));
+  const maxPlayer = exposureLimit(target, options.maxPlayerExposure);
+  const maxSuperstar = exposureLimit(target, options.maxSuperstarExposure);
   const playerCounts = new Map();
   const superstarCounts = new Map();
   const chosen = [];
@@ -531,10 +557,10 @@ function unrestrictedPortfolio(scored, order, options, target) {
   return { chosen, sets, rules: chosen.map(() => null), unfilled: {} };
 }
 
-function selectionAttempt(scored, order, options, rules, ruleCounts, ruleData, rank, mode) {
+function selectionAttempt(scored, order, options, rules, ruleCounts, ruleData, values, mode) {
   const target = options.entries;
-  const maxPlayer = Math.max(1, Math.ceil(target * options.maxPlayerExposure));
-  const maxSuperstar = Math.max(1, Math.ceil(target * options.maxSuperstarExposure));
+  const maxPlayer = exposureLimit(target, options.maxPlayerExposure);
+  const maxSuperstar = exposureLimit(target, options.maxSuperstarExposure);
   const playerCounts = new Map();
   const superstarCounts = new Map();
   const chosen = [];
@@ -612,7 +638,7 @@ function selectionAttempt(scored, order, options, rules, ruleCounts, ruleData, r
   }
 
   let quality = 0;
-  for (const candidate of chosen) quality -= rank[candidate];
+  for (const candidate of chosen) quality += values[candidate];
   return { chosen, sets, rules: assignedRules, unfilled, quality };
 }
 
@@ -629,10 +655,9 @@ function portfolio(scored, order, options) {
 
   const ruleCounts = apportionedRuleCounts(rules, target);
   const ruleData = buildRuleData(scored, order, rules);
-  const rank = new Int32Array(scored.total);
-  for (let i = 0; i < order.length; i++) rank[order[i]] = i;
+  const values = objectiveValues(scored, options.objective);
   const attempts = ["scarcity", "mandatory", "round_robin"].map((mode) =>
-    selectionAttempt(scored, order, options, rules, ruleCounts, ruleData, rank, mode)
+    selectionAttempt(scored, order, options, rules, ruleCounts, ruleData, values, mode)
   );
   attempts.sort((a, b) =>
     (b.chosen.length - a.chosen.length) || (b.quality - a.quality)
@@ -695,7 +720,7 @@ function setModel(payload) {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
-    LINEUP_SIZE, setModel, simulate, enumerate, screen, score, orderBy,
+    LINEUP_SIZE, exposureLimit, setModel, simulate, enumerate, screen, score, orderBy,
     portfolio, describe, diversity, latentMatrix, cholesky, scoreCorrelation,
     constructionSchedule, apportionedRuleCounts, matchesConstructionRule,
     covarianceMatrix: () => covariance,
@@ -717,6 +742,13 @@ self.onmessage = (event) => {
     if (message.type !== "solve") return;
 
     const options = message.options;
+    if (!Number.isInteger(options.entries) || options.entries < 1 || options.entries > 150) {
+      throw new Error("Entries must be a whole number between 1 and 150.");
+    }
+    if (exposureLimit(options.entries, options.maxPlayerExposure) === 0 ||
+        exposureLimit(options.entries, options.maxSuperstarExposure) === 0) {
+      throw new Error("The exposure limits allow zero appearances. Increase a limit or request more entries.");
+    }
     const started = performance.now();
     if (!scenarios || simCount !== options.simulations || simSeed !== options.seed) {
       self.postMessage({ type: "stage", stage: "Drawing scenarios" });
@@ -746,13 +778,15 @@ self.onmessage = (event) => {
 
     const order = orderBy(scored, options.objective);
     const built = portfolio(scored, order, options);
-    if (options.entries > 1 && constructionRules(options).length && built.chosen.length < options.entries) {
+    if (built.chosen.length < options.entries) {
       const details = Object.entries(built.unfilled)
-        .map(([name, count]) => `${name}: ${count}`).join(", ") || "unknown";
+        .map(([name, count]) => `${name}: ${count}`).join(", ");
       throw new Error(
         `Built ${built.chosen.length} of ${options.entries} entries under the construction, ` +
-        `exposure, and overlap rules. Unfilled archetype slots: ${details}. ` +
-        "Relax exposure/overlap limits or restore excluded players."
+        "exposure, and overlap rules. " +
+        (details ? `Unfilled construction slots: ${details}. ` : "") +
+        "Exposure limits use the requested entry count, so the partial result is not displayed. " +
+        "Increase detail, disable construction quotas, relax limits, or restore excluded players."
       );
     }
 

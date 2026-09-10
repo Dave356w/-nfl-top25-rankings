@@ -34,6 +34,7 @@ import numpy as np
 import pandas as pd
 
 import market_audit as projection_audit
+from pipeline.portfolio_construction import exposure_limit
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -73,6 +74,7 @@ class Settings:
     max_player_exposure: float = 0.70
     max_superstar_exposure: float = 0.35
     max_shared_players: int = 3
+    use_construction_quotas: bool = False
 
     # Historical backup-QB projections were badly biased. Keep them out unless
     # the user explicitly confirms a package or replacement-starter role.
@@ -4567,8 +4569,8 @@ def select_strongest_lineups(scored, count=10):
 def select_tournament_portfolio(scored, cfg=None):
     cfg = _cfg(cfg)
     target = cfg.tournament_lineups
-    max_player_count = max(1, math.ceil(target * cfg.max_player_exposure))
-    max_superstar_count = max(1, math.ceil(target * cfg.max_superstar_exposure))
+    max_player_count = exposure_limit(target, cfg.max_player_exposure)
+    max_superstar_count = exposure_limit(target, cfg.max_superstar_exposure)
     player_counts = Counter()
     superstar_counts = Counter()
     selected_rows = []

@@ -329,7 +329,7 @@ class BrowserAgreementTests(unittest.TestCase):
     def test_the_exposure_caps_are_honoured(self):
         settings = self.payload["settings"]
         entries = len(self.js["portfolio"])
-        cap = max(1, -(-entries * settings["max_player_exposure"] // 1))
+        cap = 1 if entries == 1 else int(entries * settings["max_player_exposure"] + 1e-9)
         counts = {}
         for lineup in self.js["portfolio"]:
             for player in lineup["ids"]:

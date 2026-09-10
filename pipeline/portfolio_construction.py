@@ -68,6 +68,20 @@ DEFAULT_PORTFOLIO_CONSTRUCTION_RULES = (
 )
 
 
+def exposure_limit(entries, fraction):
+    """Maximum appearances among requested entries; single-entry ignores caps."""
+    entries = int(entries)
+    fraction = float(fraction)
+    if not math.isfinite(fraction) or not 0 <= fraction <= 1:
+        raise ValueError("Exposure must be a finite fraction between 0 and 1.")
+    if entries <= 0:
+        return 0
+    if entries == 1:
+        return 1
+    # Tolerance protects exact integer products from binary rounding only.
+    return min(entries, math.floor(entries * fraction + 1e-9))
+
+
 def serializable_rules(rules=None):
     """Return a JSON-safe copy of the configured rules."""
     rules = DEFAULT_PORTFOLIO_CONSTRUCTION_RULES if rules is None else rules
@@ -242,8 +256,8 @@ def _attempt_selection(
 ):
     """Run one deterministic greedy attempt with future-exposure reservation."""
     target = int(cfg.tournament_lineups)
-    max_player_count = max(1, math.ceil(target * float(cfg.max_player_exposure)))
-    max_superstar_count = max(1, math.ceil(target * float(cfg.max_superstar_exposure)))
+    max_player_count = exposure_limit(target, cfg.max_player_exposure)
+    max_superstar_count = exposure_limit(target, cfg.max_superstar_exposure)
     max_shared = int(cfg.max_shared_players)
 
     player_counts = Counter()
@@ -336,8 +350,8 @@ def _attempt_selection(
 
 def _select_unrestricted(scored: pd.DataFrame, cfg, target: int):
     """Original exposure/overlap selector, used when no archetypes apply."""
-    max_player_count = max(1, math.ceil(target * float(cfg.max_player_exposure)))
-    max_superstar_count = max(1, math.ceil(target * float(cfg.max_superstar_exposure)))
+    max_player_count = exposure_limit(target, cfg.max_player_exposure)
+    max_superstar_count = exposure_limit(target, cfg.max_superstar_exposure)
     player_counts = Counter()
     superstar_counts = Counter()
     selected = []
@@ -372,6 +386,8 @@ def select_portfolio(scored: pd.DataFrame, players: pd.DataFrame, cfg, rules=Non
     portfolio is retained; if none completes, the largest partial portfolio is
     returned with explicit unfilled-slot metadata.
     """
+    if rules is None and not getattr(cfg, "use_construction_quotas", True):
+        rules = []
     rules = serializable_rules(rules)
     validate_rules(rules, int(cfg.lineup_size))
     target = int(cfg.tournament_lineups)

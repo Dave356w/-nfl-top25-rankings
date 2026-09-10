@@ -249,12 +249,25 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           <div class="field">
             <label for="objective">Select entries using</label>
             <select id="objective">
-              <option value="tournament">Tournament score</option>
+              <option value="tournament">Experimental upside score</option>
               <option value="mean">Simulated mean</option>
               <option value="ceiling">Ceiling (P90)</option>
               <option value="floor">Floor (P25)</option>
               <option value="expected">Analytic expectation</option>
             </select>
+          </div>
+          <div class="hint">
+            Analytic expectation targets expected points. The experimental upside
+            score combines P90, near-best rate, mean and volatility; its weights
+            have not been validated against historical results.
+          </div>
+          <div class="field">
+            <label for="construction">Roster-shape quotas</label>
+            <select id="construction">
+              <option value="off">Off — select by objective and exposure limits</option>
+              <option value="on">On — enforce the preset construction mix</option>
+            </select>
+            <div class="hint">Quotas can exclude higher-ranked lineups. They do not apply to one entry.</div>
           </div>
           <div class="field">
             <label for="floor">Minimum salary used <span id="floor-value" class="mono"></span></label>
@@ -284,6 +297,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
               <input type="number" id="superstar-exposure" min="0.05" max="1" step="0.05">
             </div>
           </div>
+          <div class="hint" id="exposure-hint"></div>
           <div class="field">
             <label>Position limits per lineup</label>
             <div id="limits" class="grid-2"></div>
@@ -343,7 +357,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         coefficients of variation, and publishes the PSD-repaired latent
         correlation matrix for each game. That payload is about 7 KB. This page
         downloads it and does the rest: it draws the scenarios, enumerates every
-        Yahoo-valid roster, screens them on the analytic ceiling, scores the
+        Yahoo-valid roster, screens them for the selected objective, scores the
         survivors against shared scenarios, and applies the exposure caps.
       </p>
       <p>
@@ -351,6 +365,14 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         answer cross-origin requests from a Pages origin, and pointing every
         visitor's IP at a sportsbook is what got the pipeline's own VM blocked.
       </p>
+      <h4>Screening and selection</h4>
+      <p>Expected-points objectives screen by analytic mean. Floor and ceiling
+        objectives screen by approximate P25 and P90, using a lognormal matched
+        to each lineup's mean and variance. The retained candidates are ranked
+        by their simulated percentiles. The experimental upside objective keeps
+        the mean-plus-volatility screen. All modes also reserve high-mean candidates.
+        Screening and greedy portfolio selection are approximations, not a guarantee
+        of the globally best lineup or portfolio. Increase detail to check stability.</p>
       <h4>Why excluding a player is cheap</h4>
       <p>
         Removing a player is a principal submatrix of a positive semi-definite
@@ -563,9 +585,11 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   function applyDefaults(payload) {
     var settings = payload.settings;
     el("entries").value = settings.tournament_lineups;
+    el("construction").value = settings.use_construction_quotas === true ? "on" : "off";
     el("shared").value = settings.max_shared_players;
     el("player-exposure").value = settings.max_player_exposure;
     el("superstar-exposure").value = settings.max_superstar_exposure;
+    updateExposureHint();
     var floor = el("floor");
     floor.value = Math.round(settings.min_salary_used_pct * 100);
     el("floor-value").textContent = floor.value + "%";
@@ -583,6 +607,23 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         "</div></div>";
     }).join("");
     updateDetailHint();
+  }
+
+  function updateExposureHint() {
+    var entries = Number(el("entries").value);
+    if (!Number.isInteger(entries) || entries < 1) {
+      el("exposure-hint").textContent = "Choose a whole number of entries.";
+      return;
+    }
+    if (entries === 1) {
+      el("exposure-hint").textContent = "One entry: exposure limits and roster-shape quotas do not apply.";
+      return;
+    }
+    var player = Math.floor(entries * Number(el("player-exposure").value) + 1e-9);
+    var superstar = Math.floor(entries * Number(el("superstar-exposure").value) + 1e-9);
+    el("exposure-hint").textContent = "Each player: at most " + player + " of " + entries +
+      " entries; each Superstar: at most " + superstar + ". Counts round down. " +
+      ((player < 1 || superstar < 1) ? "These limits allow zero appearances; increase a limit or the entry count." : "");
   }
 
   function updateDetailHint() {
@@ -653,10 +694,11 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     updateDetailHint();
     settingsChanged();
   });
-  ["objective", "entries", "shared", "player-exposure", "superstar-exposure", "limits"]
+  ["objective", "construction", "entries", "shared", "player-exposure", "superstar-exposure", "limits"]
     .forEach(function (id) { el(id).addEventListener("change", settingsChanged); });
 
   function settingsChanged() {
+    updateExposureHint();
     if (!state.payload || state.loading) return;
     if (state.running) {
       stopWorker();
@@ -734,7 +776,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       maxCandidates: preset ? preset.candidates : payload.settings.max_candidate_lineups,
       meanReserve: payload.settings.mean_candidate_reserve,
       nearOptimalRatio: payload.settings.near_optimal_ratio,
-      entries: Math.max(1, Number(el("entries").value) || 1),
+      entries: Number(el("entries").value),
+      constructionRules: el("construction").value === "on"
+        ? payload.settings.portfolio_construction_rules || [] : [],
       maxPlayerExposure: Number(el("player-exposure").value),
       maxSuperstarExposure: Number(el("superstar-exposure").value),
       maxShared: Math.max(1, Number(el("shared").value) || 1),
@@ -768,6 +812,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   function publishedKeys() {
     var reference = state.payload && state.payload.reference;
     if (!reference) return new Set();
+    if (reference.portfolio.length < state.payload.settings.tournament_lineups) return new Set();
     return new Set(reference.portfolio.map(lineupKey));
   }
 
@@ -796,7 +841,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         "<span>p95 " + num(lineup.ceiling_p95, 1) + "</span>" +
         "<span>near-best " + num(lineup.near_optimal_rate * 100, 2) + "%</span>" +
         "<span>candidate-best " + num(lineup.win_rate * 100, 2) + "%</span>" +
-        "<span>score " + num(lineup.tournament_score, 2) + "</span>" +
+        "<span>experimental score " + num(lineup.tournament_score, 2) + "</span>" +
         "</div></div>";
     }).join("");
   }
@@ -855,7 +900,14 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       " scenarios over " + payload.reference.valid_rosters.toLocaleString() +
       " valid rosters. Showing the first five reference entries in construction order; " +
       "the browser uses the selected detail setting.";
-    renderLineups(el("reference"), payload.reference.portfolio.slice(0, 5), new Set());
+    if (payload.reference.portfolio.length < payload.settings.tournament_lineups) {
+      el("reference-note").textContent = "The published run could not fill the requested entry count. " +
+        "Its partial portfolio is hidden because exposure limits use the requested count. " +
+        "Adjust the settings and run Optimize.";
+      el("reference").innerHTML = "";
+    } else {
+      renderLineups(el("reference"), payload.reference.portfolio.slice(0, 5), new Set());
+    }
     var reliability = payload.reference.reliability || [];
     el("reliability").innerHTML = reliability.length
       ? "<table><thead><tr><th>Metric</th><th class='num'>Reliability</th>" +
