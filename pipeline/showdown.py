@@ -38,6 +38,7 @@ import pandas as pd
 from pipeline import market_tail_guard
 from pipeline import notebook as nb
 from pipeline import portfolio_construction
+from pipeline import scenario_portfolio
 
 market_tail_guard.install(nb)
 
@@ -54,7 +55,7 @@ EXPOSED_SETTINGS = (
     "lineup_size", "simulations", "random_seed", "tournament_lineups",
     "max_candidate_lineups", "mean_candidate_reserve", "min_salary_used_pct",
     "candidate_ceiling_weight", "near_optimal_ratio", "max_player_exposure",
-    "max_superstar_exposure", "max_shared_players", "use_construction_quotas",
+    "max_superstar_exposure", "max_shared_players", "use_construction_quotas", "showdown_objective",
 )
 
 LINEUP_METRICS = (
@@ -170,6 +171,8 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True,
         "players": player_rows(pool, model["cv"]),
         "latent": upper_triangle(model["latent_corr"]),
         "model": {
+            "family": "correlated_lognormal_approximation",
+            "limitations": ["No explicit participation hurdle or discrete scoring components; zero and negative scores are not represented."],
             "psd_max_score_adjustment": round(float(model["psd_max_score_adjustment"]), 6),
             "infeasible_pairs": int(model["infeasible_pairs"]),
             "max_infeasible_shift": round(float(model["max_infeasible_shift"]), 6),
@@ -186,7 +189,12 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True,
         pool, salary_cap, covariance, cfg
     )
     scored = nb.score_candidates_shared_scenarios(candidates, outcomes, cfg)
-    portfolio = portfolio_construction.select_portfolio(scored, pool, cfg)
+    if cfg.showdown_objective == "auto":
+        portfolio = scenario_portfolio.select(scored, outcomes, cfg)
+    elif cfg.showdown_objective == "tournament":
+        portfolio = portfolio_construction.select_portfolio(scored, pool, cfg)
+    else:
+        raise ValueError(f"Unsupported Showdown objective: {cfg.showdown_objective}")
     strongest = nb.select_strongest_lineups(scored, count=10)
     reliability = nb.reliability_report(scored)
 
@@ -194,6 +202,7 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True,
         "valid_rosters": int(valid_rosters),
         "candidates_scored": int(len(scored)),
         "portfolio": lineup_rows(portfolio),
+        "scenario_evaluation": portfolio.attrs.get("scenario_evaluation"),
         "strongest": lineup_rows(strongest),
         "construction": {
             "requested": int(portfolio.attrs.get("construction_requested", cfg.tournament_lineups)),
@@ -283,3 +292,4 @@ def build_slate(cfg=None, optimize=True, max_games=None, *, prepared_slate=None,
         "availability_removed": int(len(slate["nflverse_removed"])),
     }
     return payloads, index
+

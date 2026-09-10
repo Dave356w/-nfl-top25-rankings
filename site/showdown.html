@@ -249,6 +249,8 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           <div class="field">
             <label for="objective">Select entries using</label>
             <select id="objective">
+              <option value="auto">Automatic — expected points / portfolio coverage</option>
+              <option value="portfolio">Portfolio — improve best score across scenarios</option>
               <option value="tournament">Experimental upside score</option>
               <option value="mean">Simulated mean</option>
               <option value="ceiling">Ceiling (P90)</option>
@@ -257,7 +259,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
             </select>
           </div>
           <div class="hint">
-            Analytic expectation targets expected points. The experimental upside
+            Automatic selects the highest expected-points lineup for one entry.
+            For multiple entries, it adds complementary lineups using shared scenarios.
+            Portfolio coverage requires roster-shape quotas off. Analytic expectation targets expected points. The experimental upside
             score combines P90, near-best rate, mean and volatility; its weights
             have not been validated against historical results.
           </div>
@@ -365,6 +369,12 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         answer cross-origin requests from a Pages origin, and pointing every
         visitor's IP at a sportsbook is what got the pipeline's own VM blocked.
       </p>
+      <h4>Portfolio coverage and evaluation</h4>
+      <p>Automatic starts with the highest analytic expectation, then greedily adds
+        lineups that improve the portfolio's best score across scenarios. The first
+        half of the draws selects entries; the other half evaluates the completed
+        set against its single-lineup anchor. These are model-based simulation
+        checks, not historical performance or contest-winning probabilities.</p>
       <h4>Screening and selection</h4>
       <p>Expected-points objectives screen by analytic mean. Floor and ceiling
         objectives screen by approximate P25 and P90, using a lognormal matched
@@ -405,6 +415,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         when there are few matching simulations.
       </p>
       <h4>Model</h4>
+      <p>The current correlated lognormal approximation preserves projected means
+        but cannot produce zero or negative scores. Participation and discrete
+        scoring models remain deferred until their inputs and calibration are supported.</p>
       <div id="model-info"></div>
       <h4>Reliability of the published run</h4>
       <div id="reliability"></div>
@@ -585,6 +598,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   function applyDefaults(payload) {
     var settings = payload.settings;
     el("entries").value = settings.tournament_lineups;
+    el("objective").value = settings.showdown_objective || "auto";
     el("construction").value = settings.use_construction_quotas === true ? "on" : "off";
     el("shared").value = settings.max_shared_players;
     el("player-exposure").value = settings.max_player_exposure;
@@ -869,6 +883,14 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       (published.size ? " · " + shared + " of " + message.portfolio.length +
         " also in the published run" : "");
 
+    var evaluation = message.scenario_evaluation;
+    if (evaluation && Number.isFinite(evaluation.evaluation_best_mean)) {
+      note.innerHTML += "<br>Independent simulation check: best entry averages " +
+        num(evaluation.evaluation_best_mean, 2) + " FP; gain over the single-lineup anchor " +
+        num(evaluation.evaluation_gain_over_single, 2) + " FP across " +
+        evaluation.evaluation_scenarios.toLocaleString() + " evaluation scenarios. " +
+        "This measures performance inside the model, not historical accuracy.";
+    }
     var diversity = message.diversity;
     el("diversity-card").hidden = !diversity;
     if (diversity) {
@@ -945,3 +967,4 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 </script>
 </body>
 </html>
+

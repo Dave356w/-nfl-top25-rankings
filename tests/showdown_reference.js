@@ -38,7 +38,7 @@ const options = {
   maxShared: payload.settings.max_shared_players,
   simulations,
   seed: payload.settings.random_seed,
-  objective: "tournament",
+  objective: payload.settings.showdown_objective || "tournament",
   positionLimits: {},
 };
 
@@ -82,3 +82,4 @@ process.stdout.write(JSON.stringify({
   diversity: worker.diversity(built.sets, options.maxShared),
   probe: { ...probe, analytic: analytic(probe.ids, probe.superstar) },
 }));
+

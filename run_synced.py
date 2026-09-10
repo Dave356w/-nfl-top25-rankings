@@ -19,6 +19,7 @@ import lineup_optimizer as lo
 from pipeline import market_tail_guard
 from pipeline import notebook as nb
 from pipeline import showdown
+from pipeline import projection_archive
 import run_daily
 import run_lineup
 import run_showdown
@@ -202,6 +203,7 @@ def build_synced_payloads(
         showdown_payloads, showdown_index,
     )
     return {
+        "projection_archive": projection_archive.capture(prepared, cfg, snapshot_id, showdown_payloads),
         "generated_at": generated_at,
         "snapshot_id": snapshot_id,
         "rankings": rankings_payload,
@@ -258,6 +260,7 @@ def main(argv=None):
         return 1
 
     site = Path(args.site_dir)
+    projection_archive.write(built["projection_archive"], site / "data" / "projection_archive")
     ranking_entries = run_daily.write_outputs(
         built["rankings"],
         built["ranking_results"].get("combined"),
@@ -284,3 +287,4 @@ def main(argv=None):
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
