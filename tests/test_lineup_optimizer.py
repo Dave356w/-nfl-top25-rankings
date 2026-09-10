@@ -38,7 +38,9 @@ def _projection(player, team, points, quality="good", start=KICKOFF, feed="bovad
     return nb.Projection(
         event_id="e-" + player, matchup=team, start_time_utc=start, team=team,
         player=player, position="WR", fantasy_points=points, quality=quality,
-        stat_means={}, sources={"receiving_yards": feed + " total"},
+        stat_means={stat: 1.0 for stats in nb.REQUIRED_PROJECTION_COMPONENTS.values()
+                    for stat in stats},
+        sources={"receiving_yards": feed + " total"},
     )
 
 

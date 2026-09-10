@@ -330,14 +330,29 @@ class RoleMeanAdjustmentTests(unittest.TestCase):
         self.assertEqual(out["Projection_Adjustment"].iloc[0], "market mean retained")
 
     def test_a_partial_market_mean_haircuts_only_its_prior_share(self):
-        out = nb.apply_depth_mean_adjustments(
-            self.frame("WR", 4, 4, source="market td-estimate 35%: Bovada", weight=0.35)
-        )
-        # 0.35 believed outright + 0.65 of the prior carrying the 0.77 haircut.
-        self.assertAlmostEqual(
-            float(out["Depth_Mean_Multiplier"].iloc[0]), 0.35 + 0.65 * 0.77, places=6
-        )
+        frame = self.frame("WR", 4, 4, source="market td-estimate 35%: Bovada", weight=0.35)
+        frame["Fallback_Projected_FP"] = 6.0
+        frame["Projected_FP"] = 0.35 * 14.0 + 0.65 * 6.0
+        out = nb.apply_depth_mean_adjustments(frame)
+        expected = 0.35 * 14.0 + 0.65 * 0.77 * 6.0
+        self.assertAlmostEqual(out["Projected_FP"].iloc[0], expected)
+        self.assertAlmostEqual(out["Depth_Mean_Multiplier"].iloc[0], expected / 8.8)
         self.assertIn("partial market mean", out["Projection_Adjustment"].iloc[0])
+
+    def test_partial_blend_without_components_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "Fallback_Projected_FP"):
+            nb.apply_depth_mean_adjustments(
+                self.frame("WR", 4, 4, source="market fair", weight=0.75))
+
+    def test_zero_market_weight_is_all_prior(self):
+        out = nb.apply_depth_mean_adjustments(
+            self.frame("WR", 4, 4, source="market fair", weight=0.0))
+        self.assertAlmostEqual(out["Projected_FP"].iloc[0], 7.7)
+
+    def test_manual_projection_is_preserved(self):
+        out = nb.apply_depth_mean_adjustments(
+            self.frame("WR", 4, 4, source="manual override", weight=0.35))
+        self.assertEqual(out["Projected_FP"].iloc[0], 10.0)
 
 
 class RunningBackCorrelationTests(unittest.TestCase):
