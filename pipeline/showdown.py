@@ -142,9 +142,15 @@ def lineup_rows(frame, limit=None):
     return rows
 
 
-def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True,
+def build_game_payload(game_players, game, salary_cap=None, cfg=None, optimize=True,
                        *, generated_at=None, snapshot_id=None):
     """Model one game and, by default, solve it once so the page opens on an answer.
+
+    `salary_cap` may be `None`. Nothing in the model depends on it: the pool, the
+    fitted CVs, the zero rates and the latent correlation matrix are all built
+    from the players alone, and the cap enters only when rosters are enumerated.
+    A capless game therefore still publishes a complete model, with no reference
+    portfolio, and the page asks the visitor for the cap before optimizing.
 
     Returns `(payload, note)`. A game that cannot produce a Yahoo-valid roster --
     a team whose skill players were all filtered out, most often -- returns
@@ -172,7 +178,7 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True,
         "away": str(game["Away Team"]),
         "home": str(game["Home Team"]),
         "kickoff_utc": _clean(game["Game Time"]),
-        "salary_cap": round(float(salary_cap), 2),
+        "salary_cap": None if salary_cap is None else round(float(salary_cap), 2),
         "settings": settings,
         "players": player_rows(pool, model["cv"], model["zero_rate"]),
         "latent": upper_triangle(model["latent_corr"]),
@@ -186,7 +192,9 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True,
         "dropped_from_pool": list(dropped),
         "reference": None,
     }
-    if not optimize:
+    # Without a cap there is no legal-roster set to enumerate, so the reference
+    # run is skipped rather than guessed at. Everything above is already final.
+    if not optimize or salary_cap is None:
         return payload, None
 
     outcomes, _ = nb.simulate_player_outcomes(pool, cfg)
@@ -242,7 +250,7 @@ def build_slate(cfg=None, optimize=True, max_games=None, *, prepared_slate=None,
     players = slate["players"]
     games = slate["games"]
 
-    payloads, entries, notes = [], [], []
+    payloads, entries, notes, capless = [], [], [], []
     for position, (_, game) in enumerate(games.iterrows()):
         if max_games is not None and position >= max_games:
             break
@@ -252,15 +260,20 @@ def build_slate(cfg=None, optimize=True, max_games=None, *, prepared_slate=None,
             notes.append(f"{game['Matchup']}: no priced players survived the filters")
             continue
         salary_cap = slate["cap_map"].get(game_id)
-        if salary_cap is None or not float(salary_cap) > 0:
-            # The interactive runner asks the user for a cap here. A published
-            # build has nobody to ask, and a guessed cap would silently change
-            # which lineups are legal, so the game is skipped and said so.
-            notes.append(f"{game['Matchup']}: Yahoo published no single-game salary cap")
-            continue
+        if salary_cap is not None and not float(salary_cap) > 0:
+            salary_cap = None
+        if salary_cap is None:
+            # The interactive runner asks the user for a cap here, and a published
+            # build has nobody to ask. v3.7 stopped dropping the game over it: a
+            # guessed cap would still silently change which lineups are legal, but
+            # the model does not need one, so the game is published without a
+            # reference portfolio and the page asks the visitor instead. On the
+            # 2026-09-10 slate this is 14 of 16 games.
+            capless.append(str(game["Matchup"]))
 
         payload, problem = build_game_payload(
-            game_players, game, float(salary_cap), cfg, optimize=optimize,
+            game_players, game, None if salary_cap is None else float(salary_cap),
+            cfg, optimize=optimize,
             generated_at=generated_at, snapshot_id=snapshot_id,
         )
         if payload is None:
@@ -274,6 +287,9 @@ def build_slate(cfg=None, optimize=True, max_games=None, *, prepared_slate=None,
             "home": payload["home"],
             "kickoff_utc": payload["kickoff_utc"],
             "salary_cap": payload["salary_cap"],
+            # A game Yahoo priced no cap for is complete except for the cap, and
+            # the page collects that before it will optimize.
+            "needs_salary_cap": payload["salary_cap"] is None,
             "players": len(payload["players"]),
             "file": f"{payload['game_id']}.json",
             "optimized": payload["reference"] is not None,
@@ -289,6 +305,7 @@ def build_slate(cfg=None, optimize=True, max_games=None, *, prepared_slate=None,
         "run_date": generated_at.strftime("%Y-%m-%d"),
         "games": entries,
         "skipped": notes,
+        "awaiting_salary_cap": capless,
         "market": {
             "feeds": list(audit.get("feeds") or []),
             "notes": list(audit.get("notes") or []),

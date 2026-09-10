@@ -1001,6 +1001,11 @@ self.onmessage = (event) => {
     if (message.type !== "solve") return;
 
     const options = message.options;
+    if (!Number.isFinite(options.salaryCap) || options.salaryCap <= 0) {
+      // Yahoo does not price every single-game slate; those games publish a model
+      // with no cap and the page collects one before asking for a solve.
+      throw new Error("This game has no salary cap. Enter the cap from your contest.");
+    }
     if (!Number.isInteger(options.entries) || options.entries < 1 || options.entries > 150) {
       throw new Error("Entries must be a whole number between 1 and 150.");
     }

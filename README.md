@@ -157,9 +157,9 @@ python run_showdown.py --no-optimize        # models only, no reference run
 
 Those standalone entry points are local diagnostics. Use `run_synced.py` for
 publication; `--showdown-no-optimize` skips only the reference simulation while
-still exporting shared models. If Yahoo supplies no usable single-game caps,
-the synchronized run publishes an empty Showdown index and removes stale game
-files without blocking the other pages.
+still exporting shared models. If no game produces a usable pool at all, the
+synchronized run publishes an empty Showdown index and removes stale game files
+without blocking the other pages.
 
 Tests do not need the network, and cover both optimizers as well as the
 published JSON:
@@ -469,6 +469,29 @@ without notice. DEF has no dependable player-prop market and always uses the
 Yahoo fallback, and neither does a kicker, who is estimated from rolling
 nflverse game logs on the lineup page.
 
+
+### Games Yahoo prices no cap for
+
+Yahoo publishes a `singleGameSalaryCapMap` that often covers only part of the
+slate — on 2026-09-10 it priced 2 of 16 games. Those 14 games used to be dropped
+from the Showdown export entirely.
+
+Nothing in the model depends on the cap. The pool, the fitted coefficients of
+variation, the zero rates and the latent correlation matrix are all built from
+the players alone; the cap enters only when rosters are enumerated. So a capless
+game now publishes a **complete model with no reference portfolio**, `salary_cap`
+is `null`, and the page collects the cap from the visitor before it will optimize.
+The picker labels those games and Optimize stays disabled until a positive number
+is entered.
+
+The original refusal was right about one thing and it still holds: a *guessed*
+cap would silently change which lineups are legal. So nothing is guessed. The cap
+is asked for, the result says it came from you rather than from Yahoo, and the
+published reference run is omitted rather than invented.
+
+This does not change the projections. Those never depended on the cap and already
+covered the whole slate — the rankings page carries all 468 priced players from
+all 16 games either way. What the cap unlocks is enumeration and optimization.
 
 ### Showdown roster rules
 
