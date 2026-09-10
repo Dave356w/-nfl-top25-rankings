@@ -522,10 +522,9 @@ def apply_depth_mean_adjustments(players):
     # Applying the historical role haircut again would double-count role. Role
     # still controls the calibrated CV and the pair correlations.
     #
-    # A partially weighted market mean is part prior, and the prior half has not
-    # been corrected for role, so the multiplier is blended by the same weight:
-    # a 35%-weight td-estimate keeps 65% of its haircut, a full-weight market
-    # mean keeps none of it.
+    # final = w * market + (1 - w) * role_multiplier * prior.
+    # Subtract only the prior's role discount from the already audited blend;
+    # multiplying the blend by a weighted haircut also changes the market part.
     market = out["Projection_Source"].astype(str).str.startswith("market ")
     if "Market_Weight" in out:
         weight = pd.to_numeric(out["Market_Weight"], errors="coerce").fillna(1.0)
@@ -533,14 +532,21 @@ def apply_depth_mean_adjustments(players):
         weight = pd.Series(1.0, index=out.index)
     weight = weight.where(market, 0.0).clip(0.0, 1.0)
     out["Market_Mean_Share"] = weight
-    out["Depth_Mean_Multiplier"] = (
-        weight + (1.0 - weight) * out["Depth_Mean_Multiplier"]
-    )
     manual = out["Projection_Source"].eq("manual override")
-    out.loc[manual, "Depth_Mean_Multiplier"] = 1.0
-    out["Projected_FP"] = (
-        out["Pre_Depth_Projected_FP"] * out["Depth_Mean_Multiplier"]
-    ).clip(lower=0.05)
+    prior = pd.to_numeric(
+        out.get("Fallback_Projected_FP", pd.Series(np.nan, index=out.index)),
+        errors="coerce",
+    )
+    needs_prior = market & weight.gt(0) & weight.lt(1) & ~manual
+    if (needs_prior & ~np.isfinite(prior)).any():
+        raise ValueError("Partial market blend requires finite Fallback_Projected_FP")
+    prior = prior.where(market & weight.gt(0), out["Pre_Depth_Projected_FP"]).fillna(0.0)
+    discount = (1.0 - weight) * (1.0 - out["Depth_Mean_Multiplier"]) * prior
+    out["Projected_FP"] = (out["Pre_Depth_Projected_FP"] - discount).clip(lower=0.05)
+    out.loc[manual, "Projected_FP"] = out.loc[manual, "Pre_Depth_Projected_FP"]
+    out["Depth_Mean_Multiplier"] = (
+        out["Projected_FP"] / out["Pre_Depth_Projected_FP"].replace(0, np.nan)
+    ).fillna(1.0)
     adjusted = out["Depth_Mean_Multiplier"].lt(0.999)
     out["Projection_Adjustment"] = np.select(
         [
@@ -2178,36 +2184,43 @@ def fit_stat_distribution(
     raise ValueError(f"Unsupported stat: {stat}")
 
 
+REQUIRED_PROJECTION_COMPONENTS = {
+    "QB": {"passing_yards", "passing_touchdowns", "interceptions",
+           "rushing_yards", "any_touchdowns"},
+    "RB": {"rushing_yards", "receiving_yards", "receptions", "any_touchdowns"},
+    "WR": {"receiving_yards", "receptions", "any_touchdowns"},
+    "TE": {"receiving_yards", "receptions", "any_touchdowns"},
+}
+
+
+def missing_projection_components(means, position):
+    """Require position-specific core stats; absence is not an observed zero.
+
+    Rare ancillary stats (e.g. WR rushing and lost fumbles) still contribute
+    when available, but are not required for the core coverage label.
+    """
+    required = REQUIRED_PROJECTION_COMPONENTS.get(str(position).upper())
+    if required is None:
+        return ["known position"]
+    return sorted(stat for stat in required
+                  if stat not in means or not math.isfinite(means[stat]))
+
+
 def projection_quality(
     distributions: Mapping[str, Distribution],
     sources: Mapping[str, str],
     position: str = "UNK",
 ) -> str:
-    stats = set(distributions)
-    has_total_anchor = any("total" in source for source in sources.values())
-    is_quarterback = position.upper() == "QB" or bool(
-        stats & {"passing_yards", "passing_touchdowns", "interceptions"}
-    )
-    if is_quarterback:
-        quarterback_core = {"passing_yards", "passing_touchdowns", "interceptions"}
-        if quarterback_core <= stats and has_total_anchor:
-            return "good"
-        if {"passing_yards", "passing_touchdowns"} <= stats:
-            return "fair"
+    means = {stat: dist.mean for stat, dist in distributions.items()}
+    # TD-only regression is a separately labelled estimate, never a complete
+    # direct component sum. Preserve that route for non-quarterbacks.
+    if set(means) == {"any_touchdowns"} and str(position).upper() != "QB":
+        return "td-only" if math.isfinite(means["any_touchdowns"]) else "partial"
+    if missing_projection_components(means, position):
         return "partial"
-
-    skill_core = sum(
-        stat in stats
-        for stat in ("rushing_yards", "receiving_yards", "receptions")
-    )
-    has_touchdown = "any_touchdowns" in stats
-    if skill_core >= 2 and has_touchdown and has_total_anchor:
-        return "good"
-    if skill_core >= 2 or (skill_core >= 1 and has_touchdown):
-        return "fair"
-    if skill_core >= 1:
-        return "partial"
-    return "td-only" if has_touchdown else "partial"
+    required = REQUIRED_PROJECTION_COMPONENTS[str(position).upper()]
+    has_total_anchor = any("total" in sources.get(stat, "") for stat in required)
+    return "good" if has_total_anchor else "fair"
 
 
 def iso_start_time(start_time_ms: Optional[int]) -> Optional[str]:
@@ -3100,7 +3113,7 @@ def build_market_projection_report(yahoo_players, projections, selected_game, cf
     columns = [
         "Player", "Team", "Position", "Yahoo projection", "Market projection",
         "Market quality", "Market method", "Market feeds", "Market matched",
-        "Market accepted", "Market reason",
+        "Market accepted", "Market reason", "Market missing components",
     ]
     if not len(yahoo_players):
         return pd.DataFrame(columns=columns)
@@ -3120,6 +3133,7 @@ def build_market_projection_report(yahoo_players, projections, selected_game, cf
         market_rows.append({
             "_key": (_market_team(projection.team), _market_name_key(projection.player)),
             "Market projection": float(projection.fantasy_points),
+            "_stat_means": projection.stat_means,
             "Market quality": str(projection.quality),
             "Market method": str(projection.fantasy_points_method),
             "Market feeds": "+".join(sorted({
@@ -3146,14 +3160,18 @@ def build_market_projection_report(yahoo_players, projections, selected_game, cf
         manual = str(player.Projection_Source) == "manual override"
         matched = hit is not None
         quality = hit["Market quality"] if matched else None
+        missing = (missing_projection_components(hit["_stat_means"], player.Position)
+                   if matched and quality != "td-estimate" else [])
         finite_positive = matched and np.isfinite(hit["Market projection"]) and hit["Market projection"] > 0
-        accepted = bool(matched and quality in accepted_quality and finite_positive and not manual)
+        accepted = bool(matched and quality in accepted_quality and finite_positive and not manual and not missing)
         if manual:
             reason = "manual override retained"
         elif key in ambiguous:
             reason = "ambiguous market identity"
         elif not matched:
             reason = "no same-game market projection"
+        elif missing:
+            reason = "missing required components: " + ", ".join(missing)
         elif quality not in accepted_quality:
             reason = f"quality '{quality}' not accepted"
         elif not finite_positive:
@@ -3172,6 +3190,7 @@ def build_market_projection_report(yahoo_players, projections, selected_game, cf
             "Market matched": matched,
             "Market accepted": accepted,
             "Market reason": reason,
+            "Market missing components": ", ".join(missing),
         })
     return pd.DataFrame(rows, columns=columns)
 
@@ -3180,8 +3199,8 @@ def build_market_projection_report(yahoo_players, projections, selected_game, cf
 # `projection_quality` assigned it.
 #
 # "good" is a direct component sum off well-covered props and replaces the prior
-# outright. "fair" is the same construction on thinner coverage. "td-estimate" is
-# something else entirely: no yardage or reception market was priced, so the
+# outright. "fair" has the same core components but no total anchor.
+# "td-estimate" is something else entirely: no yardage or reception market was priced, so the
 # player's expected touchdowns were pushed through a slate-wide regression onto
 # full fantasy points. That regression is fitted per slate on whatever players do
 # have both, and for a deep-role player it is extrapolating well outside its own
@@ -3224,10 +3243,17 @@ def apply_market_projection_means(players, report, cfg=None):
         accepted["Market weight"] * accepted["Market projection"]
         + (1.0 - accepted["Market weight"]) * accepted["Yahoo projection"]
     )
+    rejected = report[~report["Market accepted"]].set_index(["Team", "Player"])
     by_identity = accepted.set_index(["Team", "Player"])
     for idx, player in out.iterrows():
         key = (player["Team"], player["Name"])
         if key not in by_identity.index:
+            if key in rejected.index and player["Projection_Source"] != "manual override":
+                missing = rejected.loc[key].get("Market missing components", "")
+                if isinstance(missing, str) and missing:
+                    out.loc[idx, "Projection_Source"] = (
+                        f"{player['Projection_Source']}; market missing: {missing}"
+                    )
             continue
         row = by_identity.loc[key]
         weight = float(row["Market weight"])

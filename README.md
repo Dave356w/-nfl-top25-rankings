@@ -36,6 +36,24 @@ salary prior. The market mean is blended in by how completely the props covered
 the player rather than substituted outright, and only the prior share carries
 the role haircut. Every row on the page shows which of the three produced it.
 
+The role calculation is `w × market + (1 − w) × role multiplier × prior`,
+using the market weight after confidence auditing. Coverage requires these core
+components before a direct market total can be accepted:
+
+| Position | Required components |
+| --- | --- |
+| QB | Passing yards, passing TDs, interceptions, rushing yards, own TDs |
+| RB | Rushing yards, receiving yards, receptions, own TDs |
+| WR / TE | Receiving yards, receptions, own TDs |
+
+Missing core components retain the fallback and appear in the projection method.
+A measured zero counts as present. Unknown positions are not rated complete.
+Complete core coverage is `good` with a total anchor and `fair` without one;
+these labels describe coverage, not measured forecast accuracy. Ancillary stats
+such as WR rushing and lost fumbles contribute when supplied but are not required.
+The separately labelled `td-estimate` regression remains a low-weight estimate.
+Confidence weights and audit caps remain judgment calls pending historical testing.
+
 ### Role, depth and mean are three different things
 
 A depth chart is not one ordered list per position. A team in three-receiver
