@@ -56,6 +56,32 @@ def _exposure_starvation_fixture():
 
 
 class PortfolioConstructionTests(unittest.TestCase):
+    def test_strict_exposure_limit_and_single_entry_exception(self):
+        self.assertEqual(pc.exposure_limit(5, 0.70), 3)
+        self.assertEqual(pc.exposure_limit(5, 0.05), 0)
+        self.assertEqual(pc.exposure_limit(100, 0.29), 29)
+        self.assertEqual(pc.exposure_limit(1, 0.05), 1)
+        for value in (float("nan"), float("inf"), -0.1, 1.1):
+            with self.assertRaises(ValueError):
+                pc.exposure_limit(5, value)
+
+    def test_python_selection_obeys_both_strict_caps(self):
+        lineups = [(0, 1, 2, 3, 4), (0, 5, 6, 7, 8), (0, 9, 10, 11, 12),
+                   (0, 13, 14, 15, 16), (17, 18, 19, 20, 21), (22, 23, 24, 25, 26)]
+        players = pd.DataFrame({"Position": ["WR"] * 27})
+        scored = pd.DataFrame({"Player_Ids": lineups, "Superstar_Id": [0, 0, 0, 0, 17, 22],
+                               "Tournament_Score": [100, 99, 98, 97, 96, 95]})
+        cfg = _cfg(5, player_exposure=0.7, superstar_exposure=0.7, shared=3)
+        cfg.use_construction_quotas = False
+        out = pc.select_portfolio(scored, players, cfg)
+        self.assertEqual(len(out), 5)
+        self.assertEqual(out["Superstar_Id"].eq(0).sum(), 3)
+        self.assertEqual(sum(0 in ids for ids in out["Player_Ids"]), 3)
+        self.assertNotIn(lineups[3], list(out["Player_Ids"]))
+        from pipeline import notebook as nb
+        legacy = nb.select_tournament_portfolio(scored, cfg)
+        self.assertEqual(list(legacy["Player_Ids"]), list(out["Player_Ids"]))
+
     def test_default_construction_mix_is_twenty_entries(self):
         rules = pc.serializable_rules()
         self.assertEqual(sum(rule["count"] for rule in rules), 20)

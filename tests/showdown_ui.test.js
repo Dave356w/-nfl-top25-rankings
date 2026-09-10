@@ -136,3 +136,34 @@ test("results distinguish expectation, sample mean and candidate rates", async (
   assert.match(rendered, /candidate-best 1.00%/);
   assert.doesNotMatch(rendered, /<span>win /);
 });
+
+
+test("quota switch and integer exposure counts reach the worker", async () => {
+  const p = await page();
+  p.node("entries").value = 5;
+  p.node("entries").handlers.change();
+  assert.match(p.node("exposure-hint").textContent, /at most 3 of 5/);
+  assert.equal(p.node("construction").value, "off");
+  p.node("run").handlers.click();
+  assert.equal(p.workers.at(-1).messages.at(-1).options.constructionRules.length, 0);
+  const rules = [{ name: "QB", count: 1, positions: { QB: 1 } }];
+  p.routesData["A.json"].settings.portfolio_construction_rules = rules;
+  p.node("construction").value = "on";
+  p.node("construction").handlers.change();
+  p.node("run").handlers.click();
+  assert.equal(p.workers.at(-1).messages.at(-1).options.constructionRules, rules);
+  p.node("entries").value = 1;
+  p.node("entries").handlers.change();
+  assert.match(p.node("exposure-hint").textContent, /do not apply/);
+});
+
+test("incomplete published portfolios are not displayed as valid entries", async () => {
+  const p = await page();
+  p.routesData["B.json"].reference = {
+    valid_rosters: 10, portfolio: [{ids:[0,1,2,3,4],superstar:0}], reliability:[]
+  };
+  p.choose("B");
+  await flush();
+  assert.equal(p.node("reference").innerHTML, "");
+  assert.match(p.node("reference-note").textContent, /partial portfolio is hidden/);
+});
