@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-10T14:11:59Z",
-  "snapshot_id": "2026-09-10T14:11:59Z",
+  "generated_utc": "2026-09-10T14:40:09Z",
+  "snapshot_id": "2026-09-10T14:40:09Z",
   "run_date": "2026-09-10",
   "top_n": 25,
   "positions": [
@@ -255,6 +255,21 @@
       },
       {
         "rank": 9,
+        "player": "Brock Purdy",
+        "team": "SF",
+        "opponent": "LA",
+        "fp": 19.01,
+        "fppg": 19.32,
+        "salary": 27,
+        "fp_per_salary": 0.704,
+        "role": "starter",
+        "role_slot": "QB slot 9",
+        "depth": 1,
+        "kickoff_utc": "2026-09-11 00:35",
+        "method": "market good: Bovada+Underdog"
+      },
+      {
+        "rank": 10,
         "player": "Kyler Murray",
         "team": "MIN",
         "opponent": "GB",
@@ -269,7 +284,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 10,
+        "rank": 11,
         "player": "Caleb Williams",
         "team": "CHI",
         "opponent": "CAR",
@@ -281,21 +296,6 @@
         "role_slot": "QB slot 9",
         "depth": 1,
         "kickoff_utc": "2026-09-13 17:00",
-        "method": "market good: Bovada+Underdog"
-      },
-      {
-        "rank": 11,
-        "player": "Brock Purdy",
-        "team": "SF",
-        "opponent": "LA",
-        "fp": 18.95,
-        "fppg": 19.32,
-        "salary": 27,
-        "fp_per_salary": 0.702,
-        "role": "starter",
-        "role_slot": "QB slot 9",
-        "depth": 1,
-        "kickoff_utc": "2026-09-11 00:35",
         "method": "market good: Bovada+Underdog"
       },
       {
@@ -363,10 +363,10 @@
         "player": "Matthew Stafford",
         "team": "LA",
         "opponent": "SF",
-        "fp": 17.95,
+        "fp": 17.91,
         "fppg": 21.02,
         "salary": 35,
-        "fp_per_salary": 0.513,
+        "fp_per_salary": 0.512,
         "role": "starter",
         "role_slot": "QB slot 9",
         "depth": 1,
@@ -545,7 +545,7 @@
         "player": "Christian McCaffrey",
         "team": "SF",
         "opponent": "LA",
-        "fp": 18.58,
+        "fp": 18.57,
         "fppg": 21.15,
         "salary": 39,
         "fp_per_salary": 0.476,
@@ -755,10 +755,10 @@
         "player": "Kyren Williams",
         "team": "LA",
         "opponent": "SF",
-        "fp": 12.61,
+        "fp": 12.72,
         "fppg": 14.93,
         "salary": 36,
-        "fp_per_salary": 0.35,
+        "fp_per_salary": 0.353,
         "role": "starter",
         "role_slot": "RB slot 11",
         "depth": 1,
@@ -922,10 +922,10 @@
         "player": "Puka Nacua",
         "team": "LA",
         "opponent": "SF",
-        "fp": 17.29,
+        "fp": 17.22,
         "fppg": 19.79,
         "salary": 38,
-        "fp_per_salary": 0.455,
+        "fp_per_salary": 0.453,
         "role": "starter",
         "role_slot": "WR slot 1",
         "depth": 1,
@@ -1129,21 +1129,6 @@
       },
       {
         "rank": 17,
-        "player": "Davante Adams",
-        "team": "LA",
-        "opponent": "SF",
-        "fp": 11.81,
-        "fppg": 13.11,
-        "salary": 27,
-        "fp_per_salary": 0.437,
-        "role": "starter",
-        "role_slot": "WR slot 2",
-        "depth": 2,
-        "kickoff_utc": "2026-09-11 00:35",
-        "method": "market good: Bovada+Underdog"
-      },
-      {
-        "rank": 18,
         "player": "Tetairoa McMillan",
         "team": "CAR",
         "opponent": "CHI",
@@ -1158,7 +1143,7 @@
         "method": "market good: Bovada+Underdog"
       },
       {
-        "rank": 19,
+        "rank": 18,
         "player": "Ladd McConkey",
         "team": "LAC",
         "opponent": "ARI",
@@ -1170,6 +1155,21 @@
         "role_slot": "WR slot 1",
         "depth": 1,
         "kickoff_utc": "2026-09-13 20:25",
+        "method": "market good: Bovada+Underdog"
+      },
+      {
+        "rank": 19,
+        "player": "Davante Adams",
+        "team": "LA",
+        "opponent": "SF",
+        "fp": 11.74,
+        "fppg": 13.11,
+        "salary": 27,
+        "fp_per_salary": 0.435,
+        "role": "starter",
+        "role_slot": "WR slot 2",
+        "depth": 2,
+        "kickoff_utc": "2026-09-11 00:35",
         "method": "market good: Bovada+Underdog"
       },
       {
@@ -1252,10 +1252,10 @@
         "player": "Mike Evans",
         "team": "SF",
         "opponent": "LA",
-        "fp": 10.23,
+        "fp": 10.27,
         "fppg": 8.72,
         "salary": 23,
-        "fp_per_salary": 0.445,
+        "fp_per_salary": 0.447,
         "role": "starter",
         "role_slot": "WR slot 1",
         "depth": 1,
@@ -2025,7 +2025,7 @@
     ],
     "notes": [
       "bovada: 396 player-market records (live)",
-      "underdog: 616 player-market records (live)"
+      "underdog: 617 player-market records (live)"
     ],
     "matched": 405,
     "accepted": 397,
@@ -2033,9 +2033,9 @@
     "calibration_pairs": 293,
     "projection_audit": {
       "audited": 397,
-      "flagged": 88,
+      "flagged": 86,
       "shrunk": 37,
-      "extreme": 80,
+      "extreme": 78,
       "rules": {
         "moderate": {
           "min_abs_fp": 2.5,
@@ -2057,8 +2057,8 @@
   "availability_removed": 394,
   "method_counts": {
     "market good: Bovada+Underdog": 179,
-    "market td-estimate 35%: Bovada+Underdog": 120,
-    "market td-estimate 35%: Bovada": 46,
+    "market td-estimate 35%: Bovada+Underdog": 121,
+    "market td-estimate 35%: Bovada": 45,
     "80% salary prior; zero/low FPPG": 39,
     "70% FPPG + 30% salary prior": 33,
     "market good 65% audit: Bovada+Underdog": 29,
@@ -2072,11 +2072,11 @@
     "80% salary prior; zero/low FPPG; market missing: receiving_yards, receptions, rushing_yards": 1
   },
   "log": [
-    "Yahoo slate: 16 game(s), 915 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-10T14:11:59Z)",
+    "Yahoo slate: 16 game(s), 915 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-10T14:40:09Z)",
     "  Market: bovada: 396 player-market records (live)",
-    "  Market: underdog: 616 player-market records (live)",
+    "  Market: underdog: 617 player-market records (live)",
     "  Market: Bovada, Underdog; matched 405/883 skill-player rows; accepted 397 estimated means.",
-    "  Market audit: 88/397 flagged, 37 shrunk, 80 extreme.",
+    "  Market audit: 86/397 flagged, 37 shrunk, 78 extreme.",
     "  nflverse: depth chart 2026: 573 offensive rows, snapshot 2026-09-10 12:01 UTC",
     "  nflverse: roster status 2026: 2,963 rows",
     "  nflverse: role tiers for 541 player(s); roster status matched 92% of the skill pool.",

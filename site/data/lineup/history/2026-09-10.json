@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-10T14:11:59Z",
-  "snapshot_id": "2026-09-10T14:11:59Z",
+  "generated_utc": "2026-09-10T14:40:09Z",
+  "snapshot_id": "2026-09-10T14:40:09Z",
   "run_date": "2026-09-10",
   "season": 2026,
   "week": 1,
@@ -445,7 +445,7 @@
     ],
     "notes": [
       "bovada: 396 player-market records (live)",
-      "underdog: 616 player-market records (live)"
+      "underdog: 617 player-market records (live)"
     ],
     "matched": 405,
     "accepted": 397,
@@ -454,9 +454,9 @@
     "calibration_pairs": 293,
     "projection_audit": {
       "audited": 397,
-      "flagged": 88,
+      "flagged": 86,
       "shrunk": 37,
-      "extreme": 80,
+      "extreme": 78,
       "rules": {
         "moderate": {
           "min_abs_fp": 2.5,
@@ -476,11 +476,11 @@
     }
   },
   "log": [
-    "Yahoo slate: 16 game(s), 915 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-10T14:11:59Z)",
+    "Yahoo slate: 16 game(s), 915 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-10T14:40:09Z)",
     "  Market: bovada: 396 player-market records (live)",
-    "  Market: underdog: 616 player-market records (live)",
+    "  Market: underdog: 617 player-market records (live)",
     "  Market: Bovada, Underdog; matched 405/883 skill-player rows; accepted 397 estimated means.",
-    "  Market audit: 88/397 flagged, 37 shrunk, 80 extreme.",
+    "  Market audit: 86/397 flagged, 37 shrunk, 78 extreme.",
     "  nflverse: depth chart 2026: 573 offensive rows, snapshot 2026-09-10 12:01 UTC",
     "  nflverse: roster status 2026: 2,963 rows",
     "  nflverse: role tiers for 541 player(s); roster status matched 92% of the skill pool.",
@@ -628,11 +628,11 @@
     "[25 rows x 13 columns]",
     "Ranking run time: 0.1s",
     "Roster: 14 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-09-10T14:11:59Z (shared with position rankings).",
+    "Projection snapshot: 2026-09-10T14:40:09Z (shared with position rankings).",
     "Market: bovada: 396 player-market records (live)",
-    "Market: underdog: 616 player-market records (live)",
+    "Market: underdog: 617 player-market records (live)",
     "Market: Bovada, Underdog; matched 405/883 skill-player rows; accepted 397 means.",
-    "Market audit: 88/397 flagged, 37 shrunk, 80 extreme.",
+    "Market audit: 86/397 flagged, 37 shrunk, 78 extreme.",
     "Season 2026 week 1; depth snapshot 2026-09-10T12:01:46Z.",
     "Add pool: 269 player(s) resolved for the page's roster editor."
   ]
