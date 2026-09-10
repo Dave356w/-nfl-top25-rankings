@@ -1,15 +1,15 @@
 slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,fppg,depth,depth_source,source,market_quality,market_raw,market_prior,market_delta,market_delta_pct,market_base_weight,market_weight,market_audit_flag,market_audit_reason,market_feed_count,injury,review
 QB,Dak Prescott,QB,DAL,NYG,2026-09-14 00:20,19.43,12.79,31.57,36.0,19.05,1,nflverse latest depth,market good: Bovada+Underdog,good,19.43,19.07,0.36,0.0189,1.0,1.0,pass,within calibration gates,2.0,,ok
-RB,James Cook III,RB,BUF,HOU,2026-09-13 17:00,14.85,8.13,27.01,31.0,16.05,1,nflverse latest depth,market good: Bovada+Underdog,good,14.85,15.55,-0.7,-0.045,1.0,1.0,pass,within calibration gates,2.0,,ok
-RB,Breece Hall,RB,NYJ,TEN,2026-09-13 17:00,14.37,7.87,26.13,27.0,11.85,1,nflverse latest depth,market good: Bovada+Underdog,good,14.37,11.95,2.42,0.2025,1.0,1.0,pass,within calibration gates,2.0,,Full Participation in Practice
+RB,James Cook III,RB,BUF,HOU,2026-09-13 17:00,14.84,8.13,26.99,31.0,16.05,1,nflverse latest depth,market good: Bovada+Underdog,good,14.84,15.55,-0.71,-0.0456,1.0,1.0,pass,within calibration gates,2.0,,ok
+RB,Breece Hall,RB,NYJ,TEN,2026-09-13 17:00,14.31,7.84,26.02,27.0,11.85,1,nflverse latest depth,market good: Bovada+Underdog,good,14.31,11.95,2.36,0.1975,1.0,1.0,pass,within calibration gates,2.0,,Full Participation in Practice
 WR,Tee Higgins,WR,CIN,TB,2026-09-13 17:00,12.75,6.11,24.66,33.0,12.14,2,nflverse latest depth,market good: Bovada+Underdog,good,12.75,12.96,-0.21,-0.0163,1.0,1.0,pass,within calibration gates,2.0,,Full Participation in Practice
 WR,Jameson Williams,WR,DET,NO,2026-09-13 17:00,11.58,5.55,22.4,27.0,11.02,2,nflverse latest depth,market good: Bovada+Underdog,good,11.58,11.25,0.33,0.0292,1.0,1.0,pass,within calibration gates,2.0,,ok
-TE,Harold Fannin Jr,TE,CLE,JAC,2026-09-13 17:00,8.07,3.62,16.02,20.0,9.4,1,nflverse latest depth,market good: Bovada+Underdog,good,8.07,9.54,-1.47,-0.1541,1.0,1.0,pass,within calibration gates,2.0,,ok
+TE,Brenton Strange,TE,JAC,CLE,2026-09-13 17:00,8.18,3.67,16.23,15.0,7.45,1,nflverse latest depth,market good: Bovada+Underdog,good,8.18,7.12,1.06,0.1487,1.0,1.0,pass,within calibration gates,2.0,,ok
 K,Brandon Aubrey,K,DAL,NYG,,11.75,7.26,19.94,,,1,nflverse PK depth,nflverse rolling kicker games (n=8),,,,,,,,,,,,ok
 FLEX,Jaylen Warren,RB,PIT,ATL,2026-09-13 17:00,11.52,6.31,20.95,27.0,11.9,1,nflverse latest depth,market good: Bovada+Underdog,good,11.52,11.98,-0.46,-0.0386,1.0,1.0,pass,within calibration gates,2.0,,ok
-BENCH,Jaylen Waddle,WR,DEN,KC,2026-09-15 00:15,10.93,5.88,20.06,21.0,10.13,1,nflverse latest depth,market good: Bovada+Underdog,good,10.93,9.7,1.23,0.1267,1.0,1.0,pass,within calibration gates,2.0,,ok
-BENCH,Quentin Johnston,WR,LAC,ARI,2026-09-13 20:25,10.21,4.9,19.75,20.0,10.66,2,nflverse latest depth,market good: Bovada+Underdog,good,10.21,9.91,0.3,0.0299,1.0,1.0,pass,within calibration gates,2.0,,ok
-BENCH,Brenton Strange,TE,JAC,CLE,2026-09-13 17:00,8.01,3.59,15.9,15.0,7.45,1,nflverse latest depth,market good: Bovada+Underdog,good,8.01,7.12,0.89,0.1248,1.0,1.0,pass,within calibration gates,2.0,,ok
+BENCH,Jaylen Waddle,WR,DEN,KC,2026-09-15 00:15,10.92,5.87,20.05,21.0,10.13,1,nflverse latest depth,market good: Bovada+Underdog,good,10.92,9.7,1.22,0.1257,1.0,1.0,pass,within calibration gates,2.0,,ok
+BENCH,Quentin Johnston,WR,LAC,ARI,2026-09-13 20:25,10.1,4.84,19.53,20.0,10.66,2,nflverse latest depth,market good: Bovada+Underdog,good,10.1,9.91,0.19,0.0188,1.0,1.0,pass,within calibration gates,2.0,,ok
+BENCH,Harold Fannin Jr,TE,CLE,JAC,2026-09-13 17:00,8.08,3.62,16.04,20.0,9.4,1,nflverse latest depth,market good: Bovada+Underdog,good,8.08,9.54,-1.46,-0.153,1.0,1.0,pass,within calibration gates,2.0,,ok
 BENCH,Sam Darnold,QB,SEA,NE,2026-09-10 00:20,4.59,3.02,7.46,29.0,0.52,1,nflverse latest depth,70% FPPG + 30% salary prior,,,,,,,,,,,,ok
 BENCH,Isaac TeSlaa,WR,DET,NO,2026-09-13 17:00,4.5,1.75,9.35,11.0,4.85,3,nflverse latest depth,market good: Bovada+Underdog,good,4.5,4.46,0.04,0.0095,1.0,1.0,pass,within calibration gates,2.0,,depth 3
 BENCH,Rashid Shaheed,WR,SEA,NE,2026-09-10 00:20,2.16,1.16,3.96,14.0,0.9,1,nflverse latest depth,70% FPPG + 30% salary prior,,,,,,,,,,,,ok
