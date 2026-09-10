@@ -42,11 +42,14 @@ from pipeline import scenario_portfolio
 
 market_tail_guard.install(nb)
 
-SCHEMA = 1
+# 2: players carry a fitted `zero` rate and the marginals are zero-hurdle
+# lognormals. A worker that ignores `zero` would silently simulate the wrong
+# floors, so the page refuses a schema it does not understand.
+SCHEMA = 2
 
 # Fields the page needs per player. Short keys: the payload is mostly numbers and
 # this is the difference between 7 KB and 11 KB per game.
-PLAYER_FIELDS = ("name", "team", "pos", "salary", "fp", "cv", "role", "slot", "depth", "source")
+PLAYER_FIELDS = ("name", "team", "pos", "salary", "fp", "cv", "zero", "role", "slot", "depth", "source")
 
 # Settings the page exposes as controls. Published with the payload so the page
 # starts from the same defaults the server-side reference run used, and so a
@@ -100,7 +103,7 @@ def upper_triangle(matrix, decimals=5):
     ]
 
 
-def player_rows(players, cv):
+def player_rows(players, cv, zero):
     rows = []
     for index, player in enumerate(players.itertuples()):
         rows.append({
@@ -110,6 +113,9 @@ def player_rows(players, cv):
             "salary": round(float(player.Salary), 2),
             "fp": round(float(player.Projected_FP), 4),
             "cv": round(float(cv[index]), 5),
+            # Played-but-scoreless probability. The page needs it to reproduce the
+            # marginals: mean and CV alone no longer describe them.
+            "zero": round(float(zero[index]), 5),
             "role": str(getattr(player, "Role_Label", "unknown")),
             "slot": _clean(getattr(player, "Role_Slot", None)),
             "depth": int(player.Depth_Rank),
@@ -168,11 +174,11 @@ def build_game_payload(game_players, game, salary_cap, cfg=None, optimize=True,
         "kickoff_utc": _clean(game["Game Time"]),
         "salary_cap": round(float(salary_cap), 2),
         "settings": settings,
-        "players": player_rows(pool, model["cv"]),
+        "players": player_rows(pool, model["cv"], model["zero_rate"]),
         "latent": upper_triangle(model["latent_corr"]),
         "model": {
-            "family": "correlated_lognormal_approximation",
-            "limitations": ["No explicit participation hurdle or discrete scoring components; zero and negative scores are not represented."],
+            "family": "correlated_zero_hurdle_lognormal",
+            "limitations": ["Zero scores are represented by a fitted played-but-scoreless rate; a player being inactive is priced by the market mean, not modelled here. Negative scores and discrete scoring components are still not represented."],
             "psd_max_score_adjustment": round(float(model["psd_max_score_adjustment"]), 6),
             "infeasible_pairs": int(model["infeasible_pairs"]),
             "max_infeasible_shift": round(float(model["max_infeasible_shift"]), 6),

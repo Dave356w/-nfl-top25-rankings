@@ -522,10 +522,64 @@ draws cannot change selection. This checks performance within the simulation;
 it does not establish historical accuracy or a probability of winning a contest.
 Candidate screening and constrained greedy selection can miss a global optimum.
 
-The simulator remains the existing correlated lognormal approximation. Explicit
-participation, zero scores, negative defense scores and discrete touchdowns are
-not yet represented. Those changes require availability and component-level
-calibration; their probabilities are not invented from depth-chart labels.
+The simulator is a correlated **zero-hurdle** lognormal. Each marginal is an atom
+at zero of fitted size plus a lognormal above it, and the correlation structure is
+still a Gaussian copula, so excluding a player is still a principal submatrix and
+the browser still needs no eigensolver.
+
+Explicit participation, negative defense scores and discrete touchdowns are still
+not represented. Availability in particular is deliberately left out: the market
+means already price it, so modelling it here would charge the same risk twice.
+
+### Zero scores
+
+A mean-preserving lognormal is strictly positive, so the old simulator gave every
+player a floor. Measurement says that was right for starters and badly wrong for
+everyone else. Over 2016-2025, the share of games landing below each player's
+modelled P25 — 25% if the model were calibrated — ran:
+
+| | below modelled P25 | zero games |
+| --- | --- | --- |
+| QB1 / RB1 / WR1 / TE1 | 23% / 25% / 28% / 28% | 1-6% |
+| WR3 / RB3 | 32% / 43% | 14% / 19% |
+| WR4 / RB4 / QB2 | 40% / 53% / 58% | 29% / 33% / 26% |
+
+Ceilings were fine everywhere: 85-91% of games fell below the modelled P90.
+
+`ZERO_RATE` therefore carries a fitted probability that a player who **took the
+field** still finished on zero, and `hurdle_transform` puts an atom there. Writing
+`p` for that rate and `c` for the CV of the scoring part,
+
+```
+mean = (1 - p) * (m / (1 - p)) = m          CV^2 = (c^2 + p) / (1 - p)
+```
+
+so holding `CALIBRATED_CV` fixed pins `c^2 = CV^2 (1 - p) - p`. **The published
+mean and CV do not move.** Only the shape does, with mass taken out of the lower
+body and placed on zero.
+
+Scope is the argument. A game with no carry, target or pass attempt is dropped
+from both numerator and denominator, because that is usually a player who was
+inactive and the market mean already prices that. What is left is the pure usage
+effect: a fourth receiver who dressed, ran his routes and was never thrown to.
+`tools/calibrate_zero_rate.py` reproduces the table and prints both rates so the
+gap is visible.
+
+```bash
+python tools/calibrate_zero_rate.py --seasons 2016-2025
+```
+
+An atom at zero breaks the closed form `score_to_lognormal_latent` used to hit a
+requested correlation, so the inversion is numerical: Mehler's formula turns the
+latent-to-score map into a polynomial in the latent correlation whose coefficients
+depend only on `(CV, zero rate)`, and each pair is bisected against its own series.
+A pool has about a dozen distinct pairs, so the coefficients are cached and the
+whole inversion costs about 0.1s per game. With every rate set to zero it reduces
+to the old closed form exactly, which the tests pin.
+
+DEF is held at zero throughout: weekly player stats carry no team-defense scoring,
+so nothing is fitted, and a defense can post a negative score, which this model
+does not represent either.
 
 ### Historical component-prior gate
 

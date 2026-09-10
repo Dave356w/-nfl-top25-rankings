@@ -385,9 +385,12 @@ class ScenarioReproducibilityTests(unittest.TestCase):
         latent = np.random.default_rng(cfg.random_seed).normal(
             size=(cfg.simulations, size)
         ) @ root.T
-        sigma = np.sqrt(np.log1p(np.square(model["cv"])))
-        means = self.POOL["Projected_FP"].to_numpy(float)
-        again = means * np.exp(latent * sigma - 0.5 * np.square(sigma))
+        again = nb.hurdle_transform(
+            latent,
+            self.POOL["Projected_FP"].to_numpy(float),
+            model["cv"],
+            model["zero_rate"],
+        )
         # Under the old eigendecomposition root this correlation collapsed to
         # about 0.08 -- a different scenario set from the same seed.
         for index in range(size):

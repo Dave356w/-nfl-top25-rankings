@@ -94,6 +94,148 @@ function scoreCorrelation(latent, cv, n) {
   return score;
 }
 
+/* ---------- zero hurdle -------------------------------------------------- */
+/* Each marginal is an atom at zero of fitted size `zero` plus a lognormal above
+ * it, scaled so the unconditional mean and CV are still the published ones.
+ * Mirrors `hurdle_transform` and `hurdle_score_correlation` in
+ * pipeline/notebook.py; the coefficients below are the same ones. */
+
+function conditionalCv(cv, zero) {
+  return Math.sqrt(Math.max(cv * cv * (1 - zero) - zero, 1e-12));
+}
+
+/* Hart's double-precision normal CDF. */
+function normalCdf(value) {
+  const magnitude = Math.abs(value);
+  const density = Math.exp(-0.5 * magnitude * magnitude);
+  let tail;
+  if (magnitude < 7.07106781186547) {
+    const num = (((((3.52624965998911e-02 * magnitude + 0.700383064443688)
+      * magnitude + 6.37396220353165) * magnitude + 33.912866078383)
+      * magnitude + 112.079291497871) * magnitude + 221.213596169931)
+      * magnitude + 220.206867912376;
+    const den = ((((((8.83883476483184e-02 * magnitude + 1.75566716318264)
+      * magnitude + 16.064177579207) * magnitude + 86.7807322029461)
+      * magnitude + 296.564248779674) * magnitude + 637.333633378831)
+      * magnitude + 793.826512519948) * magnitude + 440.413735824752;
+    tail = density * num / den;
+  } else {
+    const cont = magnitude + 1 / (magnitude + 2 / (magnitude + 3 / (magnitude + 4 / (magnitude + 0.65))));
+    tail = density / cont / 2.506628274631;
+  }
+  return value > 0 ? 1 - tail : tail;
+}
+
+/* Acklam's inverse normal CDF. */
+const PPF_A = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02,
+  1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+const PPF_B = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02,
+  6.680131188771972e+01, -1.328068155288572e+01];
+const PPF_C = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00,
+  -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+const PPF_D = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00,
+  3.754408661907416e+00];
+const PPF_SPLIT = 0.02425;
+
+function normalPpf(probability) {
+  const p = Math.min(Math.max(probability, 1e-300), 1 - 1e-16);
+  let q, r;
+  if (p < PPF_SPLIT || p > 1 - PPF_SPLIT) {
+    const lower = p < PPF_SPLIT;
+    q = Math.sqrt(-2 * Math.log(lower ? p : 1 - p));
+    const top = ((((PPF_C[0] * q + PPF_C[1]) * q + PPF_C[2]) * q + PPF_C[3]) * q + PPF_C[4]) * q + PPF_C[5];
+    const bottom = (((PPF_D[0] * q + PPF_D[1]) * q + PPF_D[2]) * q + PPF_D[3]) * q + 1;
+    return (lower ? 1 : -1) * top / bottom;
+  }
+  q = p - 0.5; r = q * q;
+  const top = (((((PPF_A[0] * r + PPF_A[1]) * r + PPF_A[2]) * r + PPF_A[3]) * r + PPF_A[4]) * r + PPF_A[5]) * q;
+  const bottom = ((((PPF_B[0] * r + PPF_B[1]) * r + PPF_B[2]) * r + PPF_B[3]) * r + PPF_B[4]) * r + 1;
+  return top / bottom;
+}
+
+const HURDLE_TERMS = 24;
+const HURDLE_NODES = 20001;
+const HURDLE_LIMIT = 9.0;
+const HURDLE_FACTORIAL = (() => {
+  const out = new Float64Array(HURDLE_TERMS + 1);
+  out[0] = 1;
+  for (let k = 1; k <= HURDLE_TERMS; k++) out[k] = out[k - 1] * k;
+  return out;
+})();
+const hurdleCoefficientCache = new Map();
+
+/* Mehler coefficients of one unit-mean marginal, by quadrature on a uniform
+ * grid. Cached per distinct (cv, zero): a 36-player pool has about a dozen. */
+function hurdleCoefficients(cv, zero) {
+  const key = cv + "|" + zero;
+  const cached = hurdleCoefficientCache.get(key);
+  if (cached) return cached;
+  const step = (2 * HURDLE_LIMIT) / (HURDLE_NODES - 1);
+  const sigma = Math.sqrt(Math.log1p(conditionalCv(cv, zero) ** 2));
+  const plainSigma = Math.sqrt(Math.log1p(cv * cv));
+  const weighted = new Float64Array(HURDLE_NODES);
+  const grid = new Float64Array(HURDLE_NODES);
+  for (let i = 0; i < HURDLE_NODES; i++) {
+    const u = -HURDLE_LIMIT + i * step;
+    grid[i] = u;
+    let value;
+    if (zero > 0) {
+      const uniform = normalCdf(u);
+      if (uniform < zero) value = 0;
+      else value = Math.exp(normalPpf((uniform - zero) / (1 - zero)) * sigma - 0.5 * sigma * sigma) / (1 - zero);
+    } else {
+      value = Math.exp(u * plainSigma - 0.5 * plainSigma * plainSigma);
+    }
+    weighted[i] = value * Math.exp(-0.5 * u * u) / Math.sqrt(2 * Math.PI);
+  }
+  const integrate = (poly) => {
+    let total = 0;
+    for (let i = 0; i < HURDLE_NODES; i++) total += weighted[i] * poly[i];
+    return step * (total - 0.5 * (weighted[0] * poly[0]
+      + weighted[HURDLE_NODES - 1] * poly[HURDLE_NODES - 1]));
+  };
+  const out = new Float64Array(HURDLE_TERMS + 1);
+  let previous = new Float64Array(HURDLE_NODES).fill(1);
+  let current = Float64Array.from(grid);
+  out[0] = integrate(previous);
+  out[1] = integrate(current);
+  for (let k = 1; k < HURDLE_TERMS; k++) {
+    const next = new Float64Array(HURDLE_NODES);
+    for (let i = 0; i < HURDLE_NODES; i++) next[i] = grid[i] * current[i] - k * previous[i];
+    previous = current; current = next;
+    out[k + 1] = integrate(current);
+  }
+  hurdleCoefficientCache.set(key, out);
+  return out;
+}
+
+function hurdleScoreCorrelation(latent, cv, zero, n) {
+  let any = false;
+  for (let i = 0; i < n; i++) if (zero[i] > 0) { any = true; break; }
+  if (!any) return scoreCorrelation(latent, cv, n);
+  const coefficients = [];
+  for (let i = 0; i < n; i++) coefficients.push(hurdleCoefficients(cv[i], zero[i]));
+  const score = new Float64Array(n * n);
+  for (let i = 0; i < n; i++) {
+    score[i * n + i] = 1;
+    for (let j = i + 1; j < n; j++) {
+      const ai = coefficients[i], aj = coefficients[j];
+      const rho = latent[i * n + j];
+      let total = 0, power = 1;
+      for (let k = 1; k <= HURDLE_TERMS; k++) {
+        power *= rho;
+        total += power * ai[k] * aj[k] / HURDLE_FACTORIAL[k];
+      }
+      const denominator = cv[i] * cv[j];
+      const value = denominator > 0 ? total / denominator : 0;
+      const clipped = Math.max(-0.999, Math.min(0.999, value));
+      score[i * n + j] = clipped;
+      score[j * n + i] = clipped;
+    }
+  }
+  return score;
+}
+
 /* ---------- simulation --------------------------------------------------- */
 
 function simulate(simulations, seed) {
@@ -101,10 +243,18 @@ function simulate(simulations, seed) {
   const n = players.length;
   const cv = Float64Array.from(players, (p) => p.cv);
   const means = Float64Array.from(players, (p) => p.fp);
+  // An older payload has no fitted zero rate; treating it as 0 reproduces the
+  // pure lognormal that payload was built from rather than inventing a floor.
+  const zero = Float64Array.from(players, (p) => Number(p.zero) || 0);
   const latent = latentMatrix(model);
   const root = cholesky(latent, n);
   const sigma = new Float64Array(n);
-  for (let i = 0; i < n; i++) sigma[i] = Math.sqrt(Math.log1p(cv[i] * cv[i]));
+  const scale = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const effective = zero[i] > 0 ? conditionalCv(cv[i], zero[i]) : cv[i];
+    sigma[i] = Math.sqrt(Math.log1p(effective * effective));
+    scale[i] = means[i] / (1 - zero[i]);
+  }
 
   const random = makeRandom(seed);
   const draws = new Float64Array(n);
@@ -115,12 +265,18 @@ function simulate(simulations, seed) {
       let correlated = 0;
       const row = i * n;
       for (let k = 0; k <= i; k++) correlated += root[row + k] * draws[k];
-      out[i * simulations + s] =
-        means[i] * Math.exp(correlated * sigma[i] - 0.5 * sigma[i] * sigma[i]);
+      const half = 0.5 * sigma[i] * sigma[i];
+      if (zero[i] > 0) {
+        const uniform = normalCdf(correlated);
+        out[i * simulations + s] = uniform < zero[i] ? 0
+          : scale[i] * Math.exp(normalPpf((uniform - zero[i]) / (1 - zero[i])) * sigma[i] - half);
+      } else {
+        out[i * simulations + s] = means[i] * Math.exp(correlated * sigma[i] - half);
+      }
     }
   }
 
-  const score = scoreCorrelation(latent, cv, n);
+  const score = hurdleScoreCorrelation(latent, cv, zero, n);
   covariance = new Float64Array(n * n);
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
@@ -824,6 +980,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     LINEUP_SIZE, exposureLimit, scenarioPortfolio, setModel, simulate, enumerate, screen, score, orderBy,
     portfolio, describe, diversity, latentMatrix, cholesky, scoreCorrelation,
+    normalCdf, normalPpf, conditionalCv, hurdleCoefficients, hurdleScoreCorrelation,
     constructionSchedule, apportionedRuleCounts, matchesConstructionRule,
     covarianceMatrix: () => covariance,
   };
