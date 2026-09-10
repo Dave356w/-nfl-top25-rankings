@@ -62,8 +62,11 @@ class Settings:
     mean_candidate_reserve: int = 750
     max_enumeration_players: int = 36
 
-    # This is a strategy filter, not a Yahoo rule. Lower it to allow more salary left unused.
-    min_salary_used_pct: float = 0.75
+    # This is a strategy filter, not a Yahoo rule, so v3.6 defaults it off. At the
+    # previous 0.75 it removed 161,439 of the 187,697 cap-legal rosters on the
+    # 2026-09-10 SF-LA slate -- 86% of the legal space -- before the model scored
+    # one of them. Raise it to refuse lineups that leave salary unused.
+    min_salary_used_pct: float = 0.0
     candidate_ceiling_weight: float = 0.85
     near_optimal_ratio: float = 0.95
 
@@ -697,9 +700,11 @@ def apply_exclusions_interactive(players, preexcluded=None):
 def roster_feasibility_error(players, lineup_size):
     """Return why this pool cannot build a Yahoo-valid roster, or None if it can.
 
-    Yahoo requires five players and at least one non-DEF athlete from each team.
-    Checking that up front turns a confusing "no valid rosters" failure deep inside
-    enumeration into a specific message naming the team that lost its skill players.
+    Yahoo requires five players and at least one player from each team. Any
+    position satisfies that, a team defense included -- v3.6 dropped a
+    non-DEF wording that was stricter than the rule and quietly discarded
+    legal rosters. Checking it up front turns a confusing "no valid rosters"
+    failure deep inside enumeration into a message naming the empty team.
     """
     if len(players) < lineup_size:
         return f"Only {len(players)} players remain; {lineup_size} are required."
@@ -707,10 +712,10 @@ def roster_feasibility_error(players, lineup_size):
     if len(teams) != 2:
         return f"Expected exactly two teams, found {teams}."
     for team in teams:
-        if players[players["Team"].eq(team) & ~players["Position"].eq("DEF")].empty:
+        if players[players["Team"].eq(team)].empty:
             return (
-                f"{team} has no non-DEF player left. Yahoo requires at least one skill "
-                "player from each team, so no valid lineup exists."
+                f"{team} has no player left. Yahoo requires at least one player "
+                "from each team, so no valid lineup exists."
             )
     return None
 
@@ -723,10 +728,11 @@ def trim_player_pool(players, cfg=None):
     even though `max_enumeration_players` was 36. The missing slots are now filled by
     a 70/30 projection/value percentile score.
 
-    v3.2 also protects roster feasibility. A pool whose leaders all belonged to one
-    team could strand the other team with only its DEF; the caller's two-team guard
-    still passed and enumeration then failed with an unrelated message. Each team's
-    best non-DEF player is now reserved before ranking.
+    v3.2 also protects pool quality. A pool whose leaders all belonged to one team
+    could strand the other team with only its DEF. That is legal under Yahoo's
+    one-player-per-team rule, but a slate reduced to somebody's defense is not a
+    pool worth optimizing, so each team's best non-DEF player is reserved before
+    ranking.
     """
     cfg = _cfg(cfg)
     if len(players) <= cfg.max_enumeration_players:
@@ -4345,7 +4351,6 @@ def enumerate_candidate_lineups(players, salary_cap, covariance, cfg=None, chunk
     positions = players["Position"].to_numpy(str)
     team_values = players["Team"].to_numpy(str)
     teams = list(pd.unique(team_values))
-    is_skill = positions != "DEF"
     covariance = np.ascontiguousarray(covariance, dtype=np.float64)
     min_salary = salary_cap * cfg.min_salary_used_pct
 
@@ -4357,9 +4362,10 @@ def enumerate_candidate_lineups(players, salary_cap, covariance, cfg=None, chunk
 
     combo_salary = salary[combos].sum(axis=1)
     keep_mask = (combo_salary <= salary_cap) & (combo_salary >= min_salary)
-    # Yahoo single-game rule: at least one non-defense athlete from each team.
+    # Yahoo single-game rule: at least one player from each team. Any position
+    # counts, a team defense included.
     for team in teams:
-        keep_mask &= ((team_values[combos] == team) & is_skill[combos]).any(axis=1)
+        keep_mask &= (team_values[combos] == team).any(axis=1)
     for position, (low, high) in (cfg.position_limits or {}).items():
         counts = (positions[combos] == position).sum(axis=1)
         keep_mask &= (counts >= low) & (counts <= high)

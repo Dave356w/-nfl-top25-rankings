@@ -440,6 +440,21 @@ Yahoo fallback, and neither does a kicker, who is estimated from rolling
 nflverse game logs on the lineup page.
 
 
+### Showdown roster rules
+
+Yahoo requires five players, the salary cap, and **at least one player from each
+team**. Any position satisfies the team requirement, a team defense included —
+the enumerator used to demand a non-DEF player from each side, which discarded
+304 legal rosters on the 2026-09-10 SF-LA slate.
+
+`Settings.min_salary_used_pct` is a strategy filter, not a Yahoo rule, and now
+defaults to `0.0`. At the previous `0.75` it removed 161,439 of the 187,697
+cap-legal rosters on that same slate — 86% of the legal space — before the model
+scored one of them. The candidate screen already ranks on the analytic ceiling,
+so it discards weak cheap rosters on their merits: with the floor off, only 449
+of the 25,000 retained candidates are newly admitted, none of them inside the
+top 1,000. The page keeps the slider for anyone who wants the filter back.
+
 ### Showdown selection controls
 
 Exposure percentages round down to whole appearances among the requested entries:

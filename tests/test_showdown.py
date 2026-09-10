@@ -270,8 +270,8 @@ class BrowserAgreementTests(unittest.TestCase):
 
     def test_both_find_the_same_number_of_valid_rosters(self):
         # Enumeration is pure combinatorics over the same rules -- the cap, the
-        # salary floor and Yahoo's one-skill-player-per-team requirement -- so
-        # any disagreement here is a rule implemented differently on one side.
+        # salary floor and Yahoo's one-player-per-team requirement -- so any
+        # disagreement here is a rule implemented differently on one side.
         self.assertEqual(
             self.js["valid_rosters"], self.payload["reference"]["valid_rosters"]
         )
@@ -322,9 +322,8 @@ class BrowserAgreementTests(unittest.TestCase):
             self.assertEqual(len(set(lineup["ids"])), 5)
             self.assertLessEqual(lineup["salary"], cap + 1e-6)
             self.assertIn(lineup["superstar"], lineup["ids"])
-            skill_teams = {players[i]["team"] for i in lineup["ids"]
-                           if players[i]["pos"] != "DEF"}
-            self.assertEqual(skill_teams, teams, "each team needs a non-DEF player")
+            represented = {players[i]["team"] for i in lineup["ids"]}
+            self.assertEqual(represented, teams, "each team needs a player")
 
     def test_the_exposure_caps_are_honoured(self):
         settings = self.payload["settings"]
@@ -407,3 +406,54 @@ class ScenarioReproducibilityTests(unittest.TestCase):
         first, _ = nb.simulate_player_outcomes(self.POOL, cfg)
         second, _ = nb.simulate_player_outcomes(self.POOL, cfg)
         np.testing.assert_array_equal(first, second)
+
+
+class RosterRuleTests(unittest.TestCase):
+    """Yahoo's actual single-game rules, and nothing stricter.
+
+    Both of these were narrower than the rule they claimed to implement: the
+    enumerator wanted a non-DEF player from each team, and the salary floor
+    defaulted to 75% of the cap. Each silently removed legal rosters before the
+    model scored one of them.
+    """
+
+    # One team's only entry in the pool is its defense, so a legal roster has to
+    # be allowed to satisfy the team requirement with that defense.
+    POOL = pd.DataFrame({
+        "Name": ["NE QB", "NE RB", "NE WR1", "NE WR2", "NE TE", "SEA DEF"],
+        "Team": ["NE"] * 5 + ["SEA"],
+        "Position": ["QB", "RB", "WR", "WR", "TE", "DEF"],
+        "Salary": [30.0, 25.0, 22.0, 12.0, 11.0, 10.0],
+        "Projected_FP": [18.0, 12.0, 11.0, 5.0, 4.0, 7.0],
+        "Depth_Rank": [1, 1, 1, 2, 1, 1],
+    })
+
+    def test_a_defense_can_be_a_teams_only_representative(self):
+        self.assertIsNone(nb.roster_feasibility_error(self.POOL, 5))
+
+    def test_the_enumerator_builds_that_roster(self):
+        cfg = nb.replace(nb.CFG, min_salary_used_pct=0.0)
+        model = nb.build_correlation_model(self.POOL)
+        covariance = nb.analytic_covariance(self.POOL, model)
+        candidates, valid = nb.enumerate_candidate_lineups(
+            self.POOL, 110.0, covariance, cfg
+        )
+        self.assertGreater(valid, 0)
+        teams = self.POOL["Team"].to_numpy()
+        for ids in candidates["Player_Ids"]:
+            self.assertEqual(set(teams[list(ids)]), {"NE", "SEA"})
+
+    def test_the_salary_floor_is_off_by_default(self):
+        self.assertEqual(nb.CFG.min_salary_used_pct, 0.0)
+
+    def test_the_floor_only_removes_rosters_below_it(self):
+        model = nb.build_correlation_model(self.POOL)
+        covariance = nb.analytic_covariance(self.POOL, model)
+        cap = 110.0
+        _, without = nb.enumerate_candidate_lineups(
+            self.POOL, cap, covariance, nb.replace(nb.CFG, min_salary_used_pct=0.0)
+        )
+        _, with_floor = nb.enumerate_candidate_lineups(
+            self.POOL, cap, covariance, nb.replace(nb.CFG, min_salary_used_pct=0.75)
+        )
+        self.assertGreater(without, with_floor)
