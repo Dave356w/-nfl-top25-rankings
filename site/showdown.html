@@ -442,6 +442,10 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   var DATA = "./data/showdown/";
   var LINEUP_SIZE = 5;
   var POSITIONS = ["QB", "RB", "WR", "TE", "DEF"];
+  // Bump with pipeline/showdown.py's SCHEMA whenever the page learns to read a
+  // new payload field.
+  var SUPPORTED_SCHEMA = 2;
+
   var PRESETS = {
     fast: { simulations: 5000, candidates: 4000 },
     balanced: { simulations: 10000, candidates: 10000 },
@@ -552,6 +556,15 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       if (requestId !== state.loadId) return;
       if (state.index.snapshot_id && payload.snapshot_id !== state.index.snapshot_id) {
         throw new Error("The game and index belong to different snapshots. Reload the page.");
+      }
+      // A cached copy of an older worker would ignore fields a newer payload
+      // depends on -- the fitted zero rate above all -- and would silently
+      // simulate different floors rather than fail. Refuse instead.
+      if (Number(payload.schema) > SUPPORTED_SCHEMA) {
+        throw new Error(
+          "This game was published for a newer version of the page (schema " +
+          text(payload.schema) + "; this page understands " + SUPPORTED_SCHEMA +
+          "). Reload to pick up the current page.");
       }
       state.payload = payload;
       state.loading = false;

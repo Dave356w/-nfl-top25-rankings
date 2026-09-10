@@ -28,6 +28,7 @@ import time
 import warnings
 from collections import Counter
 from dataclasses import dataclass, replace
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -62,8 +63,11 @@ class Settings:
     mean_candidate_reserve: int = 750
     max_enumeration_players: int = 36
 
-    # This is a strategy filter, not a Yahoo rule. Lower it to allow more salary left unused.
-    min_salary_used_pct: float = 0.75
+    # This is a strategy filter, not a Yahoo rule, so v3.6 defaults it off. At the
+    # previous 0.75 it removed 161,439 of the 187,697 cap-legal rosters on the
+    # 2026-09-10 SF-LA slate -- 86% of the legal space -- before the model scored
+    # one of them. Raise it to refuse lineups that leave salary unused.
+    min_salary_used_pct: float = 0.0
     candidate_ceiling_weight: float = 0.85
     near_optimal_ratio: float = 0.95
 
@@ -697,9 +701,11 @@ def apply_exclusions_interactive(players, preexcluded=None):
 def roster_feasibility_error(players, lineup_size):
     """Return why this pool cannot build a Yahoo-valid roster, or None if it can.
 
-    Yahoo requires five players and at least one non-DEF athlete from each team.
-    Checking that up front turns a confusing "no valid rosters" failure deep inside
-    enumeration into a specific message naming the team that lost its skill players.
+    Yahoo requires five players and at least one player from each team. Any
+    position satisfies that, a team defense included -- v3.6 dropped a
+    non-DEF wording that was stricter than the rule and quietly discarded
+    legal rosters. Checking it up front turns a confusing "no valid rosters"
+    failure deep inside enumeration into a message naming the empty team.
     """
     if len(players) < lineup_size:
         return f"Only {len(players)} players remain; {lineup_size} are required."
@@ -707,10 +713,10 @@ def roster_feasibility_error(players, lineup_size):
     if len(teams) != 2:
         return f"Expected exactly two teams, found {teams}."
     for team in teams:
-        if players[players["Team"].eq(team) & ~players["Position"].eq("DEF")].empty:
+        if players[players["Team"].eq(team)].empty:
             return (
-                f"{team} has no non-DEF player left. Yahoo requires at least one skill "
-                "player from each team, so no valid lineup exists."
+                f"{team} has no player left. Yahoo requires at least one player "
+                "from each team, so no valid lineup exists."
             )
     return None
 
@@ -723,10 +729,11 @@ def trim_player_pool(players, cfg=None):
     even though `max_enumeration_players` was 36. The missing slots are now filled by
     a 70/30 projection/value percentile score.
 
-    v3.2 also protects roster feasibility. A pool whose leaders all belonged to one
-    team could strand the other team with only its DEF; the caller's two-team guard
-    still passed and enumeration then failed with an unrelated message. Each team's
-    best non-DEF player is now reserved before ranking.
+    v3.2 also protects pool quality. A pool whose leaders all belonged to one team
+    could strand the other team with only its DEF. That is legal under Yahoo's
+    one-player-per-team rule, but a slate reduced to somebody's defense is not a
+    pool worth optimizing, so each team's best non-DEF player is reserved before
+    ranking.
     """
     cfg = _cfg(cfg)
     if len(players) <= cfg.max_enumeration_players:
@@ -3850,6 +3857,34 @@ CALIBRATED_CV = {
     "DEF": {1: 0.950, 2: 0.950, 3: 0.950, 4: 0.950},
 }
 
+# Probability that a player who dressed and touched the ball still finished the
+# game on zero Yahoo points, by position and opportunity bucket. Fitted by
+# tools/calibrate_zero_rate.py over 2016-2025 nflverse weekly stats, on the same
+# population CALIBRATED_CV was fitted on.
+#
+# Scope is deliberate. A game with no carry, target or pass attempt is *excluded*
+# from both numerator and denominator, because that is usually a player who was
+# inactive, and the market means already price availability -- a book's line on a
+# doubtful receiver is already shaded for the chance he does not play. Counting
+# those games here would charge the same risk twice. What is left is the pure
+# shape effect: a WR4 who plays, runs his routes and is never thrown to.
+#
+# Sample sizes are the played-game counts behind each entry. QB3+ falls back to
+# QB2 and TE4 to TE3, matching CALIBRATED_CV's own fallbacks. RB4's 186 games are
+# the thinnest cell in the table; it is published because leaving RB4 at the RB3
+# rate would understate the one bucket most likely to be a punt play.
+#
+# DEF is held at zero: weekly player stats carry no team-defense scoring, so
+# there is nothing fitted here, and a defense can also post a *negative* score,
+# which this model does not represent either.
+ZERO_RATE = {
+    "QB": {1: 0.014, 2: 0.259, 3: 0.259, 4: 0.259},  # 4,954 / 603 played games
+    "RB": {1: 0.006, 2: 0.028, 3: 0.063, 4: 0.140},  # 5,153 / 4,315 / 1,544 / 186
+    "WR": {1: 0.020, 2: 0.056, 3: 0.109, 4: 0.185},  # 5,166 / 5,060 / 4,258 / 2,510
+    "TE": {1: 0.048, 2: 0.141, 3: 0.176, 4: 0.176},  # 4,874 / 2,502 / 499
+    "DEF": {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0},
+}
+
 QB_WR_CORR = {1: 0.217, 2: 0.171, 3: 0.129, 4: 0.076}
 QB_TE_CORR = {1: 0.152, 2: 0.085, 3: 0.072, 4: 0.060}
 RB_OWN_DEF_CORR = {1: 0.057, 2: 0.015, 3: 0.000, 4: 0.000}
@@ -3916,6 +3951,127 @@ def _position_pair(first, second):
 def _calibrated_cv(position, depth):
     """Return fitted total forecast-error CV for one position/depth bucket."""
     return CALIBRATED_CV[position][_depth_bucket(depth)]
+
+
+def _zero_rate(position, depth):
+    """Return the fitted played-but-scoreless probability for one player."""
+    return ZERO_RATE[position][_depth_bucket(depth)]
+
+
+def conditional_lognormal_cv(cv, zero):
+    """CV of the scoring part of a hurdle model that preserves the fitted total.
+
+    A score is `0` with probability `p` and otherwise lognormal with mean
+    `m / (1 - p)`, which leaves the unconditional mean at `m`. Writing `c` for
+    the conditional CV, the unconditional CV of that mixture is
+
+        CV^2 = (c^2 + p) / (1 - p),
+
+    so holding the fitted `CALIBRATED_CV` fixed pins `c^2 = CV^2 (1 - p) - p`.
+    Nothing about the marginal moments moves; only the shape does, with mass
+    taken out of the lower body and placed on an atom at zero. Every published
+    (CV, rate) pair clears the positivity constraint with room to spare -- the
+    tightest is TE1 at 0.783 against 0.050 -- and the floor here is a numerical
+    guard, not a modelling choice.
+    """
+    cv = np.asarray(cv, dtype=float)
+    zero = np.asarray(zero, dtype=float)
+    return np.sqrt(np.maximum(cv * cv * (1.0 - zero) - zero, 1e-12))
+
+
+def zero_rate_is_representable(cv, zero):
+    """Whether a (CV, zero rate) pair leaves a positive conditional variance."""
+    return float(cv) * float(cv) * (1.0 - float(zero)) - float(zero) > 0.0
+
+
+def normal_cdf(value):
+    """Vectorized standard normal CDF, Hart's double-precision rational form.
+
+    Accurate to machine epsilon against `math.erf`, and `site/showdown-worker.js`
+    carries the same coefficients so the browser applies the same transform.
+    """
+    value = np.asarray(value, dtype=float)
+    magnitude = np.abs(value)
+    density = np.exp(-0.5 * np.square(magnitude))
+    numerator = (((((3.52624965998911e-02 * magnitude + 0.700383064443688)
+                    * magnitude + 6.37396220353165) * magnitude + 33.912866078383)
+                  * magnitude + 112.079291497871) * magnitude + 221.213596169931
+                 ) * magnitude + 220.206867912376
+    denominator = ((((((8.83883476483184e-02 * magnitude + 1.75566716318264)
+                       * magnitude + 16.064177579207) * magnitude + 86.7807322029461)
+                     * magnitude + 296.564248779674) * magnitude + 637.333633378831)
+                   * magnitude + 793.826512519948) * magnitude + 440.413735824752
+    near = magnitude < 7.07106781186547
+    tail = np.where(near, density * numerator / denominator, 0.0)
+    if not np.all(near):
+        distant = np.where(near, 1.0, magnitude)
+        fraction = distant + 1.0 / (distant + 2.0 / (distant + 3.0 / (distant + 4.0 / (distant + 0.65))))
+        tail = np.where(near, tail, density / fraction / 2.506628274631)
+    return np.where(value > 0, 1.0 - tail, tail)
+
+
+_PPF_A = (-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02,
+          1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00)
+_PPF_B = (-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02,
+          6.680131188771972e+01, -1.328068155288572e+01)
+_PPF_C = (-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00,
+          -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00)
+_PPF_D = (7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00,
+          3.754408661907416e+00)
+_PPF_SPLIT = 0.02425
+
+
+def normal_ppf(probability):
+    """Vectorized inverse standard normal CDF (Acklam), mirrored in the worker."""
+    probability = np.clip(np.asarray(probability, dtype=float), 1e-300, 1.0 - 1e-16)
+    out = np.empty_like(probability)
+    lower = probability < _PPF_SPLIT
+    upper = probability > 1.0 - _PPF_SPLIT
+    middle = ~(lower | upper)
+
+    def tail(values, sign):
+        q = np.sqrt(-2.0 * np.log(values))
+        top = ((((_PPF_C[0] * q + _PPF_C[1]) * q + _PPF_C[2]) * q + _PPF_C[3]) * q + _PPF_C[4]) * q + _PPF_C[5]
+        bottom = (((_PPF_D[0] * q + _PPF_D[1]) * q + _PPF_D[2]) * q + _PPF_D[3]) * q + 1.0
+        return sign * top / bottom
+
+    out[lower] = tail(probability[lower], 1.0)
+    out[upper] = tail(1.0 - probability[upper], -1.0)
+    q = probability[middle] - 0.5
+    r = q * q
+    top = (((((_PPF_A[0] * r + _PPF_A[1]) * r + _PPF_A[2]) * r + _PPF_A[3]) * r + _PPF_A[4]) * r + _PPF_A[5]) * q
+    bottom = ((((_PPF_B[0] * r + _PPF_B[1]) * r + _PPF_B[2]) * r + _PPF_B[3]) * r + _PPF_B[4]) * r + 1.0
+    out[middle] = top / bottom
+    return out
+
+
+def hurdle_transform(latent, means, cv, zero):
+    """Map correlated standard normals to scores carrying an atom at zero.
+
+    The same latent draw decides both halves: a player scores nothing exactly
+    when his own uniform falls under his zero rate, and the remaining uniform is
+    stretched back over (0, 1) to place the magnitude. The map is monotone in the
+    latent, so the joint distribution stays a Gaussian copula and excluding a
+    player is still a principal submatrix -- which is what lets the browser skip
+    the eigensolver and reuse one set of scenario draws.
+    """
+    means = np.asarray(means, dtype=float)
+    cv = np.asarray(cv, dtype=float)
+    zero = np.asarray(zero, dtype=float)
+    plain_sigma = np.sqrt(np.log1p(np.square(cv)))
+    plain = means * np.exp(latent * plain_sigma - 0.5 * np.square(plain_sigma))
+    if not np.any(zero > 0):
+        return plain
+    sigma = np.sqrt(np.log1p(np.square(conditional_lognormal_cv(cv, zero))))
+    uniform = normal_cdf(latent)
+    safe_zero = np.where(zero > 0, zero, 0.0)
+    rescaled = np.clip((uniform - safe_zero) / np.maximum(1.0 - safe_zero, 1e-12),
+                       1e-300, 1.0 - 1e-16)
+    magnitude = (means / np.maximum(1.0 - safe_zero, 1e-12)) * np.exp(
+        normal_ppf(rescaled) * sigma - 0.5 * np.square(sigma)
+    )
+    hurdled = np.where(uniform < safe_zero, 0.0, magnitude)
+    return np.where(zero > 0, hurdled, plain)
 
 
 def same_team_rb_rb_correlation(a, b):
@@ -4080,6 +4236,141 @@ def lognormal_score_correlation(latent_corr, cv):
     return score
 
 
+HURDLE_HERMITE_TERMS = 24
+HURDLE_QUADRATURE_NODES = 20001
+HURDLE_QUADRATURE_LIMIT = 9.0
+_HURDLE_FACTORIALS = np.array(
+    [float(math.factorial(term)) for term in range(HURDLE_HERMITE_TERMS + 1)]
+)
+
+
+@lru_cache(maxsize=None)
+def _hurdle_hermite_coefficients(cv, zero):
+    """Hermite coefficients of one player's unit-mean score transform.
+
+    For a Gaussian copula, the covariance of two transformed marginals is exactly
+
+        Cov = sum_{k>=1} rho^k a_k^i a_k^j / k!,
+
+    with `a_k = E[g(U) He_k(U)]` (Mehler's formula). Computing the coefficients
+    once per distinct (CV, zero rate) pair turns the latent-to-score map into a
+    polynomial in `rho`, which is what makes the pairwise inversion below cheap
+    enough to run on every publish. The closed form the pure lognormal uses does
+    not survive the atom at zero, and Gauss-Hermite quadrature overflows at the
+    orders needed here, so the coefficients come from a fine uniform grid.
+
+    `a_0` recovers the mean (1.0) and `sum_k a_k^2 / k!` recovers `CV^2`; both are
+    asserted in the tests, and both agree to about 1e-5 on this grid.
+    """
+    grid = np.linspace(-HURDLE_QUADRATURE_LIMIT, HURDLE_QUADRATURE_LIMIT,
+                       HURDLE_QUADRATURE_NODES)
+    spacing = grid[1] - grid[0]
+    density = np.exp(-0.5 * np.square(grid)) / math.sqrt(2.0 * math.pi)
+    weighted = hurdle_transform(grid, 1.0, cv, zero) * density
+
+    def integrate(values):
+        # Uniform-grid trapezoid, spelled out so this does not depend on whether
+        # the installed numpy calls it trapz or trapezoid.
+        return spacing * (values.sum() - 0.5 * (values[0] + values[-1]))
+
+    coefficients = np.empty(HURDLE_HERMITE_TERMS + 1)
+    previous = np.ones_like(grid)
+    coefficients[0] = integrate(weighted * previous)
+    current = grid.copy()
+    coefficients[1] = integrate(weighted * current)
+    for term in range(1, HURDLE_HERMITE_TERMS):
+        following = grid * current - term * previous
+        previous, current = current, following
+        coefficients[term + 1] = integrate(weighted * current)
+    return coefficients
+
+
+def _hurdle_coefficient_matrix(cv, zero):
+    return np.array([
+        _hurdle_hermite_coefficients(float(value), float(rate))
+        for value, rate in zip(np.asarray(cv, float), np.asarray(zero, float))
+    ])
+
+
+def _hurdle_correlation_from_latent(latent, coefficients, cv):
+    """Score correlation implied by a latent correlation, elementwise."""
+    terms = np.arange(1, HURDLE_HERMITE_TERMS + 1)
+    pairwise = np.einsum(
+        "ik,jk->ijk", coefficients[:, 1:], coefficients[:, 1:]
+    ) / _HURDLE_FACTORIALS[1:]
+    powers = np.power(np.asarray(latent, float)[..., None], terms)
+    covariance = np.sum(pairwise * powers, axis=-1)
+    denominator = np.outer(cv, cv)
+    score = np.divide(covariance, denominator, out=np.zeros_like(covariance),
+                      where=denominator > 0)
+    score = 0.5 * (score + score.T)
+    np.fill_diagonal(score, 1.0)
+    return score
+
+
+def hurdle_score_correlation(latent_corr, cv, zero):
+    """Return the score correlation a latent matrix delivers under the hurdle."""
+    if not np.any(np.asarray(zero, float) > 0):
+        return lognormal_score_correlation(latent_corr, cv)
+    coefficients = _hurdle_coefficient_matrix(cv, zero)
+    score = _hurdle_correlation_from_latent(latent_corr, coefficients, np.asarray(cv, float))
+    return np.clip(score, -0.999, 0.999) * (1 - np.eye(len(cv))) + np.eye(len(cv))
+
+
+def score_to_hurdle_latent(score_corr, cv, zero, report=None):
+    """Invert the latent-to-score map when the marginals carry an atom at zero.
+
+    The pure lognormal case has a closed form and keeps it. With a zero rate the
+    map is a polynomial in `rho` rather than an exponential, and it is monotone
+    over the attainable range, so each pair is solved by bisection against its own
+    Mehler series. Targets outside what the pair can reach are clipped to the
+    nearest attainable value and counted, exactly as the lognormal path does --
+    the atom narrows that range further, because two marginals that are both zero
+    a fifth of the time cannot be driven as far apart as two that never are.
+    """
+    cv = np.asarray(cv, dtype=float)
+    zero = np.asarray(zero, dtype=float)
+    if not np.any(zero > 0):
+        return score_to_lognormal_latent(score_corr, cv, report=report)
+
+    coefficients = _hurdle_coefficient_matrix(cv, zero)
+    size = len(cv)
+    limit = np.full((size, size), 0.999)
+    low = _hurdle_correlation_from_latent(-limit, coefficients, cv)
+    high = _hurdle_correlation_from_latent(limit, coefficients, cv)
+    margin = 1e-6
+    feasible = np.clip(score_corr, low + margin, high - margin)
+    np.fill_diagonal(feasible, 1.0)
+    infeasible = np.abs(feasible - score_corr) > 1e-9
+    np.fill_diagonal(infeasible, False)
+
+    lower = np.full((size, size), -0.999)
+    upper = np.full((size, size), 0.999)
+    for _ in range(60):
+        middle = 0.5 * (lower + upper)
+        implied = _hurdle_correlation_from_latent(middle, coefficients, cv)
+        too_low = implied < feasible
+        lower = np.where(too_low, middle, lower)
+        upper = np.where(too_low, upper, middle)
+    latent = 0.5 * (lower + upper)
+    latent = 0.5 * (latent + latent.T)
+    np.fill_diagonal(latent, 1.0)
+
+    if report is not None:
+        report["infeasible_pairs"] = int(infeasible.sum() // 2)
+        report["max_infeasible_shift"] = (
+            float(np.abs(feasible - score_corr).max()) if infeasible.any() else 0.0
+        )
+    if infeasible.any():
+        warnings.warn(
+            f"{int(infeasible.sum() // 2)} correlation target(s) were outside the range "
+            "two hurdle marginals with these coefficients of variation and zero rates "
+            "can attain and were clipped to the nearest attainable value (largest shift "
+            f"{float(np.abs(feasible - score_corr).max()):.3f})."
+        )
+    return latent
+
+
 def build_correlation_model(players):
     """Build requested, latent, repaired, and effective score correlations."""
     teams = list(players["Team"].drop_duplicates())
@@ -4088,17 +4379,21 @@ def build_correlation_model(players):
     cv = np.array([
         _calibrated_cv(row.Position, row.Depth_Rank) for row in players.itertuples()
     ])
+    zero = np.array([
+        _zero_rate(row.Position, row.Depth_Rank) for row in players.itertuples()
+    ])
     requested_score = requested_score_correlation_matrix(players)
     feasibility = {}
-    requested_latent = score_to_lognormal_latent(requested_score, cv, report=feasibility)
+    requested_latent = score_to_hurdle_latent(requested_score, cv, zero, report=feasibility)
     latent_corr = repair_correlation_matrix(requested_latent)
-    effective_score = lognormal_score_correlation(latent_corr, cv)
+    effective_score = hurdle_score_correlation(latent_corr, cv, zero)
     off_diagonal = ~np.eye(len(players), dtype=bool)
     max_adjustment = float(
         np.max(np.abs(effective_score[off_diagonal] - requested_score[off_diagonal]))
     ) if len(players) > 1 else 0.0
     return {
         "cv": cv,
+        "zero_rate": zero,
         "target_score_corr": requested_score,
         "requested_latent_corr": requested_latent,
         "latent_corr": latent_corr,
@@ -4109,17 +4404,54 @@ def build_correlation_model(players):
     }
 
 
+def latent_root(latent_corr, jitter=1e-10, attempts=6):
+    """Return the unique lower-triangular factor R with R @ R.T == latent_corr.
+
+    v3.6 replaced an eigendecomposition root. The correlation targets are looked
+    up by (position, depth bucket, team), so players sharing all three get
+    identical rows and the matrix carries exactly degenerate eigenvalues -- a
+    typical showdown pool has a six-fold one. Eigenvectors spanning a degenerate
+    eigenspace are arbitrary, so `eigh` returned a basis that depended on the
+    LAPACK build, and `random_seed` did not actually pin the scenario set: a
+    1e-13 perturbation of the same matrix re-based that eigenspace and dropped
+    the per-player correlation between the two scenario sets to a median of 0.08.
+    A Cholesky factor is unique for a positive-definite matrix, so the same seed
+    now reproduces the same draws -- and it is the factorization
+    `site/showdown-worker.js` already uses.
+
+    `repair_correlation_matrix` floors the eigenvalues, so the input is positive
+    definite by construction; the jitter loop only covers the case where that
+    floor is thin enough for the factorization to fail in floating point.
+    """
+    matrix = np.asarray(latent_corr, dtype=np.float64)
+    for attempt in range(attempts):
+        try:
+            return np.linalg.cholesky(matrix)
+        except np.linalg.LinAlgError:
+            matrix = np.asarray(latent_corr, dtype=np.float64) + np.eye(
+                len(matrix)
+            ) * jitter * (10.0 ** attempt)
+    raise np.linalg.LinAlgError(
+        "Latent correlation matrix is not positive definite even with jitter."
+    )
+
+
 def simulate_player_outcomes(players, cfg=None):
-    """Simulate mean-preserving lognormal scores under the repaired joint model."""
+    """Simulate mean-preserving scores under the repaired joint model.
+
+    Each marginal is a zero-hurdle lognormal: an atom at zero of the fitted
+    played-but-scoreless size, and a lognormal above it scaled so the
+    unconditional mean is still `Projected_FP` and the unconditional CV is still
+    `CALIBRATED_CV`. Only the shape moves, which is the point -- a WR4's floor was
+    the one part of this model measurement said was badly wrong.
+    """
     cfg = _cfg(cfg)
     model = build_correlation_model(players)
-    eigenvalues, eigenvectors = np.linalg.eigh(model["latent_corr"])
-    root = eigenvectors @ np.diag(np.sqrt(np.maximum(eigenvalues, 0.0)))
+    root = latent_root(model["latent_corr"])
     rng = np.random.default_rng(cfg.random_seed)
     latent = rng.normal(size=(cfg.simulations, len(players))) @ root.T
-    sigma = np.sqrt(np.log1p(np.square(model["cv"])))
     means = players["Projected_FP"].to_numpy(float)
-    outcomes = means * np.exp(latent * sigma - 0.5 * np.square(sigma))
+    outcomes = hurdle_transform(latent, means, model["cv"], model["zero_rate"])
     return outcomes.astype(np.float32), model
 
 
@@ -4314,7 +4646,6 @@ def enumerate_candidate_lineups(players, salary_cap, covariance, cfg=None, chunk
     positions = players["Position"].to_numpy(str)
     team_values = players["Team"].to_numpy(str)
     teams = list(pd.unique(team_values))
-    is_skill = positions != "DEF"
     covariance = np.ascontiguousarray(covariance, dtype=np.float64)
     min_salary = salary_cap * cfg.min_salary_used_pct
 
@@ -4326,9 +4657,10 @@ def enumerate_candidate_lineups(players, salary_cap, covariance, cfg=None, chunk
 
     combo_salary = salary[combos].sum(axis=1)
     keep_mask = (combo_salary <= salary_cap) & (combo_salary >= min_salary)
-    # Yahoo single-game rule: at least one non-defense athlete from each team.
+    # Yahoo single-game rule: at least one player from each team. Any position
+    # counts, a team defense included.
     for team in teams:
-        keep_mask &= ((team_values[combos] == team) & is_skill[combos]).any(axis=1)
+        keep_mask &= (team_values[combos] == team).any(axis=1)
     for position, (low, high) in (cfg.position_limits or {}).items():
         counts = (positions[combos] == position).sum(axis=1)
         keep_mask &= (counts >= low) & (counts <= high)

@@ -270,8 +270,8 @@ class BrowserAgreementTests(unittest.TestCase):
 
     def test_both_find_the_same_number_of_valid_rosters(self):
         # Enumeration is pure combinatorics over the same rules -- the cap, the
-        # salary floor and Yahoo's one-skill-player-per-team requirement -- so
-        # any disagreement here is a rule implemented differently on one side.
+        # salary floor and Yahoo's one-player-per-team requirement -- so any
+        # disagreement here is a rule implemented differently on one side.
         self.assertEqual(
             self.js["valid_rosters"], self.payload["reference"]["valid_rosters"]
         )
@@ -322,9 +322,8 @@ class BrowserAgreementTests(unittest.TestCase):
             self.assertEqual(len(set(lineup["ids"])), 5)
             self.assertLessEqual(lineup["salary"], cap + 1e-6)
             self.assertIn(lineup["superstar"], lineup["ids"])
-            skill_teams = {players[i]["team"] for i in lineup["ids"]
-                           if players[i]["pos"] != "DEF"}
-            self.assertEqual(skill_teams, teams, "each team needs a non-DEF player")
+            represented = {players[i]["team"] for i in lineup["ids"]}
+            self.assertEqual(represented, teams, "each team needs a player")
 
     def test_the_exposure_caps_are_honoured(self):
         settings = self.payload["settings"]
@@ -342,3 +341,122 @@ class BrowserAgreementTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ScenarioReproducibilityTests(unittest.TestCase):
+    """The seed has to pin the scenarios, on any LAPACK build.
+
+    The correlation targets are looked up by (position, depth bucket, team), so
+    a pool with several players sharing all three carries exactly degenerate
+    eigenvalues. Any eigenvector basis of a degenerate eigenspace is a valid
+    eigendecomposition, so a root built from one is not a function of the matrix.
+    A Cholesky factor is, and the browser worker already uses it.
+    """
+
+    POOL = pd.DataFrame({
+        # Four receivers per team at the same depth bucket: four identical rows
+        # per side, so the latent matrix has repeated eigenvalues by construction.
+        "Name": [f"{team} WR{n}" for team in ("NE", "SEA") for n in range(1, 5)]
+                + ["NE QB", "SEA QB"],
+        "Team": ["NE"] * 4 + ["SEA"] * 4 + ["NE", "SEA"],
+        "Position": ["WR"] * 8 + ["QB", "QB"],
+        "Salary": [20.0] * 8 + [30.0, 30.0],
+        "Projected_FP": [10.0] * 8 + [18.0, 17.0],
+        "Depth_Rank": [2, 2, 2, 2, 2, 2, 2, 2, 1, 1],
+    })
+
+    def _perturbed_root(self, latent, size):
+        rng = np.random.default_rng(0)
+        noise = rng.standard_normal((size, size)) * 1e-13
+        noise = 0.5 * (noise + noise.T)
+        np.fill_diagonal(noise, 0.0)
+        return nb.latent_root(latent + noise)
+
+    def test_the_pool_really_does_have_a_degenerate_eigenspace(self):
+        model = nb.build_correlation_model(self.POOL)
+        eigenvalues = np.sort(np.linalg.eigvalsh(model["latent_corr"]))
+        self.assertLess(np.diff(eigenvalues).min(), 1e-12)
+
+    def test_a_negligible_perturbation_leaves_the_draws_alone(self):
+        cfg = nb.replace(nb.CFG, simulations=4_000, random_seed=356)
+        outcomes, model = nb.simulate_player_outcomes(self.POOL, cfg)
+        size = len(self.POOL)
+        root = self._perturbed_root(model["latent_corr"], size)
+        latent = np.random.default_rng(cfg.random_seed).normal(
+            size=(cfg.simulations, size)
+        ) @ root.T
+        again = nb.hurdle_transform(
+            latent,
+            self.POOL["Projected_FP"].to_numpy(float),
+            model["cv"],
+            model["zero_rate"],
+        )
+        # Under the old eigendecomposition root this correlation collapsed to
+        # about 0.08 -- a different scenario set from the same seed.
+        for index in range(size):
+            correlation = np.corrcoef(
+                np.asarray(outcomes, dtype=float)[:, index], again[:, index]
+            )[0, 1]
+            self.assertGreater(correlation, 1 - 1e-9, self.POOL["Name"][index])
+
+    def test_the_root_reproduces_the_requested_correlation(self):
+        model = nb.build_correlation_model(self.POOL)
+        root = nb.latent_root(model["latent_corr"])
+        np.testing.assert_allclose(root @ root.T, model["latent_corr"], atol=1e-12)
+
+    def test_the_same_seed_gives_the_same_scenarios(self):
+        cfg = nb.replace(nb.CFG, simulations=2_000, random_seed=356)
+        first, _ = nb.simulate_player_outcomes(self.POOL, cfg)
+        second, _ = nb.simulate_player_outcomes(self.POOL, cfg)
+        np.testing.assert_array_equal(first, second)
+
+
+class RosterRuleTests(unittest.TestCase):
+    """Yahoo's actual single-game rules, and nothing stricter.
+
+    Both of these were narrower than the rule they claimed to implement: the
+    enumerator wanted a non-DEF player from each team, and the salary floor
+    defaulted to 75% of the cap. Each silently removed legal rosters before the
+    model scored one of them.
+    """
+
+    # One team's only entry in the pool is its defense, so a legal roster has to
+    # be allowed to satisfy the team requirement with that defense.
+    POOL = pd.DataFrame({
+        "Name": ["NE QB", "NE RB", "NE WR1", "NE WR2", "NE TE", "SEA DEF"],
+        "Team": ["NE"] * 5 + ["SEA"],
+        "Position": ["QB", "RB", "WR", "WR", "TE", "DEF"],
+        "Salary": [30.0, 25.0, 22.0, 12.0, 11.0, 10.0],
+        "Projected_FP": [18.0, 12.0, 11.0, 5.0, 4.0, 7.0],
+        "Depth_Rank": [1, 1, 1, 2, 1, 1],
+    })
+
+    def test_a_defense_can_be_a_teams_only_representative(self):
+        self.assertIsNone(nb.roster_feasibility_error(self.POOL, 5))
+
+    def test_the_enumerator_builds_that_roster(self):
+        cfg = nb.replace(nb.CFG, min_salary_used_pct=0.0)
+        model = nb.build_correlation_model(self.POOL)
+        covariance = nb.analytic_covariance(self.POOL, model)
+        candidates, valid = nb.enumerate_candidate_lineups(
+            self.POOL, 110.0, covariance, cfg
+        )
+        self.assertGreater(valid, 0)
+        teams = self.POOL["Team"].to_numpy()
+        for ids in candidates["Player_Ids"]:
+            self.assertEqual(set(teams[list(ids)]), {"NE", "SEA"})
+
+    def test_the_salary_floor_is_off_by_default(self):
+        self.assertEqual(nb.CFG.min_salary_used_pct, 0.0)
+
+    def test_the_floor_only_removes_rosters_below_it(self):
+        model = nb.build_correlation_model(self.POOL)
+        covariance = nb.analytic_covariance(self.POOL, model)
+        cap = 110.0
+        _, without = nb.enumerate_candidate_lineups(
+            self.POOL, cap, covariance, nb.replace(nb.CFG, min_salary_used_pct=0.0)
+        )
+        _, with_floor = nb.enumerate_candidate_lineups(
+            self.POOL, cap, covariance, nb.replace(nb.CFG, min_salary_used_pct=0.75)
+        )
+        self.assertGreater(without, with_floor)

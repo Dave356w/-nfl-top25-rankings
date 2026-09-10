@@ -242,7 +242,9 @@ smaller presets; at 5,000 scenarios it is well under a second.
 
 **Why your numbers differ from the published run.** The page seeds its own
 generator, so simulated means and percentiles land within Monte Carlo error of
-the published ones rather than on top of them. Everything analytic — salary,
+the published ones rather than on top of them. The page also defaults to a
+smaller detail setting than the published run; *Full* matches its scenario and
+candidate counts. Everything analytic — salary,
 expected points, the analytic standard deviation, the count of valid rosters —
 matches exactly, and `tests/test_showdown.py` pins that agreement by driving the
 worker through Node against the same payload.
@@ -392,6 +394,14 @@ keep a Colab copy in step, port these:
   `apply_market_projection_means` a blend rather than a substitution (cell 8);
 - `Settings.nflverse_drop_unmatched` defaults to `True`, with
   `AVAILABILITY_OVERRIDES` and the `nflverse_min_match_rate` guard (cells 2 and 9);
+- `simulate_player_outcomes` factors the latent matrix with `latent_root`
+  (Cholesky) rather than an eigendecomposition. The correlation targets are
+  looked up by (position, depth bucket, team), so a pool with several players
+  sharing all three carries exactly degenerate eigenvalues — a typical showdown
+  pool has a six-fold one — and any eigenvector basis of that eigenspace is a
+  valid decomposition. The old root therefore depended on the LAPACK build and
+  `random_seed` did not pin the scenario set; a Cholesky factor is unique, and
+  it is the factorization `site/showdown-worker.js` already used (cell 11);
 - `score_candidates_shared_scenarios` carries scores as (candidates × scenarios)
   against a pre-transposed outcomes array and accumulates the mean and standard
   deviation in float64 (cell 13). Same arithmetic, ~1.75x faster, and the
@@ -421,6 +431,36 @@ of that survives into fantasy scoring, and every 95% interval straddles zero.
 Representing the cannibalization is the right thing to do; expecting it to
 reshuffle a portfolio is not.
 
+`tools/calibrate_game_correlations.py` does the same job for every *other* pair
+in the showdown target matrix — every same-team and opposing offensive
+relationship — which previously rested on asserted fits with no script behind
+them.
+
+```bash
+python tools/calibrate_game_correlations.py --seasons 2016-2025
+```
+
+On 2016-2025, 51,874 player-games and 500,463 same-game pairs, the table holds
+up. Same-team QB-WR measures **0.215** against a published 0.217; opposing QB-QB
+measures 0.164 against 0.175; 14 of 20 relationships sit inside the 95% interval
+of the measurement and no gap anywhere exceeds 0.033.
+
+That answers a question the live pool invites. Mean absolute off-diagonal score
+correlation on a published 32-player game is 0.023, and cross-player covariance
+supplies only 10-15% of a lineup's variance, which looks at first like a model
+treating one football game as thirty-two independent players. It is not a bug:
+on the forecast-error scale the model works in, same-game fantasy errors really
+are close to uncorrelated once each player's own expectation is subtracted.
+
+Read the printed gaps as an **upper bound**. The expectation there is a lagged
+eight-game rolling average, which does not know the game total, so a shootout is
+a surprise to it and part of what it books as correlated error is really the
+shared game environment. The pipeline's means are market-implied and already
+price that environment, so the correlation left for its residuals is if anything
+lower. A positive gap is therefore not a licence to raise a constant. Team
+defenses are not covered: weekly player stats carry no DST scoring, so the DEF
+entries still rest on their original fit.
+
 ## Caveats
 
 These are market-derived estimates, not predictions with a guarantee. The
@@ -429,6 +469,21 @@ without notice. DEF has no dependable player-prop market and always uses the
 Yahoo fallback, and neither does a kicker, who is estimated from rolling
 nflverse game logs on the lineup page.
 
+
+### Showdown roster rules
+
+Yahoo requires five players, the salary cap, and **at least one player from each
+team**. Any position satisfies the team requirement, a team defense included —
+the enumerator used to demand a non-DEF player from each side, which discarded
+304 legal rosters on the 2026-09-10 SF-LA slate.
+
+`Settings.min_salary_used_pct` is a strategy filter, not a Yahoo rule, and now
+defaults to `0.0`. At the previous `0.75` it removed 161,439 of the 187,697
+cap-legal rosters on that same slate — 86% of the legal space — before the model
+scored one of them. The candidate screen already ranks on the analytic ceiling,
+so it discards weak cheap rosters on their merits: with the floor off, only 449
+of the 25,000 retained candidates are newly admitted, none of them inside the
+top 1,000. The page keeps the slider for anyone who wants the filter back.
 
 ### Showdown selection controls
 
@@ -467,10 +522,64 @@ draws cannot change selection. This checks performance within the simulation;
 it does not establish historical accuracy or a probability of winning a contest.
 Candidate screening and constrained greedy selection can miss a global optimum.
 
-The simulator remains the existing correlated lognormal approximation. Explicit
-participation, zero scores, negative defense scores and discrete touchdowns are
-not yet represented. Those changes require availability and component-level
-calibration; their probabilities are not invented from depth-chart labels.
+The simulator is a correlated **zero-hurdle** lognormal. Each marginal is an atom
+at zero of fitted size plus a lognormal above it, and the correlation structure is
+still a Gaussian copula, so excluding a player is still a principal submatrix and
+the browser still needs no eigensolver.
+
+Explicit participation, negative defense scores and discrete touchdowns are still
+not represented. Availability in particular is deliberately left out: the market
+means already price it, so modelling it here would charge the same risk twice.
+
+### Zero scores
+
+A mean-preserving lognormal is strictly positive, so the old simulator gave every
+player a floor. Measurement says that was right for starters and badly wrong for
+everyone else. Over 2016-2025, the share of games landing below each player's
+modelled P25 — 25% if the model were calibrated — ran:
+
+| | below modelled P25 | zero games |
+| --- | --- | --- |
+| QB1 / RB1 / WR1 / TE1 | 23% / 25% / 28% / 28% | 1-6% |
+| WR3 / RB3 | 32% / 43% | 14% / 19% |
+| WR4 / RB4 / QB2 | 40% / 53% / 58% | 29% / 33% / 26% |
+
+Ceilings were fine everywhere: 85-91% of games fell below the modelled P90.
+
+`ZERO_RATE` therefore carries a fitted probability that a player who **took the
+field** still finished on zero, and `hurdle_transform` puts an atom there. Writing
+`p` for that rate and `c` for the CV of the scoring part,
+
+```
+mean = (1 - p) * (m / (1 - p)) = m          CV^2 = (c^2 + p) / (1 - p)
+```
+
+so holding `CALIBRATED_CV` fixed pins `c^2 = CV^2 (1 - p) - p`. **The published
+mean and CV do not move.** Only the shape does, with mass taken out of the lower
+body and placed on zero.
+
+Scope is the argument. A game with no carry, target or pass attempt is dropped
+from both numerator and denominator, because that is usually a player who was
+inactive and the market mean already prices that. What is left is the pure usage
+effect: a fourth receiver who dressed, ran his routes and was never thrown to.
+`tools/calibrate_zero_rate.py` reproduces the table and prints both rates so the
+gap is visible.
+
+```bash
+python tools/calibrate_zero_rate.py --seasons 2016-2025
+```
+
+An atom at zero breaks the closed form `score_to_lognormal_latent` used to hit a
+requested correlation, so the inversion is numerical: Mehler's formula turns the
+latent-to-score map into a polynomial in the latent correlation whose coefficients
+depend only on `(CV, zero rate)`, and each pair is bisected against its own series.
+A pool has about a dozen distinct pairs, so the coefficients are cached and the
+whole inversion costs about 0.1s per game. With every rate set to zero it reduces
+to the old closed form exactly, which the tests pin.
+
+DEF is held at zero throughout: weekly player stats carry no team-defense scoring,
+so nothing is fitted, and a defense can post a negative score, which this model
+does not represent either.
 
 ### Historical component-prior gate
 
