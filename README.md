@@ -113,6 +113,7 @@ site/data/history/          one archived JSON + CSV per run date
 pipeline/team_outcome.py    the game corpus and its as-of feature harness
 pipeline/team_outcome_eval.py  de-vig, metrics and interval estimates
 pipeline/team_outcome_fit.py   the ridge logistic and linear fitters
+tools/build_team_outcome_model.py  the preregistered walk-forward candidate
 docs/team-outcome-prereg.md    what the model will be, frozen before fitting
 tools/                      offline calibration scripts (see below)
 tests/                      shape tests for every published payload
@@ -687,6 +688,20 @@ refuses to amend at all.
 
 The two most recent complete seasons are sealed. Nothing in the pipeline reads
 them, and the corpus summary reports coverage for them but never an outcome.
+
+Phase P3 runs the preregistered candidate:
+
+```bash
+python tools/build_team_outcome_model.py --draws 2000
+```
+
+It rebuilds the corpus with play-by-play efficiency, audits the as-of boundary
+over all 572 settled weeks, and only then picks which preregistered
+specification to fit — the audit result decides that, never a score. Over the
+same 4,594 games the candidate scores a Brier of 0.2190 against fitted Elo's
+0.2239 and the market's 0.2100, passing every gate that can be evaluated before
+the seal is opened. Writes `model/team_outcome.json` with `approved: false`:
+the approval rule needs the sealed read, which has not happened.
 
 ### Historical component-prior gate
 

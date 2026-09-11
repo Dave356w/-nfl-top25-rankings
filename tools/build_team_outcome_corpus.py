@@ -28,6 +28,25 @@ def seasons_arg(value: str) -> list[int]:
     return list(range(int(start), int(end or start) + 1))
 
 
+def pull_efficiency(seasons, cache_dir: Path, refresh: bool) -> pd.DataFrame:
+    """Cache the aggregated team-game efficiency, not the raw play frame.
+
+    A season of play-by-play is fifty thousand rows and 372 columns; the corpus
+    needs nine columns per team-game. Aggregating before caching keeps the
+    cache small enough to reread quickly and makes the stored object the same
+    shape the corpus consumes.
+    """
+    target = cache_dir / f"efficiency_{seasons[0]}_{seasons[-1]}.json.gz"
+    if target.exists() and not refresh:
+        return pd.DataFrame(json.loads(gzip.decompress(target.read_bytes())))
+    frame = to.load_pbp_efficiency(seasons)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.loads(frame.to_json(orient="records", date_format="iso"))
+    target.write_bytes(gzip.compress(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode(), mtime=0))
+    return frame
+
+
 def pull(seasons, cache_dir: Path, refresh: bool) -> pd.DataFrame:
     """Cache the raw schedules pull so a rebuild does not depend on the network."""
     target = cache_dir / f"schedules_{seasons[0]}_{seasons[-1]}.json.gz"

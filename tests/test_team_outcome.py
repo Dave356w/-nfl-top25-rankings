@@ -106,15 +106,9 @@ class AsOfTests(unittest.TestCase):
         self.assertEqual(report['checkpoints'],len(self.corpus.weeks(settled_only=True)))
 
     def test_audit_detects_an_off_by_one_as_of_boundary(self):
-        class LeakyCorpus(to.Corpus):
-            """The regression this harness exists to prevent: <= instead of <."""
-            def history(self,season,week):
-                joined=self.games.merge(self.outcomes,on='game_id',how='inner')
-                order=joined.season*100+joined.week
-                return joined.loc[order.le(season*100+week)].reset_index(drop=True)
-
-        leaky=LeakyCorpus(games=self.corpus.games,outcomes=self.corpus.outcomes,
-                          market=self.corpus.market)
+        self.assertTrue(to.canary_detected(self.corpus))
+        leaky=to._OffByOneCorpus(games=self.corpus.games,outcomes=self.corpus.outcomes,
+                                 market=self.corpus.market,efficiency=self.corpus.efficiency)
         report=to.audit(leaky)
         self.assertFalse(report['clean'])
         checks={f['check'] for f in report['findings']}
@@ -191,6 +185,100 @@ class EloTests(unittest.TestCase):
         self.assertIn('elo_diff',to.FEATURES)
         report=to.audit(self.corpus,features={'elo_diff':to.FEATURES['elo_diff']})
         self.assertTrue(report['clean'],report['findings'])
+
+
+def plays(seasons=(2019,2020),weeks=range(1,6)):
+    """Synthetic play-by-play: one team clearly better than the rest."""
+    rows=[]
+    for season in seasons:
+        for week in weeks:
+            pairs=[(TEAMS[0],TEAMS[1]),(TEAMS[2],TEAMS[3])] if week%2 else [(TEAMS[1],TEAMS[2]),(TEAMS[3],TEAMS[0])]
+            if season==2020 and week==3: pairs=[(TEAMS[0],TEAMS[1])]
+            for home,away in pairs:
+                for team,opponent in ((home,away),(away,home)):
+                    for play in range(20):
+                        rows.append(dict(game_id=f'{season}_{week:02d}_{away}_{home}',
+                            season=season,week=week,posteam=team,defteam=opponent,
+                            play_type='pass' if play%2 else 'run',
+                            epa=0.3 if team==TEAMS[2] else -0.1,
+                            success=1.0 if team==TEAMS[2] else 0.0))
+    return pd.DataFrame(rows)
+
+
+class EfficiencyTests(unittest.TestCase):
+    def setUp(self):
+        base=to.build_corpus(schedules())
+        self.corpus=to.attach_efficiency(base,to.aggregate_efficiency(plays()))
+
+    def test_aggregation_gives_two_rows_per_game_and_drops_non_offensive_plays(self):
+        frame=to.aggregate_efficiency(pd.concat([plays(),
+            plays().assign(play_type='punt',epa=99.0)]))
+        self.assertEqual(len(frame),len(self.corpus.efficiency))
+        self.assertLess(float(frame.off_epa.max()),1.0)  # the punts were dropped
+        self.assertEqual(sorted(frame.groupby('game_id').size().unique()),[2])
+
+    def test_efficiency_is_refused_when_it_names_an_unknown_game(self):
+        rogue=to.aggregate_efficiency(plays()).assign(game_id='9999_99_XX_YY')
+        with self.assertRaisesRegex(ValueError,'does not have'):
+            to.attach_efficiency(to.build_corpus(schedules()),rogue)
+        doubled=pd.concat([to.aggregate_efficiency(plays())]*2)
+        with self.assertRaisesRegex(ValueError,'Duplicate team-game'):
+            to.attach_efficiency(to.build_corpus(schedules()),doubled)
+
+    def test_the_view_only_carries_earlier_team_games(self):
+        for season,week in self.corpus.weeks():
+            view=self.corpus.view(season,week)
+            if view.efficiency.empty: continue
+            order=view.efficiency.season*100+view.efficiency.week
+            self.assertLess(int(order.max()),season*100+week)
+
+    def test_the_opponent_adjustment_separates_offence_from_schedule(self):
+        history=self.corpus.efficiency_before(2020,5)
+        offence,defence=to.opponent_adjusted(history,'off_epa')
+        # TEAMS[2] is the one team with a real edge, so it must rank top on offence
+        self.assertEqual(offence.idxmax(),TEAMS[2])
+        # and the teams that had to play it should not be credited with its output
+        self.assertLess(float(offence.drop(TEAMS[2]).max()),float(offence[TEAMS[2]]))
+
+    def test_efficiency_features_pass_the_as_of_audit(self):
+        features={n:to.FEATURES[n] for n in ('epa_off_diff','epa_def_diff','success_rate_diff')}
+        report=to.audit(self.corpus,features=features)
+        self.assertTrue(report['clean'],report['findings'])
+
+    def test_a_broken_boundary_moves_the_efficiency_features_too(self):
+        features={n:to.FEATURES[n] for n in ('epa_off_diff','success_rate_diff')}
+        self.assertTrue(to.canary_detected(self.corpus,features=features))
+        broken=to._OffByOneCorpus(games=self.corpus.games,outcomes=self.corpus.outcomes,
+                                  market=self.corpus.market,efficiency=self.corpus.efficiency)
+        checks={f['check'] for f in to.audit(broken,features=features)['findings']}
+        self.assertIn('efficiency_boundary',checks)
+
+    def test_a_corpus_without_play_by_play_still_builds_every_feature(self):
+        bare=to.build_corpus(schedules())
+        frame=to.feature_frame(bare,2020,4)
+        for name in ('epa_off_diff','epa_def_diff','success_rate_diff'):
+            self.assertIn(name,frame.columns)
+            self.assertTrue((frame[name]==0).all())
+
+
+class FeatureDiagnosticTests(unittest.TestCase):
+    def test_a_constant_feature_is_reported_as_degenerate(self):
+        from tools.build_team_outcome_model import feature_diagnostics
+        design=pd.DataFrame({'varies':[1.0,2.0,3.0],'constant':[0.0,0.0,0.0]})
+        report=feature_diagnostics(design,('varies','constant'))
+        self.assertEqual(report['degenerate'],['constant'])
+        self.assertFalse(report['features']['varies']['degenerate'])
+        self.assertEqual(report['features']['constant']['non_zero_rate'],0.0)
+
+    def test_the_short_week_difference_cannot_fire_on_a_symmetric_short_week(self):
+        # An NFL short week puts both teams on short rest, which is what makes
+        # the directional form degenerate in the real corpus.
+        rows=[dict(game_id='2019_02_GB_CHI',season=2019,week=2,game_type='REG',
+            gameday='2019-09-12',gametime='20:20',home_team='CHI',away_team='GB',
+            location='Home',roof='outdoors',surface='grass',div_game=1,
+            home_rest=4,away_rest=4,stadium_id='S',home_score=17.0,away_score=14.0)]
+        corpus=to.build_corpus(pd.DataFrame(rows))
+        self.assertEqual(float(to.feature_frame(corpus,2019,2).short_week_diff.iloc[0]),0.0)
 
 
 class SealTests(unittest.TestCase):

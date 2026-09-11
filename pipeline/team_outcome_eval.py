@@ -106,6 +106,23 @@ def _auc(y: np.ndarray, p: np.ndarray) -> float:
     return float((ranks[positives].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
 
 
+def calibration_slope(frame: pd.DataFrame, probability: str) -> float:
+    """Cox calibration slope: 1.0 means neither over- nor under-confident.
+
+    A logistic fit, not least squares — see the note in `_calibration`. Exposed
+    separately so the bootstrap can resample it without rebuilding every other
+    metric alongside it.
+    """
+    y = frame.home_win.to_numpy(float)
+    p = np.clip(frame[probability].to_numpy(float), EPSILON, 1 - EPSILON)
+    logit = np.log(p / (1 - p))
+    if np.ptp(logit) == 0:
+        return float("nan")
+    from pipeline.team_outcome_fit import fit_logistic
+    model = fit_logistic(logit.reshape(-1, 1), y)
+    return float(model["coefficients"][0] / model["scale"][0])
+
+
 def _calibration(y: np.ndarray, p: np.ndarray, bins: int = 10) -> dict:
     clipped = np.clip(p, EPSILON, 1 - EPSILON)
     edges = np.quantile(clipped, np.linspace(0, 1, bins + 1))

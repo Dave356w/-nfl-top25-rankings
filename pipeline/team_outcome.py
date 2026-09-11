@@ -66,6 +66,10 @@ WITHHELD_COLUMNS = (
 
 REQUIRED_COLUMNS = CONTEXT_COLUMNS + OUTCOME_SOURCE_COLUMNS
 
+EFFICIENCY_COLUMNS = ("game_id", "season", "week", "team", "opponent", "is_home",
+                      "off_epa", "off_success", "plays")
+EMPTY_EFFICIENCY = pd.DataFrame(columns=list(EFFICIENCY_COLUMNS))
+
 # The final holdout of docs/team-outcome-model-plan.md §6.1: the two most recent
 # complete seasons, read once at P4 and never before. Sealing is a reporting
 # rule, not a loading rule — the corpus has to know these games exist to count
@@ -160,9 +164,10 @@ class AsOfView:
 
     season: int
     week: int
-    context: pd.DataFrame   # the target week, pregame columns only
-    history: pd.DataFrame   # settled games strictly earlier, with outcomes
-    schedule: pd.DataFrame  # published schedule through this week, pregame only
+    context: pd.DataFrame     # the target week, pregame columns only
+    history: pd.DataFrame     # settled games strictly earlier, with outcomes
+    schedule: pd.DataFrame    # published schedule through this week, pregame only
+    efficiency: pd.DataFrame  # settled team-games strictly earlier, one row per side
 
 
 @dataclass(frozen=True)
@@ -170,6 +175,10 @@ class Corpus:
     games: pd.DataFrame      # one row per scheduled game, pregame context only
     outcomes: pd.DataFrame   # one row per settled game: margin, home_win, tie
     market: pd.DataFrame     # one row per game with a closing line
+    # Play-by-play efficiency, two rows per settled game. Empty under
+    # specification A. It is settled fact about games already played, so it
+    # crosses the same boundary as `outcomes` and never a looser one.
+    efficiency: pd.DataFrame = None
 
     def weeks(self, settled_only: bool = False) -> list[tuple[int, int]]:
         frame = self.games
@@ -198,9 +207,19 @@ class Corpus:
         earlier = joined.loc[order.lt(season * 100 + week)]
         return earlier.sort_values(["season", "week", "game_id"]).reset_index(drop=True)
 
+    def efficiency_before(self, season: int, week: int) -> pd.DataFrame:
+        """Team-games strictly earlier than (season, week)."""
+        frame = self.efficiency
+        if frame is None or frame.empty:
+            return EMPTY_EFFICIENCY
+        order = frame.season * 100 + frame.week
+        earlier = frame.loc[order.lt(season * 100 + week)]
+        return earlier.sort_values(["season", "week", "game_id", "team"]).reset_index(drop=True)
+
     def view(self, season: int, week: int) -> AsOfView:
         return AsOfView(int(season), int(week), self.context(season, week),
-                        self.history(season, week), self.schedule_through(season, week))
+                        self.history(season, week), self.schedule_through(season, week),
+                        self.efficiency_before(season, week))
 
 
 def build_corpus(raw: pd.DataFrame) -> Corpus:
@@ -258,7 +277,8 @@ def build_corpus(raw: pd.DataFrame) -> Corpus:
     overlap = set(games.columns) & (set(MARKET_COLUMNS) | set(OUTCOME_SOURCE_COLUMNS) | set(WITHHELD_COLUMNS))
     if overlap:  # the whole point of the split; assert it rather than assume it
         raise AssertionError(f"Context frame leaked withheld columns: {sorted(overlap)}")
-    return Corpus(games=games, outcomes=outcomes, market=market)
+    return Corpus(games=games, outcomes=outcomes, market=market,
+                  efficiency=EMPTY_EFFICIENCY)
 
 
 FEATURES: dict[str, callable] = {}
@@ -375,6 +395,60 @@ def _prior_margin_diff(view: AsOfView, window: int = 8, prior_games: float = 4.0
     return home - away
 
 
+def load_pbp_efficiency(seasons=None, loader=None) -> pd.DataFrame:
+    """One row per team-game of offensive efficiency, from nflverse play-by-play.
+
+    Pass and run plays only, as the preregistration specifies. Everything here
+    is settled fact about a game already played; nothing is a pregame estimate.
+    """
+    if loader is not None:
+        frame = _pandas(loader(seasons))
+    else:
+        try:
+            import nflreadpy as nfl
+        except ModuleNotFoundError as exc:  # pragma: no cover - environment guard
+            raise RuntimeError("Install nflreadpy to build the efficiency corpus") from exc
+        wanted = ["game_id", "season", "week", "posteam", "defteam", "epa", "success", "play_type"]
+        raw = nfl.load_pbp() if seasons is None else nfl.load_pbp(seasons=list(seasons))
+        frame = _pandas(raw.select(wanted) if hasattr(raw, "select") else raw)
+    return aggregate_efficiency(frame)
+
+
+def aggregate_efficiency(plays: pd.DataFrame) -> pd.DataFrame:
+    """Collapse plays to team-games. Kept separate so tests need no network."""
+    frame = plays.loc[plays.play_type.isin(("pass", "run"))].copy()
+    frame["epa"] = pd.to_numeric(frame["epa"], errors="coerce")
+    frame["success"] = pd.to_numeric(frame["success"], errors="coerce")
+    frame = frame.loc[frame.epa.notna() & frame.posteam.notna() & frame.defteam.notna()]
+    frame["team"] = frame.posteam.map(_team)
+    frame["opponent"] = frame.defteam.map(_team)
+    grouped = frame.groupby(["game_id", "season", "week", "team", "opponent"], as_index=False).agg(
+        off_epa=("epa", "mean"), off_success=("success", "mean"), plays=("epa", "size"))
+    grouped["season"] = grouped.season.astype(int)
+    grouped["week"] = grouped.week.astype(int)
+    return grouped
+
+
+def attach_efficiency(corpus: Corpus, efficiency: pd.DataFrame) -> Corpus:
+    """Join efficiency to the corpus, refusing anything the schedule disowns."""
+    frame = efficiency.copy()
+    unknown = set(frame.game_id) - set(corpus.games.game_id)
+    if unknown:
+        raise ValueError(f"{len(unknown)} efficiency rows name a game the corpus does not have")
+    if frame.duplicated(["game_id", "team"]).any():
+        raise ValueError("Duplicate team-game rows in the efficiency frame")
+
+    sides = corpus.games[["game_id", "home_team"]]
+    frame = frame.merge(sides, on="game_id", how="left")
+    frame["is_home"] = frame.team.eq(frame.home_team).astype(float)
+    frame = frame.reindex(columns=list(EFFICIENCY_COLUMNS))
+    leaked = set(frame.columns) & (set(MARKET_COLUMNS) | set(OUTCOME_SOURCE_COLUMNS))
+    if leaked:  # a score reaching the efficiency frame would bypass the split
+        raise AssertionError(f"Efficiency frame leaked withheld columns: {sorted(leaked)}")
+    return Corpus(games=corpus.games, outcomes=corpus.outcomes, market=corpus.market,
+                  efficiency=frame.sort_values(["season", "week", "game_id", "team"]).reset_index(drop=True))
+
+
 def elo_ratings(history: pd.DataFrame, target_season=None, k: float = ELO_K,
                 regression: float = ELO_SEASON_REGRESSION) -> dict[str, float]:
     """Walk Elo forward through settled games, in order.
@@ -410,6 +484,82 @@ def _elo_diff(view: AsOfView) -> pd.Series:
     home = view.context.home_team.map(ratings).astype(float).fillna(ELO_START)
     away = view.context.away_team.map(ratings).astype(float).fillna(ELO_START)
     return home - away
+
+
+EFFICIENCY_WINDOW = 8
+EFFICIENCY_PRIOR_GAMES = 4.0
+EFFICIENCY_RIDGE = 1.0
+
+
+def opponent_adjusted(efficiency: pd.DataFrame, column: str,
+                      window: int = EFFICIENCY_WINDOW,
+                      ridge: float = EFFICIENCY_RIDGE,
+                      prior_games: float = EFFICIENCY_PRIOR_GAMES):
+    """Split a rolling window of team-games into offence and defence effects.
+
+    One ridge least-squares fit, exactly as the preregistration specifies:
+
+        efficiency ~ off_effect[team] + def_effect[opponent] + home
+
+    Raw per-game efficiency confounds a team with the defences it happened to
+    face; the fit separates them. Effects are shrunk toward the league mean by
+    n/(n+4) so a team two games into a window is not evidence of a two-game
+    team. Returns (off_effect, def_effect), both Series indexed by team.
+    """
+    from pipeline.team_outcome_fit import fit_linear
+
+    if efficiency is None or efficiency.empty:
+        return pd.Series(dtype=float), pd.Series(dtype=float)
+    window_rows = efficiency.groupby("team", sort=False).tail(window)
+    values = pd.to_numeric(window_rows[column], errors="coerce")
+    window_rows = window_rows.loc[values.notna()]
+    if window_rows.empty:
+        return pd.Series(dtype=float), pd.Series(dtype=float)
+
+    teams = pd.Index(sorted(set(window_rows.team) | set(window_rows.opponent)))
+    offence = teams.get_indexer(window_rows.team)
+    defence = teams.get_indexer(window_rows.opponent)
+    design = np.zeros((len(window_rows), 2 * len(teams) + 1))
+    rows = np.arange(len(window_rows))
+    design[rows, offence] = 1.0
+    design[rows, len(teams) + defence] = 1.0
+    design[:, -1] = window_rows.is_home.to_numpy(float)
+
+    model = fit_linear(design, pd.to_numeric(window_rows[column], errors="coerce").to_numpy(float),
+                       ridge=ridge)
+    scale = np.asarray(model["scale"], float)
+    effects = np.asarray(model["coefficients"], float) / np.where(scale == 0, 1.0, scale)
+    counts = window_rows.groupby("team").size().reindex(teams).fillna(0).astype(float)
+    faced = window_rows.groupby("opponent").size().reindex(teams).fillna(0).astype(float)
+    shrink = lambda values, n: pd.Series(values, index=teams) * (n / (n + prior_games))
+    return shrink(effects[:len(teams)], counts), shrink(effects[len(teams):2 * len(teams)], faced)
+
+
+def _efficiency_difference(view: AsOfView, column: str, defensive: bool) -> pd.Series:
+    offence, defence = opponent_adjusted(view.efficiency, column)
+    effect = defence if defensive else offence
+    if effect.empty:
+        return pd.Series(0.0, index=view.context.index)
+    home = view.context.home_team.map(effect).astype(float).fillna(0.0)
+    away = view.context.away_team.map(effect).astype(float).fillna(0.0)
+    # A defensive effect is efficiency *allowed*, so the sign flips: the home
+    # team gains when its own defence allows less than the away team's does.
+    return (away - home) if defensive else (home - away)
+
+
+@feature("epa_off_diff")
+def _epa_off_diff(view: AsOfView) -> pd.Series:
+    return _efficiency_difference(view, "off_epa", defensive=False)
+
+
+@feature("epa_def_diff")
+def _epa_def_diff(view: AsOfView) -> pd.Series:
+    return _efficiency_difference(view, "off_epa", defensive=True)
+
+
+@feature("success_rate_diff")
+def _success_rate_diff(view: AsOfView) -> pd.Series:
+    return _efficiency_difference(view, "off_success", defensive=False)
 
 
 def feature_frame(corpus: Corpus, season: int, week: int, features=None) -> pd.DataFrame:
@@ -457,6 +607,15 @@ def _corrupt(corpus: Corpus, season: int, week: int, rng: np.random.Generator) -
         outcomes.loc[hit, "home_win"] = np.where(margin > 0, 1.0, np.where(margin < 0, 0.0, 0.5))
         outcomes.loc[hit, "tie"] = margin == 0
 
+    efficiency = corpus.efficiency
+    if efficiency is not None and not efficiency.empty:
+        efficiency = efficiency.copy()
+        hit_efficiency = efficiency.game_id.isin(at_or_after)
+        if hit_efficiency.any():
+            count = int(hit_efficiency.sum())
+            efficiency.loc[hit_efficiency, "off_epa"] = rng.normal(0, 1, count)
+            efficiency.loc[hit_efficiency, "off_success"] = rng.random(count)
+
     market = corpus.market.copy()
     if not market.empty:
         hit_market = market.game_id.isin(at_or_after)
@@ -464,7 +623,41 @@ def _corrupt(corpus: Corpus, season: int, week: int, rng: np.random.Generator) -
             values = pd.to_numeric(market[column], errors="coerce")
             noise = pd.Series(rng.normal(0, 50, len(market)), index=market.index)
             market[column] = values.where(~hit_market, values.fillna(0.0) + noise)
-    return Corpus(games=corpus.games.copy(), outcomes=outcomes, market=market)
+    return Corpus(games=corpus.games.copy(), outcomes=outcomes, market=market,
+                  efficiency=efficiency)
+
+
+class _OffByOneCorpus(Corpus):
+    """A corpus whose as-of filters admit the target week. Deliberately wrong.
+
+    This is the regression the harness exists to prevent, kept here rather than
+    in the tests so that a run can certify its own leakage gate: an audit that
+    passes a clean corpus proves nothing unless the same audit fails this one.
+
+    It breaks *every* settled-data boundary, not just the first one. A canary
+    that covered only `history` would leave `efficiency_before` with no canary
+    at all, and a gate that cannot fail on one of the paths it claims to cover
+    is the failure mode this whole harness is built around.
+    """
+
+    def history(self, season: int, week: int) -> pd.DataFrame:
+        joined = self.games.merge(self.outcomes, on="game_id", how="inner")
+        order = joined.season * 100 + joined.week
+        return joined.loc[order.le(season * 100 + week)].reset_index(drop=True)
+
+    def efficiency_before(self, season: int, week: int) -> pd.DataFrame:
+        frame = self.efficiency
+        if frame is None or frame.empty:
+            return EMPTY_EFFICIENCY
+        order = frame.season * 100 + frame.week
+        return frame.loc[order.le(season * 100 + week)].reset_index(drop=True)
+
+
+def canary_detected(corpus: Corpus, checkpoints=None, features=None, seed: int = 0) -> bool:
+    """True when the audit catches a broken boundary it is supposed to catch."""
+    broken = _OffByOneCorpus(games=corpus.games, outcomes=corpus.outcomes,
+                             market=corpus.market, efficiency=corpus.efficiency)
+    return not audit(broken, checkpoints=checkpoints, features=features, seed=seed)["clean"]
 
 
 def audit(corpus: Corpus, checkpoints=None, features=None, seed: int = 0) -> dict:
@@ -500,7 +693,13 @@ def audit(corpus: Corpus, checkpoints=None, features=None, seed: int = 0) -> dic
             if late:
                 findings.append({"season": int(season), "week": int(week), "check": "schedule_boundary",
                                  "detail": f"{late} scheduled games after the checkpoint"})
-        for name, frame in (("context", view.context), ("schedule", view.schedule)):
+        if view.efficiency is not None and not view.efficiency.empty:
+            late = int((view.efficiency.season * 100 + view.efficiency.week).ge(cutoff).sum())
+            if late:
+                findings.append({"season": int(season), "week": int(week), "check": "efficiency_boundary",
+                                 "detail": f"{late} team-games at or after the checkpoint"})
+        for name, frame in (("context", view.context), ("schedule", view.schedule),
+                            ("efficiency", view.efficiency)):
             leaked = sorted(withheld & set(frame.columns))
             if leaked:
                 findings.append({"season": int(season), "week": int(week), "check": "withheld_columns",

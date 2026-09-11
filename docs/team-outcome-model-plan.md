@@ -546,7 +546,7 @@ edge, if at all, as negative/neutral/positive, and display no win probability.
 | P0 | corpus assembly, as-of harness | **done** — see below |
 | P1 | baselines | **done** — see below |
 | P2 | preregistration | **done** — see below |
-| P3 | candidates, walk-forward | G1-G4 and G8 evaluated and written to the artifact |
+| P3 | candidates, walk-forward | **done** — see below |
 | P4 | sealed read | G5 evaluated; artifact written with `approved` either way |
 | P5 | corpus-B ablation | full-slate retention checked; G7 evaluated and recorded, expected to fail on coverage |
 
@@ -691,6 +691,70 @@ The document opens by listing what has already been seen, because a
 preregistration claiming to be blind would be false here. Everything in §1 of
 it comes from unsealed seasons; from 2024 and 2025 only the game counts and the
 moneyline coverage are known.
+
+### P3 result
+
+`tools/build_team_outcome_model.py` and `model/team_outcome.json`, executing
+the frozen preregistration `171bc3eb386e…`. Specification **B** — the
+play-by-play corpus passed the same as-of audit over all 572 settled weeks
+with zero findings, which is what selects it; no performance number entered
+that choice. 4,594 games, 17 seasons, eleven terms plus an intercept. The
+sealed seasons were neither fitted on nor scored.
+
+| Forecast | Brier | Accuracy | AUC | ECE | Cox slope | Margin RMSE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Home team only (P1) | 0.2456 | 56.1% | 0.504 | 0.018 | — | 14.69 |
+| Fitted Elo (P1, the G3 reference) | 0.2239 | 63.4% | 0.673 | 0.020 | 0.97 | 13.77 |
+| **Candidate, specification B** | **0.2190** | 63.7% | 0.692 | 0.019 | 1.08 | 13.58 |
+| No-vig market (n=4,505) | 0.2100 | 66.4% | 0.722 | 0.018 | 1.01 | — |
+
+**Every evaluable gate passes.** G1: 4,594 games across 17 seasons. G2: ECE
+0.0187 with the Cox slope interval [0.956, 1.212] containing 1. G3: Brier
+0.0049 below fitted Elo, interval [-0.0072, -0.0026], entirely below zero. G4:
+lower Brier than Elo in 16 of 17 seasons. G8: audit clean, canary detected.
+G5 is the sealed read and stays unevaluated, so the artifact records
+`approved: false` — no model is promoted at P3.
+
+Four things worth more than the headline.
+
+- **The preregistered expectation was wrong, and the record says so.** §4 of the
+  preregistration wrote down that the efficiency terms were "expected to add
+  little once Elo is present". They carry almost the entire improvement:
+  specification A — Elo plus every schedule-context feature — scores 0.2231,
+  barely distinguishable from Elo's own 0.2239, while adding the three
+  opponent-adjusted efficiency terms moves it to 0.2190. The ablation gap is
+  0.0042 [0.0022, 0.0061]. Writing the expectation down beforehand is what
+  turns this into a finding rather than a story told afterwards.
+- **The picks are not distinguishable; the probabilities plainly are.** On the
+  453 games where the candidate and Elo disagree, the candidate is right 234
+  times and Elo 219: exact McNemar p = 0.51. Accuracy rises only 0.3 points
+  while Brier improves with an interval well clear of zero. This is the
+  argument of §5 — probability quality, not picks — showing up as a measurement
+  rather than an assertion.
+- **A preregistered feature turned out to be structurally dead.**
+  `short_week_diff` is identically zero across all 4,594 games: an NFL short
+  week puts *both* teams on short rest, so a directional form can never fire.
+  That is a defect in the P0 "correction" recorded above — the plan's original
+  symmetric indicator could at least distinguish a Thursday game from a Sunday
+  one, and making it directional removed the only information it had. It stays
+  in place. Replacing a feature after seeing a run is precisely the freedom the
+  preregistration exists to remove, and the feature is inert rather than
+  harmful. The run now reports degeneracy for every feature, so this class of
+  defect is measured rather than noticed by eye.
+- **The noisy selector was noisy, as predicted.** The preregistered
+  leave-last-season-out rule picked ridge penalties of 0.01, 10 and 100 across
+  folds — bouncing four orders of magnitude on a single held-out season. The
+  preregistration said this rule was noisy before it ran; following it anyway
+  is what makes the prediction worth anything.
+
+The challengers behaved as specified and none is promoted: the nonlinearity
+term is worth +0.0001, adding `prior_margin_diff` is worth −0.0005 with an
+interval straddling zero, and specification A is +0.0042 worse.
+
+Against the market the candidate closes about a third of P1's gap, from 0.0141
+to **0.0090** [0.0053, 0.0128]. G6 has no threshold and gates nothing; the
+market remains ahead, which is the expected outcome for a model that reads no
+market data.
 
 ## 13. What would invalidate this plan
 
