@@ -1,5 +1,5 @@
 {
-  "_comment": "Edit this file to change the team. Positions: QB, RB, WR, TE, K.",
+  "_comment": "Edit this file to change the team. Positions: QB, RB, WR, TE, K, DEF.",
   "roster": [
     {
       "Name": "Dak Prescott",
@@ -55,14 +55,14 @@
     },
     {
       "Name": "Tyrone Tracy Jr.",
-      "Position": "WR"
+      "Position": "RB"
     },
     {
-      "Name": "Rams",
+      "Name": "Los Angeles Rams",
       "Position": "DEF"
     },
     {
-      "Name": "Broncos.",
+      "Name": "Denver Broncos",
       "Position": "DEF"
     }
   ]

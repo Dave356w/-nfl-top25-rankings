@@ -55,7 +55,7 @@ MY_TEAM_ROSTER = [
     {"Name": "Isaac TeSlaa", "Position": "WR"},
 ]
 
-STARTING_POSITIONS = {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "K": 1, "FLEX": 1}
+STARTING_POSITIONS = {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "K": 1, "DEF": 1, "FLEX": 1}
 FLEX_ELIGIBLE = ["RB", "WR", "TE"]
 LINEUP_OBJECTIVE = "FP"  # FP, Floor_P25, or Ceiling_P90
 EXCLUDED_PLAYERS: list[str] | None = None  # None prompts; [] skips prompt.
@@ -64,7 +64,7 @@ AUTO_EXCLUDE_REPORTED_OUT = True
 AUTO_INSTALL_NFLREADPY = True
 # How deep the page's add pool goes per position. Deep enough to cover a real
 # waiver claim, shallow enough that `pool.json` stays a small download.
-POOL_LIMITS = {"QB": 40, "RB": 70, "WR": 90, "TE": 45, "K": 32}
+POOL_LIMITS = {"QB": 40, "RB": 70, "WR": 90, "TE": 45, "K": 32, "DEF": 32}
 
 YAHOO_URL = "https://dfyql-ro.sports.yahoo.com/v2/external/playersFeed/nfl"
 KICKER_SCORING = {"FG_0_39": 3.0, "FG_40_49": 4.0, "FG_50_PLUS": 5.0, "PAT": 1.0}
@@ -324,6 +324,14 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
     ycols = ["Key", "Feed_Name", "Feed_Position", "Team", "Opponent", "Game_Time", "Salary", "FPPG",
              "Projected_FP", "Projection_Source", "Fallback_Depth", "Projection_Frozen"]
     roster = roster.merge(yahoo[ycols], on="Key", how="left")
+    roster["Configured_Position"] = roster["Position"]
+    feed_position = roster["Feed_Position"].astype("string").str.upper()
+    roster["Position_Mismatch"] = (
+        feed_position.notna() & feed_position.ne(roster["Configured_Position"])
+    )
+    # Yahoo owns eligibility when the player matched. This prevents a typo in
+    # the editable roster from seating an RB in a WR slot.
+    roster.loc[feed_position.notna(), "Position"] = feed_position[feed_position.notna()]
 
     d = ctx["depth"][["Key", "Team", "Official_Depth", "pos_abb"]].rename(columns={"Team": "Depth_Team"})
     d = d.drop_duplicates("Key")
@@ -493,6 +501,8 @@ def optimize(roster: pd.DataFrame, excluded: list[str], objective: str = LINEUP_
 
 def review(p: pd.Series) -> str:
     notes = []
+    if bool(p.get("Position_Mismatch", False)):
+        notes.append(f"position corrected {p.Configured_Position}->{p.Position}")
     if not p.Projection_Available: notes.append("no weekly projection/bye")
     if pd.notna(p.get("report_status")): notes.append(f"injury {p.report_status}")
     if pd.notna(p.get("practice_status")): notes.append(str(p.practice_status))

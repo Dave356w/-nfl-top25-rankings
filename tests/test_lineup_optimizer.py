@@ -50,6 +50,7 @@ def _roster_frame():
         ("RB1", "RB", 16.0), ("RB2", "RB", 14.0), ("RB3", "RB", 10.0),
         ("WR1", "WR", 15.0), ("WR2", "WR", 13.0), ("WR3", "WR", 12.0),
         ("TE1", "TE", 9.0), ("TE2", "TE", 7.0), ("K1", "K", 8.0),
+        ("DEF1", "DEF", 6.0),
     ]
     frame = pd.DataFrame(rows, columns=["Name", "Position", "FP"])
     frame["Key"] = frame["Name"].map(lo.normalize_name)
@@ -218,6 +219,16 @@ class BuildRosterTests(unittest.TestCase):
 
     def test_every_configured_player_survives_the_joins(self):
         self.assertEqual(len(self.roster), len(self.configured))
+
+    def test_yahoo_position_corrects_a_roster_typo(self):
+        roster = lo.build_roster(
+            [{"Name": "Breece Hall", "Position": "WR"}],
+            _yahoo_frame(), _context(),
+        )
+        row = roster.iloc[0]
+        self.assertEqual(row["Position"], "RB")
+        self.assertEqual(row["Configured_Position"], "WR")
+        self.assertIn("position corrected WR->RB", lo.review(row))
         self.assertEqual(self.roster.loc["Jaylen Waddle", "Team"], "MIA")
         self.assertGreater(self.roster.loc["Jaylen Waddle", "FP"], 0)
         self.assertIn("salary-position-depth regression", self.roster.loc["Jaylen Waddle", "Projection_Source"])
@@ -295,11 +306,11 @@ class OptimizeTests(unittest.TestCase):
 
     def test_it_fills_every_slot_exactly_once(self):
         starters, bench = lo.optimize(self.roster, [])
-        self.assertEqual(len(starters), 8)
-        self.assertEqual(len(bench), len(self.roster) - 8)
+        self.assertEqual(len(starters), 9)
+        self.assertEqual(len(bench), len(self.roster) - 9)
         counts = starters["Slot"].value_counts().to_dict()
-        self.assertEqual(counts, {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "K": 1, "FLEX": 1})
-        self.assertEqual(len(set(starters["Name"])), 8)
+        self.assertEqual(counts, {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "K": 1, "DEF": 1, "FLEX": 1})
+        self.assertEqual(len(set(starters["Name"])), 9)
 
     def test_the_flex_takes_the_best_leftover_rb_wr_or_te(self):
         starters, _ = lo.optimize(self.roster, [])
@@ -338,7 +349,7 @@ class OptimizeTests(unittest.TestCase):
     def test_a_short_roster_warns_instead_of_inventing_a_starter(self):
         thin = self.roster[self.roster.Position.ne("K")]
         starters, _ = lo.optimize(thin, [])
-        self.assertEqual(len(starters), 7)
+        self.assertEqual(len(starters), 8)
         self.assertTrue(starters[starters.Slot.eq("K")].empty)
 
 
