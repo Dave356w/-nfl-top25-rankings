@@ -124,6 +124,92 @@ class UncertaintyTests(unittest.TestCase):
         self.assertLess(result['p_value'],0.001)
 
 
+def book(n,home_ml,away_ml,home_wins,ties=0):
+    """A synthetic book: n games at one price, with a known number of home wins."""
+    outcomes=[1.0]*home_wins+[0.5]*ties+[0.0]*(n-home_wins-ties)
+    forecasts=pd.DataFrame({'game_id':[f'g{i}' for i in range(n)],
+                            'season':[2015+i%3 for i in range(n)],
+                            'home_win':outcomes})
+    market=pd.DataFrame({'game_id':forecasts.game_id,
+                         'home_moneyline':float(home_ml),'away_moneyline':float(away_ml)})
+    return forecasts,market
+
+
+class StakingTests(unittest.TestCase):
+    def test_american_odds_pay_what_they_promise(self):
+        self.assertAlmostEqual(float(ev.american_profit([-110.0],[True])[0]),100/110,places=6)
+        self.assertEqual(float(ev.american_profit([150.0],[True])[0]),1.5)
+        self.assertEqual(float(ev.american_profit([-100.0],[True])[0]),1.0)
+        self.assertEqual(float(ev.american_profit([100.0],[True])[0]),1.0)
+        self.assertEqual(float(ev.american_profit([-110.0],[False])[0]),-1.0)
+
+    def test_a_tie_is_a_push_that_returns_the_stake(self):
+        self.assertEqual(float(ev.american_profit([-110.0],[False],[True])[0]),0.0)
+        self.assertEqual(float(ev.american_profit([500.0],[True],[True])[0]),0.0)
+
+    def test_a_price_inside_the_invalid_band_pays_nothing_knowable(self):
+        self.assertTrue(np.all(np.isnan(ev.american_profit([0.0,50.0,-99.0],[True,True,True]))))
+
+    def test_a_real_edge_shows_up_as_a_profit(self):
+        # The check that keeps a sign error from making every answer negative:
+        # a forecast that genuinely knows better must come out ahead.
+        forecasts,market=book(100,100,-200,home_wins=70)
+        forecasts['p']=0.7
+        bets=ev.moneyline_bets(forecasts,market,'p')
+        self.assertEqual(len(bets),100)
+        self.assertTrue((bets.side=='home').all())
+        self.assertAlmostEqual(ev.roi(bets),0.40,places=6)   # 70 won at evens, 30 lost
+
+    def test_a_systematically_wrong_forecast_loses(self):
+        forecasts,market=book(100,100,-200,home_wins=30)
+        forecasts['p']=0.7
+        self.assertAlmostEqual(ev.roi(ev.moneyline_bets(forecasts,market,'p')),-0.40,places=6)
+
+    def test_a_forecast_that_only_matches_the_no_vig_price_finds_no_bet(self):
+        # -110/-110 is a 50/50 after de-vigging, so a model saying 0.5 has no
+        # edge at the quoted price. Comparing against the no-vig number instead
+        # would invent one, which is the error this pins down.
+        forecasts,market=book(50,-110,-110,home_wins=25)
+        forecasts['p']=0.5
+        devigged=ev.devig_proportional(ev.american_to_probability(market.home_moneyline),
+                                       ev.american_to_probability(market.away_moneyline))
+        self.assertAlmostEqual(float(devigged[0]),0.5,places=6)
+        self.assertTrue(ev.moneyline_bets(forecasts,market,'p').empty)
+
+    def test_one_game_can_never_produce_two_bets(self):
+        forecasts,market=book(60,-110,-110,home_wins=30)
+        forecasts['p']=[i/59 for i in range(60)]          # every edge from 0 to 1
+        bets=ev.moneyline_bets(forecasts,market,'p')
+        self.assertFalse(bets.game_id.duplicated().any())
+        self.assertLessEqual(len(bets),60)
+
+    def test_the_edge_threshold_only_removes_bets(self):
+        forecasts,market=book(60,-110,-110,home_wins=30)
+        forecasts['p']=[i/59 for i in range(60)]
+        loose=ev.moneyline_bets(forecasts,market,'p',edge=0.0)
+        tight=ev.moneyline_bets(forecasts,market,'p',edge=0.2)
+        self.assertLess(len(tight),len(loose))
+        self.assertTrue(set(tight.game_id)<=set(loose.game_id))
+        self.assertGreater(float(tight.edge.min()),0.2)
+
+    def test_a_push_is_staked_and_counted_but_pays_nothing(self):
+        # 3 won at evens, 4 pushed, 3 lost: the wins and losses cancel and the
+        # pushes neither help nor hurt, so the book comes out exactly level.
+        forecasts,market=book(10,100,-200,home_wins=3,ties=4)
+        forecasts['p']=0.7
+        bets=ev.moneyline_bets(forecasts,market,'p')
+        self.assertEqual(len(bets),10)
+        self.assertEqual(int((bets.profit==0).sum()),4)
+        self.assertEqual(int((bets.profit>0).sum()),3)
+        self.assertEqual(int((bets.profit<0).sum()),3)
+        self.assertAlmostEqual(ev.roi(bets),0.0,places=6)
+
+    def test_a_forecast_frame_missing_its_columns_is_refused(self):
+        forecasts,market=book(10,100,-200,home_wins=5)
+        with self.assertRaisesRegex(ValueError,'missing'):
+            ev.moneyline_bets(forecasts,market,'p')
+
+
 class FitTests(unittest.TestCase):
     def test_logistic_recovers_known_coefficients(self):
         rng=np.random.default_rng(0)

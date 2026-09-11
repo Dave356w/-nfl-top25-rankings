@@ -73,6 +73,84 @@ def devig_shin(home_q: np.ndarray, away_q: np.ndarray, iterations: int = 60) -> 
     return out
 
 
+def american_profit(odds, won, push=False) -> np.ndarray:
+    """Profit on one flat unit staked, in units. A push returns the stake.
+
+    Prices inside the (-100, +100) band do not name a price and come back as
+    missing, matching `american_to_probability`.
+    """
+    odds = np.asarray(pd.to_numeric(pd.Series(odds), errors="coerce"), float)
+    won = np.asarray(won, bool)
+    push = np.broadcast_to(np.asarray(push, bool), odds.shape)
+    valid = np.abs(odds) >= 100.0
+    with np.errstate(divide="ignore", invalid="ignore"):
+        payout = np.where(odds < 0, 100.0 / np.where(odds < 0, -odds, 1.0), odds / 100.0)
+    profit = np.where(push, 0.0, np.where(won, payout, -1.0))
+    return np.where(valid, profit, np.nan)
+
+
+def moneyline_bets(forecasts: pd.DataFrame, market: pd.DataFrame, probability: str,
+                   edge: float = 0.0) -> pd.DataFrame:
+    """One flat unit wherever a forecast prices an edge at the quoted line.
+
+    The comparison is against the **vig-included** implied probability, because
+    that is the price actually on offer. Comparing a forecast to a no-vig
+    probability and then collecting a vig-included payout is the classic way to
+    manufacture an edge that does not exist.
+
+    A game yields at most one bet: the two quoted probabilities sum to more
+    than one while the forecast's sum to exactly one, so at most one side can
+    show a positive edge.
+    """
+    needed = ("game_id", "season", "home_win", probability)
+    missing = [column for column in needed if column not in forecasts.columns]
+    if missing:
+        raise ValueError(f"Forecast frame is missing {missing}")
+
+    quoted = market[["game_id", "home_moneyline", "away_moneyline"]].copy()
+    quoted["implied_home"] = american_to_probability(quoted.home_moneyline)
+    quoted["implied_away"] = american_to_probability(quoted.away_moneyline)
+    quoted = quoted.loc[quoted.implied_home.notna() & quoted.implied_away.notna()]
+
+    frame = forecasts.merge(quoted, on="game_id", how="inner")
+    model_home = frame[probability].to_numpy(float)
+    outcome = frame.home_win.to_numpy(float)
+    push = outcome == 0.5
+
+    rows = []
+    for side, model, implied, odds, won in (
+        ("home", model_home, frame.implied_home.to_numpy(float),
+         frame.home_moneyline.to_numpy(float), outcome == 1.0),
+        ("away", 1.0 - model_home, frame.implied_away.to_numpy(float),
+         frame.away_moneyline.to_numpy(float), outcome == 0.0),
+    ):
+        taken = (model - implied) > edge
+        if not taken.any():
+            continue
+        rows.append(pd.DataFrame({
+            "game_id": frame.game_id.to_numpy()[taken],
+            "season": frame.season.to_numpy()[taken],
+            "side": side,
+            "odds": odds[taken],
+            "model": model[taken],
+            "implied": implied[taken],
+            "edge": (model - implied)[taken],
+            "profit": american_profit(odds[taken], won[taken], push[taken]),
+        }))
+    if not rows:
+        return pd.DataFrame(columns=["game_id", "season", "side", "odds", "model",
+                                     "implied", "edge", "profit"])
+    bets = pd.concat(rows, ignore_index=True)
+    if bets.game_id.duplicated().any():
+        raise AssertionError("A game produced bets on both sides, which the prices forbid")
+    return bets.sort_values(["season", "game_id"]).reset_index(drop=True)
+
+
+def roi(bets: pd.DataFrame) -> float:
+    """Return per flat unit staked. A push stakes a unit and returns it."""
+    return float(bets.profit.mean()) if len(bets) else float("nan")
+
+
 def market_probabilities(market: pd.DataFrame) -> pd.DataFrame:
     """Home win probability from a closing moneyline, both de-vig methods."""
     home_q = american_to_probability(market.home_moneyline)

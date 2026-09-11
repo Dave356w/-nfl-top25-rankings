@@ -822,6 +822,83 @@ to 0.2188, so the walk-forward was not optimistic about absolute accuracy. And
 the margin model's sealed RMSE of 12.99 against the walk-forward's 13.58 is
 the sealed seasons being less variable, not the model improving.
 
+### Addendum: would backing it have made money?
+
+Not a phase of this plan — no betting model was ever proposed — but the
+question a forecast invites, so it is answered with the same discipline and
+kept reproducible in `tools/backtest_team_outcome_roi.py` and
+`model/team_outcome_roi.json`.
+
+**No.** One flat unit staked wherever a forecast prices an edge at the quoted
+closing moneyline, priced against the **vig-included** quote because that is
+the price on offer:
+
+| Forecast | Span | Bets | ROI | 95% interval |
+| --- | --- | ---: | ---: | :---: |
+| Fitted Elo | 2007-2023 | 4,093 | −5.57% | [−11.46%, +0.38%] |
+| Candidate | 2007-2023 | 3,988 | −4.12% | [−9.78%, +1.67%] |
+| Fitted Elo | 2024-2025 | 489 | −9.47% | [−22.73%, +3.59%] |
+| Candidate | 2024-2025 | 451 | −4.29% | [−16.67%, +8.42%] |
+
+Season-block intervals this wide mean no single row is decisive on its own.
+The finding rests on the direction being identical in every span, every model
+and every threshold from 0% to 15% — twelve cells, all negative.
+
+Three things make the result legible.
+
+- **The models claim an edge on about 90% of games.** A forecast that finds
+  positive expected value nine times in ten has not found edges; it is
+  calibrated differently from the market. A genuine edge appears on a small
+  minority.
+- **The loss is worse than no skill.** The mean overround is 2.7%, so a
+  bettor picking sides at random loses about 1.4% per flat unit. Losing 4-6%
+  means the selections are worse than random: the model disagrees most where
+  the market is most confident, which is where its own errors are largest.
+- **This is §8's Brier gap in different units.** A forecast that loses to the
+  market on a proper scoring rule cannot systematically find value at that
+  market's prices. The 0.0141 gap and the negative ROI are one fact told twice.
+
+The threshold sweep is recorded as a diagnostic and nothing is read off its
+best cell; that selection is what the rest of this project refuses. Prices are
+closing moneylines from one book, with no line shopping, no opening-line
+comparison and no stake sizing. Nothing here is promoted, published, or advice.
+
+### Addendum: would backing it have made money?
+
+Not a phase of this plan — no betting model was ever proposed — but the
+question a forecast invites, kept reproducible in
+`tools/backtest_team_outcome_roi.py` and `model/team_outcome_roi.json`.
+
+**No.** One flat unit staked wherever a forecast prices an edge at the quoted
+closing moneyline, priced against the **vig-included** quote because that is
+the price on offer:
+
+| Forecast | Span | Bets | ROI | 95% interval |
+| --- | --- | ---: | ---: | :---: |
+| Fitted Elo | 2007-2023 | 4,093 | −5.57% | [−11.46%, +0.38%] |
+| Candidate | 2007-2023 | 3,988 | −4.12% | [−9.78%, +1.67%] |
+| Fitted Elo | 2024-2025 | 489 | −9.47% | [−22.73%, +3.59%] |
+| Candidate | 2024-2025 | 451 | −4.29% | [−16.67%, +8.42%] |
+
+Season-block intervals this wide mean no single row is decisive alone. The
+finding rests on the direction being identical in every span, model and
+threshold from 0% to 15% — twelve cells, all negative.
+
+- **The models claim an edge on about 90% of games.** A forecast finding value
+  nine times in ten has not found edges; it is calibrated differently from the
+  market. A genuine edge appears on a small minority.
+- **The loss is worse than no skill.** A bettor picking sides at random loses
+  about half the overround, near 1.4% per unit. Losing 4-6% means the
+  selections are worse than random: the model disagrees most where the market
+  is most confident, which is where its own errors are largest.
+- **This is §8's Brier gap in other units.** A forecast that loses to the
+  market on a proper scoring rule cannot systematically find value at that
+  market's prices.
+
+The threshold sweep is a diagnostic and nothing is read off its best cell.
+Prices are closing moneylines from one book, with no line shopping and no
+stake sizing. Nothing here is promoted, published, or advice.
+
 ## 13. What would invalidate this plan
 
 - **nflverse restates history.** Rosters, depth charts and injury feeds are

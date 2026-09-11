@@ -115,6 +115,8 @@ pipeline/team_outcome_eval.py  de-vig, metrics and interval estimates
 pipeline/team_outcome_fit.py   the ridge logistic and linear fitters
 tools/build_team_outcome_model.py  the preregistered walk-forward candidate
 tools/read_team_outcome_seal.py    the single sealed read; spent
+tools/backtest_team_outcome_roi.py flat-unit ROI against closing moneylines
+tools/backtest_team_outcome_roi.py flat-unit ROI against closing moneylines
 docs/team-outcome-prereg.md    what the model will be, frozen before fitting
 tools/                      offline calibration scripts (see below)
 tests/                      shape tests for every published payload
@@ -726,6 +728,33 @@ thing that made this a candidate rather than a repackaged Elo did not. No win
 probability is displayed, and nothing is promoted. See
 [`docs/team-outcome-model-plan.md`](docs/team-outcome-model-plan.md) for the
 full disposition.
+
+A forecast invites one more question, so it is answered and kept reproducible:
+
+```bash
+python tools/backtest_team_outcome_roi.py --draws 2000
+```
+
+Backing either model at the closing moneyline loses money — about −4% to −6%
+per flat unit across both spans, negative in all twelve cells measured. Bets
+are priced against the vig-included quote, because that is the price on offer.
+Two numbers explain it: the models claim an edge on roughly 90% of games, which
+is not what finding an edge looks like, and the loss exceeds the ~1.4% a
+no-skill bettor pays in hold. Writes `model/team_outcome_roi.json`. Not advice.
+
+A forecast invites one more question, so it is answered and kept reproducible:
+
+```bash
+python tools/backtest_team_outcome_roi.py --draws 2000
+```
+
+Backing either model at the closing moneyline loses money — about −4% to −6%
+per flat unit across both the walk-forward and sealed spans, negative in every
+one of the twelve cells measured. Bets are priced against the vig-included
+quote, because that is the price on offer. Two numbers explain it: the models
+claim an edge on roughly 90% of games, which is not what finding an edge looks
+like, and the loss is larger than the ~1.4% a no-skill bettor pays in hold.
+Writes `model/team_outcome_roi.json`. Nothing here is advice.
 
 ### Historical component-prior gate
 
