@@ -27,6 +27,7 @@ from pipeline import team_outcome_core as core
 from pipeline import team_outcome_eval as ev
 from pipeline import team_outcome_fit as fit
 from tools.build_team_outcome_corpus import pull, pull_fantasy, seasons_arg, CACHE
+from tools.backtest_team_outcome_roi import summarize as roi_summary, breakdown as roi_breakdown
 
 
 def descriptive(frame: pd.DataFrame, neutral_share: float = 0.2) -> dict:
@@ -129,6 +130,19 @@ def main():
 
     market = ev.market_probabilities(corpus.market)
     priced = scored.merge(market, on="game_id", how="inner")
+
+    # Would backing the core have made money? Same staking rules as
+    # tools/backtest_team_outcome_roi.py: one flat unit, priced against the
+    # vig-included quote, a tie is a push.
+    roi = {}
+    for name in ("core_only", "elo_only", "elo_plus_core"):
+        bets = ev.moneyline_bets(scored, corpus.market, name)
+        roi[name] = {
+            **roi_summary(bets, args.draws, args.seed),
+            "share_of_games_with_a_claimed_edge": round(float(len(bets) / len(priced)), 4)
+            if len(priced) else None,
+            "breakdown": roi_breakdown(bets),
+        }
     artifact = {
         "schema": 1,
         "phase": "fixed-core hypothesis at scale",
@@ -153,8 +167,10 @@ def main():
         "market_context": {
             "n": int(len(priced)),
             "core_only_brier": round(ev.brier(priced, "core_only"), 4),
+            "elo_only_brier": round(ev.brier(priced, "elo_only"), 4),
             "market_shin_brier": round(ev.brier(priced, "market_shin"), 4),
         },
+        "flat_unit_roi": roi,
         "limitations": [
             "The instrument is a lagged rolling average, not Yahoo salary. This tests the "
             "structure of the hypothesis, not whether Yahoo's pricing carries information.",
@@ -184,6 +200,14 @@ def main():
               f"auc {block['auc']:.4f}")
     for name, block in comparisons.items():
         print(f"    {name:28s} {block['point']:+.4f} [{block['low']:+.4f}, {block['high']:+.4f}]")
+    print("  flat-unit ROI against closing moneylines:")
+    for name, block in roi.items():
+        if not block["bets"]:
+            print(f"    {name:16s} no bets"); continue
+        low, high = block["roi_interval"]
+        print(f"    {name:16s} bets {block['bets']:5d}  ROI {block['roi']:+7.2%}  "
+              f"[{low:+.2%}, {high:+.2%}]  units {block['units']:+8.1f}  "
+              f"edge claimed on {block['share_of_games_with_a_claimed_edge']:.1%}")
     return 0
 
 

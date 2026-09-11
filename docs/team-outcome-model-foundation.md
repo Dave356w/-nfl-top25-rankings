@@ -307,6 +307,28 @@ Three results, none of which the 67 games could reach.
   whose players have been producing fantasy points is a team that has been
   winning.
 
+Backing it at the closing moneyline would have lost money, on the same staking
+rules as the rest of the project — one flat unit wherever the model prices an
+edge, against the vig-included quote, a tie a push:
+
+| Forecast | Bets | ROI | 95% interval | Units |
+| --- | ---: | ---: | :---: | ---: |
+| Fixed core alone | 4,256 | −5.29% | [−10.46%, +0.02%] | −225.0 |
+| Elo alone | 4,093 | −5.57% | [−11.46%, +0.38%] | −228.1 |
+| Elo plus fixed core | 4,056 | −5.26% | [−10.72%, +0.60%] | −213.4 |
+
+The three are indistinguishable from each other and all clearly negative. The
+core's marginally better ROI than Elo despite a clearly worse Brier is not a
+contradiction — ROI depends on where a model disagrees and at what price, not
+on its overall calibration — but the gap is far inside the noise and should not
+be read as the core finding value Elo misses.
+
+The same tell as the rest of the project shows up more strongly here: the core
+prices an edge on **94.5%** of games. A model that sees value nineteen times in
+twenty has not found edges. Its worst bucket is long underdogs at +300 or
+better, −14.18% over 943 bets, which is where a rolling-average team strength
+disagrees most violently with a market that knows about the injury.
+
 So the hypothesis is real and now properly established — and largely redundant
 with a simpler measure of the same thing. Whether Yahoo's salary-based
 expectations carry something a rolling average does not is still open, and
