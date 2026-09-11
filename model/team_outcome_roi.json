@@ -1,0 +1,340 @@
+{
+  "schema": 1,
+  "phase": "addendum to P4",
+  "as_of_utc": "2026-09-11T22:51:15.499476+00:00",
+  "question": "Would backing these forecasts at the closing moneyline have made money?",
+  "answer": "No. Every span, model and threshold measured is negative.",
+  "staking": "one flat unit per bet, priced against the vig-included quote; a tie is a push and returns the stake",
+  "results": {
+    "walk_forward": {
+      "fitted_elo": {
+        "bets": 4093,
+        "roi": -0.0557,
+        "roi_interval": [
+          -0.1146,
+          0.0038
+        ],
+        "units": -228.1,
+        "seasons": [
+          2007,
+          2023
+        ],
+        "priced_games": 4505,
+        "share_of_games_with_a_claimed_edge": 0.9085,
+        "breakdown": {
+          "by_price": [
+            {
+              "price": "<= -300",
+              "bets": 122,
+              "roi": 0.0695
+            },
+            {
+              "price": "-300..-150",
+              "bets": 504,
+              "roi": -0.0848
+            },
+            {
+              "price": "-150..+100",
+              "bets": 478,
+              "roi": -0.0628
+            },
+            {
+              "price": "+100..+200",
+              "bets": 1394,
+              "roi": -0.0168
+            },
+            {
+              "price": "+200..+300",
+              "bets": 792,
+              "roi": -0.0586
+            },
+            {
+              "price": "> +300",
+              "bets": 803,
+              "roi": -0.1171
+            }
+          ],
+          "favourites": {
+            "bets": 1099,
+            "roi": -0.0594
+          },
+          "underdogs": {
+            "bets": 2994,
+            "roi": -0.0544
+          }
+        }
+      },
+      "candidate": {
+        "bets": 3988,
+        "roi": -0.0412,
+        "roi_interval": [
+          -0.0978,
+          0.0167
+        ],
+        "units": -164.4,
+        "seasons": [
+          2007,
+          2023
+        ],
+        "priced_games": 4505,
+        "share_of_games_with_a_claimed_edge": 0.8852,
+        "breakdown": {
+          "by_price": [
+            {
+              "price": "<= -300",
+              "bets": 126,
+              "roi": 0.025
+            },
+            {
+              "price": "-300..-150",
+              "bets": 444,
+              "roi": -0.0571
+            },
+            {
+              "price": "-150..+100",
+              "bets": 447,
+              "roi": -0.0092
+            },
+            {
+              "price": "+100..+200",
+              "bets": 1386,
+              "roi": 0.018
+            },
+            {
+              "price": "+200..+300",
+              "bets": 792,
+              "roi": -0.0625
+            },
+            {
+              "price": "> +300",
+              "bets": 793,
+              "roi": -0.1433
+            }
+          ],
+          "favourites": {
+            "bets": 1013,
+            "roi": -0.026
+          },
+          "underdogs": {
+            "bets": 2975,
+            "roi": -0.0464
+          }
+        }
+      }
+    },
+    "sealed": {
+      "fitted_elo": {
+        "bets": 489,
+        "roi": -0.0947,
+        "roi_interval": [
+          -0.2273,
+          0.0359
+        ],
+        "units": -46.3,
+        "seasons": [
+          2024,
+          2025
+        ],
+        "priced_games": 570,
+        "share_of_games_with_a_claimed_edge": 0.8579,
+        "breakdown": {
+          "by_price": [
+            {
+              "price": "<= -300",
+              "bets": 10,
+              "roi": -0.1165
+            },
+            {
+              "price": "-300..-150",
+              "bets": 64,
+              "roi": 0.0088
+            },
+            {
+              "price": "-150..+100",
+              "bets": 59,
+              "roi": 0.1174
+            },
+            {
+              "price": "+100..+200",
+              "bets": 178,
+              "roi": -0.1627
+            },
+            {
+              "price": "+200..+300",
+              "bets": 94,
+              "roi": -0.0803
+            },
+            {
+              "price": "> +300",
+              "bets": 84,
+              "roi": -0.1917
+            }
+          ],
+          "favourites": {
+            "bets": 130,
+            "roi": 0.0563
+          },
+          "underdogs": {
+            "bets": 359,
+            "roi": -0.1493
+          }
+        }
+      },
+      "candidate": {
+        "bets": 451,
+        "roi": -0.0429,
+        "roi_interval": [
+          -0.1667,
+          0.0842
+        ],
+        "units": -19.3,
+        "seasons": [
+          2024,
+          2025
+        ],
+        "priced_games": 570,
+        "share_of_games_with_a_claimed_edge": 0.7912,
+        "breakdown": {
+          "by_price": [
+            {
+              "price": "<= -300",
+              "bets": 15,
+              "roi": -0.0101
+            },
+            {
+              "price": "-300..-150",
+              "bets": 55,
+              "roi": 0.1284
+            },
+            {
+              "price": "-150..+100",
+              "bets": 55,
+              "roi": -0.0996
+            },
+            {
+              "price": "+100..+200",
+              "bets": 166,
+              "roi": -0.1028
+            },
+            {
+              "price": "+200..+300",
+              "bets": 86,
+              "roi": 0.0302
+            },
+            {
+              "price": "> +300",
+              "bets": 74,
+              "roi": -0.0851
+            }
+          ],
+          "favourites": {
+            "bets": 119,
+            "roi": 0.0288
+          },
+          "underdogs": {
+            "bets": 332,
+            "roi": -0.0686
+          }
+        }
+      }
+    }
+  },
+  "threshold_sweep_diagnostic": [
+    {
+      "edge": 0.0,
+      "bets": 4093,
+      "roi": -0.0557,
+      "roi_interval": [
+        -0.1172,
+        0.0015
+      ],
+      "units": -228.1,
+      "seasons": [
+        2007,
+        2023
+      ]
+    },
+    {
+      "edge": 0.02,
+      "bets": 3481,
+      "roi": -0.0549,
+      "roi_interval": [
+        -0.1143,
+        0.0104
+      ],
+      "units": -191.2,
+      "seasons": [
+        2007,
+        2023
+      ]
+    },
+    {
+      "edge": 0.05,
+      "bets": 2599,
+      "roi": -0.0487,
+      "roi_interval": [
+        -0.1228,
+        0.0245
+      ],
+      "units": -126.5,
+      "seasons": [
+        2007,
+        2023
+      ]
+    },
+    {
+      "edge": 0.08,
+      "bets": 1860,
+      "roi": -0.0424,
+      "roi_interval": [
+        -0.1121,
+        0.0465
+      ],
+      "units": -78.9,
+      "seasons": [
+        2007,
+        2023
+      ]
+    },
+    {
+      "edge": 0.1,
+      "bets": 1435,
+      "roi": -0.0621,
+      "roi_interval": [
+        -0.1493,
+        0.0396
+      ],
+      "units": -89.1,
+      "seasons": [
+        2007,
+        2023
+      ]
+    },
+    {
+      "edge": 0.15,
+      "bets": 687,
+      "roi": -0.0378,
+      "roi_interval": [
+        -0.1746,
+        0.1216
+      ],
+      "units": -25.9,
+      "seasons": [
+        2007,
+        2023
+      ]
+    }
+  ],
+  "reference": {
+    "mean_overround": 0.0272,
+    "no_skill_loss_per_unit": 0.0136,
+    "note": "A bettor with no skill loses roughly half the overround per flat unit. Losing more than that means the selections are worse than random."
+  },
+  "limitations": [
+    "Closing moneylines: the most efficient price of the week, and the hardest to beat.",
+    "One book, no line shopping, no opening-line comparison, no stake sizing, no limits.",
+    "Season-block bootstrap intervals are wide; the finding rests on the direction being consistent across every span, model and threshold, not on one interval.",
+    "The sealed seasons were spent at P4, so they are no longer an untouched holdout.",
+    "Nothing here is promoted, published, or advice."
+  ]
+}

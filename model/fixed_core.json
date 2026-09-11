@@ -1,0 +1,935 @@
+{
+  "schema": 1,
+  "phase": "fixed-core hypothesis at scale",
+  "as_of_utc": "2026-09-11T23:20:11.108907+00:00",
+  "hypothesis": "A fixed 1 QB / 3 RB / 3 WR / 2 TE / 1 DEF core, summed and differenced, carries team-outcome signal.",
+  "instrument": "nflverse lagged eight-appearance Yahoo half-PPR production, not Yahoo salary; see pipeline/team_outcome_core.py",
+  "corpus": {
+    "games": 4594,
+    "seasons": [
+      2007,
+      2023
+    ],
+    "unit_weeks": 164483,
+    "complete_cores": 4594,
+    "original_study_games": 67
+  },
+  "as_of_audit": {
+    "checkpoints": 572,
+    "clean": true,
+    "findings": [],
+    "canary_detected": true
+  },
+  "descriptive": {
+    "neutral_band": 4.568,
+    "sign_accuracy": 0.5854,
+    "home_baseline": 0.5599,
+    "edge_correlation_with_margin": 0.2351,
+    "tiers": [
+      {
+        "tier": "negative",
+        "games": 1826,
+        "home_wins": 842,
+        "home_win_rate": 0.4611,
+        "average_edge": -16.95
+      },
+      {
+        "tier": "neutral",
+        "games": 919,
+        "home_wins": 499,
+        "home_win_rate": 0.543,
+        "average_edge": -0.01
+      },
+      {
+        "tier": "positive",
+        "games": 1849,
+        "home_wins": 1231,
+        "home_win_rate": 0.6658,
+        "average_edge": 16.87
+      }
+    ],
+    "quintiles": [
+      {
+        "quintile": 1,
+        "games": 919,
+        "average_edge": -24.47,
+        "home_win_rate": 0.4287,
+        "average_margin": -2.64
+      },
+      {
+        "quintile": 2,
+        "games": 919,
+        "average_edge": -9.26,
+        "home_win_rate": 0.4951,
+        "average_margin": 0.17
+      },
+      {
+        "quintile": 3,
+        "games": 918,
+        "average_edge": 0.11,
+        "home_win_rate": 0.5425,
+        "average_margin": 1.82
+      },
+      {
+        "quintile": 4,
+        "games": 919,
+        "average_edge": 9.64,
+        "home_win_rate": 0.6268,
+        "average_margin": 4.75
+      },
+      {
+        "quintile": 5,
+        "games": 919,
+        "average_edge": 24.24,
+        "home_win_rate": 0.7062,
+        "average_margin": 6.87
+      }
+    ]
+  },
+  "descriptive_complete_cores_only": {
+    "neutral_band": 4.568,
+    "sign_accuracy": 0.5854,
+    "home_baseline": 0.5599,
+    "edge_correlation_with_margin": 0.2351,
+    "tiers": [
+      {
+        "tier": "negative",
+        "games": 1826,
+        "home_wins": 842,
+        "home_win_rate": 0.4611,
+        "average_edge": -16.95
+      },
+      {
+        "tier": "neutral",
+        "games": 919,
+        "home_wins": 499,
+        "home_win_rate": 0.543,
+        "average_edge": -0.01
+      },
+      {
+        "tier": "positive",
+        "games": 1849,
+        "home_wins": 1231,
+        "home_win_rate": 0.6658,
+        "average_edge": 16.87
+      }
+    ],
+    "quintiles": [
+      {
+        "quintile": 1,
+        "games": 919,
+        "average_edge": -24.47,
+        "home_win_rate": 0.4287,
+        "average_margin": -2.64
+      },
+      {
+        "quintile": 2,
+        "games": 919,
+        "average_edge": -9.26,
+        "home_win_rate": 0.4951,
+        "average_margin": 0.17
+      },
+      {
+        "quintile": 3,
+        "games": 918,
+        "average_edge": 0.11,
+        "home_win_rate": 0.5425,
+        "average_margin": 1.82
+      },
+      {
+        "quintile": 4,
+        "games": 919,
+        "average_edge": 9.64,
+        "home_win_rate": 0.6268,
+        "average_margin": 4.75
+      },
+      {
+        "quintile": 5,
+        "games": 919,
+        "average_edge": 24.24,
+        "home_win_rate": 0.7062,
+        "average_margin": 6.87
+      }
+    ]
+  },
+  "walk_forward": {
+    "home_only": {
+      "n": 4594,
+      "accuracy": 0.5613,
+      "brier": 0.2456,
+      "log_loss": 0.6858,
+      "auc": 0.5043,
+      "ece": 0.0177,
+      "slope": 1.3757,
+      "curve": [
+        {
+          "bin": 0,
+          "n": 284,
+          "predicted": 0.5661,
+          "observed": 0.5669
+        },
+        {
+          "bin": 1,
+          "n": 570,
+          "predicted": 0.5673,
+          "observed": 0.5412
+        },
+        {
+          "bin": 2,
+          "n": 269,
+          "predicted": 0.5717,
+          "observed": 0.5
+        },
+        {
+          "bin": 3,
+          "n": 534,
+          "predicted": 0.5727,
+          "observed": 0.5908
+        },
+        {
+          "bin": 4,
+          "n": 534,
+          "predicted": 0.573,
+          "observed": 0.5721
+        },
+        {
+          "bin": 5,
+          "n": 534,
+          "predicted": 0.5732,
+          "observed": 0.5824
+        },
+        {
+          "bin": 6,
+          "n": 267,
+          "predicted": 0.5742,
+          "observed": 0.5225
+        },
+        {
+          "bin": 7,
+          "n": 534,
+          "predicted": 0.5745,
+          "observed": 0.559
+        },
+        {
+          "bin": 8,
+          "n": 534,
+          "predicted": 0.5747,
+          "observed": 0.5637
+        },
+        {
+          "bin": 9,
+          "n": 534,
+          "predicted": 0.5761,
+          "observed": 0.5684
+        }
+      ]
+    },
+    "core_only": {
+      "n": 4594,
+      "accuracy": 0.5839,
+      "brier": 0.2366,
+      "log_loss": 0.6672,
+      "auc": 0.6144,
+      "ece": 0.0255,
+      "slope": 1.1696,
+      "curve": [
+        {
+          "bin": 0,
+          "n": 460,
+          "predicted": 0.4244,
+          "observed": 0.4065
+        },
+        {
+          "bin": 1,
+          "n": 459,
+          "predicted": 0.4851,
+          "observed": 0.4793
+        },
+        {
+          "bin": 2,
+          "n": 459,
+          "predicted": 0.5168,
+          "observed": 0.4586
+        },
+        {
+          "bin": 3,
+          "n": 460,
+          "predicted": 0.5415,
+          "observed": 0.5022
+        },
+        {
+          "bin": 4,
+          "n": 459,
+          "predicted": 0.5643,
+          "observed": 0.5381
+        },
+        {
+          "bin": 5,
+          "n": 459,
+          "predicted": 0.5865,
+          "observed": 0.5468
+        },
+        {
+          "bin": 6,
+          "n": 460,
+          "predicted": 0.6087,
+          "observed": 0.6424
+        },
+        {
+          "bin": 7,
+          "n": 459,
+          "predicted": 0.6335,
+          "observed": 0.6351
+        },
+        {
+          "bin": 8,
+          "n": 459,
+          "predicted": 0.6617,
+          "observed": 0.6863
+        },
+        {
+          "bin": 9,
+          "n": 460,
+          "predicted": 0.7094,
+          "observed": 0.7174
+        }
+      ]
+    },
+    "elo_only": {
+      "n": 4594,
+      "accuracy": 0.634,
+      "brier": 0.2239,
+      "log_loss": 0.64,
+      "auc": 0.6728,
+      "ece": 0.0202,
+      "slope": 0.9682,
+      "curve": [
+        {
+          "bin": 0,
+          "n": 460,
+          "predicted": 0.2981,
+          "observed": 0.3141
+        },
+        {
+          "bin": 1,
+          "n": 459,
+          "predicted": 0.4048,
+          "observed": 0.3813
+        },
+        {
+          "bin": 2,
+          "n": 459,
+          "predicted": 0.4676,
+          "observed": 0.4564
+        },
+        {
+          "bin": 3,
+          "n": 460,
+          "predicted": 0.5164,
+          "observed": 0.4707
+        },
+        {
+          "bin": 4,
+          "n": 459,
+          "predicted": 0.5609,
+          "observed": 0.573
+        },
+        {
+          "bin": 5,
+          "n": 459,
+          "predicted": 0.6017,
+          "observed": 0.5893
+        },
+        {
+          "bin": 6,
+          "n": 460,
+          "predicted": 0.6423,
+          "observed": 0.6283
+        },
+        {
+          "bin": 7,
+          "n": 459,
+          "predicted": 0.6845,
+          "observed": 0.6394
+        },
+        {
+          "bin": 8,
+          "n": 459,
+          "predicted": 0.7363,
+          "observed": 0.7516
+        },
+        {
+          "bin": 9,
+          "n": 460,
+          "predicted": 0.8157,
+          "observed": 0.8087
+        }
+      ]
+    },
+    "elo_plus_core": {
+      "n": 4594,
+      "accuracy": 0.6383,
+      "brier": 0.2232,
+      "log_loss": 0.6384,
+      "auc": 0.6757,
+      "ece": 0.0231,
+      "slope": 0.977,
+      "curve": [
+        {
+          "bin": 0,
+          "n": 460,
+          "predicted": 0.2959,
+          "observed": 0.3033
+        },
+        {
+          "bin": 1,
+          "n": 459,
+          "predicted": 0.4031,
+          "observed": 0.4074
+        },
+        {
+          "bin": 2,
+          "n": 459,
+          "predicted": 0.4686,
+          "observed": 0.4118
+        },
+        {
+          "bin": 3,
+          "n": 460,
+          "predicted": 0.5162,
+          "observed": 0.5326
+        },
+        {
+          "bin": 4,
+          "n": 459,
+          "predicted": 0.5607,
+          "observed": 0.5185
+        },
+        {
+          "bin": 5,
+          "n": 459,
+          "predicted": 0.6002,
+          "observed": 0.6187
+        },
+        {
+          "bin": 6,
+          "n": 460,
+          "predicted": 0.6416,
+          "observed": 0.6011
+        },
+        {
+          "bin": 7,
+          "n": 459,
+          "predicted": 0.6866,
+          "observed": 0.6634
+        },
+        {
+          "bin": 8,
+          "n": 459,
+          "predicted": 0.7387,
+          "observed": 0.7495
+        },
+        {
+          "bin": 9,
+          "n": 460,
+          "predicted": 0.8175,
+          "observed": 0.8065
+        }
+      ]
+    }
+  },
+  "walk_forward_complete_cores_only": {
+    "home_only": {
+      "n": 4594,
+      "accuracy": 0.5613,
+      "brier": 0.2456,
+      "log_loss": 0.6858,
+      "auc": 0.5043,
+      "ece": 0.0177,
+      "slope": 1.3757,
+      "curve": [
+        {
+          "bin": 0,
+          "n": 284,
+          "predicted": 0.5661,
+          "observed": 0.5669
+        },
+        {
+          "bin": 1,
+          "n": 570,
+          "predicted": 0.5673,
+          "observed": 0.5412
+        },
+        {
+          "bin": 2,
+          "n": 269,
+          "predicted": 0.5717,
+          "observed": 0.5
+        },
+        {
+          "bin": 3,
+          "n": 534,
+          "predicted": 0.5727,
+          "observed": 0.5908
+        },
+        {
+          "bin": 4,
+          "n": 534,
+          "predicted": 0.573,
+          "observed": 0.5721
+        },
+        {
+          "bin": 5,
+          "n": 534,
+          "predicted": 0.5732,
+          "observed": 0.5824
+        },
+        {
+          "bin": 6,
+          "n": 267,
+          "predicted": 0.5742,
+          "observed": 0.5225
+        },
+        {
+          "bin": 7,
+          "n": 534,
+          "predicted": 0.5745,
+          "observed": 0.559
+        },
+        {
+          "bin": 8,
+          "n": 534,
+          "predicted": 0.5747,
+          "observed": 0.5637
+        },
+        {
+          "bin": 9,
+          "n": 534,
+          "predicted": 0.5761,
+          "observed": 0.5684
+        }
+      ]
+    },
+    "core_only": {
+      "n": 4594,
+      "accuracy": 0.5839,
+      "brier": 0.2366,
+      "log_loss": 0.6672,
+      "auc": 0.6144,
+      "ece": 0.0255,
+      "slope": 1.1696,
+      "curve": [
+        {
+          "bin": 0,
+          "n": 460,
+          "predicted": 0.4244,
+          "observed": 0.4065
+        },
+        {
+          "bin": 1,
+          "n": 459,
+          "predicted": 0.4851,
+          "observed": 0.4793
+        },
+        {
+          "bin": 2,
+          "n": 459,
+          "predicted": 0.5168,
+          "observed": 0.4586
+        },
+        {
+          "bin": 3,
+          "n": 460,
+          "predicted": 0.5415,
+          "observed": 0.5022
+        },
+        {
+          "bin": 4,
+          "n": 459,
+          "predicted": 0.5643,
+          "observed": 0.5381
+        },
+        {
+          "bin": 5,
+          "n": 459,
+          "predicted": 0.5865,
+          "observed": 0.5468
+        },
+        {
+          "bin": 6,
+          "n": 460,
+          "predicted": 0.6087,
+          "observed": 0.6424
+        },
+        {
+          "bin": 7,
+          "n": 459,
+          "predicted": 0.6335,
+          "observed": 0.6351
+        },
+        {
+          "bin": 8,
+          "n": 459,
+          "predicted": 0.6617,
+          "observed": 0.6863
+        },
+        {
+          "bin": 9,
+          "n": 460,
+          "predicted": 0.7094,
+          "observed": 0.7174
+        }
+      ]
+    },
+    "elo_only": {
+      "n": 4594,
+      "accuracy": 0.634,
+      "brier": 0.2239,
+      "log_loss": 0.64,
+      "auc": 0.6728,
+      "ece": 0.0202,
+      "slope": 0.9682,
+      "curve": [
+        {
+          "bin": 0,
+          "n": 460,
+          "predicted": 0.2981,
+          "observed": 0.3141
+        },
+        {
+          "bin": 1,
+          "n": 459,
+          "predicted": 0.4048,
+          "observed": 0.3813
+        },
+        {
+          "bin": 2,
+          "n": 459,
+          "predicted": 0.4676,
+          "observed": 0.4564
+        },
+        {
+          "bin": 3,
+          "n": 460,
+          "predicted": 0.5164,
+          "observed": 0.4707
+        },
+        {
+          "bin": 4,
+          "n": 459,
+          "predicted": 0.5609,
+          "observed": 0.573
+        },
+        {
+          "bin": 5,
+          "n": 459,
+          "predicted": 0.6017,
+          "observed": 0.5893
+        },
+        {
+          "bin": 6,
+          "n": 460,
+          "predicted": 0.6423,
+          "observed": 0.6283
+        },
+        {
+          "bin": 7,
+          "n": 459,
+          "predicted": 0.6845,
+          "observed": 0.6394
+        },
+        {
+          "bin": 8,
+          "n": 459,
+          "predicted": 0.7363,
+          "observed": 0.7516
+        },
+        {
+          "bin": 9,
+          "n": 460,
+          "predicted": 0.8157,
+          "observed": 0.8087
+        }
+      ]
+    },
+    "elo_plus_core": {
+      "n": 4594,
+      "accuracy": 0.6383,
+      "brier": 0.2232,
+      "log_loss": 0.6384,
+      "auc": 0.6757,
+      "ece": 0.0231,
+      "slope": 0.977,
+      "curve": [
+        {
+          "bin": 0,
+          "n": 460,
+          "predicted": 0.2959,
+          "observed": 0.3033
+        },
+        {
+          "bin": 1,
+          "n": 459,
+          "predicted": 0.4031,
+          "observed": 0.4074
+        },
+        {
+          "bin": 2,
+          "n": 459,
+          "predicted": 0.4686,
+          "observed": 0.4118
+        },
+        {
+          "bin": 3,
+          "n": 460,
+          "predicted": 0.5162,
+          "observed": 0.5326
+        },
+        {
+          "bin": 4,
+          "n": 459,
+          "predicted": 0.5607,
+          "observed": 0.5185
+        },
+        {
+          "bin": 5,
+          "n": 459,
+          "predicted": 0.6002,
+          "observed": 0.6187
+        },
+        {
+          "bin": 6,
+          "n": 460,
+          "predicted": 0.6416,
+          "observed": 0.6011
+        },
+        {
+          "bin": 7,
+          "n": 459,
+          "predicted": 0.6866,
+          "observed": 0.6634
+        },
+        {
+          "bin": 8,
+          "n": 459,
+          "predicted": 0.7387,
+          "observed": 0.7495
+        },
+        {
+          "bin": 9,
+          "n": 460,
+          "predicted": 0.8175,
+          "observed": 0.8065
+        }
+      ]
+    }
+  },
+  "comparisons": {
+    "core_only_vs_home_only": {
+      "point": -0.009,
+      "low": -0.0124,
+      "high": -0.0057,
+      "draws": 2000,
+      "skill_vs_reference": 0.0367,
+      "reference": "home_only"
+    },
+    "core_only_vs_elo_only": {
+      "point": 0.0127,
+      "low": 0.0077,
+      "high": 0.0177,
+      "draws": 2000,
+      "skill_vs_reference": -0.0569,
+      "reference": "elo_only"
+    },
+    "elo_plus_core_vs_elo_only": {
+      "point": -0.0007,
+      "low": -0.0017,
+      "high": 0.0003,
+      "draws": 2000,
+      "skill_vs_reference": 0.003,
+      "reference": "elo_only"
+    }
+  },
+  "market_context": {
+    "n": 4505,
+    "core_only_brier": 0.2368,
+    "elo_only_brier": 0.224,
+    "market_shin_brier": 0.21
+  },
+  "flat_unit_roi": {
+    "core_only": {
+      "bets": 4256,
+      "roi": -0.0529,
+      "roi_interval": [
+        -0.1046,
+        0.0002
+      ],
+      "units": -225.0,
+      "seasons": [
+        2007,
+        2023
+      ],
+      "share_of_games_with_a_claimed_edge": 0.9447,
+      "breakdown": {
+        "by_price": [
+          {
+            "price": "<= -300",
+            "bets": 2,
+            "roi": 0.2832
+          },
+          {
+            "price": "-300..-150",
+            "bets": 188,
+            "roi": -0.0756
+          },
+          {
+            "price": "-150..+100",
+            "bets": 396,
+            "roi": -0.0673
+          },
+          {
+            "price": "+100..+200",
+            "bets": 1692,
+            "roi": -0.0068
+          },
+          {
+            "price": "+200..+300",
+            "bets": 1035,
+            "roi": -0.0382
+          },
+          {
+            "price": "> +300",
+            "bets": 943,
+            "roi": -0.1418
+          }
+        ],
+        "favourites": {
+          "bets": 583,
+          "roi": -0.0674
+        },
+        "underdogs": {
+          "bets": 3673,
+          "roi": -0.0506
+        }
+      }
+    },
+    "elo_only": {
+      "bets": 4093,
+      "roi": -0.0557,
+      "roi_interval": [
+        -0.1146,
+        0.0038
+      ],
+      "units": -228.1,
+      "seasons": [
+        2007,
+        2023
+      ],
+      "share_of_games_with_a_claimed_edge": 0.9085,
+      "breakdown": {
+        "by_price": [
+          {
+            "price": "<= -300",
+            "bets": 122,
+            "roi": 0.0695
+          },
+          {
+            "price": "-300..-150",
+            "bets": 504,
+            "roi": -0.0848
+          },
+          {
+            "price": "-150..+100",
+            "bets": 478,
+            "roi": -0.0628
+          },
+          {
+            "price": "+100..+200",
+            "bets": 1394,
+            "roi": -0.0168
+          },
+          {
+            "price": "+200..+300",
+            "bets": 792,
+            "roi": -0.0586
+          },
+          {
+            "price": "> +300",
+            "bets": 803,
+            "roi": -0.1171
+          }
+        ],
+        "favourites": {
+          "bets": 1099,
+          "roi": -0.0594
+        },
+        "underdogs": {
+          "bets": 2994,
+          "roi": -0.0544
+        }
+      }
+    },
+    "elo_plus_core": {
+      "bets": 4056,
+      "roi": -0.0526,
+      "roi_interval": [
+        -0.1072,
+        0.006
+      ],
+      "units": -213.4,
+      "seasons": [
+        2007,
+        2023
+      ],
+      "share_of_games_with_a_claimed_edge": 0.9003,
+      "breakdown": {
+        "by_price": [
+          {
+            "price": "<= -300",
+            "bets": 126,
+            "roi": 0.0945
+          },
+          {
+            "price": "-300..-150",
+            "bets": 495,
+            "roi": -0.074
+          },
+          {
+            "price": "-150..+100",
+            "bets": 478,
+            "roi": -0.0512
+          },
+          {
+            "price": "+100..+200",
+            "bets": 1376,
+            "roi": -0.0267
+          },
+          {
+            "price": "+200..+300",
+            "bets": 787,
+            "roi": -0.0524
+          },
+          {
+            "price": "> +300",
+            "bets": 794,
+            "roi": -0.1087
+          }
+        ],
+        "favourites": {
+          "bets": 1094,
+          "roi": -0.0459
+        },
+        "underdogs": {
+          "bets": 2962,
+          "roi": -0.0551
+        }
+      }
+    }
+  },
+  "limitations": [
+    "The instrument is a lagged rolling average, not Yahoo salary. This tests the structure of the hypothesis, not whether Yahoo's pricing carries information.",
+    "Roster membership is the team a unit last appeared for. A player who is inactive this week still occupies a slot, because the corpus carries no pregame status feed.",
+    "2024-2025 are no longer an untouched holdout: the seal was spent at P4 on a different hypothesis. A clean final test of this one needs 2026.",
+    "Descriptive tables read their cuts off the evaluated games, as the original did."
+  ]
+}
