@@ -50,7 +50,27 @@ class PreregistrationTests(unittest.TestCase):
         self.assertEqual(tuple(self.record['sealed_seasons']),to.SEALED_SEASONS)
         for season in to.SEALED_SEASONS:
             self.assertIn(str(season),self.text)
-        self.assertFalse(self.record['sealed_read_recorded'])
+
+    def test_a_spent_seal_stays_spent_and_closes_the_amendment_route(self):
+        # P4 happened, so this record carries a sealed read. Nothing may reopen
+        # it: the stopping rule is the point of the whole mechanism.
+        self.assertTrue(self.record['sealed_read_recorded'])
+        self.assertTrue(self.record['sealed_read_utc'])
+        sealed=json.loads((to.ROOT/'model'/'team_outcome_sealed.json').read_text(encoding='utf-8'))
+        self.assertEqual(sealed['prereg_sha256'],self.record['sha256'])
+        self.assertEqual(sorted(sealed['sealed_seasons']),sorted(to.SEALED_SEASONS))
+        # An unchanged document is a no-op, so an attempted *amendment* is what
+        # the spent seal has to refuse. Exercised against copies: the real
+        # record is a one-shot object and the test must not be able to alter it.
+        with tempfile.TemporaryDirectory() as scratch:
+            document=Path(scratch)/'prereg.md'
+            record=Path(scratch)/'record.json'
+            document.write_text(self.text+'\nan attempted amendment\n',encoding='utf-8')
+            record.write_text(json.dumps(self.record),encoding='utf-8')
+            refused=freeze(document,record,'--reason','should be impossible now')
+            self.assertNotEqual(refused.returncode,0)
+            self.assertIn('seal is spent',refused.stderr)
+            self.assertEqual(json.loads(record.read_text(encoding='utf-8')),self.record)
 
     def test_the_decision_rule_excludes_the_edge_ablation_from_the_model_flag(self):
         rule=self.record['decision_rule']
@@ -87,6 +107,20 @@ class FreezeToolTests(unittest.TestCase):
 
     def read(self):
         return json.loads(self.record.read_text(encoding='utf-8'))
+
+    def test_the_sealed_read_tool_refuses_a_second_read(self):
+        import subprocess as sp
+        record=Path(self.dir.name)/'spent.json'
+        record.write_text(json.dumps({**json.loads(to.PREREG_RECORD.read_text(encoding='utf-8')),
+                                      'sealed_read_recorded':True,
+                                      'sealed_read_utc':'2026-01-01T00:00:00Z'}),encoding='utf-8')
+        reader=Path(__file__).resolve().parents[1]/'tools'/'read_team_outcome_seal.py'
+        out=Path(self.dir.name)/'never_written.json'
+        result=sp.run([sys.executable,str(reader),'--prereg-record',str(record),
+                       '--output',str(out)],capture_output=True,text=True)
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('Refusing to read the seal twice',result.stderr)
+        self.assertFalse(out.exists())
 
     def test_first_freeze_records_the_hash_and_a_repeat_is_a_no_op(self):
         self.assertEqual(freeze(self.document,self.record).returncode,0)

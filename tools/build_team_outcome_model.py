@@ -65,11 +65,20 @@ def select_ridge(train: pd.DataFrame, columns, target: str, kind: str):
     return best["ridge"], scores
 
 
-def walk_forward(design: pd.DataFrame, seasons, columns, label: str) -> pd.DataFrame:
-    """Fit on every earlier season, score the next. Never touches the seal."""
+def walk_forward(design: pd.DataFrame, seasons, columns, label: str,
+                 allow_sealed_training: bool = False) -> pd.DataFrame:
+    """Fit on every earlier season, score the next.
+
+    `allow_sealed_training` stays False everywhere except the P4 sealed read,
+    where the expanding window has to continue through the sealed block: the
+    2025 fold is fitted on everything before it, 2024 included. That is the
+    same procedure, not a new one, and it happens inside the single read.
+    """
     blocks, folds = [], []
     for season in seasons:
-        train = design.loc[design.season.lt(season) & ~design.season.isin(to.SEALED_SEASONS)]
+        train = design.loc[design.season.lt(season)]
+        if not allow_sealed_training:
+            train = train.loc[~train.season.isin(to.SEALED_SEASONS)]
         test = design.loc[design.season.eq(season)].copy()
         if train.empty or test.empty:
             continue

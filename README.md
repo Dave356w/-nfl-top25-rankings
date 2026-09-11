@@ -114,6 +114,7 @@ pipeline/team_outcome.py    the game corpus and its as-of feature harness
 pipeline/team_outcome_eval.py  de-vig, metrics and interval estimates
 pipeline/team_outcome_fit.py   the ridge logistic and linear fitters
 tools/build_team_outcome_model.py  the preregistered walk-forward candidate
+tools/read_team_outcome_seal.py    the single sealed read; spent
 docs/team-outcome-prereg.md    what the model will be, frozen before fitting
 tools/                      offline calibration scripts (see below)
 tests/                      shape tests for every published payload
@@ -701,7 +702,30 @@ specification to fit — the audit result decides that, never a score. Over the
 same 4,594 games the candidate scores a Brier of 0.2190 against fitted Elo's
 0.2239 and the market's 0.2100, passing every gate that can be evaluated before
 the seal is opened. Writes `model/team_outcome.json` with `approved: false`:
-the approval rule needs the sealed read, which has not happened.
+the approval rule needs the sealed read.
+
+Phase P4 spends the seal, once:
+
+```bash
+python tools/read_team_outcome_seal.py --draws 2000
+```
+
+It scores 2024 and 2025 — 570 games nothing else in the project had read — and
+then marks the preregistration spent, after which both the freeze tool and the
+reader refuse to reopen it. The frozen decision rule returned `approved: true`:
+the sealed Brier of 0.2188 landed inside the acceptance interval computed from
+the walk-forward before the read.
+
+The honest reading is narrower than that flag. The candidate's advantage over a
+fitted Elo baseline — 0.0049 with an interval clear of zero across 17 seasons —
+did not reproduce: on the sealed seasons both score 0.2188, a gap of +0.0001
+with an interval straddling zero. Sealed calibration also degraded to an ECE of
+0.0367, past the 0.025 the project's own calibration gate requires. So the gate
+as written asked whether the Brier *level* reproduced, and it did, while the
+thing that made this a candidate rather than a repackaged Elo did not. No win
+probability is displayed, and nothing is promoted. See
+[`docs/team-outcome-model-plan.md`](docs/team-outcome-model-plan.md) for the
+full disposition.
 
 ### Historical component-prior gate
 

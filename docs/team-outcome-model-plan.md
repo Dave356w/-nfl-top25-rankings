@@ -367,6 +367,9 @@ what makes the next round not need that label.
 
 ### 6.4 One read of the seal
 
+**Spent.** P4 read 2024-2025 on 2026-09-11. The result is in §12; these seasons
+are not available to any future evaluation.
+
 The sealed seasons are scored once. If the gates fail, the artifact records
 the failure and the model is not promoted. A second attempt requires a new
 sealed season — the next complete one — not a re-read of the same games with
@@ -547,7 +550,7 @@ edge, if at all, as negative/neutral/positive, and display no win probability.
 | P1 | baselines | **done** — see below |
 | P2 | preregistration | **done** — see below |
 | P3 | candidates, walk-forward | **done** — see below |
-| P4 | sealed read | G5 evaluated; artifact written with `approved` either way |
+| P4 | sealed read | **done, seal spent** — see below |
 | P5 | corpus-B ablation | full-slate retention checked; G7 evaluated and recorded, expected to fail on coverage |
 
 Every phase writes an artifact. No phase before P4 reads the seal.
@@ -755,6 +758,69 @@ Against the market the candidate closes about a third of P1's gap, from 0.0141
 to **0.0090** [0.0053, 0.0128]. G6 has no threshold and gates nothing; the
 market remains ahead, which is the expected outcome for a model that reads no
 market data.
+
+### P4 result: the rule says approved, and the evidence is weaker than that word
+
+`tools/read_team_outcome_seal.py` and `model/team_outcome_sealed.json`. The
+2024 and 2025 seasons — 570 games nothing in this project had read — were
+scored once. The seal is now spent: `model/team_outcome_prereg.json` records
+the read, and both the freeze tool and the reader refuse to reopen it.
+
+The acceptance interval was computed from the unsealed walk-forward **before**
+any sealed data was scored, and the run refuses to proceed unless the
+walk-forward reproduces the Brier the P3 artifact recorded.
+
+| | Walk-forward (2007-2023) | Sealed (2024-2025) |
+| --- | ---: | ---: |
+| Candidate Brier | 0.2190 | **0.2188** |
+| Fitted Elo Brier | 0.2239 | **0.2188** |
+| Candidate advantage over Elo | −0.0049 [−0.0072, −0.0026] | **+0.0001 [−0.0059, +0.0063]** |
+| ECE | 0.0187 | **0.0367** |
+| Gap to the no-vig market | 0.0090 | 0.0134 |
+
+**`approved_model` is `true`.** All six gates in the frozen decision rule
+passed, G5 included: the sealed Brier of 0.2188 sits inside the acceptance
+interval [0.2135, 0.2246]. That is what the preregistration committed to, and
+it is recorded as such.
+
+**It should not be promoted, and the same table says why.**
+
+- **The advantage over the baseline did not reproduce.** The candidate's whole
+  claim was that it beat a fitted Elo model — 0.0049 with an interval clear of
+  zero across 17 seasons. On the sealed seasons the two are indistinguishable:
+  0.2188 against 0.2188, a gap of +0.0001 with an interval straddling zero.
+  Elo was better in 2024 (0.2110 against 0.2136) and the candidate in 2025
+  (0.2241 against 0.2266), and they cancel.
+- **Calibration degraded past the project's own threshold.** Sealed ECE is
+  0.0367 against 0.0187 on the walk-forward. G2 requires ≤ 0.025 — applied to
+  the sealed seasons, the calibration gate would have failed. G2 was
+  preregistered against the walk-forward, so it passes as written.
+
+**G5 was the wrong gate, and the seal is what revealed it.** As frozen, G5
+asks whether the Brier *level* reproduces. It does, almost exactly. But a
+Brier level can reproduce while the model has no advantage over a baseline a
+tenth its complexity — which is precisely what happened. The gate should have
+required the *advantage* to reproduce: the candidate-minus-Elo gap inside the
+walk-forward interval for that gap, not the raw score inside the interval for
+the raw score.
+
+That correction is not applied here. Rewriting a gate after seeing the result
+it produced is the exact freedom this machinery exists to remove, and the
+2024-2025 seasons cannot be scored again under any rule. It is recorded as the
+first amendment the next preregistration must carry, and the next sealed season
+is 2026.
+
+**Disposition.** Do not display a win probability. Do not treat the
+play-by-play specification as established: its one out-of-sample test says it
+matches Elo. The defensible next step is a new preregistration with a
+gap-based G5, evaluated on 2026 once that season is complete, with the current
+model and fitted Elo both carried forward unchanged so the comparison is
+genuinely out of sample for both.
+
+Two things did hold up. The Brier *level* transferred almost exactly, 0.2190
+to 0.2188, so the walk-forward was not optimistic about absolute accuracy. And
+the margin model's sealed RMSE of 12.99 against the walk-forward's 13.58 is
+the sealed seasons being less variable, not the model improving.
 
 ## 13. What would invalidate this plan
 

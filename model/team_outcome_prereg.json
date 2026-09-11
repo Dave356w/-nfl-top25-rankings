@@ -22,7 +22,7 @@
     2024,
     2025
   ],
-  "sealed_read_recorded": false,
+  "sealed_read_recorded": true,
   "primary_metric": "brier on the win target, pooled over the walk-forward span",
   "decision_rule": "approved_model = G1 and G2 and G3 and G4 and G5 and G8; approved_edge = G7, a separate flag evaluated at P5",
   "specifications": {
@@ -35,5 +35,7 @@
     "A frozen hash constrains this document, not the honesty of the run it governs.",
     "Prior exposure is listed in section 1 of the document; this is not a blind protocol.",
     "Gradient boosting is deliberately not run; the deviation is recorded in section 5."
-  ]
+  ],
+  "sealed_read_utc": "2026-09-11T22:38:22.304243+00:00",
+  "sealed_read_artifact": "model/team_outcome_sealed.json"
 }
