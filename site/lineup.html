@@ -547,7 +547,9 @@ footer{
   // ask the same question of a different roster -- a waiver add, a drop, a
   // game-time benching -- without waiting for the next workflow run. The edit
   // lives in this browser; `lineup_roster.json` is still what the workflow reads.
-  var STORE_KEY = "nfl-lineup-roster-v1";
+  // v2 adds the published-roster fingerprint. This also retires stale v1
+  // edits that could hide a newly committed lineup_roster.json indefinitely.
+  var STORE_KEY = "nfl-lineup-roster-v2";
   var published = null;    // latest.json, exactly as the workflow published it
   var known = {};          // player key -> the row this run priced him at
   var pool = [];           // pool.json, fetched the first time the editor needs it
@@ -639,6 +641,10 @@ footer{
       raw = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
     } catch (e) { return null; }
     if (!raw || !raw.roster) return null;
+    if (!raw.base_roster || raw.base_roster !== published.roster_fingerprint) {
+      try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+      return null;
+    }
     var roster = raw.roster.filter(function (e) { return e && e.key && e.pos; });
     if (!roster.length) return null;
     // A benching is a call about one week's kickoff, so it expires with the run
@@ -655,7 +661,8 @@ footer{
         localStorage.removeItem(STORE_KEY);
       } else {
         localStorage.setItem(STORE_KEY, JSON.stringify({
-          roster: edits.roster, bench: edits.bench, run: published.run_date
+          roster: edits.roster, bench: edits.bench, run: published.run_date,
+          base_roster: published.roster_fingerprint
         }));
       }
     } catch (e) { /* private mode: the edit lasts for this page view only */ }

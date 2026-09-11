@@ -72,12 +72,19 @@ class PayloadTests(unittest.TestCase):
     def test_it_carries_every_key_the_page_reads(self):
         for key in ("status", "generated_utc", "snapshot_id", "run_date", "season", "week",
                     "objective", "slots", "totals", "counts", "starters", "bench",
-                    "benched_by_request", "projection", "log"):
+                    "benched_by_request", "roster_fingerprint", "projection", "log"):
             self.assertIn(key, self.payload)
         for key in PLAYER_KEYS:
             self.assertIn(key, self.payload["starters"][0])
             self.assertIn(key, self.payload["bench"][0])
         self.assertEqual(self.payload["projection"]["trained_through_season"], 2025)
+
+    def test_roster_fingerprint_tracks_committed_configuration_not_projection_order(self):
+        roster = _results()["roster"]
+        expected = "|".join(
+            f"{row.Key}:{row.Position}" for _, row in roster.iterrows()
+        )
+        self.assertEqual(self.payload["roster_fingerprint"], expected)
 
     def test_only_starters_carry_a_slot(self):
         slots = [row["slot"] for row in self.payload["starters"]]
