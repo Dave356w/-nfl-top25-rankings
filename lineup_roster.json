@@ -6,8 +6,8 @@
       "Position": "QB"
     },
     {
-      "Name": "Sam Darnold",
-      "Position": "QB"
+      "Name": "Emmett Johnson",
+      "Position": "RB"
     },
     {
       "Name": "James Cook III",
@@ -50,12 +50,20 @@
       "Position": "RB"
     },
     {
-      "Name": "Rashid Shaheed",
+      "Name": "Chris Brooks",
+      "Position": "RB"
+    },
+    {
+      "Name": "Tyrone Tracy Jr.",
       "Position": "WR"
     },
     {
-      "Name": "Isaac TeSlaa",
-      "Position": "WR"
+      "Name": "Rams",
+      "Position": "DEF"
+    },
+    {
+      "Name": "Broncos.",
+      "Position": "DEF"
     }
   ]
 }
