@@ -250,7 +250,8 @@ def _player_name(row: dict) -> str:
     return " ".join(filter(None, [row.get("firstName"), row.get("lastName")])).strip()
 
 
-def build_pool(slate: dict, payload: dict, history: NflverseHistory) -> tuple[pd.DataFrame, dict]:
+def build_pool(slate: dict, payload: dict, history: NflverseHistory,
+               apply_projection: bool = True) -> tuple[pd.DataFrame, dict]:
     """Build the exact-priced slate with only pregame nflverse features."""
     game = history.match_game(slate)
     if game is None:
@@ -314,10 +315,9 @@ def build_pool(slate: dict, payload: dict, history: NflverseHistory) -> tuple[pd
     pool = pd.DataFrame(rows)
     if pool.empty:
         raise ValueError("Yahoo returned no usable players")
-    pool = nb.add_projection_priors(pool)
     order = pool.sort_values(
-        ["Team", "Position", "Expected_Touches", "Projected_FP", "Salary", "Name"],
-        ascending=[True, True, False, False, False, True],
+        ["Team", "Position", "Expected_Touches", "Salary", "Name"],
+        ascending=[True, True, False, False, True],
     )
     ranks = order.groupby(["Team", "Position"]).cumcount().add(1).reindex(pool.index)
     pool["Depth_Rank"] = ranks.astype(int)
@@ -326,7 +326,10 @@ def build_pool(slate: dict, payload: dict, history: NflverseHistory) -> tuple[pd
     pool["Role_Label"] = [nb.role_label(pos, rank) for pos, rank in zip(
         pool["Position"], pool["Depth_Rank"]
     )]
-    pool = nb.apply_depth_mean_adjustments(pool)
+    if apply_projection:
+        pool = nb.add_projection_priors(pool)
+    else:
+        pool["Projection_Source"] = "historical feature extraction"
     pool, removed_qbs = nb.apply_default_role_filters(pool, cfg=nb.CFG)
     audit = {
         "unresolved_players": unresolved, "unavailable_players": unavailable,
@@ -432,7 +435,7 @@ def summarize(results: list[dict], skipped: list[dict]) -> dict:
         "mean_regret_to_best_submitted": float(np.mean(regrets)) if regrets else None,
         "limitations": [
             "Yahoo settled points are used for contest scoring; nflverse offensive points are an audit.",
-            "Historical sportsbook player props are unavailable, so this does not replay the live market blend.",
+            "The production mean is the frozen Yahoo salary-position-depth regression.",
             "Yahoo player team, FPPG, projection, status, and image fields are mutable and are not used as historical facts.",
             "The current fitted CV and correlation constants are reused; use season-frozen fits for a strict out-of-sample parameter test.",
             "Best submitted score is not a contest ROI or payout simulation.",

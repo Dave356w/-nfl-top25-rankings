@@ -29,7 +29,6 @@ from pathlib import Path
 import pandas as pd
 
 import lineup_optimizer as lo
-import market_audit as projection_audit
 # The daily entry point already solved log capture and NaN-safe JSON, and the
 # page contract is the same one. Sharing them keeps the two payloads honest.
 from run_daily import _Tee, _clean
@@ -58,36 +57,15 @@ def _player_row(player: pd.Series, slot: str | None = None) -> dict:
         "depth": _clean(player.get("Depth_Rank")),
         "depth_source": _clean(player.get("Depth_Source")),
         "source": _clean(player.get("Projection_Source")),
-        "market_quality": _clean(player.get("Market_Quality")),
-        # Runtime confidence audit. `market_raw` is the sportsbook component
-        # sum before shrinkage; `market_prior` is the displaced Yahoo/salary
-        # estimate. Publishing both makes every adjustment reproducible.
-        "market_raw": _clean(player.get("Market_Raw_FP")),
-        "market_prior": _clean(player.get("Market_Prior_FP")),
-        "market_delta": _clean(player.get("Market_Delta_FP")),
-        "market_delta_pct": _clean(player.get("Market_Delta_Pct")),
-        "market_base_weight": _clean(player.get("Market_Base_Weight")),
-        "market_weight": _clean(player.get("Market_Weight")),
-        "market_audit_flag": _clean(player.get("Market_Audit_Flag")),
-        "market_audit_reason": _clean(player.get("Market_Audit_Reason")),
-        "market_feed_count": _clean(player.get("Market_Feed_Count")),
         "injury": _clean(player.get("report_status")),
         "review": lo.review(player),
     }
     kickoff = player.get("Game_Time")
     if isinstance(kickoff, pd.Timestamp) and pd.notna(kickoff):
         row["kickoff_utc"] = kickoff.strftime("%Y-%m-%d %H:%M")
-    for key in (
-        "floor", "ceiling", "fppg", "market_raw", "market_prior", "market_delta"
-    ):
+    for key in ("floor", "ceiling", "fppg"):
         if isinstance(row[key], float):
             row[key] = round(row[key], 2)
-    if isinstance(row["market_delta_pct"], float):
-        row["market_delta_pct"] = round(row["market_delta_pct"], 4)
-    if isinstance(row["market_base_weight"], float):
-        row["market_base_weight"] = round(row["market_base_weight"], 3)
-    if isinstance(row["market_weight"], float):
-        row["market_weight"] = round(row["market_weight"], 3)
     if slot is None:
         row.pop("slot")
     return row
@@ -107,7 +85,8 @@ def _total(frame: pd.DataFrame, column: str) -> float | None:
     )
     if values.isna().any():
         return None
-    return round(float(values.sum()), 2)
+    # Totals must be reproducible from the two-decimal rows the browser receives.
+    return round(float(values.round(2).sum()), 2)
 
 
 def build_payload(
@@ -123,7 +102,7 @@ def build_payload(
     now = now.astimezone(timezone.utc)
     generated_utc = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     starters, bench = results["starters"], results["bench"]
-    context, audit = results["context"], results["market_audit"]
+    context = results["context"]
     roster = results["roster"]
     return {
         "schema": 1,
@@ -155,15 +134,9 @@ def build_payload(
         "bench": [_player_row(p) for _, p in
                   bench.sort_values("FP", ascending=False).iterrows()],
         "benched_by_request": list(results.get("excluded") or []),
-        "market": {
-            "feeds": list(audit.get("feeds") or []),
-            "notes": list(audit.get("notes") or []),
-            "matched": _clean(audit.get("matched")),
-            "accepted": _clean(audit.get("accepted")),
-            "skill_rows": _clean(audit.get("skill_rows")),
-            "logit_vig": _clean(audit.get("logit_vig")),
-            "calibration_pairs": _clean(audit.get("calibration_pairs")),
-            "projection_audit": dict(audit.get("projection_audit") or {}),
+        "projection": {
+            "method": "Yahoo salary-position-depth regression",
+            "trained_through_season": results.get("projection_trained_through"),
         },
         "log": log_lines,
     }
@@ -239,29 +212,9 @@ def write_outputs(payload: dict, data_dir: Path = None,
     return entries
 
 
-def _log_market_audit(market_audit: dict) -> None:
-    for note in market_audit.get("notes") or []:
-        print(f"Market: {note}")
-    print(
-        f"Market: {', '.join(market_audit.get('feeds') or []) or 'none'}; "
-        f"matched {market_audit.get('matched', 0)}/"
-        f"{market_audit.get('skill_rows', 0)} skill-player rows; "
-        f"accepted {market_audit.get('accepted', 0)} means."
-    )
-    summary = market_audit.get("projection_audit") or {}
-    if summary.get("audited"):
-        print(
-            "Market audit: "
-            f"{summary['flagged']}/{summary['audited']} flagged, "
-            f"{summary['shrunk']} shrunk, "
-            f"{summary['extreme']} extreme."
-        )
-
-
 def _finish_lineup(
     configured: list[dict],
     yahoo: pd.DataFrame,
-    market_audit: dict,
     excluded: list[str],
     objective: str,
     no_pool: bool = False,
@@ -269,7 +222,6 @@ def _finish_lineup(
     """Resolve, optimize and optionally build the editor pool from one projection frame."""
     context = lo.load_nfl_context(yahoo)
     roster = lo.build_roster(configured, yahoo, context)
-    roster = projection_audit.attach_audit_columns(roster, yahoo)
     print(f"Season {context['season']} week {context['week']}; "
           f"depth snapshot {context['depth_stamp']}.")
     for note in context.get("notes", []):
@@ -285,7 +237,7 @@ def _finish_lineup(
         "starters": starters,
         "bench": bench,
         "context": context,
-        "market_audit": market_audit,
+        "projection_trained_through": lo.salary_projection.load()["trained_through_season"],
         "excluded": excluded,
     }
 
@@ -295,7 +247,6 @@ def _finish_lineup(
     if not no_pool:
         try:
             pool = lo.build_pool(yahoo, context)
-            pool = projection_audit.attach_audit_columns(pool, yahoo)
             print(f"Add pool: {len(pool)} player(s) resolved for the page's roster editor.")
         except Exception as exc:
             pool_note = f"Add pool unavailable ({exc}); the page can bench but not add."
@@ -312,23 +263,9 @@ def build_from_prepared_slate(
 ) -> tuple[dict, pd.DataFrame, str | None]:
     """Build a lineup from the exact final projections used by the rankings page."""
     yahoo = lo.yahoo_from_prepared_slate(prepared_slate["players"])
-    market_audit = dict(prepared_slate.get("market_audit") or {})
-    report = prepared_slate.get("market_report")
-    if isinstance(report, pd.DataFrame) and not report.empty:
-        market_audit["matched"] = int(report["Market matched"].sum())
-        market_audit["accepted"] = int(report["Market accepted"].sum())
-        market_audit["skill_rows"] = int(report["Position"].ne("DEF").sum())
-    else:
-        market_audit.setdefault("matched", 0)
-        market_audit.setdefault("accepted", 0)
-        market_audit.setdefault("skill_rows", 0)
-    if not market_audit.get("projection_audit"):
-        market_audit["projection_audit"] = projection_audit.audit_summary(yahoo)
-    _log_market_audit(market_audit)
     return _finish_lineup(
         configured,
         yahoo,
-        market_audit,
         list(excluded or []),
         objective,
         no_pool,
@@ -344,8 +281,6 @@ def main(argv=None):
                         help="what the lineup maximizes (default FP)")
     parser.add_argument("--exclude", default="",
                         help="comma-separated players to force to the bench")
-    parser.add_argument("--no-market", action="store_true",
-                        help="skip the sportsbook feeds and use Yahoo priors only")
     parser.add_argument("--no-pool", action="store_true",
                         help="skip the add pool the page's roster editor reads")
     parser.add_argument("--out", default=None, help="output directory")
@@ -363,21 +298,9 @@ def main(argv=None):
             print(f"Roster: {len(configured)} player(s) from "
                   f"{roster_path or 'MY_TEAM_ROSTER'}.")
             yahoo = lo.fetch_yahoo()
-            market_audit = lo._empty_market_audit("market projections disabled")
-            if not args.no_market:
-                yahoo, market_audit = lo.apply_market_projections(yahoo)
-
-            # Confidence audit is deliberately downstream of the shared market
-            # engine. It never changes de-vigging or the fitted stat distributions;
-            # it only shrinks a market mean toward the independent Yahoo prior when
-            # disagreement is large enough to deserve skepticism.
-            audit_summary = projection_audit.audit_summary(yahoo)
-            market_audit["projection_audit"] = audit_summary
-            _log_market_audit(market_audit)
             results, pool, pool_note = _finish_lineup(
                 configured,
                 yahoo,
-                market_audit,
                 excluded,
                 args.objective,
                 args.no_pool,

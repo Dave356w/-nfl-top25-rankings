@@ -3,8 +3,8 @@
 
 Tune recency weighting before a holdout season, then approve each position only
 if total-point MAE improves by 2% over an eight-appearance rolling mean on at
-least 200 holdout rows. No Yahoo prices or archived market forecasts are used
-in this comparison; it does not validate the eventual market/prior blend.
+least 200 holdout rows. Yahoo prices are not used in this component-only
+comparison; the live salary regression is calibrated separately.
 """
 import argparse
 from datetime import datetime, timezone
@@ -92,7 +92,7 @@ def build(weekly, holdout, as_of):
     return dict(schema=1,as_of_utc=stamp.isoformat(),trained_through_season=holdout,
         holdout_season=holdout,scoring='yahoo',validation=validation,priors=priors,
         limitations=['Conditional on a recorded weekly appearance; not an availability model.',
-          'Validation compares historical point priors, not market blends or Yahoo salary priors.',
+          'Validation compares historical point priors; the live Yahoo salary model is calibrated separately.',
           'Only earlier weekly observations enter each prediction; holdout does not select alpha.',
           'Retrospective nflverse files may contain later corrections; original publication timestamps are not available.'])
 

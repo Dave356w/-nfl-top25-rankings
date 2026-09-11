@@ -94,10 +94,7 @@ class _StubbedFeeds:
 
     PATCHES = {
         "fetch_yahoo_data": lambda *a, **k: yahoo_payload(),
-        "load_market_projection_reference": lambda cfg=None: (
-            [], {"feeds": ["Bovada"], "notes": ["stubbed"], "logit_vig": 0.17,
-                 "calibration_pairs": 41},
-        ),
+        "fetch_nflverse_injury_report": lambda season, cfg=None: (pd.DataFrame(), None),
         "display": lambda *a, **k: None,
     }
 
@@ -137,7 +134,7 @@ class PayloadShapeTests(unittest.TestCase):
                     "dropped_from_pool", "reference"):
             self.assertIn(key, self.payload)
         for key in ("schema", "status", "generated_utc", "games", "skipped",
-                    "market", "availability_removed"):
+                    "projection", "availability_removed"):
             self.assertIn(key, self.index)
         for key in showdown.EXPOSED_SETTINGS:
             self.assertIn(key, self.payload["settings"])
@@ -271,11 +268,10 @@ class BrowserAgreementTests(unittest.TestCase):
     def setUpClass(cls):
         chart, roster = depth_chart(), roster_status()
         originals = {name: getattr(nb, name) for name in
-                     ("fetch_yahoo_data", "load_market_projection_reference",
+                     ("fetch_yahoo_data", "fetch_nflverse_injury_report",
                       "load_nflverse_reference", "display")}
         nb.fetch_yahoo_data = lambda *a, **k: yahoo_payload()
-        nb.load_market_projection_reference = lambda cfg=None: (
-            [], {"feeds": [], "notes": [], "logit_vig": 0.17, "calibration_pairs": 0})
+        nb.fetch_nflverse_injury_report = lambda season, cfg=None: (pd.DataFrame(), None)
         nb.load_nflverse_reference = lambda players, season, cfg=None: (
             chart, roster, None, [])
         nb.display = lambda *a, **k: None

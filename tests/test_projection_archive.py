@@ -12,7 +12,7 @@ def snapshot(captured='2026-09-13T16:00:00Z',mean=10):
     return dict(snapshot_id='run',captured_utc=captured,predictions=[dict(
         game_id='g',player_key='yahoo:1',player='Example',position='WR',
         kickoff_utc='2026-09-13T17:00:00Z',expected_fp=mean,baseline_fp=8,
-        source='market good',p25=5,p90=15)],raw_inputs={'yahoo':{'players':[1]}})
+        source='salary regression',p25=5,p90=15)],raw_inputs={'yahoo':{'players':[1]}})
 
 
 class ProjectionArchiveTests(unittest.TestCase):

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Weekly Lineup</title>
-<meta name="description" content="This week's recommended fantasy football lineup, built from de-vigged sportsbook props, Yahoo salary priors and nflverse depth charts.">
+<meta name="description" content="This week's recommended fantasy football lineup, built from a historical Yahoo salary-position-depth model and nflverse availability data.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <style>
 :root{
@@ -153,7 +153,7 @@ tbody tr.out{opacity:.62}
   font-size:11.5px; font-weight:600; letter-spacing:.01em; white-space:nowrap;
   background:var(--mute-soft); color:var(--ink-2);
 }
-.badge.market{background:var(--good-soft); color:var(--good)}
+.badge.model{background:var(--good-soft); color:var(--good)}
 .badge.override{background:var(--accent-soft); color:var(--accent-ink)}
 .badge.fallback{background:var(--warn-soft); color:var(--warn)}
 .badge.bad{background:var(--warn-soft); color:var(--warn)}
@@ -409,15 +409,14 @@ footer{
       <h4>How the lineup is picked</h4>
       <p id="how"></p>
       <div class="legend">
-        <div><span class="badge market">market</span> de-vigged sportsbook props</div>
-        <div><span class="badge fallback">fallback</span> Yahoo FPPG / salary prior</div>
+        <div><span class="badge model">model</span> Yahoo salary-position-depth regression</div>
         <div><span class="badge">nflverse</span> rolling game logs (kickers, missing games)</div>
       </div>
       <h4>Projection sources in this lineup</h4>
       <div class="chips" id="methods"></div>
       <h4>Forced to the bench</h4>
       <p id="benched"></p>
-      <h4>Market feeds</h4>
+      <h4>Projection model</h4>
       <p id="feeds"></p>
       <h4>Data notes</h4>
       <p id="notes"></p>
@@ -513,11 +512,11 @@ footer{
   // produced the number and keep the full text in the tooltip.
   function source(text) {
     var s = String(text || "").toLowerCase();
-    if (s.indexOf("market") >= 0) return { cls: "market", label: "market" };
+    if (s.indexOf("regression") >= 0) return { cls: "model", label: "model" };
     if (s.indexOf("override") >= 0) return { cls: "override", label: "override" };
     if (s.indexOf("nflverse") >= 0) return { cls: "", label: "nflverse" };
     if (s.indexOf("no weekly projection") >= 0) return { cls: "bad", label: "none" };
-    return { cls: "fallback", label: "yahoo" };
+    return { cls: "fallback", label: "fallback" };
   }
 
   function setStatus(text, tone) {
@@ -877,13 +876,10 @@ footer{
 
   function renderStats(d, view) {
     var t = view.totals || {};
-    var m = d.market || {};
+    var m = d.projection || {};
     var band = num(t.floor) && num(t.ceiling)
       ? "P25 " + fmt(t.floor, 1) + " → P90 " + fmt(t.ceiling, 1)
       : "range unavailable";
-    var coverage = num(m.accepted) && num(m.skill_rows) && m.skill_rows > 0
-      ? m.accepted + " / " + m.skill_rows
-      : "—";
     var slots = Object.keys(d.slots || {}).map(function (k) {
       return d.slots[k] + " " + k;
     }).join(" · ");
@@ -893,8 +889,8 @@ footer{
       { k: "Week", v: num(d.week) ? "Week " + d.week : "—",
         n: d.season ? d.season + " season" : "" },
       { k: "Objective", v: objectiveLabel(d.objective), n: slots },
-      { k: "Market means", v: coverage,
-        n: (m.feeds && m.feeds.length ? m.feeds.join(" + ") : "Yahoo priors only") }
+      { k: "Projection model", v: m.trained_through_season || "—",
+        n: "Yahoo salary + position + depth" }
     ].map(function (s) {
       return '<div class="stat"><div class="k">' + escapeHtml(s.k) + '</div><div class="v">' +
         escapeHtml(s.v) + '</div><div class="n">' + escapeHtml(s.n) + "</div></div>";
@@ -903,7 +899,7 @@ footer{
   }
 
   function renderMeta(d, view) {
-    var m = d.market || {};
+    var m = d.projection || {};
     var counts = view.counts || {};
     var rows = view.starters.concat(view.bench);
 
@@ -924,8 +920,7 @@ footer{
     );
 
     el("how").textContent =
-      "Each player's mean is an accepted de-vigged sportsbook mean where the books " +
-      "price them, and a Yahoo FPPG and salary prior otherwise. Kickers, and anyone " +
+      "Each skill player's mean comes from the frozen Yahoo salary-position-depth regression. Kickers, and anyone " +
       "whose game Yahoo omits, come from rolling nflverse game logs. P25 and P90 are a " +
       "lognormal band whose width comes from the player's depth-chart role; depth widens " +
       "the band but never haircuts the mean a second time.";
@@ -950,11 +945,8 @@ footer{
       : "Nobody was forced to the bench; every player was eligible.";
 
     el("feeds").textContent =
-      (m.feeds && m.feeds.length
-        ? m.feeds.join(" + ") + "; matched " + m.matched + " of " + m.skill_rows +
-          " skill-player rows and accepted " + m.accepted + " market means."
-        : "No market feed was used; every projection fell back to Yahoo priors.") +
-      ((m.notes || []).length ? " " + m.notes.join(" ") : "");
+      "Yahoo salary-position-depth model trained through " +
+      (m.trained_through_season || "an unknown season") + ".";
 
     // A feed that degraded (an unpublished injury report, say) changes what
     // this lineup can promise, so it is stated rather than left in the log.

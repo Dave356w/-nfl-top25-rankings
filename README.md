@@ -12,7 +12,7 @@ edit there, and the
 optimizer that runs its Monte Carlo in your browser.
 
 The pipeline started as the Colab notebook `Yahoo_Top25_Position_Rankings_v1.ipynb`
-and has since diverged in the role and market layers — see
+and has since diverged in the role and projection layers — see
 [How this maps to the notebook](#how-this-maps-to-the-notebook).
 
 ## What it does
@@ -20,39 +20,20 @@ and has since diverged in the role and market layers — see
 Each run:
 
 1. Pulls the current Yahoo NFL player feed (salaries, FPPG, the slate schedule).
-2. Builds market-implied projections from Underdog and Bovada player props —
-   paired markets are de-vigged, yardage is fitted as Weibull and counts as
-   Poisson, and the means are converted to Yahoo half-PPR scoring.
-3. Cross-checks roles and availability against the published
+2. Applies the versioned salary-position-depth regression in
+   `model/salary_projection.json`, fitted to archived Yahoo salaries and settled
+   Yahoo half-PPR results with a full-season holdout.
+3. Cross-checks roles, roster availability and reported injuries against the published
    [nflverse](https://github.com/nflverse/nflverse-data) depth charts and weekly
    roster status, so injured-reserve and practice-squad players drop out and
    role comes from a real depth chart rather than from salary order.
-4. Applies the historical role adjustment to the prior share of each estimate,
-   then ranks every priced player by final projected fantasy points.
+4. Recomputes the regression with the resolved depth tier, removes players listed
+   Out, then ranks every priced player by projected fantasy points.
 5. Writes JSON and CSV into `site/data/` and deploys `site/` to Pages.
 
-Projection priority is: manual override → market-implied mean → Yahoo FPPG and
-salary prior. The market mean is blended in by how completely the props covered
-the player rather than substituted outright, and only the prior share carries
-the role haircut. Every row on the page shows which of the three produced it.
-
-The role calculation is `w × market + (1 − w) × role multiplier × prior`,
-using the market weight after confidence auditing. Coverage requires these core
-components before a direct market total can be accepted:
-
-| Position | Required components |
-| --- | --- |
-| QB | Passing yards, passing TDs, interceptions, rushing yards, own TDs |
-| RB | Rushing yards, receiving yards, receptions, own TDs |
-| WR / TE | Receiving yards, receptions, own TDs |
-
-Missing core components retain the fallback and appear in the projection method.
-A measured zero counts as present. Unknown positions are not rated complete.
-Complete core coverage is `good` with a total anchor and `fair` without one;
-these labels describe coverage, not measured forecast accuracy. Ancillary stats
-such as WR rushing and lost fumbles contribute when supplied but are not required.
-The separately labelled `td-estimate` regression remains a low-weight estimate.
-Confidence weights and audit caps remain judgment calls pending historical testing.
+Projection priority is: manual override → frozen Yahoo salary-position-depth
+regression. Sportsbook feeds and market-derived projection logic are not used.
+Yahoo FPPG remains visible as reference data but is not a model input.
 
 ### Role, depth and mean are three different things
 
@@ -66,14 +47,14 @@ So the pipeline keeps them apart:
 
 | Column | What it is | What it drives |
 | --- | --- | --- |
-| `Role_Tier` / `Role_Label` | rank *within the player's own alignment slot*: starter, rotation, backup, reserve, specialist | the historical mean multiplier, the backup-QB filter |
-| `Depth_Rank` | expected-opportunity rank, blending the chart's ordering with the current market projection | the fitted coefficients of variation and the pair correlations |
+| `Role_Tier` / `Role_Label` | rank *within the player's own alignment slot*: starter, rotation, backup, reserve, specialist | the fitted regression, the backup-QB filter |
+| `Depth_Rank` | expected-opportunity rank, blending the chart's ordering with Yahoo salary | the fitted coefficients of variation and the pair correlations |
 | `Projected_FP` | the fantasy mean itself | everything downstream |
 
-The blend matters where a chart and a market disagree: a team can list one back
+The blend matters where a chart and salary disagree: a team can list one back
 first and still say publicly that two of them will split the carries. The chart
 keeps the role tier; a straight swap of two adjacent players is decided by the
-priced expectation. `Settings.role_market_rank_weight` sets the balance — 0.0
+salary expectation. `Settings.role_salary_rank_weight` sets the balance — 0.0
 trusts the chart alone, 1.0 ignores it.
 
 ## Setup (one time)
@@ -146,7 +127,7 @@ python -m http.server -d site 8000    # then open http://localhost:8000
 ```
 
 `--positions QB,RB,WR` limits what gets published. The run needs outbound
-network access to Yahoo, the two sportsbooks and the nflverse release CDN.
+network access to Yahoo and the nflverse release CDN.
 `run_lineup.py` builds the lineup page the same way — see
 [Running it](#running-it) — and `run_showdown.py` builds the showdown models:
 
@@ -194,10 +175,8 @@ deterministic gzip JSON under `backtest_cache/yahoo`, and the report records
 unresolved identities, historical-team sources, the selected lineup, its
 settled score, and regret to Yahoo's best submitted lineup.
 
-This is a market-free walk-forward test: pregame means come from the player's
-last eight nflverse appearances blended with the historical Yahoo salary prior.
-It cannot recreate historical Bovada or Underdog player props that were never
-archived. Yahoo's settled points are the scoring authority, while independently
+This is a walk-forward test of the salary-position-depth projection. Yahoo's
+settled points are the scoring authority, while independently
 computed nflverse offensive points are reported as a cross-source audit. The
 current CV and correlation constants are reused, so a strict parameter backtest
 must additionally freeze or refit those constants before each test season.
@@ -208,9 +187,8 @@ If any feed fails hard, `run_synced.py` writes neither page and exits non-zero.
 The previously published page stays live rather than being replaced by a
 half-built one, and the failure shows up as a red run in the Actions tab.
 
-Softer failures degrade instead of stopping: an unreachable sportsbook falls
-back to Yahoo FPPG and salary priors, and an unreachable nflverse release falls
-back to the salary-order depth heuristic. Both are recorded in the run log,
+Softer failures degrade instead of stopping: an unreachable nflverse release falls
+back to the salary-order depth heuristic and records the problem in the run log,
 which the page renders under *Run details*.
 
 Availability is deliberately asymmetric. A player the weekly roster has no row
@@ -228,8 +206,8 @@ GitHub Pages. Pages is static, so the interesting question was which half of the
 Colab showdown runner can live in a browser. The answer turned out to be: all of
 the part that matters.
 
-**What runs in Actions.** `run_synced.py` fetches Yahoo, the two sportsbooks
-and the nflverse depth chart once for all three pages. `pipeline/showdown.py`
+**What runs in Actions.** `run_synced.py` fetches Yahoo and the nflverse depth,
+roster and injury data once for all three pages. `pipeline/showdown.py`
 reuses those final means, builds the fitted
 coefficients of variation, and publishes the PSD-repaired latent correlation
 matrix for each game. That payload is about 7 KB for a 36-player pool — 36
@@ -250,10 +228,8 @@ Expected FP is analytic; the sampled mean is shown separately. Candidate-best
 and near-best rates compare only screened candidates in the sampled scenarios,
 depend on the selected detail level, and are not contest-win probabilities.
 
-The feeds are the reason for the split, not the compute. Yahoo and Bovada will
-not answer a cross-origin request from a Pages origin, and pointing every
-visitor's IP at a sportsbook is what got the pipeline's own VM blocked in the
-first place.
+The feed boundary is the reason for the split, not the compute: Actions prepares
+one immutable model so every visitor sees the same inputs.
 
 Two properties of the model make the browser half cheap:
 
@@ -297,18 +273,15 @@ both pages from that exact final player frame.
 Each run:
 
 1. Pulls the Yahoo DFS feed for the week's FPPG, salary, opponent and kickoff.
-2. Replaces those blends with **de-vigged Bovada and Underdog means**, using
-   `pipeline/notebook.py`'s market engine — the same de-vigging, Weibull and
-   Poisson fits, and quality gate the rankings use. Matching is the pipeline's
-   own: team, name key, and a hard kickoff-time guard, so a player never
-   inherits a namesake's line from another game.
+2. Applies the same frozen Yahoo salary-position-depth regression used by the
+   rankings and Showdown pages.
 3. Cross-checks role and availability against the newest nflverse depth
    snapshot and the week's injury report.
 4. Fills `QB / RB / RB / WR / WR / TE / K` plus one RB/WR/TE flex and publishes
    starters, bench and a review note per player.
 
-Projection priority is: accepted market mean → Yahoo FPPG and salary prior →
-rolling nflverse game logs. Kickers always use the game logs, because the DFS
+Projection priority is: salary-position-depth regression → rolling nflverse game
+logs. Kickers always use the game logs, because the DFS
 feed does not price them, and so does a rostered player whose team is playing
 but whom Yahoo omits — a Monday-only slate, say — instead of reading as a zero.
 The page shows which of the three produced every row.
@@ -316,7 +289,7 @@ The page shows which of the three produced every row.
 `Floor_P25` and `Ceiling_P90` come from a lognormal band around the mean, using
 depth-calibrated coefficients of variation (`CALIBRATED_CV`). Depth widens the
 band but never haircuts the mean a second time: the weekly salary and the
-market line already reflect the player's current role.
+depth term already puts the player's current role into the fitted mean.
 
 ### Setting your team
 
@@ -335,7 +308,6 @@ constants at the top of `lineup_optimizer.py`:
 | --- | --- |
 | `STARTING_POSITIONS`, `FLEX_ELIGIBLE` | your league's slots |
 | `LINEUP_OBJECTIVE` | `FP` (mean, the default), `Floor_P25`, or `Ceiling_P90` |
-| `USE_MARKET_PROJECTIONS`, `MARKET_SOURCE` | market means on/off; `hybrid`, `bovada` or `underdog` |
 | `EXCLUDED_PLAYERS` | `None` prompts for benchings; a list (even empty) skips the prompt |
 | `MANUAL_DEPTH_OVERRIDES` | override a stale depth chart |
 | `AUTO_EXCLUDE_REPORTED_OUT` | drop anyone the injury report lists as *Out* |
@@ -383,9 +355,9 @@ python lineup_optimizer.py --self-test      # offline checks, no network
 Showdown index and every Showdown game with
 one `snapshot_id`, verifies every overlapping player has the same projected FP,
 then writes the files. `run_lineup.py` remains available for lineup-only local
-diagnostics. A sportsbook outage is not a hard failure: the market step
-degrades to Yahoo priors and says so in the run log the page renders. Nor is a
-failed pool: the page loses its add list, says why, and still drops and benches.
+diagnostics. An unavailable nflverse reference is reported in the run log and
+the salary-order depth fallback remains usable. A failed add-player pool is also
+non-fatal: the page loses its add list, says why, and still drops and benches.
 
 Yahoo prices this feed for **DFS half-PPR**. Check a close call against your
 league's scoring, and check the injury news yourself — the nflverse report is
@@ -406,11 +378,11 @@ Two mechanical edits were made when the notebook was imported:
   is dropped, so importing the module defines functions without running a slate;
 - the `google.colab.files.download` cell is dropped.
 
-The market engine and the showdown lineup code are otherwise carried over
-verbatim. The synchronized daily publisher uses the showdown and lineup paths
+The synchronized daily publisher uses the showdown and lineup paths
 alongside the rankings, keeping the correlation model in one place.
 
-Four model changes have since been made here and are **not** in the notebook. To
+The model has since changed substantially here and those changes are **not** in
+the notebook. To
 keep a Colab copy in step, port these:
 
 - `add_slot_role_tiers`, `role_label`, `apply_nflverse_roles` and
@@ -420,8 +392,8 @@ keep a Colab copy in step, port these:
 - `SAME_TEAM_RB_RB_CORR` replaces the pooled `("RB", "RB")` entry in
   `SAME_TEAM_OTHER_CORR`, with `same_team_rb_rb_correlation` called from
   `target_score_correlation` (cell 11);
-- `MARKET_QUALITY_WEIGHT` and `market_blend_weight` make
-  `apply_market_projection_means` a blend rather than a substitution (cell 8);
+- `pipeline/salary_projection.py` replaces the sportsbook projection cells with
+  the season-frozen Yahoo salary, position and depth regression;
 - `Settings.nflverse_drop_unmatched` defaults to `True`, with
   `AVAILABILITY_OVERRIDES` and the `nflverse_min_match_rate` guard (cells 2 and 9);
 - `simulate_player_outcomes` factors the latent matrix with `latent_root`
@@ -485,18 +457,17 @@ are close to uncorrelated once each player's own expectation is subtracted.
 Read the printed gaps as an **upper bound**. The expectation there is a lagged
 eight-game rolling average, which does not know the game total, so a shootout is
 a surprise to it and part of what it books as correlated error is really the
-shared game environment. The pipeline's means are market-implied and already
-price that environment, so the correlation left for its residuals is if anything
-lower. A positive gap is therefore not a licence to raise a constant. Team
+shared game environment. The salary-position-depth regression does not know the
+game total either, so these estimates are appropriate residual correlations but
+should not be read as evidence for inflating the table. Team
 defenses are not covered: weekly player stats carry no DST scoring, so the DEF
 entries still rest on their original fit.
 
 ## Caveats
 
-These are market-derived estimates, not predictions with a guarantee. The
-Yahoo and sportsbook feeds are public but undocumented and can change shape
-without notice. DEF has no dependable player-prop market and always uses the
-Yahoo fallback, and neither does a kicker, who is estimated from rolling
+These are historical regression estimates, not predictions with a guarantee.
+Yahoo's feed is public but undocumented and can change shape without notice.
+A kicker is estimated from rolling
 nflverse game logs on the lineup page.
 
 
@@ -579,8 +550,8 @@ still a Gaussian copula, so excluding a player is still a principal submatrix an
 the browser still needs no eigensolver.
 
 Explicit participation, negative defense scores and discrete touchdowns are still
-not represented. Availability in particular is deliberately left out: the market
-means already price it, so modelling it here would charge the same risk twice.
+not represented. Officially reported Out players are removed before simulation;
+late inactive news can still arrive after the NFLVerse snapshot.
 
 ### Zero scores
 
@@ -611,7 +582,7 @@ body and placed on zero.
 
 Scope is the argument. A game with no carry, target or pass attempt is dropped
 from both numerator and denominator, because that is usually a player who was
-inactive and the market mean already prices that. What is left is the pure usage
+inactive and is handled by the availability layer. What is left is the pure usage
 effect: a fourth receiver who dressed, ran his routes and was never thrown to.
 `tools/calibrate_zero_rate.py` reproduces the table and prints both rates so the
 gap is visible.
@@ -632,6 +603,22 @@ DEF is held at zero throughout: weekly player stats carry no team-defense scorin
 so nothing is fitted, and a defense can post a negative score, which this model
 does not represent either.
 
+### Historical salary model
+
+Rebuild `model/salary_projection.json` from archived Yahoo single-game slates
+and NFLVerse history with:
+
+```bash
+python tools/build_salary_projection_model.py
+```
+
+The trainer compares linear, quadratic and cubic position-specific salary
+curves, optional salary-by-depth interactions and four ridge penalties. Model
+selection uses minimum MAE on the 2025 season holdout. The shipped artifact
+selected a cubic curve, position-depth offsets, no depth-salary interaction and
+ridge 0.1. Its 1,922-player holdout produced MAE 3.700, RMSE 5.309 and
+correlation 0.696.
+
 ### Historical component-prior gate
 
 Run `python tools/build_component_priors.py --holdout 2025 --start 2021` to reproduce
@@ -640,20 +627,21 @@ seasons, then compares total Yahoo-scored point error on 2025 against a lagged
 eight-appearance average. Approval requires at least 200 holdout observations and
 at least 2% lower MAE. Results were QB 0.41%, RB 0.88%, WR 0.60%, TE 0.45% lower
 MAE: **no position passed**. No component priors were promoted into live forecasts.
-The existing market-coverage/fallback process therefore remains in production.
+Those component priors remain disabled; the salary-position-depth regression is
+the production mean estimator.
 
 This is a conditional-on-appearance historical-prior comparison, not a test of
-Yahoo salary priors, the market blend or participation probabilities. Archived
+the salary model or participation probabilities. Archived
 pregame data is required for those comparisons. Merely changing the approval flag
 in the JSON does not enable a live model; integration requires a reviewed change.
 
 ### Pregame archive and evaluation
 
 Every synchronized publish now retains a compressed immutable snapshot under
-`site/data/projection_archive/`. Raw Yahoo and available market payloads are
+`site/data/projection_archive/`. Raw Yahoo payloads are
 content-addressed and deduplicated. Forecasts include identity, kickoff, capture
 time, final mean, role-adjusted fallback baseline, marginal percentiles, scoring
-settings, code hash, market component estimates, role reports and Showdown models.
+settings, code hash, the fitted model artifact, role reports and Showdown models.
 Snapshots are captured conservatively after feed/role preparation; any captured
 at or after kickoff is excluded from evaluation. Existing daily summaries cannot
 reconstruct missing historical inputs; this archive starts with the new publisher.
@@ -671,5 +659,5 @@ archived keys (Yahoo IDs where present); name matching is not guessed. The grade
 uses one latest pregame forecast per game/player, rejects duplicate outcomes,
 excludes manual overrides, and never converts an unmatched actual into zero.
 It reports MAE, RMSE, bias, paired fallback comparison, P25/P90 coverage and the
-observed zero/negative-score rate. There are no graded market-blend results yet.
+observed zero/negative-score rate.
 

@@ -29,7 +29,7 @@ from test_lineup_optimizer import _context, _yahoo_frame
 # silent "undefined" in the browser rather than an error, so they are pinned.
 PLAYER_KEYS = ("player", "key", "pos", "team", "opponent", "kickoff_utc", "mean",
                "floor", "ceiling", "salary", "fppg", "depth", "depth_source",
-               "source", "market_quality", "injury", "review")
+               "source", "injury", "review")
 
 CONFIGURED = [
     {"Name": "Dak Prescott", "Position": "QB"},
@@ -45,8 +45,6 @@ CONFIGURED = [
 
 def _results(objective="FP"):
     yahoo = _yahoo_frame()
-    yahoo["Market_Quality"] = ["good", None, None, None, None]
-    yahoo.loc[0, "Projection_Source"] = "market good: Bovada+Underdog"
     context = _context()
     roster = lo.build_roster(CONFIGURED, yahoo, context)
     excluded = lo.reported_out(roster)
@@ -54,10 +52,7 @@ def _results(objective="FP"):
     return {
         "roster": roster, "starters": starters, "bench": bench, "context": context,
         "excluded": excluded,
-        "market_audit": {"feeds": ["Bovada", "Underdog"],
-                         "notes": ["bovada: 812 player-market records (live)"],
-                         "matched": 3, "accepted": 1, "skill_rows": 4,
-                         "logit_vig": 0.166, "calibration_pairs": 41},
+        "projection_trained_through": 2025,
     }
 
 
@@ -77,13 +72,12 @@ class PayloadTests(unittest.TestCase):
     def test_it_carries_every_key_the_page_reads(self):
         for key in ("status", "generated_utc", "snapshot_id", "run_date", "season", "week",
                     "objective", "slots", "totals", "counts", "starters", "bench",
-                    "benched_by_request", "market", "log"):
+                    "benched_by_request", "projection", "log"):
             self.assertIn(key, self.payload)
         for key in PLAYER_KEYS:
             self.assertIn(key, self.payload["starters"][0])
             self.assertIn(key, self.payload["bench"][0])
-        for key in ("feeds", "notes", "matched", "accepted", "skill_rows"):
-            self.assertIn(key, self.payload["market"])
+        self.assertEqual(self.payload["projection"]["trained_through_season"], 2025)
 
     def test_only_starters_carry_a_slot(self):
         slots = [row["slot"] for row in self.payload["starters"]]
@@ -94,7 +88,7 @@ class PayloadTests(unittest.TestCase):
         # Bye Week Guy has no CV, so his 0.0 stands in at both ends rather than
         # voiding the whole band.
         totals = self.payload["totals"]
-        self.assertAlmostEqual(totals["mean"], 76.0)
+        self.assertAlmostEqual(totals["mean"], sum(row["mean"] for row in self.payload["starters"]))
         self.assertLess(totals["floor"], totals["mean"])
         self.assertGreater(totals["ceiling"], totals["mean"])
 
@@ -151,7 +145,7 @@ class PoolPayloadTests(unittest.TestCase):
 
     def test_it_is_stamped_with_the_run_that_priced_it(self):
         # A pool from an older run than the lineup would price an added player
-        # off different market lines than the ones on screen.
+        # off different projection inputs than the ones on screen.
         self.assertEqual(self.payload["run_date"], self.lineup["run_date"])
         self.assertEqual(self.payload["generated_utc"], self.lineup["generated_utc"])
         self.assertEqual(self.payload["snapshot_id"], self.lineup["snapshot_id"])
@@ -180,7 +174,7 @@ class DegradedFeedTests(unittest.TestCase):
         starters, bench = lo.optimize(roster, [])
         self.payload = run_lineup.build_payload(
             {"roster": roster, "starters": starters, "bench": bench,
-             "context": context, "market_audit": lo._empty_market_audit(),
+             "context": context, "projection_trained_through": 2025,
              "excluded": []}, "FP", ["line one"])
 
     def test_a_missing_injury_feed_still_serializes(self):
@@ -260,7 +254,7 @@ class MainTests(unittest.TestCase):
             with unittest.mock.patch.object(
                 lo, "fetch_yahoo", side_effect=RuntimeError("Yahoo feed failed")
             ), _quiet() as printed:
-                code = run_lineup.main(["--out", str(out), "--no-market"])
+                code = run_lineup.main(["--out", str(out)])
             self.assertEqual(code, 1)
             self.assertIn("no files were written", printed.getvalue())
             self.assertFalse(out.exists())
@@ -273,15 +267,13 @@ class MainTests(unittest.TestCase):
                  unittest.mock.patch.object(lo, "load_nfl_context", return_value=_context()), \
                  unittest.mock.patch.object(lo, "load_roster", return_value=CONFIGURED), \
                  _quiet():
-                code = run_lineup.main(["--out", str(out), "--no-market"])
+                code = run_lineup.main(["--out", str(out)])
             self.assertEqual(code, 0)
             published = json.loads((out / "latest.json").read_text())
             self.assertEqual(published["objective"], "FP")
             self.assertEqual(published["counts"]["roster"], len(CONFIGURED))
             self.assertTrue(published["log"])
-            # --no-market still records why there are no market means.
-            self.assertEqual(published["market"]["feeds"], [])
-            self.assertIn("market projections disabled", published["market"]["notes"])
+            self.assertEqual(published["projection"]["trained_through_season"], 2025)
             self.assertEqual(len(published["starters"]), len(results["starters"]))
 
             pool = json.loads((out / "pool.json").read_text())
@@ -299,7 +291,7 @@ class MainTests(unittest.TestCase):
                  unittest.mock.patch.object(lo, "build_pool",
                                             side_effect=RuntimeError("depth chart empty")), \
                  _quiet():
-                code = run_lineup.main(["--out", str(out), "--no-market"])
+                code = run_lineup.main(["--out", str(out)])
             self.assertEqual(code, 0)
             self.assertTrue(json.loads((out / "latest.json").read_text())["starters"])
             pool = json.loads((out / "pool.json").read_text())

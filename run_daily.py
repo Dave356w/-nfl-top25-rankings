@@ -27,10 +27,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from pipeline import market_tail_guard
 from pipeline import notebook as nb
-
-market_tail_guard.install(nb)
 
 SITE = Path(__file__).resolve().parent / "site"
 DATA = SITE / "data"
@@ -117,25 +114,6 @@ def _games(frame):
     return games
 
 
-def _market_summary(results):
-    report = results.get("market_report")
-    audit = results.get("market_audit") or {}
-    summary = {
-        "feeds": list(audit.get("feeds") or []),
-        "notes": list(audit.get("notes") or []),
-        "matched": None,
-        "accepted": None,
-        "skill_rows": None,
-        "calibration_pairs": _clean(audit.get("calibration_pairs")),
-        "projection_audit": dict(audit.get("projection_audit") or {}),
-    }
-    if isinstance(report, pd.DataFrame) and not report.empty:
-        summary["matched"] = int(report["Market matched"].sum())
-        summary["accepted"] = int(report["Market accepted"].sum())
-        summary["skill_rows"] = int(report["Position"].ne("DEF").sum())
-    return summary
-
-
 def _method_counts(results):
     counts = {}
     players = results.get("players")
@@ -172,7 +150,11 @@ def build_payload(results, top_n, log_lines, generated_at=None, snapshot_id=None
             "first_kickoff_utc": games[0]["kickoff_utc"] if games else None,
         },
         "rankings": rankings,
-        "market": _market_summary(results),
+        "projection": {
+            "method": "Yahoo salary-position-depth regression",
+            "trained_through_season": (results.get("projection_model") or {}).get("trained_through_season"),
+            "holdout_metrics": (results.get("projection_model") or {}).get("holdout_metrics"),
+        },
         "availability_removed": int(len(removed)) if isinstance(removed, pd.DataFrame) else 0,
         "method_counts": _method_counts(results),
         "log": log_lines,

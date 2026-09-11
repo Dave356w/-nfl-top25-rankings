@@ -1,6 +1,6 @@
 """Shape tests for the published JSON.
 
-The pipeline itself needs the live Yahoo, sportsbook and nflverse feeds, so it
+The pipeline itself needs the live Yahoo and nflverse feeds, so it
 cannot be exercised here. What can be pinned without a network is the contract
 between `run_daily.build_payload` and `site/index.html`: every key the page
 reads, the NaN handling that would otherwise emit invalid JSON, and the archive
@@ -29,13 +29,13 @@ def _view(rows):
 def _results():
     qb = _view([
         [1, "Josh Allen", "BUF", "@MIA", 22.41, 21.0, 40, 0.56, "starter",
-         "QB slot 9", 1, "2026-09-07 17:00", "market"],
+         "QB slot 9", 1, "2026-09-07 17:00", "regression"],
         [2, "Lamar Jackson", "BAL", "vs KC", 21.02, np.nan, 38, 0.553, "starter",
          "", 1, "2026-09-07 20:25", "yahoo-prior"],
     ])
     rb = _view([
         [1, "Bijan Robinson", "ATL", "vs TB", 18.9, 17.4, 35, 0.54, "starter",
-         "RB slot 11", 1, "2026-09-07 17:00", "market"],
+         "RB slot 11", 1, "2026-09-07 17:00", "regression"],
     ])
     games = pd.DataFrame([
         {"Game ID": "g1", "Game Time": "2026-09-07 17:00", "Away Team": "BUF",
@@ -43,12 +43,7 @@ def _results():
     ])
     players = pd.DataFrame({
         "Name": ["Josh Allen", "Lamar Jackson", "Bijan Robinson"],
-        "Projection_Source": ["market", "yahoo-prior", "market"],
-    })
-    market_report = pd.DataFrame({
-        "Market matched": [True, True, False],
-        "Market accepted": [True, False, False],
-        "Position": ["QB", "QB", "DEF"],
+        "Projection_Source": ["salary regression"] * 3,
     })
     return {
         "rankings": {"QB": qb, "RB": rb, "WR": _view([]), "TE": _view([]),
@@ -58,9 +53,7 @@ def _results():
         ),
         "players": players,
         "games": games,
-        "market_audit": {"feeds": ["underdog", "bovada"], "notes": ["cached"],
-                         "calibration_pairs": 41},
-        "market_report": market_report,
+        "projection_model": {"trained_through_season": 2025, "holdout_metrics": {"mae": 3.7}},
         "nflverse_removed": pd.DataFrame({"Name": ["Someone"]}),
     }
 
@@ -78,7 +71,7 @@ class PayloadTests(unittest.TestCase):
 
     def test_it_carries_every_key_the_page_reads(self):
         for key in ("status", "generated_utc", "snapshot_id", "run_date", "top_n", "positions",
-                    "slate", "rankings", "market", "method_counts", "log"):
+                    "slate", "rankings", "projection", "method_counts", "log"):
             self.assertIn(key, self.payload)
         row = self.payload["rankings"]["QB"][0]
         for key in run_daily.FIELDS.values():
@@ -89,10 +82,8 @@ class PayloadTests(unittest.TestCase):
         # empty table is worse than an absent tab.
         self.assertEqual(self.payload["positions"], ["QB", "RB"])
 
-    def test_market_counts_come_from_the_report(self):
-        self.assertEqual(self.payload["market"]["matched"], 2)
-        self.assertEqual(self.payload["market"]["accepted"], 1)
-        self.assertEqual(self.payload["market"]["skill_rows"], 2)
+    def test_projection_metadata_comes_from_the_model(self):
+        self.assertEqual(self.payload["projection"]["trained_through_season"], 2025)
         self.assertEqual(self.payload["availability_removed"], 1)
 
     def test_write_outputs_archives_and_indexes(self):
@@ -129,7 +120,7 @@ class CleanTests(unittest.TestCase):
                 json.dumps(run_daily._clean(missing))
 
     def test_real_values_survive_unchanged(self):
-        self.assertEqual(run_daily._clean("market good"), "market good")
+        self.assertEqual(run_daily._clean("salary regression"), "salary regression")
         self.assertEqual(run_daily._clean(np.int64(3)), 3)
         self.assertEqual(run_daily._clean(np.float64(1.5)), 1.5)
         self.assertEqual(run_daily._clean(0), 0)

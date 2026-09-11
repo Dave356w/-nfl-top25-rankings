@@ -16,13 +16,12 @@ Scope is the whole argument
 ---------------------------
 A game with no carry, no target and no pass attempt is dropped from *both* the
 numerator and the denominator. Such a game is usually a player who was inactive,
-and the pipeline's means are market-implied: a sportsbook's line on a doubtful
-receiver is already shaded for the chance he does not play. Counting inactive
-games here would charge that same risk a second time.
+which is handled separately by the nflverse roster and injury filters. Counting
+inactive games here would mix availability into a conditional scoring distribution.
 
 What survives the filter is the pure shape effect -- a fourth receiver who
 dressed, ran his routes, and was never thrown to. That is a property of usage,
-not of availability, and nothing upstream prices it.
+not of availability.
 
 The tool reports both rates so the gap is visible: `any zero` includes the
 no-opportunity games, `played` is the one that gets published.

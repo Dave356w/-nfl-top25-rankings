@@ -58,7 +58,7 @@ def main(argv=None) -> int:
     history = NflverseHistory.load(sorted(seasons))
     cfg = nb.replace(
         nb.CFG, simulations=args.simulations, tournament_lineups=args.entries,
-        use_market_projections=False, use_nflverse=False,
+        use_nflverse=False,
     )
     results, skipped = [], []
     for index, slate in enumerate(slates, 1):
@@ -83,4 +83,3 @@ def main(argv=None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

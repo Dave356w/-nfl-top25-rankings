@@ -361,8 +361,8 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     <div class="panel-body">
       <h4>Where the split falls</h4>
       <p>
-        A GitHub Actions run fetches Yahoo, the two sportsbook feeds and the
-        nflverse depth chart, builds the market-implied means and the fitted
+        A GitHub Actions run fetches Yahoo plus nflverse depth, roster and injury
+        data, applies the frozen salary-position-depth regression and the fitted
         coefficients of variation, and publishes the PSD-repaired latent
         correlation matrix for each game. That payload is about 7 KB. This page
         downloads it and does the rest: it draws the scenarios, enumerates every
@@ -370,9 +370,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         survivors against shared scenarios, and applies the exposure caps.
       </p>
       <p>
-        The feeds never need to be touched again, which is the point: they do not
-        answer cross-origin requests from a Pages origin, and pointing every
-        visitor's IP at a sportsbook is what got the pipeline's own VM blocked.
+        The feeds never need to be touched again after the model is published.
       </p>
       <h4>Portfolio coverage and evaluation</h4>
       <p>Automatic starts with the highest analytic expectation, then greedily adds
@@ -432,8 +430,8 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       <pre class="log" id="log"></pre>
       <h4>Caveats</h4>
       <p>
-        These are market-derived estimates, not predictions with a guarantee.
-        Check the injury news yourself; the depth chart is only as current as its
+        These are historical regression estimates, not predictions with a guarantee.
+        Check late injury news; the reports are only as current as their
         last publish.
       </p>
     </div>
@@ -1043,11 +1041,10 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   }
 
   function renderDetails(index) {
-    var market = index.market || {};
+    var projection = index.projection || {};
     el("feeds").textContent =
-      (market.feeds && market.feeds.length ? market.feeds.join(" + ") : "no market feed") +
-      (market.calibration_pairs ? " · " + market.calibration_pairs +
-        " local pairs used for the one-way vig calibration" : "") +
+      "Yahoo salary-position-depth model trained through " +
+      (projection.trained_through_season || "unknown") +
       " · " + (index.availability_removed || 0) + " player(s) removed by the " +
       "availability filter" +
       (index.skipped && index.skipped.length

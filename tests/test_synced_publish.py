@@ -39,9 +39,8 @@ class PreparedSlateAdapterTests(unittest.TestCase):
                 "Salary": 33,
                 "FPPG": 12.14,
                 "Projected_FP": 13.03,
-                "Projection_Source": "market good: Bovada+Underdog",
+                "Projection_Source": "Yahoo salary-position-depth regression",
                 "Depth_Rank": 2,
-                "Market_Quality": "good",
             }
         ])
 
