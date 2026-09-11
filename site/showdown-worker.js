@@ -305,10 +305,11 @@ function enumerate(included, options) {
   }
   const size = included.length;
   const salary = Float64Array.from(included, (i) => players[i].salary);
-  // Yahoo single-game rule: at least one player from each team. Any position
-  // counts, a team defense included.
-  const teamA = Uint8Array.from(included, (i) => (players[i].team === teams[0] ? 1 : 0));
-  const teamB = Uint8Array.from(included, (i) => (players[i].team === teams[1] ? 1 : 0));
+  // Yahoo single-game rule: at least one non-defense player from each team.
+  const teamA = Uint8Array.from(included, (i) =>
+    (players[i].team === teams[0] && players[i].pos !== "DEF" ? 1 : 0));
+  const teamB = Uint8Array.from(included, (i) =>
+    (players[i].team === teams[1] && players[i].pos !== "DEF" ? 1 : 0));
   const limitKeys = Object.keys(limits);
   const limitFlags = limitKeys.map((position) =>
     Uint8Array.from(included, (i) => (players[i].pos === position ? 1 : 0))

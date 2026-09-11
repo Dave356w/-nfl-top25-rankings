@@ -172,6 +172,36 @@ Node is optional but worth having: `tests/test_showdown.py` uses it to drive
 `site/showdown-worker.js` and check the browser optimizer against the Python
 pipeline. Without Node those tests skip.
 
+### Historical Showdown backtest
+
+Yahoo's undocumented read-only DFS endpoints retain completed single-game
+series, their exact salary pools and settled Yahoo points. The backtester joins
+those immutable contest fields to nflverse schedules, weekly rosters and player
+games; it deliberately ignores Yahoo's historical `team`, FPPG, projection and
+status fields because Yahoo can replace them with the player's current metadata.
+
+Run a small smoke test first (`--end` is exclusive):
+
+```bash
+python tools/backtest_showdown.py \
+  --start 2024-01-28 --end 2024-01-29 --max-slates 1 \
+  --simulations 2000 --entries 1 \
+  --output backtest_output/2024-01-28.json
+```
+
+Remove `--max-slates` for a full interval. Raw Yahoo responses are cached as
+deterministic gzip JSON under `backtest_cache/yahoo`, and the report records
+unresolved identities, historical-team sources, the selected lineup, its
+settled score, and regret to Yahoo's best submitted lineup.
+
+This is a market-free walk-forward test: pregame means come from the player's
+last eight nflverse appearances blended with the historical Yahoo salary prior.
+It cannot recreate historical Bovada or Underdog player props that were never
+archived. Yahoo's settled points are the scoring authority, while independently
+computed nflverse offensive points are reported as a cross-source audit. The
+current CV and correlation constants are reused, so a strict parameter backtest
+must additionally freeze or refit those constants before each test season.
+
 ## Failure behaviour
 
 If any feed fails hard, `run_synced.py` writes neither page and exits non-zero.
@@ -495,10 +525,8 @@ all 16 games either way. What the cap unlocks is enumeration and optimization.
 
 ### Showdown roster rules
 
-Yahoo requires five players, the salary cap, and **at least one player from each
-team**. Any position satisfies the team requirement, a team defense included —
-the enumerator used to demand a non-DEF player from each side, which discarded
-304 legal rosters on the 2026-09-10 SF-LA slate.
+Yahoo requires five players, the salary cap, and **at least one non-DEF player
+from each team**. A team defense does not satisfy that requirement.
 
 `Settings.min_salary_used_pct` is a strategy filter, not a Yahoo rule, and now
 defaults to `0.0`. At the previous `0.75` it removed 161,439 of the 187,697
