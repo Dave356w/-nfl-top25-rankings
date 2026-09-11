@@ -70,6 +70,11 @@ EFFICIENCY_COLUMNS = ("game_id", "season", "week", "team", "opponent", "is_home"
                       "off_epa", "off_success", "plays")
 EMPTY_EFFICIENCY = pd.DataFrame(columns=list(EFFICIENCY_COLUMNS))
 
+# Settled fantasy production, one row per unit-week: a player, or a team
+# defence. Carries the fixed-core hypothesis; see pipeline/team_outcome_core.py.
+FANTASY_COLUMNS = ("season", "week", "team", "unit_id", "position", "points")
+EMPTY_FANTASY = pd.DataFrame(columns=list(FANTASY_COLUMNS))
+
 # The final holdout of docs/team-outcome-model-plan.md §6.1: the two most recent
 # complete seasons, read once at P4 and never before. Sealing is a reporting
 # rule, not a loading rule — the corpus has to know these games exist to count
@@ -168,6 +173,7 @@ class AsOfView:
     history: pd.DataFrame     # settled games strictly earlier, with outcomes
     schedule: pd.DataFrame    # published schedule through this week, pregame only
     efficiency: pd.DataFrame  # settled team-games strictly earlier, one row per side
+    fantasy: pd.DataFrame     # settled unit-weeks strictly earlier, players and defences
 
 
 @dataclass(frozen=True)
@@ -179,6 +185,9 @@ class Corpus:
     # specification A. It is settled fact about games already played, so it
     # crosses the same boundary as `outcomes` and never a looser one.
     efficiency: pd.DataFrame = None
+    # Settled fantasy production per unit-week. Empty unless a fixed-core run
+    # attached it. Same boundary as `outcomes`: it is a fact about games played.
+    fantasy: pd.DataFrame = None
 
     def weeks(self, settled_only: bool = False) -> list[tuple[int, int]]:
         frame = self.games
@@ -216,10 +225,20 @@ class Corpus:
         earlier = frame.loc[order.lt(season * 100 + week)]
         return earlier.sort_values(["season", "week", "game_id", "team"]).reset_index(drop=True)
 
+    def fantasy_before(self, season: int, week: int) -> pd.DataFrame:
+        """Settled unit-weeks strictly earlier than (season, week)."""
+        frame = self.fantasy
+        if frame is None or frame.empty:
+            return EMPTY_FANTASY
+        order = frame.season * 100 + frame.week
+        earlier = frame.loc[order.lt(season * 100 + week)]
+        return earlier.sort_values(["season", "week", "team", "unit_id"]).reset_index(drop=True)
+
     def view(self, season: int, week: int) -> AsOfView:
         return AsOfView(int(season), int(week), self.context(season, week),
                         self.history(season, week), self.schedule_through(season, week),
-                        self.efficiency_before(season, week))
+                        self.efficiency_before(season, week),
+                        self.fantasy_before(season, week))
 
 
 def build_corpus(raw: pd.DataFrame) -> Corpus:
@@ -278,7 +297,7 @@ def build_corpus(raw: pd.DataFrame) -> Corpus:
     if overlap:  # the whole point of the split; assert it rather than assume it
         raise AssertionError(f"Context frame leaked withheld columns: {sorted(overlap)}")
     return Corpus(games=games, outcomes=outcomes, market=market,
-                  efficiency=EMPTY_EFFICIENCY)
+                  efficiency=EMPTY_EFFICIENCY, fantasy=EMPTY_FANTASY)
 
 
 FEATURES: dict[str, callable] = {}
@@ -578,7 +597,7 @@ def feature_frame(corpus: Corpus, season: int, week: int, features=None) -> pd.D
     return frame
 
 
-def build_design(corpus: Corpus, weeks=None, features=None) -> pd.DataFrame:
+def build_design(corpus: Corpus, weeks=None, features=None) -> pd.DataFrame:  # noqa: D401
     """Features and targets for every settled week, ready for walk-forward use."""
     weeks = weeks if weeks is not None else corpus.weeks(settled_only=True)
     frames = [feature_frame(corpus, s, w, features) for s, w in weeks]
@@ -616,6 +635,13 @@ def _corrupt(corpus: Corpus, season: int, week: int, rng: np.random.Generator) -
             efficiency.loc[hit_efficiency, "off_epa"] = rng.normal(0, 1, count)
             efficiency.loc[hit_efficiency, "off_success"] = rng.random(count)
 
+    fantasy = corpus.fantasy
+    if fantasy is not None and not fantasy.empty:
+        fantasy = fantasy.copy()
+        hit_fantasy = (fantasy.season * 100 + fantasy.week).ge(season * 100 + week)
+        if hit_fantasy.any():
+            fantasy.loc[hit_fantasy, "points"] = rng.normal(0, 10, int(hit_fantasy.sum()))
+
     market = corpus.market.copy()
     if not market.empty:
         hit_market = market.game_id.isin(at_or_after)
@@ -624,7 +650,7 @@ def _corrupt(corpus: Corpus, season: int, week: int, rng: np.random.Generator) -
             noise = pd.Series(rng.normal(0, 50, len(market)), index=market.index)
             market[column] = values.where(~hit_market, values.fillna(0.0) + noise)
     return Corpus(games=corpus.games.copy(), outcomes=outcomes, market=market,
-                  efficiency=efficiency)
+                  efficiency=efficiency, fantasy=fantasy)
 
 
 class _OffByOneCorpus(Corpus):
@@ -652,11 +678,19 @@ class _OffByOneCorpus(Corpus):
         order = frame.season * 100 + frame.week
         return frame.loc[order.le(season * 100 + week)].reset_index(drop=True)
 
+    def fantasy_before(self, season: int, week: int) -> pd.DataFrame:
+        frame = self.fantasy
+        if frame is None or frame.empty:
+            return EMPTY_FANTASY
+        order = frame.season * 100 + frame.week
+        return frame.loc[order.le(season * 100 + week)].reset_index(drop=True)
+
 
 def canary_detected(corpus: Corpus, checkpoints=None, features=None, seed: int = 0) -> bool:
     """True when the audit catches a broken boundary it is supposed to catch."""
     broken = _OffByOneCorpus(games=corpus.games, outcomes=corpus.outcomes,
-                             market=corpus.market, efficiency=corpus.efficiency)
+                             market=corpus.market, efficiency=corpus.efficiency,
+                             fantasy=corpus.fantasy)
     return not audit(broken, checkpoints=checkpoints, features=features, seed=seed)["clean"]
 
 
@@ -698,8 +732,13 @@ def audit(corpus: Corpus, checkpoints=None, features=None, seed: int = 0) -> dic
             if late:
                 findings.append({"season": int(season), "week": int(week), "check": "efficiency_boundary",
                                  "detail": f"{late} team-games at or after the checkpoint"})
+        if view.fantasy is not None and not view.fantasy.empty:
+            late = int((view.fantasy.season * 100 + view.fantasy.week).ge(cutoff).sum())
+            if late:
+                findings.append({"season": int(season), "week": int(week), "check": "fantasy_boundary",
+                                 "detail": f"{late} unit-weeks at or after the checkpoint"})
         for name, frame in (("context", view.context), ("schedule", view.schedule),
-                            ("efficiency", view.efficiency)):
+                            ("efficiency", view.efficiency), ("fantasy", view.fantasy)):
             leaked = sorted(withheld & set(frame.columns))
             if leaked:
                 findings.append({"season": int(season), "week": int(week), "check": "withheld_columns",

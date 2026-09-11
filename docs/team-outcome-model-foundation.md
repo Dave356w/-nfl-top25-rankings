@@ -2,6 +2,10 @@
 
 ## Status and decision
 
+*Superseded in part: see [The same hypothesis at scale](#the-same-hypothesis-at-scale)
+below, which tests the same core on 4,594 games and finds the magnitude does
+carry graded information after all. The 67-game reading is kept as written.*
+
 The unweighted fixed-core home-team edge contains useful directional signal for
 actual NFL game outcomes, but the 2025 holdout does **not** support treating its
 magnitude as a smoothly increasing win probability.
@@ -250,6 +254,63 @@ the size at stake. The fixed-core edge moves from the centre of the model to
 an ablation run last, since it is not yet distinguishable from picking the
 home team. And the gates carry numbers, one of which the current corpus
 already fails.
+
+## The same hypothesis at scale
+
+The 67-game limit was an instrument limit, not a limit on the idea. Player
+expectations came from Yahoo salary, so the corpus could only be games Yahoo
+had priced. Rebuilding the expectation from nflverse — each unit's lagged
+eight-appearance Yahoo half-PPR production, with team defences scored from
+nflverse team stats — puts the same 1 QB / 3 RB / 3 WR / 2 TE / 1 DEF core on
+**4,594 games across 2007-2023**, 69 times the original sample, all of them
+with complete ten-slot cores. `tools/backtest_fixed_core.py` and
+`model/fixed_core.json`; the as-of audit is clean over all 572 settled weeks.
+
+This tests the *structure* of the hypothesis. It does not test Yahoo's pricing,
+which is a market-informed consensus that a rolling average is not.
+
+**The monotonicity finding above is overturned.** The single quintile violation
+was sampling noise. At scale the relationship is strictly monotonic, in win
+rate and in margin together:
+
+| Edge quintile | Games | Average edge | Home win rate | Average margin |
+| --- | ---: | ---: | ---: | ---: |
+| Lowest | 919 | −24.47 | 42.9% | −2.6 |
+| 2 | 919 | −9.26 | 49.5% | +0.2 |
+| 3 | 918 | +0.11 | 54.3% | +1.8 |
+| 4 | 919 | +9.64 | 62.7% | +4.8 |
+| Highest | 919 | +24.24 | **70.6%** | +6.9 |
+
+The ordinal reading holds too, and lands almost exactly where the 67 games put
+it — negative 46.1%, neutral 54.3%, positive 66.6%, against 44.4%, 53.8% and
+70.4% originally. Edge correlation with margin is **+0.235**, against 0.149 on
+the small sample.
+
+Fitted walk-forward, each model trained only on earlier seasons:
+
+| Forecast | Brier | Accuracy | AUC |
+| --- | ---: | ---: | ---: |
+| Home team only | 0.2456 | 56.1% | 0.504 |
+| **Fixed core alone** | **0.2366** | 58.4% | 0.614 |
+| Elo alone | 0.2239 | 63.4% | 0.673 |
+| Elo plus fixed core | 0.2232 | 63.8% | 0.676 |
+
+Three results, none of which the 67 games could reach.
+
+- **The edge beats the home-team baseline, decisively.** 0.0090 Brier with a
+  bootstrap interval of [0.0057, 0.0124], entirely clear of zero. The original
+  sample could not establish this: 61.2% against 56.7% was p = 0.27.
+- **Elo beats the edge.** 0.0127 [0.0077, 0.0177] the other way. A rolling
+  Elo rating is a better team-strength estimate than a summed fantasy core.
+- **The edge adds almost nothing on top of Elo.** −0.0007 [−0.0017, +0.0003],
+  straddling zero. The core is measuring team strength, and so is Elo; a team
+  whose players have been producing fantasy points is a team that has been
+  winning.
+
+So the hypothesis is real and now properly established — and largely redundant
+with a simpler measure of the same thing. Whether Yahoo's salary-based
+expectations carry something a rolling average does not is still open, and
+still needs Yahoo's retained slates to answer.
 
 ## Recommended disposition
 

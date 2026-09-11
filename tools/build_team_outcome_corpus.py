@@ -47,6 +47,22 @@ def pull_efficiency(seasons, cache_dir: Path, refresh: bool) -> pd.DataFrame:
     return frame
 
 
+def pull_fantasy(seasons, schedules, cache_dir: Path, refresh: bool) -> pd.DataFrame:
+    """Cache the settled unit-week fantasy frame the fixed-core run consumes."""
+    from pipeline import team_outcome_core as core
+    target = cache_dir / f"fantasy_{seasons[0]}_{seasons[-1]}.json.gz"
+    if target.exists() and not refresh:
+        return pd.DataFrame(json.loads(gzip.decompress(target.read_bytes())))
+    settled = schedules.loc[schedules.home_score.notna() & schedules.away_score.notna()]
+    frame = core.build_fantasy(core.load_player_points(seasons),
+                               core.load_defence_points(settled, seasons))
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.loads(frame.to_json(orient="records", date_format="iso"))
+    target.write_bytes(gzip.compress(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode(), mtime=0))
+    return frame
+
+
 def pull(seasons, cache_dir: Path, refresh: bool) -> pd.DataFrame:
     """Cache the raw schedules pull so a rebuild does not depend on the network."""
     target = cache_dir / f"schedules_{seasons[0]}_{seasons[-1]}.json.gz"

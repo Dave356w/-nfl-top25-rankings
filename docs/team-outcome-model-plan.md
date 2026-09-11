@@ -163,6 +163,14 @@ actually wants, and the only one that needs Yahoo data at all. RQ2 is not
 answerable until RQ1's model exists, because "adds anything" needs something
 to add to.
 
+**Resolved, and this section was wrong.** The 360-game ceiling was an
+instrument limit, not a limit on the hypothesis. Rebuilding the player
+expectation from nflverse puts the same fixed core on 4,594 games without
+Yahoo at all — see *The same hypothesis at scale* in the foundation document.
+RQ2 was answerable the whole time, and deferring it to a gate that could only
+fail on coverage was a misreading. The Yahoo question below remains open and
+still needs Yahoo.
+
 One open question worth resolving early, because it changes RQ2's ceiling:
 the 360-slate limit is a *Showdown* limit. If Yahoo's read-only endpoints
 retain completed full-slate contests as well, corpus B could grow by an order
@@ -484,6 +492,8 @@ run without network access.
 pipeline/team_outcome.py               corpus split, as-of view, features, audit       [P0]
 pipeline/team_outcome_eval.py          de-vig, metrics, bootstrap, paired tests        [P1]
 pipeline/team_outcome_fit.py           ridge logistic and linear fitters               [P1]
+pipeline/team_outcome_core.py          the fixed-core hypothesis, rebuilt on nflverse
+tools/backtest_fixed_core.py           the fixed core at scale -> model/fixed_core.json
 tools/build_team_outcome_corpus.py     corpus + audit -> model/team_outcome_corpus.json  [P0]
 tools/build_team_outcome_baselines.py  walk-forward baselines -> model/team_outcome_baselines.json [P1]
 tests/test_team_outcome.py             as-of/leakage, canary, Elo, seal                [P0/P1]
