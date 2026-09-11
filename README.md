@@ -277,7 +277,7 @@ Each run:
    rankings and Showdown pages.
 3. Cross-checks role and availability against the newest nflverse depth
    snapshot and the week's injury report.
-4. Fills `QB / RB / RB / WR / WR / TE / K` plus one RB/WR/TE flex and publishes
+4. Fills `QB / RB / RB / WR / WR / TE / K / DEF` plus one RB/WR/TE flex and publishes
    starters, bench and a review note per player.
 
 Projection priority is: salary-position-depth regression → rolling nflverse game
@@ -300,7 +300,7 @@ paste in what the page's editor hands you), not the Python:
 { "roster": [ { "Name": "Dak Prescott", "Position": "QB" } ] }
 ```
 
-Positions are `QB`, `RB`, `WR`, `TE`, `K`. Yahoo's season-long roster API needs
+Positions are `QB`, `RB`, `WR`, `TE`, `K`, `DEF`. Yahoo's season-long roster API needs
 OAuth, so the team is typed in rather than fetched. Everything else lives in the
 constants at the top of `lineup_optimizer.py`:
 
