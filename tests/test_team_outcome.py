@@ -120,8 +120,12 @@ class AsOfTests(unittest.TestCase):
         checks={f['check'] for f in report['findings']}
         self.assertIn('history_boundary',checks)
         self.assertIn('perturbation',checks)
-        self.assertEqual({f['feature'] for f in report['findings'] if f['check']=='perturbation'},
-                         {'prior_margin_diff'})
+        moved={f['feature'] for f in report['findings'] if f['check']=='perturbation'}
+        # Every feature that reads history is served the corrupted week and moves;
+        # every context-only feature is untouched, which is what pins the finding
+        # to the boundary rather than to the features.
+        self.assertEqual(moved,{'prior_margin_diff','elo_diff'})
+        self.assertFalse(moved&{'home_field','dome','div_game','neutral_site','rest_diff'})
 
     def test_audit_detects_a_withheld_column_reaching_the_view(self):
         games=self.corpus.games.copy()
@@ -151,6 +155,50 @@ class AsOfTests(unittest.TestCase):
         self.assertEqual(set(design.columns)-set(to.FEATURES)-{'game_id','season','week'},
                          {'margin','home_win','tie'})
         self.assertFalse({'home_score','away_score'}&set(design.columns))
+
+
+class EloTests(unittest.TestCase):
+    def setUp(self):
+        self.corpus=to.build_corpus(schedules())
+
+    def test_winning_raises_a_rating_and_the_loser_pays_for_it(self):
+        history=self.corpus.history(2019,5)
+        ratings=to.elo_ratings(history)
+        self.assertAlmostEqual(sum(ratings.values()),to.ELO_START*len(ratings),places=6)
+        won=history.groupby('home_team').margin.sum()
+        best=won.idxmax()
+        self.assertGreater(ratings[best],to.ELO_START)
+
+    def test_ratings_regress_between_seasons(self):
+        history=self.corpus.history(2020,1)
+        end_of_2019=to.elo_ratings(history)
+        into_2020=to.elo_ratings(history,target_season=2020)
+        for team,rating in end_of_2019.items():
+            self.assertLess(abs(into_2020[team]-to.ELO_START),abs(rating-to.ELO_START)+1e-9)
+
+    def test_elo_is_covered_by_the_as_of_audit(self):
+        self.assertIn('elo_diff',to.FEATURES)
+        report=to.audit(self.corpus,features={'elo_diff':to.FEATURES['elo_diff']})
+        self.assertTrue(report['clean'],report['findings'])
+
+
+class SealTests(unittest.TestCase):
+    def test_sealed_seasons_are_dropped_from_summaries(self):
+        frame=pd.DataFrame({'season':[2019,2024,2025],'x':[1,2,3]})
+        self.assertEqual(list(to.unsealed(frame).season),[2019])
+
+    def test_evaluation_seasons_exclude_the_seal_and_the_training_floor(self):
+        rows=[]
+        for season in range(2010,2026):
+            rows.append(dict(game_id=f'{season}_x',season=season,week=1,game_type='REG',
+                gameday=f'{season}-09-01',gametime='13:00',home_team='GB',away_team='CHI',
+                location='Home',roof='dome',surface='grass',div_game=1,home_rest=7,
+                away_rest=7,stadium_id='S',home_score=20.0,away_score=17.0))
+        corpus=to.build_corpus(pd.DataFrame(rows))
+        seasons=to.evaluation_seasons(corpus)
+        self.assertFalse(set(seasons)&set(to.SEALED_SEASONS))
+        self.assertEqual(min(seasons),2010+to.MINIMUM_TRAINING_SEASONS)
+        self.assertEqual(max(seasons),2023)
 
 
 if __name__=='__main__':

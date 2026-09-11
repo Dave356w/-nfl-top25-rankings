@@ -63,6 +63,37 @@ WITHHELD_COLUMNS = (
 
 REQUIRED_COLUMNS = CONTEXT_COLUMNS + OUTCOME_SOURCE_COLUMNS
 
+# The final holdout of docs/team-outcome-model-plan.md §6.1: the two most recent
+# complete seasons, read once at P4 and never before. Sealing is a reporting
+# rule, not a loading rule — the corpus has to know these games exist to count
+# coverage and to walk forward into them later — so nothing that summarizes an
+# outcome may include them until the seal is opened.
+SEALED_SEASONS = (2024, 2025)
+
+# Expanding-window training needs a floor before the first evaluated season.
+MINIMUM_TRAINING_SEASONS = 8
+
+ELO_START = 1500.0
+ELO_K = 20.0
+ELO_SCALE = 400.0
+ELO_SEASON_REGRESSION = 1.0 / 3.0
+# A literature constant, not a value fitted here. P1 reports the textbook Elo
+# alongside one whose intercept and slope are fitted per fold, so the choice of
+# this number is visible in the gap between them rather than buried.
+ELO_HOME_ADVANTAGE = 65.0
+
+
+def unsealed(frame: pd.DataFrame, sealed=SEALED_SEASONS) -> pd.DataFrame:
+    """Drop sealed seasons. Every outcome summary goes through this."""
+    return frame.loc[~frame.season.isin(sealed)]
+
+
+def evaluation_seasons(corpus, sealed=SEALED_SEASONS,
+                       minimum_training=MINIMUM_TRAINING_SEASONS) -> list[int]:
+    """Seasons a walk-forward run may score: unsealed, and far enough in."""
+    seasons = sorted(int(s) for s in corpus.games.season.unique() if s not in sealed)
+    return seasons[minimum_training:]
+
 
 def _pandas(frame) -> pd.DataFrame:
     # nflreadpy returns polars; to_pandas needs pyarrow, which the pipeline does
@@ -296,6 +327,43 @@ def _prior_margin_diff(view: AsOfView, window: int = 8, prior_games: float = 4.0
     form = _shrink(recent.mean(), recent.count().astype(float), prior_games)
     home = view.context.home_team.map(form).astype(float).fillna(0.0)
     away = view.context.away_team.map(form).astype(float).fillna(0.0)
+    return home - away
+
+
+def elo_ratings(history: pd.DataFrame, target_season=None, k: float = ELO_K,
+                regression: float = ELO_SEASON_REGRESSION) -> dict[str, float]:
+    """Walk Elo forward through settled games, in order.
+
+    Causal by construction: a rating only ever moves on a game already played.
+    Ratings regress a third of the way to 1500 between seasons, including into
+    `target_season`, so a week 1 game is not priced on December's ratings.
+    """
+    ratings: dict[str, float] = {}
+    season_seen = None
+    def regress():
+        for team in ratings:
+            ratings[team] = ELO_START + (ratings[team] - ELO_START) * (1.0 - regression)
+    for row in history.sort_values(["season", "week", "game_id"]).itertuples(index=False):
+        if season_seen is not None and row.season != season_seen:
+            regress()
+        season_seen = row.season
+        home = ratings.get(row.home_team, ELO_START)
+        away = ratings.get(row.away_team, ELO_START)
+        expected = 1.0 / (1.0 + 10.0 ** (-(home - away + ELO_HOME_ADVANTAGE) / ELO_SCALE))
+        actual = 1.0 if row.margin > 0 else (0.0 if row.margin < 0 else 0.5)
+        move = k * (actual - expected)
+        ratings[row.home_team] = home + move
+        ratings[row.away_team] = away - move
+    if target_season is not None and season_seen is not None and target_season != season_seen:
+        regress()
+    return ratings
+
+
+@feature("elo_diff")
+def _elo_diff(view: AsOfView) -> pd.Series:
+    ratings = elo_ratings(view.history, target_season=view.season)
+    home = view.context.home_team.map(ratings).astype(float).fillna(ELO_START)
+    away = view.context.away_team.map(ratings).astype(float).fillna(ELO_START)
     return home - away
 
 

@@ -470,14 +470,21 @@ builder in `tools/`, an importable module in `pipeline/`, and shape tests that
 run without network access.
 
 ```
-pipeline/team_outcome.py            corpus split, as-of view, features, audit      [P0]
-tools/build_team_outcome_corpus.py  corpus + audit -> model/team_outcome_corpus.json [P0]
-tests/test_team_outcome.py          as-of/leakage, canary, tie handling             [P0]
-model/team_outcome_corpus.json      P0 evidence: coverage, audit result             [P0]
-tools/build_team_outcome_model.py   walk-forward trainer -> model/team_outcome.json
-tools/evaluate_team_outcome.py      scoring + bootstrap -> model/team_outcome_evaluation.json
-model/team_outcome.json             frozen artifact, gate results, approval flag
+pipeline/team_outcome.py               corpus split, as-of view, features, audit       [P0]
+pipeline/team_outcome_eval.py          de-vig, metrics, bootstrap, paired tests        [P1]
+pipeline/team_outcome_fit.py           ridge logistic and linear fitters               [P1]
+tools/build_team_outcome_corpus.py     corpus + audit -> model/team_outcome_corpus.json  [P0]
+tools/build_team_outcome_baselines.py  walk-forward baselines -> model/team_outcome_baselines.json [P1]
+tests/test_team_outcome.py             as-of/leakage, canary, Elo, seal                [P0/P1]
+tests/test_team_outcome_eval.py        de-vig, metrics, intervals, fitters             [P1]
+tools/build_team_outcome_model.py      walk-forward trainer -> model/team_outcome.json
+model/team_outcome.json                frozen artifact, gate results, approval flag
 ```
+
+Three modules rather than one: the corpus and its as-of boundary, the fitters,
+and the scoring. Scoring is the piece with the most rules attached — two de-vig
+methods, ties as half a win, an interval on every difference — and it is worth
+being able to test it without a corpus in the room.
 
 The artifact follows the conventions already in `model/`:
 

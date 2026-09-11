@@ -42,8 +42,15 @@ def pull(seasons, cache_dir: Path, refresh: bool) -> pd.DataFrame:
 
 
 def summarize(corpus: to.Corpus) -> dict:
+    """Inventory the corpus without reporting what happened in a sealed season.
+
+    Coverage counts span every season, because later phases have to know the
+    sealed games exist. Outcome statistics do not: a home win rate or a tie
+    count for a sealed season is a summary of the holdout, which §6.1 of the
+    plan puts off limits until P4.
+    """
     games, outcomes = corpus.games, corpus.outcomes
-    settled = games.merge(outcomes, on="game_id", how="inner")
+    settled = to.unsealed(games.merge(outcomes, on="game_id", how="inner"))
     market = corpus.market.merge(games[["game_id", "season"]], on="game_id", how="left")
     lines = market.groupby("season").home_moneyline.apply(lambda s: float(s.notna().mean()))
     per_season = settled.groupby("season").agg(
@@ -52,21 +59,28 @@ def summarize(corpus: to.Corpus) -> dict:
         ties=("tie", lambda s: int(s.sum())),
     ).reset_index()
     per_season["closing_moneyline_coverage"] = per_season.season.map(lines).fillna(0.0).round(4)
+    coverage = (games.groupby("season").size().rename("scheduled_games").reset_index())
+    coverage["closing_moneyline_coverage"] = coverage.season.map(lines).fillna(0.0).round(4)
+    coverage["sealed"] = coverage.season.isin(to.SEALED_SEASONS)
     return {
         "seasons": [int(games.season.min()), int(games.season.max())],
         "scheduled_games": int(len(games)),
         "settled_games": int(len(outcomes)),
         "unscheduled_outcomes": int(len(set(outcomes.game_id) - set(games.game_id))),
-        "home_win_rate": round(float((outcomes.home_win == 1.0).mean()), 4),
-        "home_win_rate_ties_as_half": round(float(outcomes.home_win.mean()), 4),
-        "ties": int(outcomes.tie.sum()),
-        "margin_sd": round(float(outcomes.margin.std()), 3),
-        "margin_mean": round(float(outcomes.margin.mean()), 3),
+        "sealed_seasons": list(to.SEALED_SEASONS),
+        "outcome_statistics_span": "unsealed seasons only",
+        "unsealed_settled_games": int(len(settled)),
+        "home_win_rate": round(float((settled.home_win == 1.0).mean()), 4),
+        "home_win_rate_ties_as_half": round(float(settled.home_win.mean()), 4),
+        "ties": int(settled.tie.sum()),
+        "margin_sd": round(float(settled.margin.std()), 3),
+        "margin_mean": round(float(settled.margin.mean()), 3),
         "teams": int(pd.concat([games.home_team, games.away_team]).nunique()),
         "context_columns": sorted(games.columns),
         "withheld_from_context": sorted(
             set(to.MARKET_COLUMNS) | set(to.OUTCOME_SOURCE_COLUMNS) | set(to.WITHHELD_COLUMNS)),
-        "per_season": per_season.to_dict("records"),
+        "per_season_outcomes_unsealed": per_season.to_dict("records"),
+        "per_season_coverage": coverage.to_dict("records"),
     }
 
 
@@ -114,12 +128,16 @@ def main():
             "History is resolved to whole weeks, so a Thursday result is not available to that "
             "week's later games.",
             "No model is fitted and nothing is promoted at P0.",
+            "Outcome statistics cover unsealed seasons only; coverage counts span the corpus.",
+            "The as-of audit does run over sealed weeks: it reports whether the boundary held, "
+            "never what happened in those games, so it reads nothing the seal protects.",
         ],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(artifact, indent=2, allow_nan=False) + "\n")
     print(json.dumps({k: artifact["corpus"][k] for k in (
-        "seasons", "scheduled_games", "settled_games", "home_win_rate", "ties", "margin_sd")}, indent=2))
+        "seasons", "scheduled_games", "settled_games", "sealed_seasons",
+        "unsealed_settled_games", "home_win_rate", "ties", "margin_sd")}, indent=2))
     print(f"as-of audit: {'clean' if report['clean'] else 'FINDINGS'} "
           f"over {report['checkpoints']} checkpoints; design rows {len(design)}")
     return 0 if report["clean"] else 1
