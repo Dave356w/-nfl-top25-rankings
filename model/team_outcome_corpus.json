@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "phase": "P0",
-  "as_of_utc": "2026-09-11T21:46:18.216353+00:00",
+  "as_of_utc": "2026-09-11T22:09:42.997537+00:00",
   "source": "nflverse schedules via nflreadpy",
   "corpus": {
     "seasons": [
@@ -411,6 +411,7 @@
     "rows": 7276,
     "features": [
       "bye_diff",
+      "crowd_absent",
       "div_game",
       "dome",
       "elo_diff",
@@ -434,6 +435,7 @@
     "Recorded weather, starting quarterback, officials and coaches are withheld: nflverse records or restates them after the fact.",
     "History is resolved to whole weeks, so a Thursday result is not available to that week's later games.",
     "No model is fitted and nothing is promoted at P0.",
-    "Outcome statistics cover unsealed seasons only; coverage counts span the corpus."
+    "Outcome statistics cover unsealed seasons only; coverage counts span the corpus.",
+    "The as-of audit does run over sealed weeks: it reports whether the boundary held, never what happened in those games, so it reads nothing the seal protects."
   ]
 }

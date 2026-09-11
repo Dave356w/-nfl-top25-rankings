@@ -20,6 +20,9 @@ shows up as a feature that moves.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -81,6 +84,35 @@ ELO_SEASON_REGRESSION = 1.0 / 3.0
 # alongside one whose intercept and slope are fitted per fold, so the choice of
 # this number is visible in the gap between them rather than buried.
 ELO_HOME_ADVANTAGE = 65.0
+
+
+ROOT = Path(__file__).resolve().parents[1]
+PREREG_PATH = ROOT / "docs" / "team-outcome-prereg.md"
+PREREG_RECORD = ROOT / "model" / "team_outcome_prereg.json"
+
+
+def prereg_sha256(path: Path = PREREG_PATH) -> str:
+    """Hash the preregistration exactly as it sits on disk."""
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def verify_prereg(record: Path = PREREG_RECORD, path: Path = PREREG_PATH) -> dict:
+    """Confirm the frozen hash still matches the document.
+
+    This is the whole enforcement mechanism. A preregistration nobody checks is
+    a wish; one whose hash is asserted in the test suite cannot be edited after
+    the fact without the edit becoming visible in a failing build.
+    """
+    frozen = json.loads(Path(record).read_text(encoding="utf-8"))
+    actual = prereg_sha256(path)
+    if actual != frozen["sha256"]:
+        raise ValueError(
+            f"{Path(path).name} has changed since it was frozen: recorded "
+            f"{frozen['sha256'][:12]}, found {actual[:12]}. Amending a "
+            "preregistration requires a new frozen version recording the "
+            "previous hash and the reason; see its Amendments section."
+        )
+    return frozen
 
 
 def unsealed(frame: pd.DataFrame, sealed=SEALED_SEASONS) -> pd.DataFrame:
@@ -310,6 +342,19 @@ def _dome(view: AsOfView) -> pd.Series:
 @feature("div_game")
 def _div_game(view: AsOfView) -> pd.Series:
     return pd.to_numeric(view.context.div_game, errors="coerce").fillna(0.0).astype(float)
+
+
+@feature("crowd_absent")
+def _crowd_absent(view: AsOfView) -> pd.Series:
+    """The 2020 season, played largely without spectators.
+
+    A training-time control, not a prediction-time lever: for any other season
+    it is zero. It exists because P0 measured home advantage at 49.8% in 2020
+    against 54.8% in 2021-2023, and without it that season drags the fitted
+    home-field term for every later fold. The justification is an external fact
+    about those games rather than a pattern found in the data.
+    """
+    return view.context.season.eq(2020).astype(float)
 
 
 @feature("prior_margin_diff")

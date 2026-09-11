@@ -113,6 +113,7 @@ site/data/history/          one archived JSON + CSV per run date
 pipeline/team_outcome.py    the game corpus and its as-of feature harness
 pipeline/team_outcome_eval.py  de-vig, metrics and interval estimates
 pipeline/team_outcome_fit.py   the ridge logistic and linear fitters
+docs/team-outcome-prereg.md    what the model will be, frozen before fitting
 tools/                      offline calibration scripts (see below)
 tests/                      shape tests for every published payload
 ```
@@ -673,6 +674,19 @@ four decimals here, so no conclusion rests on that choice.
 
 The gap between fitted Elo and the market, 0.0141 Brier, is the whole space a
 candidate model has to work in. Writes `model/team_outcome_baselines.json`.
+
+Phase P2 freezes what the model will be before it is fitted.
+[`docs/team-outcome-prereg.md`](docs/team-outcome-prereg.md) pins the feature
+list, the model family, the ridge grid, the primary metric, the gates and the
+rule that maps gate results to an approval flag — including which features were
+excluded and why. `tools/freeze_team_outcome_prereg.py` records its sha256 in
+`model/team_outcome_prereg.json`, and the test suite checks that hash on every
+run, so editing the document after the freeze fails the build. Amending needs a
+stated reason and keeps the old hash; once a sealed read is recorded, the tool
+refuses to amend at all.
+
+The two most recent complete seasons are sealed. Nothing in the pipeline reads
+them, and the corpus summary reports coverage for them but never an outcome.
 
 ### Historical component-prior gate
 

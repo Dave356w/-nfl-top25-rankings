@@ -310,6 +310,10 @@ Corpus B adds exactly two, and only for the ablation:
 | `edge_tier` | two dummies — negative and positive, neutral is the reference level |
 | `salary_depth_aggregate` | continuous, **challenger only**, never in the primary |
 
+This table is the candidate list as of P1. The binding version — eleven terms
+plus an intercept, with four named exclusions — is
+[`team-outcome-prereg.md`](team-outcome-prereg.md) §4, frozen at P2.
+
 Two disciplines apply to this list.
 
 **Cap the count.** No more than twelve features in the production candidate.
@@ -371,6 +375,10 @@ with four `approved: false` entries and an empty `priors` list rather than
 with a lowered bar.
 
 ## 7. Model families and calibration
+
+The binding version of this section is
+[`team-outcome-prereg.md`](team-outcome-prereg.md) §5, frozen at P2, which also
+records the ridge grid and the decision not to run gradient boosting.
 
 **Primary.** Ridge logistic regression for the win target and ridge linear
 regression for the margin target, on standardized features, with monotone sign
@@ -448,7 +456,7 @@ it passes or fails.
 | **G4 Stability** | positive Brier skill in ≥ 8 of 10 walk-forward seasons |
 | **G5 Seal** | sealed-season metrics inside the walk-forward bootstrap interval; one read, no re-read |
 | **G6 Market context** | gap to the no-vig market over the 2010+ games that have a closing moneyline, under both de-vig methods; **no threshold** |
-| **G7 Edge ablation** | removing `edge_tier` degrades Brier with a bootstrap interval excluding 0, on ≥ 2,000 corpus-B games |
+| **G7 Edge ablation** | removing `edge_tier` degrades Brier with a bootstrap interval excluding 0, on ≥ 2,000 corpus-B games — a separate `approved_edge` flag, not a term in `approved_model` |
 | **G8 Leakage** | as-of test passes, canary detected, every feature carries a documented timestamp |
 
 G6 carries no threshold deliberately. Beating the closing market is not the
@@ -537,7 +545,7 @@ edge, if at all, as negative/neutral/positive, and display no win probability.
 | --- | --- | --- |
 | P0 | corpus assembly, as-of harness | **done** — see below |
 | P1 | baselines | **done** — see below |
-| P2 | preregistration | `docs/team-outcome-prereg.md` committed, hash recorded |
+| P2 | preregistration | **done** — see below |
 | P3 | candidates, walk-forward | G1-G4 and G8 evaluated and written to the artifact |
 | P4 | sealed read | G5 evaluated; artifact written with `approved` either way |
 | P5 | corpus-B ablation | full-slate retention checked; G7 evaluated and recorded, expected to fail on coverage |
@@ -632,6 +640,57 @@ and slightly optimistic. And the fitted home-field term declines across folds �
 a 0.333 logit fitted through 2006 against 0.291 fitted through 2022 — which
 corroborates the P0 drift finding from inside the training data alone, with no
 sealed season involved.
+
+### P2 result
+
+[`team-outcome-prereg.md`](team-outcome-prereg.md), frozen at sha256
+`171bc3eb386e…` and recorded in `model/team_outcome_prereg.json` by
+`tools/freeze_team_outcome_prereg.py`. `tests/test_team_outcome_prereg.py`
+checks the hash on every run, so the document cannot be edited without the edit
+failing the build — which is the only thing that makes a preregistration worth
+writing. An amendment before the sealed read needs `--reason` and retains the
+previous hash; after a sealed read the tool refuses outright.
+
+Six things were still open after P1 and are now fixed.
+
+- **The season-varying intercept.** §11 of P0's result deferred this to P2.
+  Settled: the expanding-window refit already tracks the drift with a lag, so
+  the only addition is a `crowd_absent` control for 2020, which keeps that
+  season from dragging the fitted home-field term for later folds. No recency
+  weighting, no decay parameter, no rolling window — each is a knob, and P1
+  showed the drift is gradual enough that the refit absorbs it. The control is
+  justified by an external fact about those games, not by a pattern found in
+  the data.
+- **Two nested specifications, selected by an audit rather than a score.**
+  A is schedules-only and runs today; B adds opponent-adjusted play-by-play
+  efficiency. B is primary if and only if the play-by-play corpus passes the
+  same as-of audit, with zero findings. No performance number enters that
+  choice, so the fallback is not a degree of freedom. Feasibility was checked
+  before committing: play-by-play loads in about two seconds a season and
+  98.9% of pass and run plays carry an EPA value back to 1999.
+- **Four features excluded, each with its reason recorded.** `qb_continuity`
+  is the one that matters: the only honest pregame version needs to know who
+  starts *this* week, and every nflverse source for that is restated current
+  state. `travel_tz` costs an outside data dependency for a weak motivation,
+  `plays_per_game_diff` loses the cut at twelve terms, and `prior_margin_diff`
+  is collinear with Elo by construction and drops to a challenger.
+- **Gradient boosting is not run**, departing from §7. The repository ships
+  numpy, pandas and nflreadpy, and adding a tree library for a challenger this
+  plan already expects to lose is not a trade worth making. Recorded as a
+  deviation rather than quietly dropped, with a dependency-free nonlinearity
+  challenger in its place.
+- **G4 rescaled** from the plan's "8 of 10 seasons" to 13 of 17, the actual
+  walk-forward span.
+- **The decision rule disambiguated.** §9 left it unclear whether the edge
+  ablation gates the model. It does not: `approved_model` is G1-G5 and G8, and
+  `approved_edge` is a separate flag carrying G7. The fixed-core edge is a
+  corpus-B question about one feature, and the fundamentals model does not
+  depend on its answer.
+
+The document opens by listing what has already been seen, because a
+preregistration claiming to be blind would be false here. Everything in §1 of
+it comes from unsealed seasons; from 2024 and 2025 only the game counts and the
+moneyline coverage are known.
 
 ## 13. What would invalidate this plan
 

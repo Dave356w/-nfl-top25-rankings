@@ -176,6 +176,17 @@ class EloTests(unittest.TestCase):
         for team,rating in end_of_2019.items():
             self.assertLess(abs(into_2020[team]-to.ELO_START),abs(rating-to.ELO_START)+1e-9)
 
+    def test_crowd_absent_marks_only_2020(self):
+        rows=[]
+        for season in (2019,2020,2021):
+            rows.append(dict(game_id=f'{season}_x',season=season,week=1,game_type='REG',
+                gameday=f'{season}-09-01',gametime='13:00',home_team='GB',away_team='CHI',
+                location='Home',roof='dome',surface='grass',div_game=1,home_rest=7,
+                away_rest=7,stadium_id='S',home_score=20.0,away_score=17.0))
+        corpus=to.build_corpus(pd.DataFrame(rows))
+        for season,expected in ((2019,0.0),(2020,1.0),(2021,0.0)):
+            self.assertEqual(float(to.feature_frame(corpus,season,1).crowd_absent.iloc[0]),expected)
+
     def test_elo_is_covered_by_the_as_of_audit(self):
         self.assertIn('elo_diff',to.FEATURES)
         report=to.audit(self.corpus,features={'elo_diff':to.FEATURES['elo_diff']})
