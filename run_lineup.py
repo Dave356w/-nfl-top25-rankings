@@ -120,6 +120,11 @@ def build_payload(
         "auto_exclude_out": bool(lo.AUTO_EXCLUDE_REPORTED_OUT),
         "slots": dict(lo.STARTING_POSITIONS),
         "flex_eligible": list(lo.FLEX_ELIGIBLE),
+        # Browser edits may survive projection refreshes, but must yield when
+        # the committed roster itself changes.
+        "roster_fingerprint": "|".join(
+            f"{row.Key}:{row.Position}" for _, row in roster.iterrows()
+        ),
         "totals": {
             "mean": _total(starters, "FP"),
             "floor": _total(starters, "Floor_P25"),

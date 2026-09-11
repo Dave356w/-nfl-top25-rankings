@@ -619,6 +619,14 @@ selected a cubic curve, position-depth offsets, no depth-salary interaction and
 ridge 0.1. Its 1,922-player holdout produced MAE 3.700, RMSE 5.309 and
 correlation 0.696.
 
+The corresponding team-outcome experiment is documented in
+[`docs/team-outcome-model-foundation.md`](docs/team-outcome-model-foundation.md).
+On the exploratory 67-game 2025 sample, the unweighted fixed-core edge showed a
+useful negative/neutral/positive directional trend, but not a reliably monotonic
+or calibrated win-probability relationship. It selected 41 winners versus 42
+for the no-vig closing market; the strict 55-game complete-core subset tied the
+market at 35. It remains a research feature, not a production game predictor.
+
 ### Historical component-prior gate
 
 Run `python tools/build_component_priors.py --holdout 2025 --start 2021` to reproduce
