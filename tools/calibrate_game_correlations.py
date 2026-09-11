@@ -35,10 +35,10 @@ Read the result as an upper bound
 ---------------------------------
 The expectation here is a lagged rolling average, which does not know the game
 total. A shootout is therefore a surprise to it, and part of what it books as
-correlated error is really the shared game environment. The pipeline's means are
-market-implied and already price that environment, so the correlation left over
-for its residuals is if anything *lower* than what this prints. That asymmetry
-is the reason not to read a positive gap here as a licence to raise the table.
+correlated error is really the shared game environment. The live
+salary-position-depth means do not know the game total either, so this script's
+result can be used directly as a residual-correlation calibration. A positive
+gap is still not, on its own, a licence to raise the table.
 
 Team defenses are not covered: weekly player stats carry no DST scoring, so
 `OPPONENT_DEF_CORR` and the DEF entries still rest on their original fit.
@@ -229,9 +229,9 @@ def main(argv=None) -> int:
     disagree = table[table["Agrees"].eq("REVIEW")]
     print(f"\n{len(disagree)} of {len(table)} relationships fall outside the "
           "95% interval of the measurement.")
-    print("Read every gap against the docstring's upper-bound caveat before "
-          "moving a constant: this expectation does not know the game total and "
-          "the pipeline's market means do.")
+    print("Read every gap against the docstring's caveat before moving a "
+          "constant: neither this expectation nor the live salary regression "
+          "knows the game total.")
 
     if args.emit_python:
         print("\n# Measured same-game correlations, "

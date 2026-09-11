@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NFL Top 25 by Position</title>
-<meta name="description" content="Daily Yahoo NFL fantasy top-25 rankings by position, built from market-implied projections, nflverse depth charts and Yahoo salary priors.">
+<meta name="description" content="Daily Yahoo NFL fantasy top-25 rankings from a historical Yahoo salary-position-depth model and nflverse availability data.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
 <style>
 :root{
@@ -207,7 +207,7 @@ tr[data-rank="1"] .rank,tr[data-rank="2"] .rank,tr[data-rank="3"] .rank{
   font-size:11.5px; font-weight:600; letter-spacing:.01em; white-space:nowrap;
   background:var(--mute-soft); color:var(--ink-2);
 }
-.badge.market{background:var(--good-soft); color:var(--good)}
+.badge.model{background:var(--good-soft); color:var(--good)}
 .badge.override{background:var(--accent-soft); color:var(--accent-ink)}
 .badge.fallback{background:var(--warn-soft); color:var(--warn)}
 
@@ -385,20 +385,17 @@ footer{
     <div class="panel-body">
       <h4>What the numbers mean</h4>
       <p><b>Proj FP</b> is the projection this pipeline settled on for the player, in
-         Yahoo half-PPR scoring. Priority is: manual override, then a market-implied
-         mean from sportsbook props, then a Yahoo FPPG and salary prior. Market means
-         are blended in by how completely the props covered the player, so a
-         touchdown-only estimate moves the prior rather than replacing it.</p>
+         Yahoo half-PPR scoring. It comes from a season-frozen regression fitted to
+         historical Yahoo salaries, positions, depth tiers and settled results.</p>
       <p><b>Role</b> is the player's rank within his own alignment slot on the
          published depth chart, so all three receivers in a three-wide set read as
          starters rather than as a starter and two reserves. <b>Depth</b> is the
          separate expected-opportunity rank, which blends that chart ordering with
-         the market projection and is what the volatility model is keyed on. Only
-         the prior share of a projection carries the historical role haircut.</p>
+         Yahoo salary and is what the volatility model is keyed on.</p>
       <div class="legend">
-        <div><span class="badge market">market</span> de-vigged sportsbook props</div>
+        <div><span class="badge model">model</span> Yahoo salary-position-depth regression</div>
         <div><span class="badge override">override</span> manual value</div>
-        <div><span class="badge fallback">fallback</span> Yahoo FPPG / salary prior</div>
+        <div><span class="badge fallback">nflverse</span> depth, roster and injury status</div>
       </div>
       <h4>Projection sources used on this slate</h4>
       <div class="chips" id="methods"></div>
@@ -407,10 +404,9 @@ footer{
       <h4>Run log</h4>
       <pre class="log" id="log"></pre>
       <h4>Caveats</h4>
-      <p>These are market-derived estimates, not predictions with a guarantee.
-         The sportsbook and Yahoo feeds are public but undocumented and can change
-         shape without notice; when a feed is unavailable the run falls back to
-         Yahoo priors and says so in the log above. Kickoff times are shown in
+      <p>These are historical regression estimates, not predictions with a guarantee.
+         Yahoo's feed is undocumented and NFLVerse reports can lag late team news.
+         Kickoff times are shown in
          your local timezone.</p>
     </div>
   </details>
@@ -502,7 +498,7 @@ footer{
   function methodClass(method) {
     var m = String(method || "").toLowerCase();
     if (m.indexOf("override") >= 0) return "override";
-    if (m.indexOf("market") >= 0) return "market";
+    if (m.indexOf("regression") >= 0) return "model";
     return "fallback";
   }
 
@@ -652,10 +648,7 @@ footer{
       "ok"
     );
 
-    var market = d.market || {};
-    var accepted = num(market.accepted) ? market.accepted : 0;
-    var skill = num(market.skill_rows) ? market.skill_rows : 0;
-    var coverage = skill > 0 ? Math.round((accepted / skill) * 100) + "%" : "—";
+    var projection = d.projection || {};
 
     el("stats").innerHTML = [
       ['<div class="k">Games on slate</div><div class="v">' + d.slate.game_count +
@@ -664,12 +657,12 @@ footer{
        "</div>"],
       ['<div class="k">Players priced</div><div class="v">' + d.slate.player_count +
        '</div><div class="n">' + escapeHtml((d.positions || []).join(" · ")) + "</div>"],
-      ['<div class="k">Market coverage</div><div class="v">' + coverage +
-       '</div><div class="n">' + accepted + " of " + skill +
-       " skill rows priced from props</div>"],
-      ['<div class="k">Feeds</div><div class="v">' +
-       ((market.feeds || []).length || "—") + '</div><div class="n">' +
-       escapeHtml((market.feeds || []).join(", ") || "Yahoo priors only") + "</div>"]
+      ['<div class="k">Model through</div><div class="v">' +
+       escapeHtml(projection.trained_through_season || "—") +
+       '</div><div class="n">season-frozen historical fit</div>'],
+      ['<div class="k">Holdout MAE</div><div class="v">' +
+       escapeHtml(projection.holdout_metrics ? fmt(projection.holdout_metrics.mae, 2) : "—") +
+       '</div><div class="n">Yahoo settled half-PPR points</div>']
     ].map(function (h) { return '<div class="stat">' + h + "</div>"; }).join("");
     el("stats").hidden = false;
 
@@ -681,10 +674,8 @@ footer{
         " · " + methods[k] + "</span>";
     }).join("") || '<span class="badge">no breakdown recorded</span>';
 
-    var notes = (market.notes || []).join(" · ");
     el("feeds").textContent =
-      "Market: " + ((market.feeds || []).join(", ") || "none") +
-      (notes ? " — " + notes : "") +
+      "Yahoo salary model + NFLVerse depth, roster and injury reports" +
       (d.availability_removed
         ? ". Availability filter removed " + d.availability_removed + " player(s)."
         : "");

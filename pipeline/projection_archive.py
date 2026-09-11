@@ -30,7 +30,7 @@ def clean(value):
 def capture(prepared, cfg, snapshot_id, showdown_payloads):
     from pipeline import notebook as nb
     root=Path(__file__).resolve().parents[1]
-    files=sorted((root/'pipeline').glob('*.py'))+[root/'market_audit.py',root/'site/showdown-worker.js']
+    files=sorted((root/'pipeline').glob('*.py'))+[root/'site/showdown-worker.js']
     digest=hashlib.sha256()
     for path in files:
         digest.update(str(path.relative_to(root)).encode());digest.update(path.read_bytes())
@@ -38,7 +38,7 @@ def capture(prepared, cfg, snapshot_id, showdown_payloads):
     for row in prepared['players'].to_dict('records'):
         identity = row.get('Yahoo ID')
         key = ('yahoo:' + str(int(identity))) if pd.notna(identity) else (
-            row['Team'] + ':' + nb._market_name_key(row['Name']))
+            row['Team'] + ':' + nb.normalize_person_name(row['Name']))
         mean=float(row['Projected_FP']);cv=nb._calibrated_cv(row['Position'],row['Depth_Rank'])
         sigma=math.sqrt(math.log1p(cv*cv))
         quantile=lambda z: mean*math.exp(z*sigma-.5*sigma*sigma)
@@ -50,8 +50,7 @@ def capture(prepared, cfg, snapshot_id, showdown_payloads):
     return clean(dict(schema=1,snapshot_id=snapshot_id,
         captured_utc=prepared.get('inputs_captured_utc',datetime.now(timezone.utc).isoformat()),
         code_sha256=digest.hexdigest(),settings=asdict(cfg),predictions=rows,
-        market_projections=prepared.get('market_projections',[]),
-        market_audit=prepared.get('market_audit',{}),
+        projection_model=prepared.get('projection_model',{}),
         role_report=json.loads(prepared.get('nflverse_report',pd.DataFrame()).to_json(orient='records',date_format='iso')),
         showdown_models=showdown_payloads,
         raw_inputs=prepared.get('raw_inputs',{})))

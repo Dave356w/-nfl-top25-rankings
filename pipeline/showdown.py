@@ -1,11 +1,9 @@
 """Export one Yahoo single-game slate as a payload a browser can optimize.
 
-The Colab showdown runner does four things: it fetches feeds, it builds a
-correlation model, it enumerates and scores lineups, and it asks the user
-questions. Only the first of those cannot happen in a browser -- Yahoo and the
-two sportsbooks are not going to answer a cross-origin request from a Pages
-origin, and pointing every visitor's IP at a sportsbook is how the Colab VM got
-blocked in the first place.
+The runner fetches Yahoo and nflverse, applies the frozen historical salary
+model, builds a correlation model, enumerates and scores lineups, and asks the
+user questions. Feed preparation remains server-side so every visitor receives
+the same immutable model snapshot.
 
 So the split is: this module runs in Actions and publishes the *model*, and
 `site/showdown.html` runs the enumeration and the simulation in the visitor's
@@ -35,12 +33,9 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-from pipeline import market_tail_guard
 from pipeline import notebook as nb
 from pipeline import portfolio_construction
 from pipeline import scenario_portfolio
-
-market_tail_guard.install(nb)
 
 # 2: players carry a fitted `zero` rate and the marginals are zero-hurdle
 # lognormals. A worker that ignores `zero` would silently simulate the wrong
@@ -184,7 +179,7 @@ def build_game_payload(game_players, game, salary_cap=None, cfg=None, optimize=T
         "latent": upper_triangle(model["latent_corr"]),
         "model": {
             "family": "correlated_zero_hurdle_lognormal",
-            "limitations": ["Zero scores are represented by a fitted played-but-scoreless rate; a player being inactive is priced by the market mean, not modelled here. Negative scores and discrete scoring components are still not represented."],
+            "limitations": ["Zero scores are represented by a fitted played-but-scoreless rate. Officially reported Out players are removed before modelling; late inactive news after the nflverse snapshot is not represented. Negative scores and discrete scoring components are still not represented."],
             "psd_max_score_adjustment": round(float(model["psd_max_score_adjustment"]), 6),
             "infeasible_pairs": int(model["infeasible_pairs"]),
             "max_infeasible_shift": round(float(model["max_infeasible_shift"]), 6),
@@ -296,7 +291,7 @@ def build_slate(cfg=None, optimize=True, max_games=None, *, prepared_slate=None,
         })
         print(f"  {payload['matchup']}: {len(payload['players'])} players exported")
 
-    audit = slate["market_audit"]
+    projection = slate["projection_model"]
     index = {
         "schema": SCHEMA,
         "status": "ok" if entries else "empty",
@@ -306,13 +301,12 @@ def build_slate(cfg=None, optimize=True, max_games=None, *, prepared_slate=None,
         "games": entries,
         "skipped": notes,
         "awaiting_salary_cap": capless,
-        "market": {
-            "feeds": list(audit.get("feeds") or []),
-            "notes": list(audit.get("notes") or []),
-            "calibration_pairs": _clean(audit.get("calibration_pairs")),
-            "projection_audit": dict(audit.get("projection_audit") or {}),
+        "projection": {
+            "method": "Yahoo salary-position-depth regression",
+            "trained_through_season": projection.get("trained_through_season"),
+            "holdout_metrics": projection.get("holdout_metrics"),
         },
-        "availability_removed": int(len(slate["nflverse_removed"])),
+        "availability_removed": int(len(slate["nflverse_removed"])) + int(len(slate["injury_removed"])),
     }
     return payloads, index
 

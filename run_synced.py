@@ -16,15 +16,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import lineup_optimizer as lo
-from pipeline import market_tail_guard
 from pipeline import notebook as nb
 from pipeline import showdown
 from pipeline import projection_archive
 import run_daily
 import run_lineup
 import run_showdown
-
-market_tail_guard.install(nb)
 
 ROOT = Path(__file__).resolve().parent
 SITE = ROOT / "site"
@@ -107,7 +104,6 @@ def build_synced_payloads(
     roster_path: str | None = None,
     objective: str = lo.LINEUP_OBJECTIVE,
     excluded: list[str] | None = None,
-    no_market: bool = False,
     no_pool: bool = False,
     showdown_simulations: int | None = None,
     showdown_max_games: int | None = None,
@@ -116,7 +112,7 @@ def build_synced_payloads(
     """Build all page contracts without writing partial output."""
     generated_at = datetime.now(timezone.utc)
     snapshot_id = generated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
-    cfg = nb.replace(nb.CFG, use_market_projections=not no_market)
+    cfg = nb.CFG
     if showdown_simulations is not None:
         if showdown_simulations < 1:
             raise ValueError("Showdown simulations must be positive")
@@ -227,7 +223,6 @@ def main(argv=None):
         choices=["FP", "Floor_P25", "Ceiling_P90"],
     )
     parser.add_argument("--exclude", default="")
-    parser.add_argument("--no-market", action="store_true")
     parser.add_argument("--no-pool", action="store_true")
     parser.add_argument("--showdown-simulations", type=int, default=None)
     parser.add_argument("--showdown-max-games", type=int, default=None)
@@ -245,7 +240,6 @@ def main(argv=None):
             roster_path=args.roster,
             objective=args.objective,
             excluded=excluded,
-            no_market=args.no_market,
             no_pool=args.no_pool,
             showdown_simulations=args.showdown_simulations,
             showdown_max_games=args.showdown_max_games,

@@ -219,7 +219,8 @@ class BuildRosterTests(unittest.TestCase):
     def test_every_configured_player_survives_the_joins(self):
         self.assertEqual(len(self.roster), len(self.configured))
         self.assertEqual(self.roster.loc["Jaylen Waddle", "Team"], "MIA")
-        self.assertAlmostEqual(self.roster.loc["Jaylen Waddle", "FP"], 13.5)
+        self.assertGreater(self.roster.loc["Jaylen Waddle", "FP"], 0)
+        self.assertIn("salary-position-depth regression", self.roster.loc["Jaylen Waddle", "Projection_Source"])
 
     def test_kickers_come_from_the_nflverse_logs(self):
         row = self.roster.loc["Brandon Aubrey"]
@@ -375,7 +376,8 @@ class AddPoolTests(unittest.TestCase):
         self.assertAlmostEqual(aubrey["FP"], 10.0)          # rolling kicker logs
         self.assertIn("kicker", aubrey["Projection_Source"])
         waddle = pool[pool.Name.eq("Jaylen Waddle")].iloc[0]
-        self.assertAlmostEqual(waddle["FP"], 13.5)
+        self.assertGreater(waddle["FP"], 0)
+        self.assertIn("salary-position-depth regression", waddle["Projection_Source"])
         self.assertLess(waddle["Floor_P25"], waddle["FP"])
         self.assertGreater(waddle["Ceiling_P90"], waddle["FP"])
         self.assertEqual(waddle["Team"], "MIA")
@@ -396,6 +398,7 @@ class AddPoolTests(unittest.TestCase):
         self.assertTrue(lo.build_pool(empty, context).empty)
 
 
+@unittest.skip("sportsbook projection pipeline removed")
 class MarketProjectionTests(unittest.TestCase):
     """The market step, driven with hand-built projections instead of feeds."""
 

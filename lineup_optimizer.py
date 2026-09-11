@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Standalone, keyless season-long NFL weekly lineup optimizer.
 
-Yahoo's public DFS feed supplies current-week FPPG, salary, opponents and game
-times, and the daily pipeline's market engine replaces those blends with
-de-vigged Bovada and Underdog means wherever the books price a player. nflverse
+Yahoo's public DFS feed supplies current-week salary, opponents and game times.
+The frozen historical regression turns salary, position and depth into the
+shared fantasy mean. nflverse
 supplies schedules, its newest depth snapshot, injury reports when published,
 and historical kicking logs. No merged CSV is required.
 
@@ -33,6 +33,7 @@ from urllib.request import Request, urlopen
 
 import numpy as np
 import pandas as pd
+from pipeline import salary_projection
 
 
 # --------------------------- USER SETTINGS -------------------------------
@@ -64,12 +65,6 @@ AUTO_INSTALL_NFLREADPY = True
 # How deep the page's add pool goes per position. Deep enough to cover a real
 # waiver claim, shallow enough that `pool.json` stays a small download.
 POOL_LIMITS = {"QB": 40, "RB": 70, "WR": 90, "TE": 45, "K": 32}
-
-# Market-implied means, from the same Bovada + Underdog engine the daily
-# rankings use. Any failure degrades to the Yahoo blend rather than stopping.
-USE_MARKET_PROJECTIONS = True
-MARKET_SOURCE = "hybrid"  # hybrid, bovada, or underdog
-MARKET_CACHE_HOURS = 2.0
 
 YAHOO_URL = "https://dfyql-ro.sports.yahoo.com/v2/external/playersFeed/nfl"
 KICKER_SCORING = {"FG_0_39": 3.0, "FG_40_49": 4.0, "FG_50_PLUS": 5.0, "PAT": 1.0}
@@ -157,31 +152,21 @@ def fetch_yahoo(attempts: int = 3, timeout: int = 20) -> pd.DataFrame:
     out["Key"] = out["Feed_Name"].map(normalize_name)
     out = out[out["Feed_Position"].isin(["QB", "RB", "WR", "TE", "DEF"]) & out["Salary"].gt(0)].copy()
 
-    out["Salary_Prior"] = np.nan
-    for position, group in out.groupby("Feed_Position"):
-        train = group[group["FPPG"].gt(.25)]
-        if len(train) >= 5 and train["Salary"].nunique() >= 3:
-            x, y = train["Salary"].to_numpy(float), train["FPPG"].to_numpy(float)
-            centered = x - x.mean()
-            slope = np.dot(centered, y - y.mean()) / (np.dot(centered, centered) + 25)
-            prior = y.mean() + np.clip(slope, .05, 1.25) * (group["Salary"].to_numpy(float) - x.mean())
-        else:
-            ratio = np.median(train["FPPG"] / train["Salary"]) if len(train) else .45
-            prior = group["Salary"].to_numpy(float) * np.clip(ratio, .15, .90)
-        out.loc[group.index, "Salary_Prior"] = np.maximum(prior, .25)
-    history = out["FPPG"].gt(.25)
-    out["Projected_FP"] = np.where(history, .70*out["FPPG"] + .30*out["Salary_Prior"], .80*out["Salary_Prior"])
-    out["Projection_Source"] = np.where(history, "Yahoo FPPG + weekly salary prior", "Yahoo weekly salary prior")
-    out["Fallback_Depth"] = out.groupby(["Team", "Feed_Position"])["Projected_FP"].rank(method="first", ascending=False)
+    out["Fallback_Depth"] = out.groupby(["Team", "Feed_Position"])["Salary"].rank(method="first", ascending=False)
+    modeled = out.rename(columns={"Feed_Name": "Name", "Feed_Position": "Position"})
+    modeled["Depth_Rank"] = modeled["Fallback_Depth"]
+    modeled = salary_projection.apply(modeled)
+    out["Projected_FP"] = modeled["Projected_FP"]
+    out["Projection_Source"] = modeled["Projection_Source"]
+    out["Projection_Frozen"] = False
     return out.sort_values("Projected_FP", ascending=False).drop_duplicates("Key").reset_index(drop=True)
 
 
 def yahoo_from_prepared_slate(players: pd.DataFrame) -> pd.DataFrame:
     """Adapt the rankings pipeline's final player pool for the lineup builder.
 
-    `pipeline.notebook.prepare_slate_pool` has already fetched Yahoo and the
-    sportsbooks, resolved nflverse roles, applied the confidence audit and
-    applied any prior-share role adjustment.  Re-fetching those inputs here is
+    `pipeline.notebook.prepare_slate_pool` has already fetched Yahoo, resolved
+    nflverse roles and applied the frozen regression. Re-fetching those inputs here is
     what allowed two pages from one site publish to disagree.  This adapter
     preserves that final `Projected_FP` verbatim and only adds the legacy column
     aliases the season-long roster resolver expects.
@@ -213,94 +198,8 @@ def yahoo_from_prepared_slate(players: pd.DataFrame) -> pd.DataFrame:
         method="first", ascending=False
     )
     out["Fallback_Depth"] = depth.fillna(fallback)
+    out["Projection_Frozen"] = True
     return out.sort_values("Projected_FP", ascending=False).drop_duplicates("Key").reset_index(drop=True)
-
-
-def pipeline_module():
-    """Import the daily pipeline's market engine, or None if it is not there.
-
-    The optimizer is meant to stay runnable as a single file, so a missing
-    `pipeline` package is a downgrade to Yahoo priors, not an error.
-    """
-    try:
-        return importlib.import_module("pipeline.notebook")
-    except Exception as exc:  # ImportError, but a broken module should not stop a lineup
-        warnings.warn(f"Market engine not importable ({exc}); using Yahoo priors.")
-        return None
-
-
-def market_settings(nb, cfg=None):
-    """Settings for the market engine, with unmatched players always kept.
-
-    `market_drop_unmatched` is stated rather than inherited: the rankings pool
-    can afford to drop a player the books do not price, but this is my own
-    roster, and a dropped player would silently vanish from the lineup.
-    """
-    if cfg is not None:
-        return cfg
-    return nb.Settings(
-        market_source=MARKET_SOURCE,
-        market_cache_hours=MARKET_CACHE_HOURS,
-        market_drop_unmatched=False,
-    )
-
-
-def _empty_market_audit(note: str | None = None) -> dict:
-    return {"feeds": [], "notes": [note] if note else [], "logit_vig": np.nan,
-            "calibration_pairs": 0, "matched": 0, "accepted": 0, "skill_rows": 0}
-
-
-def apply_market_projections(yahoo: pd.DataFrame, projections=None, cfg=None):
-    """Replace Yahoo blends with accepted market means across the whole slate.
-
-    Same order as the daily rankings: an accepted market mean wins, and anything
-    the books do not price keeps its Yahoo FPPG and salary prior. Matching is
-    the pipeline's own -- team, name key and a hard kickoff-time guard -- so a
-    player never inherits a namesake's line from another game.
-
-    `projections` is injectable so the matching rules can be exercised without
-    either sportsbook.
-    """
-    nb = pipeline_module()
-    if nb is None:
-        return yahoo, _empty_market_audit("pipeline.notebook unavailable")
-
-    audit = _empty_market_audit()
-    try:
-        settings = market_settings(nb, cfg)
-        if projections is None:
-            projections, loaded = nb.load_market_projection_reference(settings)
-            audit.update(loaded)
-        if not projections:
-            audit["notes"].append("no usable market projections; keeping Yahoo priors")
-            return yahoo, audit
-
-        pool = yahoo.rename(columns={"Feed_Name": "Name", "Feed_Position": "Position"})
-        reports = [
-            nb.build_market_projection_report(group, projections, {"Game Time": kickoff}, settings)
-            for kickoff, group in pool.groupby("Game_Time")
-            if len(group)
-        ]
-        report = pd.concat(reports, ignore_index=True) if reports else pd.DataFrame()
-        if not len(report):
-            audit["notes"].append("no market row matched a Yahoo game")
-            return yahoo, audit
-
-        applied, _ = nb.apply_market_projection_means(pool, report, settings)
-        out = applied.rename(columns={"Name": "Feed_Name", "Position": "Feed_Position"})
-        # Salary order is the depth fallback, and accepted means have just
-        # reordered the pool, so the fallback is re-ranked on the new numbers.
-        out["Fallback_Depth"] = out.groupby(["Team", "Feed_Position"])["Projected_FP"].rank(
-            method="first", ascending=False
-        )
-        audit["matched"] = int(report["Market matched"].sum())
-        audit["accepted"] = int(report["Market accepted"].sum())
-        audit["skill_rows"] = int(report["Position"].ne("DEF").sum())
-        return out, audit
-    except Exception as exc:  # one bad feed must not cost the week's lineup
-        warnings.warn(f"Market projections unavailable ({exc}); using Yahoo priors.")
-        audit["notes"].append(f"market step failed ({type(exc).__name__}: {exc})")
-        return yahoo, audit
 
 
 def load_nfl_context(yahoo: pd.DataFrame) -> dict:
@@ -419,11 +318,11 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
     roster["Name"] = roster["Name"].astype(str).str.strip()
     roster["Position"] = roster["Position"].astype(str).str.upper()
     roster["Key"] = roster["Name"].map(normalize_name)
+    yahoo = yahoo.copy()
+    if "Projection_Frozen" not in yahoo:
+        yahoo["Projection_Frozen"] = False
     ycols = ["Key", "Feed_Name", "Feed_Position", "Team", "Opponent", "Game_Time", "Salary", "FPPG",
-             "Projected_FP", "Projection_Source", "Fallback_Depth"]
-    # Present only once the market step has run.
-    ycols += [c for c in ("Market_Quality", "Market_Method", "Fallback_Projected_FP")
-              if c in yahoo.columns]
+             "Projected_FP", "Projection_Source", "Fallback_Depth", "Projection_Frozen"]
     roster = roster.merge(yahoo[ycols], on="Key", how="left")
 
     d = ctx["depth"][["Key", "Team", "Official_Depth", "pos_abb"]].rename(columns={"Team": "Depth_Team"})
@@ -431,7 +330,7 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
     roster = roster.merge(d, on="Key", how="left")
     roster["Team"] = roster["Team"].fillna(roster["Depth_Team"]).map(normalize_team)
     roster["Depth_Rank"] = pd.to_numeric(roster["Official_Depth"], errors="coerce").fillna(roster["Fallback_Depth"])
-    roster["Depth_Source"] = np.where(roster["Official_Depth"].notna(), "nflverse latest depth", "Yahoo projection fallback")
+    roster["Depth_Source"] = np.where(roster["Official_Depth"].notna(), "nflverse latest depth", "Yahoo salary-order fallback")
     # Created up front: a roster whose every player misses both the depth chart
     # and the kicker branch would otherwise never define the column at all.
     roster["Projection_CV"] = np.nan
@@ -460,6 +359,14 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
         mask = roster.Key.eq(normalize_name(name))
         roster.loc[mask, "Depth_Rank"] = max(1, int(depth))
         roster.loc[mask, "Depth_Source"] = "manual override"
+
+    # The official chart is now attached, so recompute skill-player means with
+    # the final depth rather than the preliminary salary-order depth.
+    frozen = roster["Projection_Frozen"].fillna(False).astype(bool)
+    if (~frozen).any():
+        modeled = salary_projection.apply(roster.loc[~frozen])
+        roster.loc[~frozen, "Projected_FP"] = modeled["Projected_FP"]
+        roster.loc[~frozen, "Projection_Source"] = modeled["Projection_Source"]
 
     roster["Projected_FP"] = pd.to_numeric(roster["Projected_FP"], errors="coerce").fillna(0)
     roster["Projection_Source"] = roster["Projection_Source"].fillna(
@@ -490,7 +397,7 @@ def pool_entries(yahoo: pd.DataFrame, ctx: dict, limits: dict[str, int] | None =
 
     The lineup page's roster editor needs a player who is *not* on the roster to
     carry the same resolved projection a rostered player carries, and only
-    `build_roster` produces that. Ranking on the Yahoo/market mean before
+    `build_roster` produces that. Ranking on the salary-model mean before
     resolving is safe, because `build_roster` leaves a skill player's mean
     alone -- the top of this list is the top of the built pool. Kickers are the
     exception: the DFS feed does not price them at all, so they come off the
@@ -606,21 +513,10 @@ def output_table(frame: pd.DataFrame, starters: bool) -> pd.DataFrame:
     return pd.DataFrame(rows).sort_values("Mean", ascending=False)
 
 
-def run(use_market: bool | None = None, roster_path: str | None = None) -> dict:
-    """Fetch every provider, optimize the configured roster, and print results."""
+def run(roster_path: str | None = None) -> dict:
+    """Fetch Yahoo and nflverse, optimize the configured roster, and print results."""
     print("Loading Yahoo weekly projections ...")
     yahoo = fetch_yahoo()
-    market_audit = _empty_market_audit("market projections disabled")
-    if USE_MARKET_PROJECTIONS if use_market is None else use_market:
-        print("Loading market-implied means from the sportsbook props ...")
-        yahoo, market_audit = apply_market_projections(yahoo)
-        for note in market_audit["notes"]:
-            print(f"  Market: {note}")
-        if market_audit["accepted"]:
-            feeds = ", ".join(market_audit["feeds"]) or "market"
-            print(f"  Market: {feeds}; matched {market_audit['matched']}/"
-                  f"{market_audit['skill_rows']} skill-player rows; "
-                  f"accepted {market_audit['accepted']} means.")
     print("Loading nflverse schedule, depth, injuries, and kicking logs ...")
     ctx = load_nfl_context(yahoo)
     roster = build_roster(load_roster(roster_path), yahoo, ctx)
@@ -649,7 +545,7 @@ def run(use_market: bool | None = None, roster_path: str | None = None) -> dict:
     print("\n--- Bench ---"); print(output_table(bench, False).to_string(index=False))
     print(f"\nStarter projected mean: {starters.FP.sum():.2f}")
     return {"yahoo": yahoo, "context": ctx, "roster": roster, "starters": starters,
-            "bench": bench, "excluded": excluded, "market_audit": market_audit}
+            "bench": bench, "excluded": excluded}
 
 
 def self_test() -> None:
