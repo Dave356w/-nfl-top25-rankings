@@ -5,6 +5,8 @@ __pycache__/
 # Feed caches written by the pipeline at run time.
 market_projection_cache/
 nflverse_cache/
+backtest_cache/
+backtest_output/
 
 # Local scratch exports from the showdown runner.
 yahoo_showdown_export*/

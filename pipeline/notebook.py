@@ -701,11 +701,9 @@ def apply_exclusions_interactive(players, preexcluded=None):
 def roster_feasibility_error(players, lineup_size):
     """Return why this pool cannot build a Yahoo-valid roster, or None if it can.
 
-    Yahoo requires five players and at least one player from each team. Any
-    position satisfies that, a team defense included -- v3.6 dropped a
-    non-DEF wording that was stricter than the rule and quietly discarded
-    legal rosters. Checking it up front turns a confusing "no valid rosters"
-    failure deep inside enumeration into a message naming the empty team.
+    Yahoo requires five players and at least one non-defense player from each
+    team. Checking it up front turns a confusing "no valid rosters" failure
+    deep inside enumeration into a message naming the empty team.
     """
     if len(players) < lineup_size:
         return f"Only {len(players)} players remain; {lineup_size} are required."
@@ -713,10 +711,11 @@ def roster_feasibility_error(players, lineup_size):
     if len(teams) != 2:
         return f"Expected exactly two teams, found {teams}."
     for team in teams:
-        if players[players["Team"].eq(team)].empty:
+        skill = players[players["Team"].eq(team) & players["Position"].ne("DEF")]
+        if skill.empty:
             return (
-                f"{team} has no player left. Yahoo requires at least one player "
-                "from each team, so no valid lineup exists."
+                f"{team} has no non-DEF player left. Yahoo requires at least one "
+                "non-DEF player from each team, so no valid lineup exists."
             )
     return None
 
@@ -4657,10 +4656,11 @@ def enumerate_candidate_lineups(players, salary_cap, covariance, cfg=None, chunk
 
     combo_salary = salary[combos].sum(axis=1)
     keep_mask = (combo_salary <= salary_cap) & (combo_salary >= min_salary)
-    # Yahoo single-game rule: at least one player from each team. Any position
-    # counts, a team defense included.
+    # Yahoo single-game rule: at least one non-defense player from each team.
     for team in teams:
-        keep_mask &= (team_values[combos] == team).any(axis=1)
+        keep_mask &= (
+            (team_values[combos] == team) & (positions[combos] != "DEF")
+        ).any(axis=1)
     for position, (low, high) in (cfg.position_limits or {}).items():
         counts = (positions[combos] == position).sum(axis=1)
         keep_mask &= (counts >= low) & (counts <= high)

@@ -442,16 +442,10 @@ class ScenarioReproducibilityTests(unittest.TestCase):
 
 
 class RosterRuleTests(unittest.TestCase):
-    """Yahoo's actual single-game rules, and nothing stricter.
+    """Yahoo's actual single-game rules, and nothing stricter."""
 
-    Both of these were narrower than the rule they claimed to implement: the
-    enumerator wanted a non-DEF player from each team, and the salary floor
-    defaulted to 75% of the cap. Each silently removed legal rosters before the
-    model scored one of them.
-    """
-
-    # One team's only entry in the pool is its defense, so a legal roster has to
-    # be allowed to satisfy the team requirement with that defense.
+    # One team's only entry in the pool is its defense, which cannot satisfy
+    # Yahoo's requirement for a non-defense player from each team.
     POOL = pd.DataFrame({
         "Name": ["NE QB", "NE RB", "NE WR1", "NE WR2", "NE TE", "SEA DEF"],
         "Team": ["NE"] * 5 + ["SEA"],
@@ -461,32 +455,58 @@ class RosterRuleTests(unittest.TestCase):
         "Depth_Rank": [1, 1, 1, 2, 1, 1],
     })
 
-    def test_a_defense_can_be_a_teams_only_representative(self):
-        self.assertIsNone(nb.roster_feasibility_error(self.POOL, 5))
+    def test_a_defense_cannot_be_a_teams_only_representative(self):
+        error = nb.roster_feasibility_error(self.POOL, 5)
+        self.assertIn("SEA has no non-DEF player", error)
 
-    def test_the_enumerator_builds_that_roster(self):
+    def test_the_enumerator_rejects_that_pool(self):
         cfg = nb.replace(nb.CFG, min_salary_used_pct=0.0)
         model = nb.build_correlation_model(self.POOL)
         covariance = nb.analytic_covariance(self.POOL, model)
-        candidates, valid = nb.enumerate_candidate_lineups(
-            self.POOL, 110.0, covariance, cfg
-        )
+        with self.assertRaisesRegex(ValueError, "SEA has no non-DEF player"):
+            nb.enumerate_candidate_lineups(self.POOL, 110.0, covariance, cfg)
+
+    def test_the_enumerator_requires_skill_players_from_both_teams(self):
+        pool = pd.concat([
+            self.POOL,
+            pd.DataFrame({
+                "Name": ["SEA WR"], "Team": ["SEA"], "Position": ["WR"],
+                "Salary": [10.0], "Projected_FP": [3.0], "Depth_Rank": [1],
+            }),
+        ], ignore_index=True)
+        cfg = nb.replace(nb.CFG, min_salary_used_pct=0.0)
+        model = nb.build_correlation_model(pool)
+        covariance = nb.analytic_covariance(pool, model)
+        candidates, valid = nb.enumerate_candidate_lineups(pool, 110.0, covariance, cfg)
         self.assertGreater(valid, 0)
-        teams = self.POOL["Team"].to_numpy()
+        teams = pool["Team"].to_numpy()
+        positions = pool["Position"].to_numpy()
         for ids in candidates["Player_Ids"]:
-            self.assertEqual(set(teams[list(ids)]), {"NE", "SEA"})
+            chosen = list(ids)
+            for team in ("NE", "SEA"):
+                self.assertTrue(any(
+                    teams[index] == team and positions[index] != "DEF"
+                    for index in chosen
+                ))
 
     def test_the_salary_floor_is_off_by_default(self):
         self.assertEqual(nb.CFG.min_salary_used_pct, 0.0)
 
     def test_the_floor_only_removes_rosters_below_it(self):
-        model = nb.build_correlation_model(self.POOL)
-        covariance = nb.analytic_covariance(self.POOL, model)
+        pool = pd.concat([
+            self.POOL,
+            pd.DataFrame({
+                "Name": ["SEA WR"], "Team": ["SEA"], "Position": ["WR"],
+                "Salary": [10.0], "Projected_FP": [3.0], "Depth_Rank": [1],
+            }),
+        ], ignore_index=True)
+        model = nb.build_correlation_model(pool)
+        covariance = nb.analytic_covariance(pool, model)
         cap = 110.0
         _, without = nb.enumerate_candidate_lineups(
-            self.POOL, cap, covariance, nb.replace(nb.CFG, min_salary_used_pct=0.0)
+            pool, cap, covariance, nb.replace(nb.CFG, min_salary_used_pct=0.0)
         )
         _, with_floor = nb.enumerate_candidate_lineups(
-            self.POOL, cap, covariance, nb.replace(nb.CFG, min_salary_used_pct=0.75)
+            pool, cap, covariance, nb.replace(nb.CFG, min_salary_used_pct=0.75)
         )
         self.assertGreater(without, with_floor)
