@@ -515,10 +515,15 @@ class RosterFileTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 lo.load_roster(str(path))
 
-    def test_the_shipped_roster_file_matches_the_module(self):
+    def test_the_shipped_roster_file_is_loaded_as_user_configuration(self):
         shipped = Path(__file__).resolve().parents[1] / "lineup_roster.json"
         if shipped.exists():
-            self.assertEqual(lo.load_roster(str(shipped)), list(lo.MY_TEAM_ROSTER))
+            document = json.loads(shipped.read_text(encoding="utf-8"))
+            expected = [
+                {"Name": row["Name"].strip(), "Position": row["Position"].upper()}
+                for row in document["roster"]
+            ]
+            self.assertEqual(lo.load_roster(str(shipped)), expected)
 
 
 class ReportedOutTests(unittest.TestCase):
