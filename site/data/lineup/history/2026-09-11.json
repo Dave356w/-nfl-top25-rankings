@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-11T20:55:28Z",
-  "snapshot_id": "2026-09-11T20:55:28Z",
+  "generated_utc": "2026-09-11T22:56:51Z",
+  "snapshot_id": "2026-09-11T22:56:51Z",
   "run_date": "2026-09-11",
   "season": 2026,
   "week": 1,
@@ -342,7 +342,7 @@
     "trained_through_season": 2025
   },
   "log": [
-    "Yahoo slate: 16 game(s), 915 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-11T20:55:28Z)",
+    "Yahoo slate: 16 game(s), 915 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-11T22:56:51Z)",
     "  nflverse: depth chart 2026: 572 offensive rows, snapshot 2026-09-11 12:21 UTC",
     "  nflverse: roster status 2026: 2,963 rows",
     "  nflverse: role tiers for 540 player(s); roster status matched 92% of the skill pool.",
@@ -491,7 +491,7 @@
     "[25 rows x 13 columns]",
     "Ranking run time: 0.1s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-09-11T20:55:28Z (shared with position rankings).",
+    "Projection snapshot: 2026-09-11T22:56:51Z (shared with position rankings).",
     "Season 2026 week 1; depth snapshot 2026-09-11T12:21:50Z.",
     "Add pool: 301 player(s) resolved for the page's roster editor."
   ]
