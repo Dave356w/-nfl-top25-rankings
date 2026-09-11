@@ -238,15 +238,26 @@ Every feature for a game in season *s*, week *w* may read only rows strictly
 earlier than (*s*, *w*), plus fields of the game itself that are fixed when
 the schedule is published.
 
-Enforce that with a single entry point rather than a convention: a function
-taking `(as_of_season, as_of_week)` that never receives outcome columns for
-the target week at all. Then test it the way the repository already tests its
-other leakage boundary — `tests/test_component_prior_validation.py` corrupts
-the holdout season and asserts the tuned parameter does not move. The
-equivalent here: corrupt the current week's scores, rebuild the feature frame,
-assert it is byte-identical. Add a canary in the same test — a deliberate
-future-leaking feature — and assert the audit detects it, so the test fails
-when it stops testing anything.
+Enforce that with a single entry point rather than a convention. As built in
+`pipeline/team_outcome.py`, a feature receives an `AsOfView` — the target
+week's pregame context, settled outcomes strictly earlier, and the schedule
+published through that week — and never the corpus. Outcome and market columns
+are not in the context frame at all, so the target week's own result is not
+something a feature declines to read; it is absent.
+
+`audit` then checks that boundary from both sides, at every settled week:
+structurally, that nothing at or after the checkpoint appears in the view and
+that no withheld column reaches it; and by perturbation, replacing every
+outcome and closing line from the checkpoint onward and re-deriving, so a
+feature that moves has been served data the filter should have excluded.
+
+One limit, stated because it decides what the canary can be. Perturbation
+catches a wrong comparison in the as-of filter — the off-by-one that turns
+`<` into `<=` — and that is the canary `tests/test_team_outcome.py` asserts on.
+It cannot catch a feature that closes over a corpus or a file instead of
+reading its view, because that value never crosses the boundary being tested.
+That case stays a review rule, and it is why the builder passes a view rather
+than a corpus: the wrong thing has to be reached for deliberately.
 
 ### 4.3 Restated sources are the real hazard
 
@@ -284,8 +295,8 @@ Corpus A candidates, with the definition each one is promised to have:
 | `epa_def_diff` | opponent-adjusted defensive EPA/play difference | 8 games | n/(n+4) to league mean | + |
 | `success_rate_diff` | early-down success rate difference | 8 games | n/(n+4) | + |
 | `rest_diff` | home rest days − away rest days | — | none | + |
-| `short_week` | either side on ≤4 days | — | none | — |
-| `bye_prior` | either side off a bye | — | none | + |
+| `short_week_diff` | away on ≤4 days − home on ≤4 days | — | none | + |
+| `bye_diff` | home off a bye − away off a bye, read from the published schedule | — | none | + |
 | `neutral_site` | international or neutral | — | none | 0 |
 | `travel_tz` | time zones crossed by the away team | — | none | + |
 | `qb_continuity` | starter differs from previous game | — | none | — |
@@ -406,7 +417,10 @@ difference is not a result.
 **Reference lines**, all four reported together: home-only, Elo-only, the
 no-vig closing market, and the model. The market line is a ceiling to measure
 against, not a target to beat; a model that lands close to it while reading no
-market data is the realistic good outcome.
+market data is the realistic good outcome. It is also the one line that does
+not span the corpus: P0 found closing moneylines only from 2010 (4,363 games),
+so report it over that span and say so, rather than quietly evaluating the
+whole corpus against a benchmark two thirds of it has.
 
 **De-vig sensitivity.** The foundation document normalized the two implied
 probabilities proportionally. That is the standard first pass and it is biased
@@ -433,7 +447,7 @@ it passes or fails.
 | **G3 Skill** | Brier skill score against the Elo-plus-home baseline with a bootstrap lower bound above 0 |
 | **G4 Stability** | positive Brier skill in ≥ 8 of 10 walk-forward seasons |
 | **G5 Seal** | sealed-season metrics inside the walk-forward bootstrap interval; one read, no re-read |
-| **G6 Market context** | gap to the no-vig market reported under both de-vig methods; **no threshold** |
+| **G6 Market context** | gap to the no-vig market over the 2010+ games that have a closing moneyline, under both de-vig methods; **no threshold** |
 | **G7 Edge ablation** | removing `edge_tier` degrades Brier with a bootstrap interval excluding 0, on ≥ 2,000 corpus-B games |
 | **G8 Leakage** | as-of test passes, canary detected, every feature carries a documented timestamp |
 
@@ -456,11 +470,13 @@ builder in `tools/`, an importable module in `pipeline/`, and shape tests that
 run without network access.
 
 ```
-pipeline/team_outcome.py            as-of feature frame, predict(), load()
+pipeline/team_outcome.py            corpus split, as-of view, features, audit      [P0]
+tools/build_team_outcome_corpus.py  corpus + audit -> model/team_outcome_corpus.json [P0]
+tests/test_team_outcome.py          as-of/leakage, canary, tie handling             [P0]
+model/team_outcome_corpus.json      P0 evidence: coverage, audit result             [P0]
 tools/build_team_outcome_model.py   walk-forward trainer -> model/team_outcome.json
 tools/evaluate_team_outcome.py      scoring + bootstrap -> model/team_outcome_evaluation.json
 model/team_outcome.json             frozen artifact, gate results, approval flag
-tests/test_team_outcome.py          as-of/leakage, tie handling, artifact shape, gate arithmetic
 ```
 
 The artifact follows the conventions already in `model/`:
@@ -512,7 +528,7 @@ edge, if at all, as negative/neutral/positive, and display no win probability.
 
 | Phase | Work | Exit criterion |
 | --- | --- | --- |
-| P0 | corpus assembly, as-of harness | leakage tests and canary pass; ~7,300 games assembled; home win rate reproduces the known league value |
+| P0 | corpus assembly, as-of harness | **done** — see below |
 | P1 | baselines | home-only, Elo-only and market benchmark metrics recorded with intervals, under both de-vig methods |
 | P2 | preregistration | `docs/team-outcome-prereg.md` committed, hash recorded |
 | P3 | candidates, walk-forward | G1-G4 and G8 evaluated and written to the artifact |
@@ -520,6 +536,37 @@ edge, if at all, as negative/neutral/positive, and display no win probability.
 | P5 | corpus-B ablation | full-slate retention checked; G7 evaluated and recorded, expected to fail on coverage |
 
 Every phase writes an artifact. No phase before P4 reads the seal.
+
+### P0 result
+
+`pipeline/team_outcome.py`, `tools/build_team_outcome_corpus.py` and
+`tests/test_team_outcome.py`, with the evidence in
+`model/team_outcome_corpus.json`. Every exit criterion met: 7,276 games
+assembled across 1999-2025, a 56.3% home win rate against the known league
+value, and a clean as-of audit over all 572 settled weeks, with the off-by-one
+canary confirmed to fail it.
+
+Four things the build settled that the plan had assumed:
+
+- **The market benchmark does not cover the corpus.** Closing moneylines are
+  absent before 2006, patchy through 2009, and complete only from 2010:
+  4,363 games, not 7,276. Closing spreads go back to 1999, so a spread-derived
+  benchmark is the option for the early seasons. §8's market reference line and
+  gate G6 are scoped to 2010 onward.
+- **Home field is measurably non-stationary**, which §13 raised as a risk and
+  the corpus now quantifies: 57.5% (1999-2007), 56.8% (2008-2015), 56.6%
+  (2016-2019), **49.8% in the crowdless 2020 season**, and 54.5% (2021-2025).
+  A fixed intercept across 27 seasons is not defensible; decide the
+  season-varying form at P2, before it can be chosen on results.
+- **Two of §5's features could not carry the sign the table gave them.**
+  "Either side on a short week" and "either side off a bye" are symmetric
+  indicators on a directional target. Both are now differences, above.
+- **Relocations need franchise continuity.** nflverse keeps the historical
+  code, so the Rams appear as STL, LA and LAR. Aliasing is applied at corpus
+  build; the 35 codes in the feed resolve to 32 franchises.
+
+Margin sd across the corpus is 14.59, which is the raw spread the §3 residual
+scale of roughly 13 has to beat. Ties are 15 games, scored as half a win.
 
 ## 13. What would invalidate this plan
 

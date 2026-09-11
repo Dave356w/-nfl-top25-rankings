@@ -110,6 +110,7 @@ site/data/lineup/latest.json  what the lineup page reads
 site/data/lineup/pool.json    the players the page's roster editor can add
 site/data/showdown/index.json one entry per game, plus one file per game
 site/data/history/          one archived JSON + CSV per run date
+pipeline/team_outcome.py    the game corpus and its as-of feature harness
 tools/                      offline calibration scripts (see below)
 tests/                      shape tests for every published payload
 ```
@@ -632,6 +633,26 @@ model that could actually settle the question — corpora, feature definitions,
 walk-forward protocol, numeric promotion gates and artifact layout — is in
 [`docs/team-outcome-model-plan.md`](docs/team-outcome-model-plan.md). None of
 it is implemented.
+
+Phase P0 of that plan — the game corpus and its as-of harness — is:
+
+```bash
+python tools/build_team_outcome_corpus.py --seasons 1999-2025
+```
+
+It assembles nflverse schedules into three deliberately separate frames and
+writes `model/team_outcome_corpus.json`. Pregame context, settled outcomes and
+closing lines arrive from nflverse in one frame under one join key, which is
+how a final score or a closing line ends up in a feature by accident; the
+corpus splits them so the frame a feature receives does not contain them. A
+feature is handed an as-of view — the target week's context, settled games
+strictly earlier, and the schedule published so far — and never the corpus.
+
+The build audits that boundary at every settled week, structurally and by
+replacing every later outcome and closing line to see whether anything moves,
+and exits non-zero if it finds something. On 1999-2025 it assembles 7,276
+games at a 56.3% home win rate with a clean audit over 572 weeks. No model is
+fitted at P0 and nothing is published.
 
 ### Historical component-prior gate
 
