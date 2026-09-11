@@ -75,6 +75,52 @@ Across all 67 holdout games, the sign of the fixed-core edge selected the winner
 These discrimination and calibration statistics are modest. They indicate a
 candidate feature, not a complete game model.
 
+## Resolving power of this sample
+
+The point estimates above are reported without intervals, which makes the
+sample look more decisive than it is. Exact (Clopper-Pearson) 95% intervals on
+the same counts:
+
+| Rule | Correct | Accuracy | 95% interval |
+| --- | ---: | ---: | :---: |
+| Home team always | 38/67 | 56.7% | [44.0%, 68.8%] |
+| Fixed-core sign | 41/67 | 61.2% | [48.5%, 72.9%] |
+| No-vig closing market | 42/67 | 62.7% | [50.0%, 74.2%] |
+| Fixed core, strict 55 | 35/55 | 63.6% | [49.6%, 76.2%] |
+| Any-position N=8 | 43/67 | 64.2% | [51.5%, 75.5%] |
+| Post-hoc home override | 44/67 | 65.7% | [53.1%, 76.8%] |
+
+Every rule lies inside every other rule's interval. A one-sided exact binomial
+puts the fixed core at p = 0.043 against a fair coin, but p = 0.27 against the
+56.7% home base rate — the baseline that matters.
+
+The coarse tier grouping reported under *Monotonicity finding*, combined with
+the overall count of 41 correct picks, determines where the accuracy came from.
+The outer tiers' picks are fixed by construction: a negative edge picks the
+away team, a positive edge picks the home team.
+
+| Edge tier | Games | Home wins | Core pick | Core correct | Home-always correct |
+| --- | ---: | ---: | :---: | ---: | ---: |
+| Negative | 27 | 12 | away | 15 | 12 |
+| Neutral | 13 | 7 | by sign | 7 | 7 |
+| Positive | 27 | 19 | home | 19 | 19 |
+| Total | 67 | 38 | | **41** | **38** |
+
+In the positive tier the fixed core and the home-always rule are the same
+rule and cannot disagree. The 70.4% positive-tier home win rate is therefore a
+statement about home teams, not about the edge; its own interval,
+[49.8%, 86.2%], contains the sample's 56.7% home win rate.
+
+All measured improvement over the home baseline is three net flips among the
+27 negative-tier games — 15 correct against 12. Those 27 games are the
+complete set of discordant pairs, and an exact McNemar test on 15 versus 12
+gives p = 0.70.
+
+This does not show the edge is worthless. It shows the sample holds about
+three games' worth of evidence about it. Sizing a comparison that could
+resolve the question is the first section of
+[`team-outcome-model-plan.md`](team-outcome-model-plan.md).
+
 ## Closing-market comparison
 
 All 67 games joined directly by NFLVerse game ID to complete home and away
@@ -171,92 +217,39 @@ new untouched evaluation period.
 
 ## Future prediction-model outline
 
-### 1. Define paired targets
+This outline has been expanded into an implementable specification in
+[`team-outcome-model-plan.md`](team-outcome-model-plan.md), which fixes
+feature definitions, the walk-forward protocol, numeric promotion gates, the
+artifact and module layout, and the delivery phases. The summary:
 
-Train and evaluate both:
+1. **Paired targets.** Fit home scoring margin and home win probability, with
+   margin as the primary target and the probability derived from it through a
+   fold-fitted link.
+2. **Leakage-safe baselines.** Expanding-window season walk-forward, a sealed
+   final holdout, and comparison against home-only, a rolling team-strength or
+   Elo baseline, the no-vig closing market as a benchmark, edge tiers alone,
+   and the same feature set without the edge.
+3. **Conservative treatment of the edge.** Categorical negative/neutral/positive
+   first; the continuous edge only as a challenger, with any smooth mapping
+   fitted entirely inside training folds.
+4. **Pregame team and context features.** Timestamped rolling efficiency,
+   availability, rest and travel, pace, weather, and the salary-position-depth
+   aggregate — with closing odds retained as a benchmark, never a feature.
+5. **Probability quality, not picks.** Accuracy, AUC, Brier, log loss,
+   calibration curves, margin error, and interval estimates for every
+   difference, cut by tier, favorite strength, season and slate type.
+6. **Gates set before testing.** Beat the agreed baseline on proper scoring
+   rules across multiple walk-forward seasons, preserve calibration, show
+   incremental value from the edge in an ablation, retain performance on a
+   never-tuned final season, and document every data timestamp.
 
-- home-team win probability; and
-- home-team scoring margin.
-
-The probability target measures classification and calibration. The margin
-target helps determine whether a feature captures game strength even when the
-binary outcome is noisy.
-
-### 2. Establish leakage-safe baselines
-
-Use expanding-window, season-based walk-forward validation, with a final season
-kept untouched until model selection is complete. Compare every candidate with:
-
-- home-team-only probability;
-- a simple rolling team-strength or Elo baseline;
-- no-vig closing moneyline as an evaluation benchmark;
-- fixed-core edge tiers alone; and
-- the same feature set without fixed-core edge.
-
-Do not select feature definitions, Top N, thresholds, or calibration methods on
-the final holdout.
-
-### 3. Treat fixed-core edge conservatively
-
-Begin with a categorical negative/neutral/positive feature:
-
-```text
-logit(P(home win)) = intercept + home field + edge tier + team/context features
-```
-
-Also test the continuous edge only as a challenger. If a smooth relationship is
-needed, fit a monotonic spline or isotonic calibrator entirely inside each
-training fold. Never impose or tune that mapping using the final holdout.
-
-### 4. Add pregame team and context features
-
-Candidate inputs should be timestamped and available before kickoff:
-
-- rolling team strength, EPA, success rate, and offense/defense efficiency;
-- quarterback status and other roster availability;
-- rest, travel, home field, and short-week indicators;
-- pace and expected play volume;
-- weather for outdoor games; and
-- the salary-position-depth aggregate and its positional subcomponents.
-
-NFLVerse can anchor schedules, results, play-by-play efficiency, rosters, depth,
-and injury feeds where available. Yahoo historical salary remains a useful
-pregame consensus proxy. The proposed model should not require sportsbook lines
-or other betting-market inputs. Closing odds are retained as a benchmark, not a
-production feature.
-
-For a separate research-only test of incremental information, compare a market
-probability with and without the edge tier:
-
-```text
-market only: logit(P(home win)) = logit(no-vig market probability)
-combined:    logit(P(home win)) = logit(no-vig market probability)
-                                  + edge tier
-```
-
-Fit the tier effect inside each training fold. This residual-signal test must
-not silently turn the market-free production candidate into a market-derived
-model.
-
-### 5. Evaluate probability quality, not only picks
-
-Report accuracy, balanced accuracy, ROC-AUC, Brier score, log loss, calibration
-curves, margin MAE/RMSE, and season-level confidence intervals. Inspect metrics
-by edge tier, favorite strength, season, and slate type. A useful model must be
-well calibrated and must not depend on one small or selected season.
-
-### 6. Set promotion gates before testing
-
-A production W/L model should:
-
-- beat the agreed simple baseline on Brier score and log loss across multiple
-  walk-forward seasons;
-- improve or preserve calibration, not merely raw pick accuracy;
-- show incremental value from fixed-core edge in an ablation test;
-- report performance against the closing market without tuning rules on that
-  comparison sample;
-- retain performance on a never-tuned final season; and
-- document data timestamps so injuries and other late information cannot leak.
+The plan makes three substantive changes to this sketch. The corpus is split
+in two — all nflverse games for the model, the Yahoo-priced subset for the
+edge ablation — because 360 priced games cannot settle a Brier difference of
+the size at stake. The fixed-core edge moves from the centre of the model to
+an ablation run last, since it is not yet distinguishable from picking the
+home team. And the gates carry numbers, one of which the current corpus
+already fails.
 
 ## Recommended disposition
 
@@ -265,4 +258,5 @@ needed, as negative/neutral/positive. Do not display a game win probability from
 it yet, and do not override closing-market picks based on the observed home-side
 split. The next defensible step is a reproducible, checked-in walk-forward
 evaluator over multiple seasons and a broader set of games, with complete-core
-coverage reported explicitly.
+coverage reported explicitly. That evaluator and everything it needs are
+specified in [`team-outcome-model-plan.md`](team-outcome-model-plan.md).

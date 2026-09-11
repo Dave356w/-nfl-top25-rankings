@@ -626,6 +626,12 @@ useful negative/neutral/positive directional trend, but not a reliably monotonic
 or calibrated win-probability relationship. It selected 41 winners versus 42
 for the no-vig closing market; the strict 55-game complete-core subset tied the
 market at 35. It remains a research feature, not a production game predictor.
+Re-read with interval estimates, the whole of that sample's advantage over
+picking the home team is three games in one edge tier. The specification for a
+model that could actually settle the question — corpora, feature definitions,
+walk-forward protocol, numeric promotion gates and artifact layout — is in
+[`docs/team-outcome-model-plan.md`](docs/team-outcome-model-plan.md). None of
+it is implemented.
 
 ### Historical component-prior gate
 
