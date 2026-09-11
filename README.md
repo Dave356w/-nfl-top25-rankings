@@ -111,6 +111,8 @@ site/data/lineup/pool.json    the players the page's roster editor can add
 site/data/showdown/index.json one entry per game, plus one file per game
 site/data/history/          one archived JSON + CSV per run date
 pipeline/team_outcome.py    the game corpus and its as-of feature harness
+pipeline/team_outcome_eval.py  de-vig, metrics and interval estimates
+pipeline/team_outcome_fit.py   the ridge logistic and linear fitters
 tools/                      offline calibration scripts (see below)
 tests/                      shape tests for every published payload
 ```
@@ -653,6 +655,24 @@ replacing every later outcome and closing line to see whether anything moves,
 and exits non-zero if it finds something. On 1999-2025 it assembles 7,276
 games at a 56.3% home win rate with a clean audit over 572 weeks. No model is
 fitted at P0 and nothing is published.
+
+Phase P1 establishes the lines any later candidate has to beat:
+
+```bash
+python tools/build_team_outcome_baselines.py --draws 2000
+```
+
+It walks forward over 2007-2023 — the first eight seasons train, and the two
+most recent complete seasons are sealed and untouched until the plan's final
+phase — fitting each baseline on earlier seasons only and scoring the next.
+Over 4,594 games, picking the home team scores a Brier of 0.2456, Elo with
+textbook constants 0.2263, Elo fitted per fold 0.2239, and the no-vig closing
+market 0.2100. Every difference carries a season-block bootstrap interval, and
+closing lines are de-vigged both proportionally and by Shin: the two agree to
+four decimals here, so no conclusion rests on that choice.
+
+The gap between fitted Elo and the market, 0.0141 Brier, is the whole space a
+candidate model has to work in. Writes `model/team_outcome_baselines.json`.
 
 ### Historical component-prior gate
 

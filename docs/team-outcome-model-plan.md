@@ -429,11 +429,11 @@ normalization *and* one bias-aware method (Shin, or the power method), and
 confirm the conclusion does not depend on which. If it does, say so rather
 than picking the flattering one.
 
-**Know the playing field.** Measure it rather than assuming it, but for
-sizing: a long-run closing-market Brier on NFL games is commonly in the
-0.21-0.22 region against 0.25 for an uninformative forecast, and outcome
-entropy puts a floor somewhere near 0.20. The entire space is a few
-hundredths wide, which is precisely why §1.4's sample sizes are what they are.
+**Know the playing field.** P1 measured it rather than leaving it an estimate.
+On 4,505 priced games in 2007-2023 the no-vig closing market scores 0.2100,
+against 0.2456 for picking the home team and 0.2239 for fitted Elo. The entire
+space between a good baseline and the market is 0.0141, which is precisely why
+§1.4's sample sizes are what they are.
 
 ## 9. Promotion gates
 
@@ -536,7 +536,7 @@ edge, if at all, as negative/neutral/positive, and display no win probability.
 | Phase | Work | Exit criterion |
 | --- | --- | --- |
 | P0 | corpus assembly, as-of harness | **done** — see below |
-| P1 | baselines | home-only, Elo-only and market benchmark metrics recorded with intervals, under both de-vig methods |
+| P1 | baselines | **done** — see below |
 | P2 | preregistration | `docs/team-outcome-prereg.md` committed, hash recorded |
 | P3 | candidates, walk-forward | G1-G4 and G8 evaluated and written to the artifact |
 | P4 | sealed read | G5 evaluated; artifact written with `approved` either way |
@@ -572,8 +572,66 @@ Four things the build settled that the plan had assumed:
   code, so the Rams appear as STL, LA and LAR. Aliasing is applied at corpus
   build; the 35 codes in the feed resolve to 32 franchises.
 
-Margin sd across the corpus is 14.59, which is the raw spread the §3 residual
-scale of roughly 13 has to beat. Ties are 15 games, scored as half a win.
+Margin sd across the corpus is 14.62 on unsealed seasons, which is the raw
+spread the §3 residual scale has to beat. Ties are 14 unsealed games, scored as
+half a win.
+
+One correction this phase forced on itself: the first P0 artifact reported a
+home win rate and a tie count for every season, sealed ones included, and the
+first write-up quoted a 2021-2025 era rate. A base rate for a holdout season is
+exactly the kind of number that can steer a later modelling choice, so outcome
+statistics now stop at the seal while coverage counts still span the corpus —
+later phases have to know those games exist. The as-of audit still runs over
+sealed weeks: it reports whether the boundary held, never what happened.
+
+### P1 result
+
+`pipeline/team_outcome_eval.py`, `pipeline/team_outcome_fit.py`,
+`tools/build_team_outcome_baselines.py` and `tests/test_team_outcome_eval.py`,
+with the evidence in `model/team_outcome_baselines.json`. Expanding-window
+walk-forward over **2007-2023, 4,594 games in 17 seasons** — the first eight
+seasons are training-only and 2024-2025 are sealed and untouched.
+
+| Baseline | Brier | 95% interval | Accuracy | AUC | ECE | Cox slope |
+| --- | ---: | :---: | ---: | ---: | ---: | ---: |
+| Home team only | 0.2456 | [0.2427, 0.2484] | 56.1% | 0.504 | 0.018 | — |
+| Elo, textbook constants | 0.2263 | [0.2213, 0.2311] | 62.2% | 0.673 | 0.047 | 1.41 |
+| Elo, fitted per fold | 0.2239 | [0.2182, 0.2293] | 63.4% | 0.673 | 0.020 | 0.97 |
+| No-vig market (2007-2023, n=4,505) | **0.2100** | — | 66.4% | 0.722 | 0.018 | 1.01 |
+
+Five things this settles.
+
+- **The room a candidate model has is 0.0141 Brier.** The market beats fitted
+  Elo by that much, interval [0.0096, 0.0187], and the plan's §8 estimate of a
+  market Brier "commonly in the 0.21-0.22 region" measures at 0.2100. So the
+  whole playing field between a good baseline and the market is about fourteen
+  thousandths, and §1.4's sample sizes were not pessimism.
+- **The span can resolve what is at stake.** Bootstrap intervals on this
+  walk-forward are roughly ±0.005 Brier wide, which is the scale of the
+  differences worth shipping. G1's coverage floor is met: 4,594 games, 17
+  seasons.
+- **Elo is a real baseline, not a formality.** It beats home-only by 0.0218
+  [0.0168, 0.0271] Brier with an exact-McNemar p below 0.001 on 1,440
+  discordant picks. A candidate that does not clear this line is not close.
+- **The de-vig choice does not change any conclusion here.** Proportional and
+  Shin agree on Brier to four decimals and never differ by more than 0.017 on
+  a single game, and the model-versus-market ordering is identical under both.
+  Shin is slightly better calibrated (slope 1.007 against 1.042), as its theory
+  predicts. §13's "the de-vig method flips the ordering" risk is retired for
+  this corpus, and both remain reported.
+- **The textbook Elo constants cost calibration, not discrimination.** Fixed
+  and fitted Elo share an AUC of 0.673, but the fixed version's ECE is 0.047
+  against 0.020 and its Cox slope 1.41 against 0.97 — under-confident, exactly
+  the shape a borrowed home-field constant produces. Fitting the mapping per
+  fold is what fixes it, which is why §7 fits inside folds rather than adopting
+  a published constant.
+
+Two measured constants replace assumptions. The margin residual sd from Elo
+alone is **13.76** against home-only's 14.68, so §3's "roughly 13" was close
+and slightly optimistic. And the fitted home-field term declines across folds —
+a 0.333 logit fitted through 2006 against 0.291 fitted through 2022 — which
+corroborates the P0 drift finding from inside the training data alone, with no
+sealed season involved.
 
 ## 13. What would invalidate this plan
 
@@ -581,9 +639,10 @@ scale of roughly 13 has to beat. Ties are 15 games, scored as half a win.
   current-state; §4.3 assumes that and routes around it, but a restatement in
   the *schedules* or play-by-play frames would undermine the corpus itself.
   Pin versions and record the pull date in the artifact.
-- **The de-vig method flips the ordering.** If the market benchmark's rank
-  against the model depends on proportional versus Shin normalization, the
-  comparison is not stable enough to report as a single line.
+- ~~**The de-vig method flips the ordering.**~~ Retired at P1: proportional and
+  Shin agree on Brier to four decimals over 4,505 priced games and give the
+  same model-versus-market ordering. Both stay reported, and this is re-checked
+  whenever the priced sample changes.
 - **Home field is non-stationary.** It has drifted, and 2020 was played
   largely without crowds. A fixed intercept across 27 seasons is the wrong
   model; fit a season-varying intercept or restrict the corpus, and decide
