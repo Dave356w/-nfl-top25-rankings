@@ -110,6 +110,14 @@ site/data/lineup/latest.json  what the lineup page reads
 site/data/lineup/pool.json    the players the page's roster editor can add
 site/data/showdown/index.json one entry per game, plus one file per game
 site/data/history/          one archived JSON + CSV per run date
+pipeline/team_outcome.py    the game corpus and its as-of feature harness
+pipeline/team_outcome_eval.py  de-vig, metrics and interval estimates
+pipeline/team_outcome_fit.py   the ridge logistic and linear fitters
+tools/build_team_outcome_model.py  the preregistered walk-forward candidate
+tools/read_team_outcome_seal.py    the single sealed read; spent
+tools/backtest_team_outcome_roi.py flat-unit ROI against closing moneylines
+tools/backtest_team_outcome_roi.py flat-unit ROI against closing moneylines
+docs/team-outcome-prereg.md    what the model will be, frozen before fitting
 tools/                      offline calibration scripts (see below)
 tests/                      shape tests for every published payload
 ```
@@ -632,6 +640,121 @@ model that could actually settle the question — corpora, feature definitions,
 walk-forward protocol, numeric promotion gates and artifact layout — is in
 [`docs/team-outcome-model-plan.md`](docs/team-outcome-model-plan.md). None of
 it is implemented.
+
+Phase P0 of that plan — the game corpus and its as-of harness — is:
+
+```bash
+python tools/build_team_outcome_corpus.py --seasons 1999-2025
+```
+
+It assembles nflverse schedules into three deliberately separate frames and
+writes `model/team_outcome_corpus.json`. Pregame context, settled outcomes and
+closing lines arrive from nflverse in one frame under one join key, which is
+how a final score or a closing line ends up in a feature by accident; the
+corpus splits them so the frame a feature receives does not contain them. A
+feature is handed an as-of view — the target week's context, settled games
+strictly earlier, and the schedule published so far — and never the corpus.
+
+The build audits that boundary at every settled week, structurally and by
+replacing every later outcome and closing line to see whether anything moves,
+and exits non-zero if it finds something. On 1999-2025 it assembles 7,276
+games at a 56.3% home win rate with a clean audit over 572 weeks. No model is
+fitted at P0 and nothing is published.
+
+Phase P1 establishes the lines any later candidate has to beat:
+
+```bash
+python tools/build_team_outcome_baselines.py --draws 2000
+```
+
+It walks forward over 2007-2023 — the first eight seasons train, and the two
+most recent complete seasons are sealed and untouched until the plan's final
+phase — fitting each baseline on earlier seasons only and scoring the next.
+Over 4,594 games, picking the home team scores a Brier of 0.2456, Elo with
+textbook constants 0.2263, Elo fitted per fold 0.2239, and the no-vig closing
+market 0.2100. Every difference carries a season-block bootstrap interval, and
+closing lines are de-vigged both proportionally and by Shin: the two agree to
+four decimals here, so no conclusion rests on that choice.
+
+The gap between fitted Elo and the market, 0.0141 Brier, is the whole space a
+candidate model has to work in. Writes `model/team_outcome_baselines.json`.
+
+Phase P2 freezes what the model will be before it is fitted.
+[`docs/team-outcome-prereg.md`](docs/team-outcome-prereg.md) pins the feature
+list, the model family, the ridge grid, the primary metric, the gates and the
+rule that maps gate results to an approval flag — including which features were
+excluded and why. `tools/freeze_team_outcome_prereg.py` records its sha256 in
+`model/team_outcome_prereg.json`, and the test suite checks that hash on every
+run, so editing the document after the freeze fails the build. Amending needs a
+stated reason and keeps the old hash; once a sealed read is recorded, the tool
+refuses to amend at all.
+
+The two most recent complete seasons are sealed. Nothing in the pipeline reads
+them, and the corpus summary reports coverage for them but never an outcome.
+
+Phase P3 runs the preregistered candidate:
+
+```bash
+python tools/build_team_outcome_model.py --draws 2000
+```
+
+It rebuilds the corpus with play-by-play efficiency, audits the as-of boundary
+over all 572 settled weeks, and only then picks which preregistered
+specification to fit — the audit result decides that, never a score. Over the
+same 4,594 games the candidate scores a Brier of 0.2190 against fitted Elo's
+0.2239 and the market's 0.2100, passing every gate that can be evaluated before
+the seal is opened. Writes `model/team_outcome.json` with `approved: false`:
+the approval rule needs the sealed read.
+
+Phase P4 spends the seal, once:
+
+```bash
+python tools/read_team_outcome_seal.py --draws 2000
+```
+
+It scores 2024 and 2025 — 570 games nothing else in the project had read — and
+then marks the preregistration spent, after which both the freeze tool and the
+reader refuse to reopen it. The frozen decision rule returned `approved: true`:
+the sealed Brier of 0.2188 landed inside the acceptance interval computed from
+the walk-forward before the read.
+
+The honest reading is narrower than that flag. The candidate's advantage over a
+fitted Elo baseline — 0.0049 with an interval clear of zero across 17 seasons —
+did not reproduce: on the sealed seasons both score 0.2188, a gap of +0.0001
+with an interval straddling zero. Sealed calibration also degraded to an ECE of
+0.0367, past the 0.025 the project's own calibration gate requires. So the gate
+as written asked whether the Brier *level* reproduced, and it did, while the
+thing that made this a candidate rather than a repackaged Elo did not. No win
+probability is displayed, and nothing is promoted. See
+[`docs/team-outcome-model-plan.md`](docs/team-outcome-model-plan.md) for the
+full disposition.
+
+A forecast invites one more question, so it is answered and kept reproducible:
+
+```bash
+python tools/backtest_team_outcome_roi.py --draws 2000
+```
+
+Backing either model at the closing moneyline loses money — about −4% to −6%
+per flat unit across both spans, negative in all twelve cells measured. Bets
+are priced against the vig-included quote, because that is the price on offer.
+Two numbers explain it: the models claim an edge on roughly 90% of games, which
+is not what finding an edge looks like, and the loss exceeds the ~1.4% a
+no-skill bettor pays in hold. Writes `model/team_outcome_roi.json`. Not advice.
+
+A forecast invites one more question, so it is answered and kept reproducible:
+
+```bash
+python tools/backtest_team_outcome_roi.py --draws 2000
+```
+
+Backing either model at the closing moneyline loses money — about −4% to −6%
+per flat unit across both the walk-forward and sealed spans, negative in every
+one of the twelve cells measured. Bets are priced against the vig-included
+quote, because that is the price on offer. Two numbers explain it: the models
+claim an edge on roughly 90% of games, which is not what finding an edge looks
+like, and the loss is larger than the ~1.4% a no-skill bettor pays in hold.
+Writes `model/team_outcome_roi.json`. Nothing here is advice.
 
 ### Historical component-prior gate
 

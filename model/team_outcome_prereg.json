@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "phase": "P2",
+  "version": 1,
+  "frozen_utc": "2026-09-11T22:07:03.941276+00:00",
+  "document": "docs/team-outcome-prereg.md",
+  "sha256": "171bc3eb386ea7d5531f89f6d1efa2100c24c259eb4c4e69e9a00c7772edcf61",
+  "bytes": 13146,
+  "sections": [
+    "1. What has already been seen",
+    "2. Targets",
+    "3. Corpus and the two specifications",
+    "4. Features",
+    "5. Model family, grid and calibration",
+    "6. Validation",
+    "7. Primary metric, gates and the decision rule",
+    "8. Stopping rule",
+    "9. What would count as this preregistration failing",
+    "Amendments"
+  ],
+  "sealed_seasons": [
+    2024,
+    2025
+  ],
+  "sealed_read_recorded": true,
+  "primary_metric": "brier on the win target, pooled over the walk-forward span",
+  "decision_rule": "approved_model = G1 and G2 and G3 and G4 and G5 and G8; approved_edge = G7, a separate flag evaluated at P5",
+  "specifications": {
+    "A": "schedules only",
+    "B": "A plus opponent-adjusted play-by-play efficiency",
+    "selection": "B is primary if and only if the play-by-play as-of audit is clean; no performance number enters this decision"
+  },
+  "amendments": [],
+  "limitations": [
+    "A frozen hash constrains this document, not the honesty of the run it governs.",
+    "Prior exposure is listed in section 1 of the document; this is not a blind protocol.",
+    "Gradient boosting is deliberately not run; the deviation is recorded in section 5."
+  ],
+  "sealed_read_utc": "2026-09-11T22:38:22.304243+00:00",
+  "sealed_read_artifact": "model/team_outcome_sealed.json"
+}

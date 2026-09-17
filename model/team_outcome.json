@@ -1,0 +1,1645 @@
+{
+  "schema": 1,
+  "phase": "P3",
+  "as_of_utc": "2026-09-11T22:30:23.445859+00:00",
+  "prereg_sha256": "171bc3eb386ea7d5531f89f6d1efa2100c24c259eb4c4e69e9a00c7772edcf61",
+  "prereg_version": 1,
+  "specification": "B",
+  "specification_selected_by": "as-of audit result, not performance",
+  "features": [
+    "elo_diff",
+    "rest_diff",
+    "short_week_diff",
+    "bye_diff",
+    "neutral_site",
+    "dome",
+    "div_game",
+    "crowd_absent",
+    "epa_off_diff",
+    "epa_def_diff",
+    "success_rate_diff"
+  ],
+  "corpus": {
+    "games": 7276,
+    "team_games": 14546,
+    "games_without_play_by_play": 3
+  },
+  "walk_forward": {
+    "seasons": [
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023
+    ],
+    "games": 4594,
+    "folds": [
+      {
+        "season": 2007,
+        "training_games": 2112,
+        "margin_ridge": 100.0,
+        "win_ridge": 100.0,
+        "residual_sd": 13.545,
+        "home_field_logit": 0.331,
+        "coefficients": {
+          "elo_diff": 0.004261,
+          "rest_diff": -0.012094,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.143899,
+          "neutral_site": -0.01878,
+          "dome": -0.034946,
+          "div_game": -0.076003,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 2.031903,
+          "epa_def_diff": 1.746405,
+          "success_rate_diff": 3.173051
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.67958
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.67957
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.67943
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.67821
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.67093
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.65833
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.65834
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.65837
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.65854
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.65809
+          }
+        ]
+      },
+      {
+        "season": 2008,
+        "training_games": 2379,
+        "margin_ridge": 0.01,
+        "win_ridge": 0.01,
+        "residual_sd": 13.534,
+        "home_field_logit": 0.335,
+        "coefficients": {
+          "elo_diff": 0.005191,
+          "rest_diff": -0.079674,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.697897,
+          "neutral_site": -0.449257,
+          "dome": -0.081509,
+          "div_game": -0.173,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 2.259458,
+          "epa_def_diff": 1.675387,
+          "success_rate_diff": 3.323612
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.49201
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.49202
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.49212
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.49322
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.50608
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.61268
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.61268
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.61269
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.61284
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.61481
+          }
+        ]
+      },
+      {
+        "season": 2009,
+        "training_games": 2646,
+        "margin_ridge": 100.0,
+        "win_ridge": 100.0,
+        "residual_sd": 13.573,
+        "home_field_logit": 0.3273,
+        "coefficients": {
+          "elo_diff": 0.004364,
+          "rest_diff": -0.000794,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.127189,
+          "neutral_site": -0.420952,
+          "dome": -0.040752,
+          "div_game": -0.142837,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 2.117025,
+          "epa_def_diff": 1.898961,
+          "success_rate_diff": 3.452605
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.94369
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.94368
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.94353
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.9422
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.93463
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.62698
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.62696
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.62675
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.62538
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.62368
+          }
+        ]
+      },
+      {
+        "season": 2010,
+        "training_games": 2913,
+        "margin_ridge": 10.0,
+        "win_ridge": 0.01,
+        "residual_sd": 13.682,
+        "home_field_logit": 0.3327,
+        "coefficients": {
+          "elo_diff": 0.005181,
+          "rest_diff": -0.021627,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.278625,
+          "neutral_site": -0.689354,
+          "dome": -0.00752,
+          "div_game": -0.175182,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 2.661641,
+          "epa_def_diff": 1.900541,
+          "success_rate_diff": 2.083369
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 14.75915
+          },
+          {
+            "ridge": 0.1,
+            "score": 14.75915
+          },
+          {
+            "ridge": 1.0,
+            "score": 14.75914
+          },
+          {
+            "ridge": 10.0,
+            "score": 14.75912
+          },
+          {
+            "ridge": 100.0,
+            "score": 14.76155
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.60098
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.60098
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.60098
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.60107
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.60246
+          }
+        ]
+      },
+      {
+        "season": 2011,
+        "training_games": 3180,
+        "margin_ridge": 100.0,
+        "win_ridge": 100.0,
+        "residual_sd": 13.704,
+        "home_field_logit": 0.32,
+        "coefficients": {
+          "elo_diff": 0.004304,
+          "rest_diff": 0.007309,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.098437,
+          "neutral_site": -0.433037,
+          "dome": -0.020104,
+          "div_game": -0.136013,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 2.292144,
+          "epa_def_diff": 1.836379,
+          "success_rate_diff": 3.294181
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.94925
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.94924
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.94916
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.94828
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.94005
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.65229
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.65228
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.65222
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.65168
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.64908
+          }
+        ]
+      },
+      {
+        "season": 2012,
+        "training_games": 3447,
+        "margin_ridge": 100.0,
+        "win_ridge": 0.01,
+        "residual_sd": 13.723,
+        "home_field_logit": 0.3253,
+        "coefficients": {
+          "elo_diff": 0.004794,
+          "rest_diff": 0.003643,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.137689,
+          "neutral_site": -0.726061,
+          "dome": -0.022719,
+          "div_game": -0.164821,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 3.036521,
+          "epa_def_diff": 1.958718,
+          "success_rate_diff": 1.765137
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.97014
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.97014
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.9701
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.96976
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.96769
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.60967
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.60968
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.6097
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.60993
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.61187
+          }
+        ]
+      },
+      {
+        "season": 2013,
+        "training_games": 3714,
+        "margin_ridge": 0.01,
+        "win_ridge": 0.01,
+        "residual_sd": 13.76,
+        "home_field_logit": 0.3251,
+        "coefficients": {
+          "elo_diff": 0.004656,
+          "rest_diff": 0.003095,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.143691,
+          "neutral_site": -0.847921,
+          "dome": 0.007774,
+          "div_game": -0.131387,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 3.327433,
+          "epa_def_diff": 2.019096,
+          "success_rate_diff": 1.251548
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 14.24737
+          },
+          {
+            "ridge": 0.1,
+            "score": 14.24737
+          },
+          {
+            "ridge": 1.0,
+            "score": 14.24737
+          },
+          {
+            "ridge": 10.0,
+            "score": 14.24741
+          },
+          {
+            "ridge": 100.0,
+            "score": 14.24856
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.62679
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.62679
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.6268
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.62693
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.62788
+          }
+        ]
+      },
+      {
+        "season": 2014,
+        "training_games": 3981,
+        "margin_ridge": 100.0,
+        "win_ridge": 10.0,
+        "residual_sd": 13.72,
+        "home_field_logit": 0.3322,
+        "coefficients": {
+          "elo_diff": 0.00462,
+          "rest_diff": 0.001402,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.16223,
+          "neutral_site": -0.903882,
+          "dome": 0.014932,
+          "div_game": -0.119659,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 3.108838,
+          "epa_def_diff": 2.206378,
+          "success_rate_diff": 1.60984
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.15711
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.15711
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.15708
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.15674
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.15418
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.62751
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.62751
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.6275
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.62748
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.6277
+          }
+        ]
+      },
+      {
+        "season": 2015,
+        "training_games": 4248,
+        "margin_ridge": 100.0,
+        "win_ridge": 0.01,
+        "residual_sd": 13.774,
+        "home_field_logit": 0.3336,
+        "coefficients": {
+          "elo_diff": 0.004809,
+          "rest_diff": -0.002429,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.15218,
+          "neutral_site": -0.983403,
+          "dome": 0.018456,
+          "div_game": -0.134163,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 3.16209,
+          "epa_def_diff": 2.233619,
+          "success_rate_diff": 1.615705
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 14.58238
+          },
+          {
+            "ridge": 0.1,
+            "score": 14.58237
+          },
+          {
+            "ridge": 1.0,
+            "score": 14.58235
+          },
+          {
+            "ridge": 10.0,
+            "score": 14.58209
+          },
+          {
+            "ridge": 100.0,
+            "score": 14.58007
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.59842
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.59842
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.59843
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.59858
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.60035
+          }
+        ]
+      },
+      {
+        "season": 2016,
+        "training_games": 4515,
+        "margin_ridge": 100.0,
+        "win_ridge": 10.0,
+        "residual_sd": 13.732,
+        "home_field_logit": 0.3253,
+        "coefficients": {
+          "elo_diff": 0.004824,
+          "rest_diff": 0.002909,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.138885,
+          "neutral_site": -0.735187,
+          "dome": 0.000466,
+          "div_game": -0.162699,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 3.084284,
+          "epa_def_diff": 2.207183,
+          "success_rate_diff": 1.649677
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.07419
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.07419
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.07418
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.07412
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.07384
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.63989
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.63989
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.63989
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.63987
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.63996
+          }
+        ]
+      },
+      {
+        "season": 2017,
+        "training_games": 4782,
+        "margin_ridge": 100.0,
+        "win_ridge": 100.0,
+        "residual_sd": 13.637,
+        "home_field_logit": 0.3254,
+        "coefficients": {
+          "elo_diff": 0.004609,
+          "rest_diff": 0.005934,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.128184,
+          "neutral_site": -0.619321,
+          "dome": 0.008217,
+          "div_game": -0.127937,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 2.651615,
+          "epa_def_diff": 1.98902,
+          "success_rate_diff": 2.644138
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 11.90837
+          },
+          {
+            "ridge": 0.1,
+            "score": 11.90837
+          },
+          {
+            "ridge": 1.0,
+            "score": 11.90837
+          },
+          {
+            "ridge": 10.0,
+            "score": 11.90834
+          },
+          {
+            "ridge": 100.0,
+            "score": 11.90813
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.63136
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.63136
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.63135
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.63131
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.63117
+          }
+        ]
+      },
+      {
+        "season": 2018,
+        "training_games": 5049,
+        "margin_ridge": 100.0,
+        "win_ridge": 100.0,
+        "residual_sd": 13.649,
+        "home_field_logit": 0.3248,
+        "coefficients": {
+          "elo_diff": 0.004559,
+          "rest_diff": 0.004475,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.135764,
+          "neutral_site": -0.599376,
+          "dome": 0.006786,
+          "div_game": -0.123782,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 2.603232,
+          "epa_def_diff": 2.088323,
+          "success_rate_diff": 2.998278
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.88904
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.88902
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.8889
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.88764
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.87598
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.62275
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.62275
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.62273
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.62264
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.62224
+          }
+        ]
+      },
+      {
+        "season": 2019,
+        "training_games": 5316,
+        "margin_ridge": 100.0,
+        "win_ridge": 100.0,
+        "residual_sd": 13.63,
+        "home_field_logit": 0.3297,
+        "coefficients": {
+          "elo_diff": 0.004451,
+          "rest_diff": 0.001598,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.175006,
+          "neutral_site": -0.663234,
+          "dome": -0.005226,
+          "div_game": -0.139323,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 2.631237,
+          "epa_def_diff": 2.053924,
+          "success_rate_diff": 3.295683
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.2755
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.2755
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.27545
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.27503
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.27115
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.62268
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.62268
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.62268
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.62266
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.62252
+          }
+        ]
+      },
+      {
+        "season": 2020,
+        "training_games": 5583,
+        "margin_ridge": 0.01,
+        "win_ridge": 10.0,
+        "residual_sd": 13.627,
+        "home_field_logit": 0.3211,
+        "coefficients": {
+          "elo_diff": 0.004781,
+          "rest_diff": -0.007446,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.216338,
+          "neutral_site": -0.646936,
+          "dome": -0.012111,
+          "div_game": -0.150584,
+          "crowd_absent": 0.0,
+          "epa_off_diff": 2.973497,
+          "epa_def_diff": 2.08204,
+          "success_rate_diff": 2.503673
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.60409
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.6041
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.60411
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.60431
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.60638
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.645
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.645
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.645
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.64497
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.64497
+          }
+        ]
+      },
+      {
+        "season": 2021,
+        "training_games": 5852,
+        "margin_ridge": 100.0,
+        "win_ridge": 10.0,
+        "residual_sd": 13.591,
+        "home_field_logit": 0.3069,
+        "coefficients": {
+          "elo_diff": 0.004849,
+          "rest_diff": -4.6e-05,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.17526,
+          "neutral_site": -0.675024,
+          "dome": -0.039068,
+          "div_game": -0.146092,
+          "crowd_absent": -0.328465,
+          "epa_off_diff": 2.962983,
+          "epa_def_diff": 2.010861,
+          "success_rate_diff": 2.690682
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 13.0386
+          },
+          {
+            "ridge": 0.1,
+            "score": 13.0386
+          },
+          {
+            "ridge": 1.0,
+            "score": 13.0386
+          },
+          {
+            "ridge": 10.0,
+            "score": 13.03859
+          },
+          {
+            "ridge": 100.0,
+            "score": 13.03851
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.62799
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.62799
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.62799
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.62797
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.62828
+          }
+        ]
+      },
+      {
+        "season": 2022,
+        "training_games": 6137,
+        "margin_ridge": 0.01,
+        "win_ridge": 100.0,
+        "residual_sd": 13.62,
+        "home_field_logit": 0.2936,
+        "coefficients": {
+          "elo_diff": 0.004601,
+          "rest_diff": 0.003192,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.146207,
+          "neutral_site": -0.520807,
+          "dome": -0.050472,
+          "div_game": -0.121538,
+          "crowd_absent": -0.292879,
+          "epa_off_diff": 2.636217,
+          "epa_def_diff": 1.906739,
+          "success_rate_diff": 3.125744
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 14.21949
+          },
+          {
+            "ridge": 0.1,
+            "score": 14.21949
+          },
+          {
+            "ridge": 1.0,
+            "score": 14.21951
+          },
+          {
+            "ridge": 10.0,
+            "score": 14.21963
+          },
+          {
+            "ridge": 100.0,
+            "score": 14.22082
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.66436
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.66435
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.66434
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.66422
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.66315
+          }
+        ]
+      },
+      {
+        "season": 2023,
+        "training_games": 6421,
+        "margin_ridge": 100.0,
+        "win_ridge": 100.0,
+        "residual_sd": 13.545,
+        "home_field_logit": 0.2941,
+        "coefficients": {
+          "elo_diff": 0.004472,
+          "rest_diff": 0.000543,
+          "short_week_diff": 0.0,
+          "bye_diff": 0.168079,
+          "neutral_site": -0.603742,
+          "dome": -0.064711,
+          "div_game": -0.097734,
+          "crowd_absent": -0.291107,
+          "epa_off_diff": 2.688772,
+          "epa_def_diff": 1.866503,
+          "success_rate_diff": 3.425493
+        },
+        "margin_grid": [
+          {
+            "ridge": 0.01,
+            "score": 11.82386
+          },
+          {
+            "ridge": 0.1,
+            "score": 11.82385
+          },
+          {
+            "ridge": 1.0,
+            "score": 11.82376
+          },
+          {
+            "ridge": 10.0,
+            "score": 11.82288
+          },
+          {
+            "ridge": 100.0,
+            "score": 11.81441
+          }
+        ],
+        "win_grid": [
+          {
+            "ridge": 0.01,
+            "score": 0.63088
+          },
+          {
+            "ridge": 0.1,
+            "score": 0.63088
+          },
+          {
+            "ridge": 1.0,
+            "score": 0.63087
+          },
+          {
+            "ridge": 10.0,
+            "score": 0.6308
+          },
+          {
+            "ridge": 100.0,
+            "score": 0.63023
+          }
+        ]
+      }
+    ]
+  },
+  "feature_diagnostics": {
+    "features": {
+      "elo_diff": {
+        "non_zero_rate": 1.0,
+        "sd": 80.420419,
+        "min": -259.9612,
+        "max": 317.4918,
+        "degenerate": false
+      },
+      "rest_diff": {
+        "non_zero_rate": 0.3422,
+        "sd": 2.538998,
+        "min": -8.0,
+        "max": 8.0,
+        "degenerate": false
+      },
+      "short_week_diff": {
+        "non_zero_rate": 0.0,
+        "sd": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "degenerate": true
+      },
+      "bye_diff": {
+        "non_zero_rate": 0.1145,
+        "sd": 0.33825,
+        "min": -1.0,
+        "max": 1.0,
+        "degenerate": false
+      },
+      "neutral_site": {
+        "non_zero_rate": 0.015,
+        "sd": 0.121644,
+        "min": 0.0,
+        "max": 1.0,
+        "degenerate": false
+      },
+      "dome": {
+        "non_zero_rate": 0.2597,
+        "sd": 0.43851,
+        "min": 0.0,
+        "max": 1.0,
+        "degenerate": false
+      },
+      "div_game": {
+        "non_zero_rate": 0.3605,
+        "sd": 0.480189,
+        "min": 0.0,
+        "max": 1.0,
+        "degenerate": false
+      },
+      "crowd_absent": {
+        "non_zero_rate": 0.0586,
+        "sd": 0.234815,
+        "min": 0.0,
+        "max": 1.0,
+        "degenerate": false
+      },
+      "epa_off_diff": {
+        "non_zero_rate": 1.0,
+        "sd": 0.097243,
+        "min": -0.3535,
+        "max": 0.3881,
+        "degenerate": false
+      },
+      "epa_def_diff": {
+        "non_zero_rate": 1.0,
+        "sd": 0.08246,
+        "min": -0.2941,
+        "max": 0.2823,
+        "degenerate": false
+      },
+      "success_rate_diff": {
+        "non_zero_rate": 1.0,
+        "sd": 0.036475,
+        "min": -0.1286,
+        "max": 0.1206,
+        "degenerate": false
+      }
+    },
+    "degenerate": [
+      "short_week_diff"
+    ]
+  },
+  "metrics": {
+    "n": 4594,
+    "accuracy": 0.6372,
+    "brier": 0.219,
+    "log_loss": 0.6289,
+    "auc": 0.6917,
+    "ece": 0.0187,
+    "slope": 1.0831,
+    "curve": [
+      {
+        "bin": 0,
+        "n": 460,
+        "predicted": 0.2934,
+        "observed": 0.2696
+      },
+      {
+        "bin": 1,
+        "n": 459,
+        "predicted": 0.397,
+        "observed": 0.39
+      },
+      {
+        "bin": 2,
+        "n": 459,
+        "predicted": 0.4625,
+        "observed": 0.4521
+      },
+      {
+        "bin": 3,
+        "n": 460,
+        "predicted": 0.516,
+        "observed": 0.4902
+      },
+      {
+        "bin": 4,
+        "n": 459,
+        "predicted": 0.5585,
+        "observed": 0.5163
+      },
+      {
+        "bin": 5,
+        "n": 459,
+        "predicted": 0.5976,
+        "observed": 0.5773
+      },
+      {
+        "bin": 6,
+        "n": 460,
+        "predicted": 0.6377,
+        "observed": 0.6304
+      },
+      {
+        "bin": 7,
+        "n": 459,
+        "predicted": 0.6839,
+        "observed": 0.7081
+      },
+      {
+        "bin": 8,
+        "n": 459,
+        "predicted": 0.7359,
+        "observed": 0.7516
+      },
+      {
+        "bin": 9,
+        "n": 460,
+        "predicted": 0.8164,
+        "observed": 0.8272
+      }
+    ],
+    "margin_mae": 10.564,
+    "margin_rmse": 13.584,
+    "margin_residual_sd": 13.579
+  },
+  "direct_win_model": {
+    "n": 4594,
+    "accuracy": 0.6407,
+    "brier": 0.2192,
+    "log_loss": 0.6296,
+    "auc": 0.6912,
+    "ece": 0.0169,
+    "slope": 1.0284,
+    "curve": [
+      {
+        "bin": 0,
+        "n": 460,
+        "predicted": 0.2844,
+        "observed": 0.2652
+      },
+      {
+        "bin": 1,
+        "n": 459,
+        "predicted": 0.3898,
+        "observed": 0.3976
+      },
+      {
+        "bin": 2,
+        "n": 459,
+        "predicted": 0.4611,
+        "observed": 0.451
+      },
+      {
+        "bin": 3,
+        "n": 460,
+        "predicted": 0.5164,
+        "observed": 0.4837
+      },
+      {
+        "bin": 4,
+        "n": 459,
+        "predicted": 0.5634,
+        "observed": 0.5076
+      },
+      {
+        "bin": 5,
+        "n": 459,
+        "predicted": 0.6048,
+        "observed": 0.5817
+      },
+      {
+        "bin": 6,
+        "n": 460,
+        "predicted": 0.6464,
+        "observed": 0.6478
+      },
+      {
+        "bin": 7,
+        "n": 459,
+        "predicted": 0.6934,
+        "observed": 0.7102
+      },
+      {
+        "bin": 8,
+        "n": 459,
+        "predicted": 0.7448,
+        "observed": 0.744
+      },
+      {
+        "bin": 9,
+        "n": 460,
+        "predicted": 0.8222,
+        "observed": 0.8239
+      }
+    ]
+  },
+  "gates": {
+    "G1_coverage": {
+      "passed": true,
+      "games": 4594,
+      "seasons": 17,
+      "requirement": ">= 3000 games across >= 10 seasons"
+    },
+    "G2_calibration": {
+      "passed": true,
+      "ece": 0.0187,
+      "slope": 1.0831,
+      "slope_interval": [
+        0.9558,
+        1.2124
+      ],
+      "requirement": "ECE <= 0.025 and the slope interval contains 1"
+    },
+    "G3_skill": {
+      "passed": true,
+      "brier_gap": -0.0049,
+      "interval": [
+        -0.0072,
+        -0.0026
+      ],
+      "skill_score": 0.022,
+      "mcnemar": {
+        "discordant": 453,
+        "model_only": 234,
+        "reference_only": 219,
+        "p_value": 0.5107,
+        "method": "exact"
+      },
+      "requirement": "Brier below fitted Elo with the bootstrap upper bound below 0"
+    },
+    "G4_stability": {
+      "passed": true,
+      "seasons_beaten": 16,
+      "of": 17,
+      "requirement": "lower Brier than fitted Elo in >= 13 of 17"
+    },
+    "G5_seal": {
+      "passed": null,
+      "note": "Not evaluated. The sealed read is P4."
+    },
+    "G8_leakage": {
+      "passed": true,
+      "audit_clean": true,
+      "canary_detected": true,
+      "requirement": "audit clean, canary detected, every feature timestamped"
+    },
+    "per_season": [
+      {
+        "season": 2007,
+        "n": 267,
+        "brier": 0.2122,
+        "brier_elo_reference": 0.2199
+      },
+      {
+        "season": 2008,
+        "n": 267,
+        "brier": 0.2164,
+        "brier_elo_reference": 0.22
+      },
+      {
+        "season": 2009,
+        "n": 267,
+        "brier": 0.208,
+        "brier_elo_reference": 0.2096
+      },
+      {
+        "season": 2010,
+        "n": 267,
+        "brier": 0.2285,
+        "brier_elo_reference": 0.2357
+      },
+      {
+        "season": 2011,
+        "n": 267,
+        "brier": 0.2126,
+        "brier_elo_reference": 0.2202
+      },
+      {
+        "season": 2012,
+        "n": 267,
+        "brier": 0.2187,
+        "brier_elo_reference": 0.2261
+      },
+      {
+        "season": 2013,
+        "n": 267,
+        "brier": 0.2189,
+        "brier_elo_reference": 0.2224
+      },
+      {
+        "season": 2014,
+        "n": 267,
+        "brier": 0.2062,
+        "brier_elo_reference": 0.2098
+      },
+      {
+        "season": 2015,
+        "n": 267,
+        "brier": 0.2234,
+        "brier_elo_reference": 0.2253
+      },
+      {
+        "season": 2016,
+        "n": 267,
+        "brier": 0.2178,
+        "brier_elo_reference": 0.2193
+      },
+      {
+        "season": 2017,
+        "n": 267,
+        "brier": 0.217,
+        "brier_elo_reference": 0.225
+      },
+      {
+        "season": 2018,
+        "n": 267,
+        "brier": 0.2157,
+        "brier_elo_reference": 0.2275
+      },
+      {
+        "season": 2019,
+        "n": 267,
+        "brier": 0.2257,
+        "brier_elo_reference": 0.2276
+      },
+      {
+        "season": 2020,
+        "n": 269,
+        "brier": 0.2168,
+        "brier_elo_reference": 0.2223
+      },
+      {
+        "season": 2021,
+        "n": 285,
+        "brier": 0.2327,
+        "brier_elo_reference": 0.2305
+      },
+      {
+        "season": 2022,
+        "n": 284,
+        "brier": 0.2199,
+        "brier_elo_reference": 0.23
+      },
+      {
+        "season": 2023,
+        "n": 285,
+        "brier": 0.2302,
+        "brier_elo_reference": 0.2332
+      }
+    ]
+  },
+  "challengers": {
+    "nonlinearity": {
+      "features": [
+        "elo_diff",
+        "rest_diff",
+        "short_week_diff",
+        "bye_diff",
+        "neutral_site",
+        "dome",
+        "div_game",
+        "crowd_absent",
+        "epa_off_diff",
+        "epa_def_diff",
+        "success_rate_diff",
+        "elo_diff_squared"
+      ],
+      "brier": 0.219,
+      "accuracy": 0.6375,
+      "vs_candidate": {
+        "point": 0.0001,
+        "low": -0.0,
+        "high": 0.0002,
+        "draws": 2000,
+        "skill_vs_reference": -0.0003,
+        "reference": "candidate"
+      }
+    },
+    "redundancy": {
+      "features": [
+        "elo_diff",
+        "rest_diff",
+        "short_week_diff",
+        "bye_diff",
+        "neutral_site",
+        "dome",
+        "div_game",
+        "crowd_absent",
+        "epa_off_diff",
+        "epa_def_diff",
+        "success_rate_diff",
+        "prior_margin_diff"
+      ],
+      "brier": 0.2185,
+      "accuracy": 0.6416,
+      "vs_candidate": {
+        "point": -0.0005,
+        "low": -0.0013,
+        "high": 0.0005,
+        "draws": 2000,
+        "skill_vs_reference": 0.0021,
+        "reference": "candidate"
+      }
+    },
+    "specification_a": {
+      "features": [
+        "elo_diff",
+        "rest_diff",
+        "short_week_diff",
+        "bye_diff",
+        "neutral_site",
+        "dome",
+        "div_game",
+        "crowd_absent"
+      ],
+      "brier": 0.2231,
+      "accuracy": 0.6359,
+      "vs_candidate": {
+        "point": 0.0042,
+        "low": 0.0022,
+        "high": 0.0061,
+        "draws": 2000,
+        "skill_vs_reference": -0.0191,
+        "reference": "candidate"
+      }
+    }
+  },
+  "G6_market_context": {
+    "n": 4505,
+    "candidate_brier": 0.219,
+    "market_shin_brier": 0.21,
+    "market_proportional_brier": 0.21,
+    "gap_to_market_shin": {
+      "point": 0.009,
+      "low": 0.0053,
+      "high": 0.0128,
+      "draws": 2000,
+      "skill_vs_reference": -0.0431,
+      "reference": "market_shin"
+    },
+    "note": "Reported without a threshold. G6 gates nothing."
+  },
+  "as_of_audit": {
+    "checkpoints": 572,
+    "clean": true,
+    "findings": [],
+    "canary_detected": true
+  },
+  "approved": false,
+  "approval_note": "approved_model requires G5, which is the sealed read at P4. No model is promoted at P3.",
+  "limitations": [
+    "Three 1999-2000 games carry no play-by-play; their team-games are absent from every rolling window.",
+    "Ridge selection uses one held-out season, as preregistered. It is noisy.",
+    "short_week_diff is identically zero over the evaluated span: an NFL short week puts both teams on short rest, so the directional form cannot fire. It is left in place rather than swapped out, because replacing a feature after seeing a run is the freedom the preregistration exists to remove.",
+    "The sealed seasons are neither fitted on nor scored here."
+  ]
+}
