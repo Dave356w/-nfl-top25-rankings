@@ -1,20 +1,16 @@
 {
-  "_comment": "Edit this file to change the team. Positions: QB, RB, WR, TE, K, DEF.",
+  "_comment": "Edit this file to change the team. Positions: QB, RB, WR, TE, K.",
   "roster": [
     {
       "Name": "Dak Prescott",
       "Position": "QB"
     },
     {
-      "Name": "Emmett Johnson",
+      "Name": "Breece Hall",
       "Position": "RB"
     },
     {
       "Name": "James Cook III",
-      "Position": "RB"
-    },
-    {
-      "Name": "Breece Hall",
       "Position": "RB"
     },
     {
@@ -26,7 +22,7 @@
       "Position": "WR"
     },
     {
-      "Name": "Harold Fannin Jr",
+      "Name": "Brenton Strange",
       "Position": "TE"
     },
     {
@@ -34,36 +30,40 @@
       "Position": "K"
     },
     {
-      "Name": "Jameson Williams",
-      "Position": "WR"
-    },
-    {
-      "Name": "Brenton Strange",
-      "Position": "TE"
-    },
-    {
-      "Name": "Quentin Johnston",
-      "Position": "WR"
+      "Name": "Denver Broncos",
+      "Position": "DEF"
     },
     {
       "Name": "Jaylen Warren",
       "Position": "RB"
     },
     {
-      "Name": "Chris Brooks",
-      "Position": "RB"
+      "Name": "Jameson Williams",
+      "Position": "WR"
     },
     {
-      "Name": "Tyrone Tracy Jr.",
-      "Position": "RB"
+      "Name": "Quentin Johnston",
+      "Position": "WR"
+    },
+    {
+      "Name": "Harold Fannin Jr",
+      "Position": "TE"
     },
     {
       "Name": "Los Angeles Rams",
       "Position": "DEF"
     },
     {
-      "Name": "Denver Broncos",
-      "Position": "DEF"
+      "Name": "Emmett Johnson",
+      "Position": "RB"
+    },
+    {
+      "Name": "Caleb Douglas",
+      "Position": "WR"
+    },
+    {
+      "Name": "Demond Claiborne",
+      "Position": "RB"
     }
   ]
 }
