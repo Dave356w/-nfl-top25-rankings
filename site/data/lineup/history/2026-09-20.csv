@@ -1,0 +1,17 @@
+slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,fppg,depth,depth_source,source,injury,review
+QB,Dak Prescott,QB,DAL,WAS,2026-09-20 20:25,18.59,12.23,30.21,32.0,15.4,1.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+RB,Breece Hall,RB,NYJ,GB,2026-09-20 17:00,15.24,8.35,27.72,33.0,18.8,1.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+RB,James Cook III,RB,BUF,DET,2026-09-18 00:15,14.16,7.76,25.76,30.0,14.4,1.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+WR,Jaylen Waddle,WR,DEN,JAC,2026-09-20 20:05,11.14,5.99,20.44,23.0,0.7,1.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+WR,Tee Higgins,WR,CIN,HOU,2026-09-20 17:00,11.02,5.28,21.3,28.0,7.4,2.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+TE,Brenton Strange,TE,JAC,DEN,2026-09-20 20:05,9.34,4.19,18.54,18.0,9.3,1.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+K,Brandon Aubrey,K,DAL,WAS,,10.88,6.33,19.12,,,1.0,nflverse PK depth,nflverse rolling kicker games (n=8),,ok
+DEF,Denver Broncos,DEF,DEN,JAC,2026-09-20 20:05,7.03,2.97,14.24,18.0,3.0,1.0,Yahoo salary-order fallback,Yahoo salary-position-depth regression (trained through 2025),,ok
+FLEX,Jaylen Warren,RB,PIT,NE,2026-09-20 17:00,12.11,6.63,22.02,23.0,7.8,1.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+BENCH,Jameson Williams,WR,DET,BUF,2026-09-18 00:15,9.63,4.62,18.62,22.0,5.4,2.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+BENCH,Caleb Douglas,WR,MIA,SF,2026-09-20 20:25,8.44,4.05,16.33,15.0,11.9,2.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+BENCH,Quentin Johnston,WR,LAC,LV,2026-09-20 20:05,8.43,4.04,16.31,18.0,2.7,2.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+BENCH,Harold Fannin Jr,TE,CLE,TB,2026-09-20 17:00,8.35,3.74,16.57,16.0,3.1,1.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+BENCH,Los Angeles Rams,DEF,LA,NYG,2026-09-22 00:15,6.06,2.56,12.27,12.0,2.0,1.0,Yahoo salary-order fallback,Yahoo salary-position-depth regression (trained through 2025),,ok
+BENCH,Emmett Johnson,RB,KC,IND,2026-09-21 00:20,1.43,0.62,2.88,10.0,7.8,2.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
+BENCH,Demond Claiborne,RB,MIN,CHI,2026-09-20 17:00,1.43,0.62,2.88,10.0,0.0,2.0,nflverse latest depth,Yahoo salary-position-depth regression (trained through 2025),,ok
