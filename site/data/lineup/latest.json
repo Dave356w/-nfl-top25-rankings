@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-20T18:14:28Z",
-  "snapshot_id": "2026-09-20T18:14:28Z",
+  "generated_utc": "2026-09-20T22:56:03Z",
+  "snapshot_id": "2026-09-20T22:56:03Z",
   "run_date": "2026-09-20",
   "season": 2026,
   "week": 2,
@@ -27,8 +27,8 @@
   "roster_fingerprint": "dak prescott:QB|breece hall:RB|james cook:RB|jaylen waddle:WR|tee higgins:WR|brenton strange:TE|brandon aubrey:K|denver broncos:DEF|jaylen warren:RB|jameson williams:WR|quentin johnston:WR|harold fannin:TE|los angeles rams:DEF|emmett johnson:RB|caleb douglas:WR|demond claiborne:RB",
   "totals": {
     "mean": 109.51,
-    "floor": 59.73,
-    "ceiling": 199.35
+    "floor": 59.74,
+    "ceiling": 199.34
   },
   "counts": {
     "roster": 16,
@@ -67,7 +67,7 @@
       "floor": 8.35,
       "ceiling": 27.72,
       "salary": 33.0,
-      "fppg": 18.8,
+      "fppg": 15.25,
       "depth": 1.0,
       "depth_source": "nflverse latest depth",
       "source": "Yahoo salary-position-depth regression (trained through 2025)",
@@ -124,7 +124,7 @@
       "floor": 5.28,
       "ceiling": 21.3,
       "salary": 28.0,
-      "fppg": 7.4,
+      "fppg": 9.7,
       "depth": 2.0,
       "depth_source": "nflverse latest depth",
       "source": "Yahoo salary-position-depth regression (trained through 2025)",
@@ -159,8 +159,8 @@
       "opponent": "WAS",
       "kickoff_utc": null,
       "mean": 10.88,
-      "floor": 6.33,
-      "ceiling": 19.12,
+      "floor": 6.34,
+      "ceiling": 19.11,
       "salary": null,
       "fppg": null,
       "depth": 1.0,
@@ -200,7 +200,7 @@
       "floor": 6.63,
       "ceiling": 22.02,
       "salary": 23.0,
-      "fppg": 7.8,
+      "fppg": 8.25,
       "depth": 1.0,
       "depth_source": "nflverse latest depth",
       "source": "Yahoo salary-position-depth regression (trained through 2025)",
@@ -274,7 +274,7 @@
       "floor": 3.74,
       "ceiling": 16.57,
       "salary": 16.0,
-      "fppg": 3.1,
+      "fppg": 5.5,
       "depth": 1.0,
       "depth_source": "nflverse latest depth",
       "source": "Yahoo salary-position-depth regression (trained through 2025)",
@@ -328,7 +328,7 @@
       "floor": 0.62,
       "ceiling": 2.88,
       "salary": 10.0,
-      "fppg": 0.0,
+      "fppg": 0.7,
       "depth": 2.0,
       "depth_source": "nflverse latest depth",
       "source": "Yahoo salary-position-depth regression (trained through 2025)",
@@ -342,7 +342,7 @@
     "trained_through_season": 2025
   },
   "log": [
-    "Yahoo slate: 16 game(s), 539 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-20T18:14:28Z)",
+    "Yahoo slate: 16 game(s), 539 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-20T22:56:03Z)",
     "  nflverse: depth chart 2026: 589 offensive rows, snapshot 2026-09-20 12:14 UTC",
     "  nflverse: roster status 2026: 2,528 rows",
     "  nflverse: role tiers for 503 player(s); roster status matched 99% of the skill pool.",
@@ -491,7 +491,7 @@
     "[25 rows x 13 columns]",
     "Ranking run time: 0.1s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-09-20T18:14:28Z (shared with position rankings).",
+    "Projection snapshot: 2026-09-20T22:56:03Z (shared with position rankings).",
     "Season 2026 week 2; depth snapshot 2026-09-20T12:14:30Z.",
     "Add pool: 298 player(s) resolved for the page's roster editor."
   ]
