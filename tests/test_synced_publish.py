@@ -54,6 +54,101 @@ class PreparedSlateAdapterTests(unittest.TestCase):
         self.assertTrue(str(adapted.iloc[0]["Game_Time"].tz) == "UTC")
 
 
+class ActiveWeekSlateTests(unittest.TestCase):
+    @staticmethod
+    def _two_week_feed():
+        return pd.DataFrame([
+            {
+                "Game ID": "current-sun",
+                "Game Time": "2026-09-20T17:00:00Z",
+                "Team": "CHI",
+                "Name": "Caleb Williams",
+                "Position": "QB",
+            },
+            {
+                "Game ID": "current-mon",
+                "Game Time": "2026-09-22T00:15:00Z",
+                "Team": "NYG",
+                "Name": "Jaxson Dart",
+                "Position": "QB",
+            },
+            {
+                "Game ID": "next-sun",
+                "Game Time": "2026-09-27T17:00:00Z",
+                "Team": "CHI",
+                "Name": "Caleb Williams",
+                "Position": "QB",
+            },
+            {
+                "Game ID": "next-mon",
+                "Game Time": "2026-09-29T00:15:00Z",
+                "Team": "NYG",
+                "Name": "Jaxson Dart",
+                "Position": "QB",
+            },
+        ])
+
+    def test_monday_before_final_kickoff_keeps_the_ending_week(self):
+        players = self._two_week_feed()
+        caps = {
+            "current-sun": 200,
+            "current-mon": 200,
+            "next-sun": 200,
+            "next-mon": 200,
+        }
+        selected, selected_caps = nb.select_active_week_slate(
+            players,
+            caps,
+            now=datetime(2026, 9, 21, 20, 0, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual(set(selected["Game ID"]), {"current-sun", "current-mon"})
+        self.assertEqual(set(selected_caps), {"current-sun", "current-mon"})
+        self.assertEqual(
+            selected.loc[selected["Name"].eq("Caleb Williams"), "Game ID"].tolist(),
+            ["current-sun"],
+        )
+
+    def test_selector_rolls_forward_after_final_game_grace(self):
+        selected, selected_caps = nb.select_active_week_slate(
+            self._two_week_feed(),
+            {
+                "current-sun": 200,
+                "current-mon": 200,
+                "next-sun": 200,
+                "next-mon": 200,
+            },
+            now=datetime(2026, 9, 22, 7, 30, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual(set(selected["Game ID"]), {"next-sun", "next-mon"})
+        self.assertEqual(set(selected_caps), {"next-sun", "next-mon"})
+
+    def test_same_player_cannot_be_assigned_to_two_games_in_selected_week(self):
+        players = pd.DataFrame([
+            {
+                "Game ID": "game-a",
+                "Game Time": "2026-09-20T17:00:00Z",
+                "Team": "CHI",
+                "Name": "Caleb Williams",
+                "Position": "QB",
+            },
+            {
+                "Game ID": "game-b",
+                "Game Time": "2026-09-21T00:00:00Z",
+                "Team": "CHI",
+                "Name": "Caleb Williams",
+                "Position": "QB",
+            },
+        ])
+        with self.assertRaisesRegex(ValueError, "multiple games"):
+            nb.select_active_week_slate(
+                players,
+                {},
+                now=datetime(2026, 9, 20, 16, 0, tzinfo=timezone.utc),
+            )
+
+
 class ConsistencyGateTests(unittest.TestCase):
     def setUp(self):
         self.rankings = {
