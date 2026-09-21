@@ -252,19 +252,28 @@ test("Tournament EV requires contest inputs and sends the payout curve", async (
   );
 });
 
-test("GPP results render contest EV while H2H stays on expected points", async () => {
+test("GPP results distinguish joint portfolio EV from standalone entry EV", async () => {
   const p = await page();
   p.workers[0].emit({ type: "result", valid_rosters: 1, candidates_scored: 1,
     timing: { total: 10 }, diversity: null,
-    field_summary: {sampled_opponents:500,opponent_entries:4699,evaluation_scenarios:1000,
-      ownership_observations:25,ownership_contests:5},
-    scenario_evaluation: {objective:"total_modeled_contest_ev",expected_profit:1.25,
-      expected_payout:6.25,roi:.25,entries:20,price_taking:true},
+    field_summary: {sampled_opponents:500,opponent_entries:4699,
+      standalone_opponent_entries:4699,joint_opponent_entries:4680,
+      evaluation_scenarios:1000,ownership_observations:25,ownership_contests:5},
+    scenario_evaluation: {objective:"joint_portfolio_contest_ev",expected_profit:1.10,
+      expected_payout:6.10,roi:.22,entries:20,profitable_rate:.61,any_cash_rate:.88,
+      any_top_one_rate:.42,any_first_rate:.07,expected_cashes:4.2,
+      expected_top_one_finishes:.6,profit_p10:-3.5,profit_median:.75,profit_p90:8.5,
+      worst_profit:-5,best_profit:95,opponent_entries:4680,evaluation_scenarios:1000,
+      standalone_expected_profit:1.25,standalone_expected_payout:6.25,
+      standalone_roi:.25,standalone_price_taking:true,experimental_field_model:true},
     portfolio: [{
       ids:[0,1,2,3,4],superstar:0,salary:50,expected_fp:27.5,sim_mean:27.3,
       floor_p25:20,ceiling_p90:40,ceiling_p95:45,near_optimal_rate:.1,win_rate:.01,
       tournament_score:1,expected_payout:.40,expected_profit:.15,roi:.6,cash_rate:.2,
-      top_one_rate:.03,first_rate:.001,expected_duplicates:2.5,
+      top_one_rate:.03,first_rate:.001,solo_first_rate:.001,expected_duplicates:2.5,
+      joint_expected_payout:.37,joint_expected_profit:.12,joint_roi:.48,
+      joint_cash_rate:.18,joint_top_one_rate:.025,joint_first_rate:.0008,
+      joint_solo_first_rate:.0008,joint_expected_duplicates:2.4,
     }],
     h2h_anchor: [{
       ids:[0,1,2,3,4],superstar:1,salary:50,expected_fp:28.0,sim_mean:27.8,
@@ -272,8 +281,12 @@ test("GPP results render contest EV while H2H stays on expected points", async (
       tournament_score:.8,
     }]
   });
-  assert.match(p.node("portfolio").innerHTML, /EV \+\$0\.15/);
-  assert.match(p.node("portfolio").innerHTML, /opp duplicates 2\.5/);
+  assert.match(p.node("portfolio").innerHTML, /joint EV \+\$0\.12/);
+  assert.match(p.node("portfolio").innerHTML, /standalone EV \+\$0\.15/);
+  assert.match(p.node("portfolio").innerHTML, /joint opp duplicates 2\.4/);
+  assert.match(p.node("result-note").innerHTML, /Joint portfolio EV/);
+  assert.match(p.node("result-note").innerHTML, /Sum of standalone entry EVs/);
+  assert.match(p.node("result-note").innerHTML, /Field-based EV is experimental/);
   assert.equal(p.node("h2h-card").hidden, false);
   assert.match(p.node("h2h").innerHTML, /28\.00 expected FP/);
   assert.doesNotMatch(p.node("h2h").innerHTML, /ROI/);
