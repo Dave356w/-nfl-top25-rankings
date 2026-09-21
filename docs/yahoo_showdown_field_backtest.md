@@ -6,7 +6,7 @@ This report covers the **field/ownership layer only**. Yahoo's publicly indexed 
 
 The checked-in archive contains **35 player ownership observations from 7 completed Yahoo NFL single-game contests**. The contests span fields from 10 to 22,341 entries and include free, micro-stakes, and higher-entry-fee contests.
 
-The ownership prior is a ridge-logit model using projected/FPPG strength, position, field size, and entry fee. In live use, predicted marginal ownership is shifted so the player probabilities sum to exactly **5.0 roster slots**, matching Yahoo's five-player single-game lineup.
+The ownership prior is a ridge-logit model using projected/FPPG strength, position, field size, and entry fee. In live use, predicted marginal ownership is shifted so the player probabilities sum to exactly **5.0 roster slots**, matching Yahoo's five-player single-game lineup. Historical pages expose Yahoo FPPG, while live inference uses the model's Projected FP as the nearest pregame strength proxy; that transfer is approximate.
 
 ## Leave-one-contest-out results
 
