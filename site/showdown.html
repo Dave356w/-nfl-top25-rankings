@@ -109,11 +109,13 @@ h1{font-size:clamp(24px,3.4vw,34px); line-height:1.15; margin:0 0 6px;
 .field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-2);
              margin-bottom:5px}
 .field .hint{font-size:12px; color:var(--ink-3); margin-top:4px; line-height:1.45}
-select, input[type="number"]{
-  width:100%; height:36px; padding:0 9px; font:inherit; font-size:13.5px;
+select, input[type="number"], textarea{
+  width:100%; padding:0 9px; font:inherit; font-size:13.5px;
   color:var(--ink); background:var(--panel); border:1px solid var(--line);
   border-radius:9px;
 }
+select, input[type="number"]{height:36px}
+textarea{min-height:92px; padding:8px 9px; resize:vertical; line-height:1.4; font-family:var(--mono)}
 input[type="range"]{width:100%; accent-color:var(--accent)}
 .range-row{display:flex; align-items:center; gap:10px}
 .range-row output{font-family:var(--mono); font-size:12.5px; color:var(--ink-2);
@@ -249,26 +251,52 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       </section>
 
       <section class="card">
+        <h2>Contest</h2>
+        <div class="body">
+          <div class="grid-2">
+            <div class="field">
+              <label for="field-size">Field size</label>
+              <input type="number" id="field-size" min="2" step="1" placeholder="e.g. 2390">
+            </div>
+            <div class="field">
+              <label for="entry-fee">Entry fee ($)</label>
+              <input type="number" id="entry-fee" min="0" step="0.01" placeholder="e.g. 1">
+            </div>
+          </div>
+          <div class="field">
+            <label for="payouts">Payout schedule</label>
+            <textarea id="payouts" placeholder="1=200&#10;2=100&#10;3-5=50&#10;6-20=10"></textarea>
+            <div class="hint" id="contest-hint">
+              Enter one rank or rank range per line. Tournament EV uses a simulated
+              Yahoo field, expected duplication and tie-split prizes. Leave this
+              blank to use projection/portfolio modes without pretending a contest is known.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
         <h2>Rules and strategy</h2>
         <div class="body">
           <div class="field">
             <label for="objective">Select entries using</label>
             <select id="objective">
-              <option value="auto">Automatic — expected points / portfolio coverage</option>
-              <option value="portfolio">Portfolio — improve best score across scenarios</option>
-              <option value="tournament">Experimental upside score</option>
+              <option value="auto">Automatic — contest EV when configured; otherwise projection / coverage</option>
+              <option value="field_ev">Tournament EV — simulated Yahoo field and payouts</option>
+              <option value="portfolio">Scenario coverage — improve best score across outcomes</option>
+              <option value="expected">Analytic expectation</option>
               <option value="mean">Simulated mean</option>
               <option value="ceiling">Ceiling (P90)</option>
               <option value="floor">Floor (P25)</option>
-              <option value="expected">Analytic expectation</option>
+              <option value="tournament">Experimental upside — research only</option>
             </select>
           </div>
           <div class="hint">
-            Automatic selects the highest expected-points lineup for one entry.
-            For multiple entries, it adds complementary lineups using shared scenarios.
-            Portfolio coverage requires roster-shape quotas off. Analytic expectation targets expected points. The experimental upside
-            score combines P90, near-best rate, mean and volatility; its weights
-            have not been validated against historical results.
+            Automatic uses Tournament EV when the contest card is complete. Without
+            contest inputs it keeps the existing one-entry expectation / multi-entry
+            scenario-coverage behavior. Tournament EV ranks entries by simulated
+            expected profit after opponent-field ownership, duplication and tie-split
+            payouts. Experimental upside is retained only as a research diagnostic.
           </div>
           <div class="field">
             <label for="construction">Roster-shape quotas</label>
@@ -372,12 +400,18 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       <p>
         The feeds never need to be touched again after the model is published.
       </p>
-      <h4>Portfolio coverage and evaluation</h4>
-      <p>Automatic starts with the highest analytic expectation, then greedily adds
-        lineups that improve the portfolio's best score across scenarios. The first
-        half of the draws selects entries; the other half evaluates the completed
-        set against its single-lineup anchor. These are model-based simulation
-        checks, not historical performance or contest-winning probabilities.</p>
+      <h4>Contest EV and portfolio selection</h4>
+      <p>When field size, entry fee and payouts are supplied, Automatic switches to
+        Tournament EV. The page estimates Yahoo roster ownership from an archived
+        completed-contest prior, normalizes marginal ownership to five roster slots,
+        samples an opponent field, compresses duplicated field lineups into weighted
+        counts, and splits prizes across ties. Entry EV is expected payout minus the
+        entry fee. Multi-entry selection maximizes the sum of modeled entry EV subject
+        to the player, Superstar and overlap caps. This is a price-taking approximation:
+        your own entries are not inserted into one another's opponent ranks.</p>
+      <p>Without a configured contest, Automatic keeps the original shared-scenario
+        coverage mode. Its first half selects complementary entries and its second
+        half evaluates the completed portfolio against the single-lineup anchor.</p>
       <h4>Screening and selection</h4>
       <p>Expected-points objectives screen by analytic mean. Floor and ceiling
         objectives screen by approximate P25 and P90, using a lognormal matched
@@ -418,9 +452,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         when there are few matching simulations.
       </p>
       <h4>Model</h4>
-      <p>The current correlated lognormal approximation preserves projected means
-        but cannot produce zero or negative scores. Participation and discrete
-        scoring models remain deferred until their inputs and calibration are supported.</p>
+      <p>The current correlated zero-hurdle lognormal model preserves projected means
+        and can generate exact zero scores from fitted played-but-scoreless rates.
+        Negative fantasy scores and discrete scoring components are still not represented.</p>
       <div id="model-info"></div>
       <h4>Reliability of the published run</h4>
       <div id="reliability"></div>
@@ -447,7 +481,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   var POSITIONS = ["QB", "RB", "WR", "TE", "DEF"];
   // Bump with pipeline/showdown.py's SCHEMA whenever the page learns to read a
   // new payload field.
-  var SUPPORTED_SCHEMA = 2;
+  var SUPPORTED_SCHEMA = 3;
 
   var PRESETS = {
     fast: { simulations: 5000, candidates: 4000 },
@@ -462,6 +496,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     // is published without a cap and the visitor supplies one; it is kept per
     // game so switching games does not silently carry a cap across.
     caps: {},
+    contests: {},
     excluded: new Set(),
     result: null,
     running: false,
@@ -482,6 +517,11 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   }
   function money(value) {
     return value === null || value === undefined ? "—" : "$" + Number(value).toFixed(0);
+  }
+  function money2(value) {
+    if (value === null || value === undefined || !isFinite(value)) return "—";
+    var number = Number(value);
+    return (number >= 0 ? "+$" : "-$") + Math.abs(number).toFixed(2);
   }
   function setStatus(message, kind) {
     el("status-text").innerHTML = message;
@@ -647,7 +687,62 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         ' per lineup" aria-label="' + position + ' maximum">' +
         "</div></div>";
     }).join("");
+    applyContestDefaults(payload);
     updateDetailHint();
+  }
+
+  function applyContestDefaults(payload) {
+    var saved = state.contests[payload.game_id] || {};
+    el("field-size").value = saved.fieldSize === undefined ? "" : saved.fieldSize;
+    el("entry-fee").value = saved.entryFee === undefined ? "" : saved.entryFee;
+    el("payouts").value = saved.payoutText || "";
+    updateContestHint();
+  }
+
+  function parsePayouts(value) {
+    var rows = [];
+    String(value || "").split(/\n+/).forEach(function (line) {
+      line = line.trim();
+      if (!line) return;
+      var match = line.match(/^(\d+)(?:\s*-\s*(\d+))?\s*=\s*\$?([0-9]+(?:\.[0-9]+)?)$/);
+      if (!match) throw new Error("Use payout rows like 1=200 or 3-5=50.");
+      rows.push({ from: Number(match[1]), to: Number(match[2] || match[1]), amount: Number(match[3]) });
+    });
+    return rows;
+  }
+
+  function contestConfig() {
+    var fieldSize = Number(el("field-size").value);
+    var entryFee = Number(el("entry-fee").value);
+    var payouts = [];
+    var error = null;
+    try { payouts = parsePayouts(el("payouts").value); } catch (exc) { error = exc.message; }
+    return { fieldSize: fieldSize, entryFee: entryFee, payouts: payouts, error: error };
+  }
+
+  function contestReadyClient() {
+    var config = contestConfig();
+    var entries = Number(el("entries").value);
+    return !config.error && Number.isInteger(config.fieldSize)
+      && config.fieldSize > entries && Number.isFinite(config.entryFee)
+      && config.entryFee >= 0 && config.payouts.length > 0;
+  }
+
+  function updateContestHint() {
+    var config = contestConfig();
+    var hint = el("contest-hint");
+    if (config.error) {
+      hint.textContent = config.error;
+      return;
+    }
+    if (contestReadyClient()) {
+      hint.textContent = "Contest EV ready: " + config.fieldSize.toLocaleString() +
+        " total entries, " + money(config.entryFee) + " entry fee, " +
+        config.payouts.length + " payout row(s).";
+    } else {
+      hint.textContent = "Complete field size, fee and payouts to enable Tournament EV. " +
+        "Automatic will otherwise use projection / scenario coverage.";
+    }
   }
 
   function updateExposureHint() {
@@ -737,9 +832,24 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   });
   ["objective", "construction", "entries", "shared", "player-exposure", "superstar-exposure", "limits"]
     .forEach(function (id) { el(id).addEventListener("change", settingsChanged); });
+  ["field-size", "entry-fee", "payouts"].forEach(function (id) {
+    el(id).addEventListener(id === "payouts" ? "input" : "change", function () {
+      if (state.payload) {
+        state.contests[state.payload.game_id] = {
+          fieldSize: el("field-size").value === "" ? undefined : Number(el("field-size").value),
+          entryFee: el("entry-fee").value === "" ? undefined : Number(el("entry-fee").value),
+          payoutText: el("payouts").value
+        };
+      }
+      updateContestHint();
+      settingsChanged();
+      syncRunButton();
+    });
+  });
 
   function settingsChanged() {
     updateExposureHint();
+    updateContestHint();
     if (!state.payload || state.loading) return;
     if (state.running) {
       stopWorker();
@@ -840,8 +950,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   }
 
   function syncRunButton() {
+    var needsContest = el("objective").value === "field_ev";
     el("run").disabled = !state.payload || state.loading || state.running
-      || effectiveCap() === null;
+      || effectiveCap() === null || (needsContest && !contestReadyClient());
   }
 
   el("cap").addEventListener("input", function () {
@@ -865,8 +976,16 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       var highValue = Math.min(LINEUP_SIZE, Number(high.value));
       if (lowValue > 0 || highValue < LINEUP_SIZE) limits[position] = [lowValue, highValue];
     });
+    var contest = contestConfig();
+    var detail = el("detail").value;
     return {
       salaryCap: effectiveCap(),
+      fieldSize: Number.isInteger(contest.fieldSize) ? contest.fieldSize : null,
+      entryFee: Number.isFinite(contest.entryFee) ? contest.entryFee : null,
+      payouts: contest.error ? [] : contest.payouts,
+      fieldSampleSize: detail === "fast" ? 300 : (detail === "full" ? 1200 : 700),
+      fieldSimulations: detail === "fast" ? 500 : (detail === "full" ? 2500 : 1200),
+      fieldTemperature: 1.25,
       minSalaryPct: Number(el("floor").value) / 100,
       ceilingWeight: payload.settings.candidate_ceiling_weight,
       maxCandidates: preset ? preset.candidates : payload.settings.max_candidate_lineups,
@@ -889,6 +1008,10 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     if (!state.payload || state.loading || state.running || !worker) return;
     if (effectiveCap() === null) {
       setStatus("Enter the salary cap for this game before optimizing.", "bad");
+      return;
+    }
+    if (el("objective").value === "field_ev" && !contestReadyClient()) {
+      setStatus("Complete the contest field size, entry fee and payout schedule before using Tournament EV.", "bad");
       return;
     }
     var included = [];
@@ -935,6 +1058,13 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         match + "</div>" +
         '<div class="chips">' + chips + "</div>" +
         '<div class="metrics">' +
+        (lineup.expected_profit === undefined ? "" :
+          "<span><strong>EV " + money2(lineup.expected_profit) + "</strong></span>" +
+          "<span>ROI " + num(lineup.roi * 100, 1) + "%</span>" +
+          "<span>cash " + num(lineup.cash_rate * 100, 1) + "%</span>" +
+          "<span>top 1% " + num(lineup.top_one_rate * 100, 2) + "%</span>" +
+          "<span>1st " + num(lineup.first_rate * 100, 2) + "%</span>" +
+          "<span>opp duplicates " + num(lineup.expected_duplicates, 1) + "</span>") +
         "<span>sim mean " + num(lineup.sim_mean, 2) + "</span>" +
         "<span>floor " + num(lineup.floor_p25, 1) + "</span>" +
         "<span>ceiling " + num(lineup.ceiling_p90, 1) + "</span>" +
@@ -973,12 +1103,25 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           "), not one Yahoo published" : "");
 
     var evaluation = message.scenario_evaluation;
-    if (evaluation && Number.isFinite(evaluation.evaluation_best_mean)) {
+    if (evaluation && evaluation.objective === "total_modeled_contest_ev") {
+      note.innerHTML += "<br>Modeled portfolio EV: " + money2(evaluation.expected_profit) +
+        " profit on " + evaluation.entries + " entries · ROI " +
+        num(evaluation.roi * 100, 1) + "%. Entry EVs are summed against a fixed opponent field; " +
+        "your own entries are not inserted into one another's ranks.";
+    } else if (evaluation && Number.isFinite(evaluation.evaluation_best_mean)) {
       note.innerHTML += "<br>Independent simulation check: best entry averages " +
         num(evaluation.evaluation_best_mean, 2) + " FP; gain over the single-lineup anchor " +
         num(evaluation.evaluation_gain_over_single, 2) + " FP across " +
         evaluation.evaluation_scenarios.toLocaleString() + " evaluation scenarios. " +
         "This measures performance inside the model, not historical accuracy.";
+    }
+    if (message.field_summary) {
+      note.innerHTML += "<br>Opponent field: " +
+        message.field_summary.sampled_opponents.toLocaleString() + " sampled entries represent " +
+        message.field_summary.opponent_entries.toLocaleString() + " opponents across " +
+        message.field_summary.evaluation_scenarios.toLocaleString() + " football scenarios. " +
+        "Ownership prior archive: " + (message.field_summary.ownership_observations || "—") +
+        " observations / " + (message.field_summary.ownership_contests || "—") + " contests.";
     }
     var diversity = message.diversity;
     el("diversity-card").hidden = !diversity;
@@ -1029,7 +1172,11 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
             "</td></tr>";
         }).join("") + "</tbody></table>"
       : "<p>The published run did not report reliability.</p>";
+    var fieldArchive = payload.field_model && payload.field_model.archive;
     el("model-info").innerHTML =
+      (fieldArchive ? "<p>Yahoo field prior: <span class='mono'>" +
+        fieldArchive.observations + "</span> archived roster observations across <span class='mono'>" +
+        fieldArchive.contests + "</span> completed contests. It is a sparse ownership prior, not a full-field census.</p>" : "") +
       "<p>Largest PSD repair to a requested correlation: <span class='mono'>" +
       num(payload.model.psd_max_score_adjustment, 4) + "</span>. Correlation targets " +
       "outside the range two lognormals with these coefficients of variation can " +
