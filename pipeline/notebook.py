@@ -359,6 +359,93 @@ def list_games(df):
     return games.reset_index(drop=True)
 
 
+def select_active_week_slate(players, cap_map, now=None):
+    """Keep exactly one NFL Thursday-Monday week before role/projection fitting.
+
+    Yahoo can expose the ending week and the next week in one response. Letting
+    both weeks share one frame makes the same player compete with his next-week
+    copy for team-position depth rank, which changes the fitted projection and
+    causes the rankings, lineup editor and Showdown pages to disagree.
+
+    Week blocks are anchored on Thursday in US Pacific time. The oldest block
+    whose final kickoff is no more than six hours old is considered active; once
+    that grace expires the selector rolls to the next block. The grace prevents
+    a Monday-night slate from switching to next week immediately after kickoff.
+    """
+    if players is None or players.empty:
+        return players, dict(cap_map or {})
+
+    out = players.copy()
+    kickoff = pd.to_datetime(out["Game Time"], errors="coerce", utc=True)
+    if kickoff.isna().any():
+        bad = out.loc[kickoff.isna(), "Game ID"].astype(str).drop_duplicates().tolist()
+        raise ValueError(
+            "Yahoo returned unparseable game times for: " + ", ".join(bad[:8])
+        )
+
+    local = kickoff.dt.tz_convert("America/Los_Angeles")
+    days_since_thursday = (local.dt.weekday - 3) % 7
+    week_start = local.dt.normalize() - pd.to_timedelta(days_since_thursday, unit="D")
+    game_rows = (
+        out.assign(_kickoff=kickoff, _week_start=week_start)
+        [["Game ID", "_kickoff", "_week_start"]]
+        .drop_duplicates("Game ID")
+    )
+
+    clock = pd.Timestamp(now if now is not None else datetime.now(timezone.utc))
+    if clock.tzinfo is None:
+        clock = clock.tz_localize("UTC")
+    else:
+        clock = clock.tz_convert("UTC")
+
+    blocks = (
+        game_rows.groupby("_week_start", sort=True)["_kickoff"]
+        .agg(["min", "max"])
+        .sort_index()
+    )
+    grace = pd.Timedelta(hours=6)
+    live_or_future = blocks[(blocks["max"] + grace) >= clock]
+    selected_start = (
+        live_or_future.index[0] if len(live_or_future) else blocks.index[-1]
+    )
+    selected_ids = set(
+        game_rows.loc[
+            game_rows["_week_start"].eq(selected_start), "Game ID"
+        ].astype(str)
+    )
+
+    selected = out[out["Game ID"].astype(str).isin(selected_ids)].copy()
+    collisions = (
+        selected.groupby(["Team", "Name", "Position"], dropna=False)["Game ID"]
+        .nunique()
+    )
+    collisions = collisions[collisions.gt(1)]
+    if len(collisions):
+        labels = [
+            f"{team} {name} ({position})"
+            for team, name, position in collisions.index[:8]
+        ]
+        raise ValueError(
+            "Selected Yahoo week assigns a player/team to multiple games: "
+            + ", ".join(labels)
+        )
+
+    selected_cap_map = {
+        str(game_id): value
+        for game_id, value in dict(cap_map or {}).items()
+        if str(game_id) in selected_ids
+    }
+
+    if len(blocks) > 1:
+        first = blocks.loc[selected_start, "min"].tz_convert("America/Los_Angeles")
+        last = blocks.loc[selected_start, "max"].tz_convert("America/Los_Angeles")
+        print(
+            f"Yahoo feed spans {len(blocks)} NFL week blocks; selected "
+            f"{len(selected_ids)} game(s), {first:%Y-%m-%d} through {last:%Y-%m-%d}."
+        )
+    return selected.reset_index(drop=True), selected_cap_map
+
+
 def select_game_interactive(games):
     print("Available games:")
     for number, row in games.iterrows():
@@ -2620,6 +2707,7 @@ def run_interactive(cfg=None):
     started = time.perf_counter()
     payload = fetch_yahoo_data()
     all_players, cap_map = normalize_yahoo_data(payload)
+    all_players, cap_map = select_active_week_slate(all_players, cap_map)
     all_players = add_projection_priors(all_players, PROJECTION_OVERRIDES)
     games = list_games(all_players)
     selected = select_game_interactive(games)
@@ -2844,9 +2932,13 @@ def prepare_slate_pool(cfg=None, purpose=""):
     cfg = _cfg(cfg)
     payload = fetch_yahoo_data()
     players, cap_map = normalize_yahoo_data(payload)
+    raw_inputs = {"yahoo": payload}
+    # Yahoo sometimes exposes the ending week and the next week together. Filter
+    # before any depth/projection work so a player's next-week duplicate cannot
+    # change the active week's role rank or fitted mean.
+    players, cap_map = select_active_week_slate(players, cap_map)
     # Preliminary salary depth makes the model usable if nflverse is unavailable.
     players = add_projection_priors(players, PROJECTION_OVERRIDES)
-    raw_inputs = {"yahoo": payload}
     games = list_games(players)
     if games.empty:
         raise ValueError("Yahoo returned no usable NFL games")
