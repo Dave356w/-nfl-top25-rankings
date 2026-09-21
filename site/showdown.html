@@ -1044,7 +1044,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
   function syncRunButton() {
     var needsContest = el("objective").value === "field_ev";
-    el("run").disabled = !state.payload || state.loading || state.running
+    el("run").disabled = !state.payload || state.loading || state.running || !worker
       || effectiveCap() === null || (needsContest && !contestReadyClient());
   }
 
