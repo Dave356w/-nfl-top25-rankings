@@ -41,6 +41,22 @@
       "entries": 10,
       "entry_fee": 109,
       "first_place_ties": 1
+    },
+    {
+      "contest_id": "13548081",
+      "url": "https://sports.yahoo.com/dailyfantasy/contest/13548081/211871200",
+      "matchup": "SF @ KC",
+      "entries": 2350,
+      "entry_fee": 0.25,
+      "first_place_ties": 4
+    },
+    {
+      "contest_id": "14512174",
+      "url": "https://sports.yahoo.com/dailyfantasy/contest/14512174/224828210",
+      "matchup": "MIN @ DET",
+      "entries": 227,
+      "entry_fee": 0.25,
+      "first_place_ties": 1
     }
   ],
   "observations": [
@@ -218,6 +234,76 @@
       "DEF",
       3,
       0.1
+    ],
+    [
+      "13548081",
+      "Christian McCaffrey",
+      "RB",
+      21.2,
+      0.576
+    ],
+    [
+      "13548081",
+      "Jauan Jennings",
+      "WR",
+      9.4,
+      0.096
+    ],
+    [
+      "13548081",
+      "Brock Purdy",
+      "QB",
+      19.3,
+      0.45
+    ],
+    [
+      "13548081",
+      "Patrick Mahomes",
+      "QB",
+      21.2,
+      0.643
+    ],
+    [
+      "13548081",
+      "San Francisco 49ers",
+      "DEF",
+      0,
+      0.276
+    ],
+    [
+      "14512174",
+      "Jahmyr Gibbs",
+      "RB",
+      19.3,
+      0.392
+    ],
+    [
+      "14512174",
+      "Jalen Nailor",
+      "WR",
+      5.1,
+      0.366
+    ],
+    [
+      "14512174",
+      "Amon-Ra St. Brown",
+      "WR",
+      15.6,
+      0.212
+    ],
+    [
+      "14512174",
+      "Sam LaPorta",
+      "TE",
+      9.7,
+      0.502
+    ],
+    [
+      "14512174",
+      "Minnesota Vikings",
+      "DEF",
+      0,
+      0.11
     ]
   ],
   "observation_columns": [
