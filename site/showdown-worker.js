@@ -710,6 +710,47 @@ function fieldScoreAt(rosters, flat, scenario) {
   return value + 0.5 * scenarios[superstar * simCount + scenario];
 }
 
+function fieldExpectedAt(rosters, flat) {
+  const roster = (flat / LINEUP_SIZE) | 0;
+  const slot = flat % LINEUP_SIZE;
+  const base = roster * LINEUP_SIZE;
+  let value = 0;
+  for (let j = 0; j < LINEUP_SIZE; j++) {
+    value += Number(model.players[rosters.ids[base + j]].fp) || 0;
+  }
+  const superstar = rosters.ids[base + slot];
+  return value + 0.5 * (Number(model.players[superstar].fp) || 0);
+}
+
+function weightedDistributionSummary(values, weights) {
+  if (!values.length || values.length !== weights.length) return null;
+  const pairs = values.map((value, index) => ({
+    value: Number(value),
+    weight: Math.max(0, Number(weights[index]) || 0),
+  })).filter((row) => Number.isFinite(row.value) && row.weight > 0)
+    .sort((a, b) => a.value - b.value);
+  if (!pairs.length) return null;
+  const total = pairs.reduce((sum, row) => sum + row.weight, 0);
+  const mean = pairs.reduce((sum, row) => sum + row.value * row.weight, 0) / total;
+  function quantile(fraction) {
+    const threshold = Math.max(0, Math.min(1, fraction)) * total;
+    let cumulative = 0;
+    for (const row of pairs) {
+      cumulative += row.weight;
+      if (cumulative >= threshold) return row.value;
+    }
+    return pairs[pairs.length - 1].value;
+  }
+  return {
+    mean,
+    median: quantile(0.50),
+    p90: quantile(0.90),
+    p99: quantile(0.99),
+    min: pairs[0].value,
+    max: pairs[pairs.length - 1].value,
+  };
+}
+
 function sampleOpponentField(probabilities, options) {
   // Price-taking entry EV compares each candidate with a full contest-sized
   // field of other entries. The user's other entries are not explicitly
@@ -812,7 +853,12 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
   );
   const sampled = sampleOpponentField(probabilities, options);
   const fieldIds = Array.from(sampled.counts.keys());
-  const fieldWeights = fieldIds.map((id) => sampled.counts.get(id) * sampled.scale);
+  const sampledCounts = fieldIds.map((id) => sampled.counts.get(id));
+  const fieldWeights = sampledCounts.map((count) => count * sampled.scale);
+  const opponentExpectedFP = weightedDistributionSummary(
+    fieldIds.map((id) => fieldExpectedAt(fieldRosters, id)),
+    sampledCounts
+  );
   const radix = model.players.length + 1;
   function rosterKey(ids, base) {
     let key = 0;
@@ -913,6 +959,8 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
       ? model.field_model.archive.observations : null,
     ownership_contests: model.field_model && model.field_model.archive
       ? model.field_model.archive.contests : null,
+    opponent_expected_fp: opponentExpectedFP
+      ? {...opponentExpectedFP, sample_size: sampled.draws} : null,
     price_taking_entry_ev: true,
     joint_portfolio_evaluated: false,
   };
@@ -1045,8 +1093,17 @@ function evaluateJointPortfolioEV(scored, chosen, options) {
   const expectedProfit = expectedPayout - totalCost;
 
   if (scored.fieldSummary) {
+    const selectedExpected = chosen.map((candidate) => scored.expected[candidate]);
+    const selectedMean = selectedExpected.reduce((a, b) => a + b, 0) / selectedExpected.length;
+    const h2h = orderBy(scored, "expected")[0];
     scored.fieldSummary.joint_portfolio_evaluated = true;
     scored.fieldSummary.joint_opponent_entries = opponentEntries;
+    scored.fieldSummary.portfolio_expected_fp = {
+      mean: selectedMean,
+      min: Math.min(...selectedExpected),
+      max: Math.max(...selectedExpected),
+    };
+    scored.fieldSummary.h2h_expected_fp = h2h === undefined ? null : scored.expected[h2h];
   }
 
   return {
@@ -1526,8 +1583,8 @@ if (typeof module !== "undefined" && module.exports) {
     normalCdf, normalPpf, conditionalCv, hurdleCoefficients, hurdleScoreCorrelation,
     constructionSchedule, apportionedRuleCounts, matchesConstructionRule,
     contestReady, ownershipRates, superstarOwnershipRates, candidateFieldProbabilities,
-    lineupFieldProbabilities, rosterFieldProbabilities, fieldScoreAt,
-    normalizePayouts, payoutForTie, applyFieldEV, evaluateJointPortfolioEV,
+    lineupFieldProbabilities, rosterFieldProbabilities, fieldScoreAt, fieldExpectedAt,
+    weightedDistributionSummary, normalizePayouts, payoutForTie, applyFieldEV, evaluateJointPortfolioEV,
     covarianceMatrix: () => covariance,
   };
 }

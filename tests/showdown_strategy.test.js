@@ -104,6 +104,17 @@ test('tie splitting shares the occupied payout ranks', () => {
   assert.equal(w.payoutForTie(payouts, 2, 3), (50 + 10 + 10) / 3);
 });
 
+
+test('weighted field-strength summary respects sampled lineup weights', () => {
+  const summary=w.weightedDistributionSummary([1,2,10],[1,2,1]);
+  assert.equal(summary.mean,3.75);
+  assert.equal(summary.median,2);
+  assert.equal(summary.p90,10);
+  assert.equal(summary.p99,10);
+  assert.equal(summary.min,1);
+  assert.equal(summary.max,10);
+});
+
 test('contest readiness requires opponents and payouts', () => {
   assert.equal(w.contestReady({fieldSize:100,entries:5,entryFee:1,payouts:[{from:1,to:1,amount:20}]}), true);
   assert.equal(w.contestReady({fieldSize:5,entries:5,entryFee:1,payouts:[{from:1,to:1,amount:20}]}), false);
@@ -186,6 +197,21 @@ test('joint portfolio EV inserts all selected entries into the same contest rank
   assert.ok(Math.abs(standaloneProfit-evaluation.standalone_expected_profit) < 1e-9);
   assert.equal(scored.fieldSummary.joint_portfolio_evaluated,true);
   assert.equal(scored.fieldSummary.joint_opponent_entries,8);
+  const opponentFP=scored.fieldSummary.opponent_expected_fp;
+  assert.equal(opponentFP.sample_size,9);
+  assert.ok(opponentFP.min <= opponentFP.median);
+  assert.ok(opponentFP.median <= opponentFP.p90);
+  assert.ok(opponentFP.p90 <= opponentFP.p99);
+  assert.ok(opponentFP.p99 <= opponentFP.max);
+  assert.ok(opponentFP.mean >= opponentFP.min && opponentFP.mean <= opponentFP.max);
+
+  const selectedExpected=chosen.map(c=>scored.expected[c]);
+  const portfolioFP=scored.fieldSummary.portfolio_expected_fp;
+  assert.ok(Math.abs(portfolioFP.mean-
+    selectedExpected.reduce((a,b)=>a+b,0)/selectedExpected.length) < 1e-9);
+  assert.equal(portfolioFP.min,Math.min(...selectedExpected));
+  assert.equal(portfolioFP.max,Math.max(...selectedExpected));
+  assert.equal(scored.fieldSummary.h2h_expected_fp,Math.max(...scored.expected));
 
   const h2h=w.describe(scored,[chosen[0]],null,false)[0];
   assert.equal(h2h.expected_profit,undefined);
