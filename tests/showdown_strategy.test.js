@@ -136,7 +136,7 @@ test('field EV prices a fully duplicated one-lineup field with tie splitting', (
     payouts:[{from:1,to:1,amount:100}],fieldSampleSize:9,fieldSimulations:100};
   const rosters=w.enumerate([0,1,2,3,4],options);
   const scored=w.score(rosters,w.screen(rosters,options),options);
-  w.applyFieldEV(scored,options);
+  w.applyFieldEV(scored,rosters,options);
   assert.equal(scored.total,5);
   const best=w.orderBy(scored,'field_ev')[0];
   assert.ok(Number.isFinite(scored.expectedProfit[best]));
