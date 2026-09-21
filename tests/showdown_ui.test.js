@@ -41,7 +41,12 @@ async function page() {
   const routesData = { "index.json": index, "A.json": payload("A"),
     "B.json": payload("B"), "C.json": payload("C") };
   class Worker {
-    constructor() { this.messages = []; this.terminated = false; workers.push(this); }
+    constructor(url) {
+      this.url = url;
+      this.messages = [];
+      this.terminated = false;
+      workers.push(this);
+    }
     postMessage(message) { this.messages.push(message); }
     terminate() { this.terminated = true; }
     emit(data) { this.onmessage({ data }); }
@@ -60,6 +65,18 @@ async function page() {
   return { node, workers, routes, routesData,
     choose(id) { node("game").value = `${id}.json`; node("game").handlers.change(); } };
 }
+
+test("worker URL is snapshot-versioned and protocol mismatches fail visibly", async () => {
+  const p = await page();
+  assert.match(
+    p.workers[0].url,
+    /showdown-worker\.js\?protocol=4&snapshot=same-snapshot$/
+  );
+  p.workers[0].emit({ type: "loaded", players: 5, protocol: 3 });
+  assert.equal(p.workers[0].terminated, true);
+  assert.equal(p.node("run").disabled, true);
+  assert.match(p.node("status-text").innerHTML, /out of sync/);
+});
 
 test("switching game during a solve cancels work and restores Optimize", async () => {
   const p = await page();
