@@ -9,8 +9,8 @@ from pipeline import showdown_field
 class YahooShowdownFieldModelTests(unittest.TestCase):
     def test_archive_is_auditable_and_nonempty(self):
         archive = showdown_field.load_archive()
-        self.assertGreaterEqual(len(archive["observations"]), 20)
-        self.assertGreaterEqual(len(archive["sources"]), 4)
+        self.assertGreaterEqual(len(archive["observations"]), 35)
+        self.assertGreaterEqual(len(archive["sources"]), 7)
         self.assertTrue(all(row.get("url") for row in archive["sources"]))
 
     def test_fitted_model_is_finite(self):
@@ -42,9 +42,9 @@ class YahooShowdownFieldModelTests(unittest.TestCase):
 
     def test_leave_one_contest_out_report_is_explicitly_historical(self):
         report = showdown_field.leave_one_contest_out()
-        self.assertEqual(report["observations"], 25)
-        self.assertEqual(report["contests"], 5)
-        self.assertLess(report["mae"], 0.40)
+        self.assertEqual(report["observations"], 35)
+        self.assertEqual(report["contests"], 7)
+        self.assertLess(report["mae"], 0.25)
         self.assertTrue(report["observed_duplication"])
         self.assertIn("leave-one-contest-out", report["method"])
 
