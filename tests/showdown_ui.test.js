@@ -278,3 +278,17 @@ test("GPP results render contest EV while H2H stays on expected points", async (
   assert.match(p.node("h2h").innerHTML, /28\.00 expected FP/);
   assert.doesNotMatch(p.node("h2h").innerHTML, /ROI/);
 });
+
+
+test("Yahoo quarter-dollar preset fills the 4704-entry payout ladder", async () => {
+  const p = await page();
+  p.node("contest-preset").value = "yahoo_025_1k";
+  p.node("contest-preset").handlers.change();
+  assert.equal(p.node("field-size").value, 4704);
+  assert.equal(p.node("entry-fee").value, 0.25);
+  assert.match(p.node("payouts").value, /1=100/);
+  assert.match(p.node("payouts").value, /501-915=0\.50/);
+  p.node("objective").value = "field_ev";
+  p.node("objective").handlers.change();
+  assert.equal(p.node("run").disabled, false);
+});
