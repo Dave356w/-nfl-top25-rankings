@@ -4,7 +4,7 @@ This report covers the **field/ownership layer only**. Yahoo's publicly indexed 
 
 ## Archived sample
 
-The checked-in archive contains **25 player ownership observations from 5 completed Yahoo NFL single-game contests**. The contests span fields from 10 to 22,341 entries and include free, micro-stakes, and higher-entry-fee contests.
+The checked-in archive contains **35 player ownership observations from 7 completed Yahoo NFL single-game contests**. The contests span fields from 10 to 22,341 entries and include free, micro-stakes, and higher-entry-fee contests.
 
 The ownership prior is a ridge-logit model using projected/FPPG strength, position, field size, and entry fee. In live use, predicted marginal ownership is shifted so the player probabilities sum to exactly **5.0 roster slots**, matching Yahoo's five-player single-game lineup.
 
@@ -12,18 +12,20 @@ The ownership prior is a ridge-logit model using projected/FPPG strength, positi
 
 | Held-out contest | Observations | MAE | RMSE |
 |---|---:|---:|---:|
-| 11772338 | 5 | 34.6 pp | 37.8 pp |
-| 12786466 | 5 | 25.5 pp | 31.2 pp |
-| 13545843 | 5 | 17.9 pp | 23.4 pp |
-| 15236154 | 5 | 12.8 pp | 17.7 pp |
-| 15747948 | 5 | 18.0 pp | 22.0 pp |
-| **Overall** | **25** | **21.8 pp** | **27.4 pp** |
+| 11772338 | 5 | 25.5 pp | 29.0 pp |
+| 12786466 | 5 | 26.7 pp | 32.9 pp |
+| 13545843 | 5 | 13.1 pp | 16.3 pp |
+| 13548081 | 5 | 15.8 pp | 18.4 pp |
+| 14512174 | 5 | 14.2 pp | 18.2 pp |
+| 15236154 | 5 | 11.4 pp | 14.1 pp |
+| 15747948 | 5 | 18.8 pp | 21.3 pp |
+| **Overall** | **35** | **17.9 pp** | **22.4 pp** |
 
 This is deliberately treated as a **sparse field prior**, not a precise ownership forecast. The largest error comes from small/older contests where roster construction and player context differ sharply from the rest of the archive.
 
 ## Duplication evidence
 
-Completed Yahoo leaderboards in the archive show first-place ties of **18**, **2**, **1**, and **1** entries in contests where the leaderboard tie count was visible and unambiguous. That is enough to justify modeling duplicate lineups and prize splitting; it is not enough to estimate a universal duplication rate.
+Completed Yahoo leaderboards in the archive show first-place ties of **18**, **4**, **2**, **1**, and **1** entries in contests where the leaderboard tie count was visible and unambiguous. That is enough to justify modeling duplicate lineups and prize splitting; it is not enough to estimate a universal duplication rate.
 
 ## What is and is not validated
 
