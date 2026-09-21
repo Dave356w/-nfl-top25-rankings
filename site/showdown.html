@@ -382,6 +382,11 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         </div>
       </section>
 
+      <section class="card" id="field-strength-card" hidden>
+        <h2>Field strength / calibration</h2>
+        <div class="body"><div id="field-strength"></div></div>
+      </section>
+
       <section class="card" id="h2h-card" hidden>
         <h2>H2H anchor</h2>
         <div class="note">
@@ -432,8 +437,11 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         portfolio is built, all selected entries are inserted into the same simulated
         contest at once, so they compete with one another for ranks and payouts. The
         page reports that joint portfolio EV separately from the sum of standalone
-        entry EVs. The field prior is sparse, so all contest-EV outputs are experimental
-        until they are prospectively calibrated across substantially more contests.</p>
+        entry EVs. A field-strength diagnostic compares the sampled opponent field's
+        analytic expected-FP distribution with the selected portfolio and H2H anchor.
+        The field prior is sparse and selection-biased, so all contest-EV outputs are
+        experimental and are not calibrated return estimates until prospectively
+        evaluated across substantially more contests.</p>
       <p>Without a configured contest, Automatic keeps the original shared-scenario
         coverage mode. Its first half selects complementary entries and its second
         half evaluates the completed portfolio against the single-lineup anchor.</p>
@@ -624,6 +632,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     el("model-info").innerHTML = "";
     el("reliability").innerHTML = "";
     el("diversity-card").hidden = true;
+    el("field-strength-card").hidden = true;
     el("h2h-card").hidden = true;
     el("result-note").hidden = true;
     el("game-hint").textContent = "";
@@ -924,6 +933,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     el("portfolio-empty").innerHTML =
       "<h3>Settings changed</h3><p>Press Optimize to calculate entries with these settings.</p>";
     el("diversity-card").hidden = true;
+    el("field-strength-card").hidden = true;
     el("h2h-card").hidden = true;
     el("result-note").hidden = true;
     setStatus("Settings changed · press Optimize to recalculate");
@@ -1181,7 +1191,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
     var evaluation = message.scenario_evaluation;
     if (evaluation && evaluation.objective === "joint_portfolio_contest_ev") {
-      note.innerHTML += "<br><strong>Joint portfolio EV (experimental field model): " +
+      note.innerHTML += "<br><strong>Joint portfolio EV under experimental field prior: " +
         money2(evaluation.expected_profit) + "</strong> profit on " + evaluation.entries +
         " entries · ROI " + num(evaluation.roi * 100, 1) + "%. All selected entries are " +
         "ranked together against " + evaluation.opponent_entries.toLocaleString() +
@@ -1202,6 +1212,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         num(evaluation.standalone_roi * 100, 1) +
         "%. Standalone EV is a price-taking diagnostic: each entry is evaluated alone " +
         "against a field of field size minus one, so it is not portfolio EV.";
+      note.innerHTML += "<br><strong>Not a calibrated return estimate.</strong> " +
+        "Contest EV is highly sensitive to the opponent-field prior; use it as a " +
+        "relative portfolio diagnostic until prospective field calibration is deeper.";
     } else if (evaluation && evaluation.objective === "total_modeled_contest_ev") {
       // Backward-compatible rendering for an older cached worker.
       note.innerHTML += "<br>Sum of standalone entry EVs: " + money2(evaluation.expected_profit) +
@@ -1232,6 +1245,38 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         " observations / " + (message.field_summary.ownership_contests || "—") +
         " contests. Field-based EV is experimental; this archive is a sparse prior, " +
         "not a full-field census.";
+
+      var opponentFP = message.field_summary.opponent_expected_fp;
+      var portfolioFP = message.field_summary.portfolio_expected_fp;
+      var h2hFP = message.field_summary.h2h_expected_fp;
+      var strengthCard = el("field-strength-card");
+      if (opponentFP && portfolioFP) {
+        strengthCard.hidden = false;
+        el("field-strength").innerHTML =
+          "<p><strong>Opponent expected FP — sampled field:</strong> mean " +
+          num(opponentFP.mean, 2) + " · median " + num(opponentFP.median, 2) +
+          " · P90 " + num(opponentFP.p90, 2) + " · P99 " + num(opponentFP.p99, 2) +
+          ".</p>" +
+          "<p><strong>Selected portfolio expected FP:</strong> mean " +
+          num(portfolioFP.mean, 2) + " · min " + num(portfolioFP.min, 2) +
+          " · max " + num(portfolioFP.max, 2) +
+          (Number.isFinite(h2hFP) ? ". H2H anchor: " + num(h2hFP, 2) + "." : ".") +
+          "</p>" +
+          "<p><strong>Ownership calibration:</strong> " +
+          (message.field_summary.ownership_observations || "—") + " observations / " +
+          (message.field_summary.ownership_contests || "—") +
+          " contests · selection-biased sparse prior.</p>" +
+          "<p><strong>Not a calibrated return estimate.</strong> The field-strength " +
+          "diagnostic shows whether modeled opponents are systematically weaker or " +
+          "stronger on projected points; it does not validate the ownership, duplication, " +
+          "or tail-rank model.</p>";
+      } else {
+        strengthCard.hidden = true;
+        el("field-strength").innerHTML = "";
+      }
+    } else {
+      el("field-strength-card").hidden = true;
+      el("field-strength").innerHTML = "";
     }
     var diversity = message.diversity;
     el("diversity-card").hidden = !diversity;
