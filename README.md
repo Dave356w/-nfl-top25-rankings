@@ -228,6 +228,18 @@ Expected FP is analytic; the sampled mean is shown separately. Candidate-best
 and near-best rates compare only screened candidates in the sampled scenarios,
 depend on the selected detail level, and are not contest-win probabilities.
 
+When contest size, entry fee and payouts are configured, Tournament EV uses the
+archived Yahoo ownership prior to price candidates against a sampled opponent
+field. Candidate selection still uses standalone price-taking EV. After the
+portfolio is built, the worker inserts every selected entry into the same
+simulated contest, reduces the modeled opponent count by the number of user
+entries, ranks the user entries against both opponents and one another, and
+tie-splits the payout curve once. The page therefore reports **joint portfolio
+EV** separately from the **sum of standalone entry EVs**, plus portfolio profit
+quantiles and any-cash/top-1%/first rates. The ownership archive is sparse, so
+field-based EV remains explicitly experimental rather than a calibrated win
+probability.
+
 The feed boundary is the reason for the split, not the compute: Actions prepares
 one immutable model so every visitor sees the same inputs.
 
