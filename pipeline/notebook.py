@@ -289,6 +289,17 @@ def normalize_yahoo_data(payload):
             errors="coerce",
         ).astype("Int64")
 
+    raw_caps = payload.get("salaryCapInfo", {}).get("result", [{}])
+    cap_map = raw_caps[0].get("singleGameSalaryCapMap", {}) if raw_caps else {}
+    cap_map = {str(key): float(value) for key, value in cap_map.items()}
+
+    # Yahoo can expose the ending week and the next week in one response. Reduce
+    # that feed before repairing game assignments: the repair logic correctly
+    # assumes each team has only one game in the selected NFL week.
+    df, cap_map = select_active_week_slate(
+        df, cap_map, validate_assignments=False
+    )
+
     # v3.2: the live feed carries rows whose `gameCode` points at a game their team is
     # not playing in - for example Corey Kiner, correctly listed as NE, filed under
     # ARI@LAC. v3.1 gave them a wrong Opponent and, worse, they registered as a third
@@ -310,10 +321,7 @@ def normalize_yahoo_data(payload):
         & df["Salary"].gt(0)
     ].copy()
     df = df.drop_duplicates(["Game ID", "Team", "Name", "Position"]).reset_index(drop=True)
-
-    raw_caps = payload.get("salaryCapInfo", {}).get("result", [{}])
-    cap_map = raw_caps[0].get("singleGameSalaryCapMap", {}) if raw_caps else {}
-    cap_map = {str(key): float(value) for key, value in cap_map.items()}
+    validate_single_game_assignments(df)
     return df, cap_map
 
 
@@ -359,7 +367,29 @@ def list_games(df):
     return games.reset_index(drop=True)
 
 
-def select_active_week_slate(players, cap_map, now=None):
+def validate_single_game_assignments(players):
+    """Reject impossible duplicate game assignments inside one selected week."""
+    if players is None or players.empty:
+        return
+    collisions = (
+        players.groupby(["Team", "Name", "Position"], dropna=False)["Game ID"]
+        .nunique()
+    )
+    collisions = collisions[collisions.gt(1)]
+    if len(collisions):
+        labels = [
+            f"{team} {name} ({position})"
+            for team, name, position in collisions.index[:8]
+        ]
+        raise ValueError(
+            "Selected Yahoo week assigns a player/team to multiple games: "
+            + ", ".join(labels)
+        )
+
+
+def select_active_week_slate(
+    players, cap_map, now=None, validate_assignments=True
+):
     """Keep exactly one NFL Thursday-Monday week before role/projection fitting.
 
     Yahoo can expose the ending week and the next week in one response. Letting
@@ -415,20 +445,8 @@ def select_active_week_slate(players, cap_map, now=None):
     )
 
     selected = out[out["Game ID"].astype(str).isin(selected_ids)].copy()
-    collisions = (
-        selected.groupby(["Team", "Name", "Position"], dropna=False)["Game ID"]
-        .nunique()
-    )
-    collisions = collisions[collisions.gt(1)]
-    if len(collisions):
-        labels = [
-            f"{team} {name} ({position})"
-            for team, name, position in collisions.index[:8]
-        ]
-        raise ValueError(
-            "Selected Yahoo week assigns a player/team to multiple games: "
-            + ", ".join(labels)
-        )
+    if validate_assignments:
+        validate_single_game_assignments(selected)
 
     selected_cap_map = {
         str(game_id): value
@@ -2707,7 +2725,6 @@ def run_interactive(cfg=None):
     started = time.perf_counter()
     payload = fetch_yahoo_data()
     all_players, cap_map = normalize_yahoo_data(payload)
-    all_players, cap_map = select_active_week_slate(all_players, cap_map)
     all_players = add_projection_priors(all_players, PROJECTION_OVERRIDES)
     games = list_games(all_players)
     selected = select_game_interactive(games)
@@ -2933,10 +2950,8 @@ def prepare_slate_pool(cfg=None, purpose=""):
     payload = fetch_yahoo_data()
     players, cap_map = normalize_yahoo_data(payload)
     raw_inputs = {"yahoo": payload}
-    # Yahoo sometimes exposes the ending week and the next week together. Filter
-    # before any depth/projection work so a player's next-week duplicate cannot
-    # change the active week's role rank or fitted mean.
-    players, cap_map = select_active_week_slate(players, cap_map)
+    # normalize_yahoo_data has already reduced a multi-week Yahoo response to one
+    # active NFL week, before repair/depth/projection logic can mix duplicate players.
     # Preliminary salary depth makes the model usable if nflverse is unavailable.
     players = add_projection_priors(players, PROJECTION_OVERRIDES)
     games = list_games(players)
