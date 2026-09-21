@@ -371,6 +371,17 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         </div>
       </section>
 
+      <section class="card" id="h2h-card" hidden>
+        <h2>H2H anchor</h2>
+        <div class="note">
+          Highest analytic expected-points lineup from the same candidate set.
+          Ownership, duplication and the GPP payout curve do not affect this lineup.
+          Using the same anchor in multiple H2Hs maximizes the model's expected score
+          for each match; diversify only if you intentionally want different outcome exposure.
+        </div>
+        <div id="h2h"></div>
+      </section>
+
       <section class="card" id="diversity-card" hidden>
         <h2>How different the entries are</h2>
         <div class="body"><div id="diversity"></div></div>
@@ -599,6 +610,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     el("model-info").innerHTML = "";
     el("reliability").innerHTML = "";
     el("diversity-card").hidden = true;
+    el("h2h-card").hidden = true;
     el("result-note").hidden = true;
     el("game-hint").textContent = "";
     setStatus("Loading " + text(entry.matchup) + "…", "busy");
@@ -861,6 +873,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     el("portfolio-empty").innerHTML =
       "<h3>Settings changed</h3><p>Press Optimize to calculate entries with these settings.</p>";
     el("diversity-card").hidden = true;
+    el("h2h-card").hidden = true;
     el("result-note").hidden = true;
     setStatus("Settings changed · press Optimize to recalculate");
     syncRunButton();
@@ -1086,6 +1099,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
     var published = publishedKeys();
     renderLineups(el("portfolio"), message.portfolio, published);
+    var h2h = message.h2h_anchor || [];
+    el("h2h-card").hidden = !h2h.length;
+    if (h2h.length) renderLineups(el("h2h"), h2h, published);
 
     var shared = message.portfolio.filter(function (lineup) {
       return published.has(lineupKey(lineup));
