@@ -92,3 +92,54 @@ test('worker refuses partial portfolios even with construction quotas off', () =
   assert.match(messages.at(-1).message,/partial result/);
   assert.ok(!messages.some(m=>m.type==='result'));
 });
+
+
+test('tie splitting shares the occupied payout ranks', () => {
+  const payouts = w.normalizePayouts([
+    {from:1,to:1,amount:100},
+    {from:2,to:2,amount:50},
+    {from:3,to:5,amount:10},
+  ], 10);
+  assert.equal(w.payoutForTie(payouts, 1, 2), 75);
+  assert.equal(w.payoutForTie(payouts, 2, 3), (50 + 10 + 10) / 3);
+});
+
+test('contest readiness requires opponents and payouts', () => {
+  assert.equal(w.contestReady({fieldSize:100,entries:5,entryFee:1,payouts:[{from:1,to:1,amount:20}]}), true);
+  assert.equal(w.contestReady({fieldSize:5,entries:5,entryFee:1,payouts:[{from:1,to:1,amount:20}]}), false);
+  assert.equal(w.contestReady({fieldSize:100,entries:5,entryFee:1,payouts:[]}), false);
+});
+
+test('ownership prior always fills exactly five Yahoo roster slots', () => {
+  const players = [
+    {fp:22,pos:'QB'},{fp:19,pos:'QB'},{fp:17,pos:'RB'},{fp:14,pos:'WR'},
+    {fp:10,pos:'WR'},{fp:8,pos:'TE'},{fp:6,pos:'DEF'}
+  ].map((p,i)=>({...p,team:i<4?'A':'B',salary:10,cv:.5}));
+  w.setModel({players,latent:Array(21).fill(0),settings:{}});
+  const own = w.ownershipRates({fieldSize:2000,entryFee:1});
+  assert.ok(Math.abs(Array.from(own).reduce((a,b)=>a+b,0)-5) < 1e-8);
+  const star = w.superstarOwnershipRates(own);
+  assert.ok(Math.abs(Array.from(star).reduce((a,b)=>a+b,0)-1) < 1e-8);
+});
+
+test('field EV prices a fully duplicated one-lineup field with tie splitting', () => {
+  const players = [10,9,8,7,6].map((fp,i)=>({
+    fp,cv:.01,salary:1,pos:i===0?'QB':'WR',team:i<4?'A':'B'
+  }));
+  const payload={players,latent:Array(10).fill(0),settings:{}};
+  w.setModel(payload);
+  w.simulate(200,356);
+  const options={salaryCap:5,minSalaryPct:0,ceilingWeight:.85,maxCandidates:10,
+    meanReserve:10,nearOptimalRatio:.95,objective:'field_ev',entries:1,
+    maxPlayerExposure:1,maxSuperstarExposure:1,maxShared:4,constructionRules:[],
+    simulations:200,seed:356,fieldSize:10,entryFee:1,
+    payouts:[{from:1,to:1,amount:100}],fieldSampleSize:9,fieldSimulations:100};
+  const rosters=w.enumerate([0,1,2,3,4],options);
+  const scored=w.score(rosters,w.screen(rosters,options),options);
+  w.applyFieldEV(scored,options);
+  assert.equal(scored.total,5);
+  const best=w.orderBy(scored,'field_ev')[0];
+  assert.ok(Number.isFinite(scored.expectedProfit[best]));
+  assert.ok(scored.expectedDuplicates[best] >= 0);
+  assert.ok(scored.expectedPayout[best] > 0);
+});
