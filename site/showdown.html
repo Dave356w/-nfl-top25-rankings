@@ -290,7 +290,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
             <label for="objective">Select entries using</label>
             <select id="objective">
               <option value="auto">Automatic — contest EV when configured; otherwise projection / coverage</option>
-              <option value="field_ev">Tournament EV — simulated Yahoo field and payouts</option>
+              <option value="field_ev">Tournament EV — simulated Yahoo field + joint portfolio evaluation</option>
               <option value="portfolio">Scenario coverage — improve best score across outcomes</option>
               <option value="expected">Analytic expectation</option>
               <option value="mean">Simulated mean</option>
@@ -302,9 +302,10 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           <div class="hint">
             Automatic uses Tournament EV when the contest card is complete. Without
             contest inputs it keeps the existing one-entry expectation / multi-entry
-            scenario-coverage behavior. Tournament EV ranks entries by simulated
-            expected profit after opponent-field ownership, duplication and tie-split
-            payouts. Experimental upside is retained only as a research diagnostic.
+            scenario-coverage behavior. Tournament EV selects candidates using
+            standalone price-taking EV, then inserts the completed portfolio into one
+            shared contest to report joint payouts, ranks and portfolio risk.
+            Experimental upside is retained only as a research diagnostic.
           </div>
           <div class="field">
             <label for="construction">Roster-shape quotas</label>
@@ -369,7 +370,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         <h2>Portfolio</h2>
         <div class="note">
           Entry numbers follow portfolio construction order. They are not performance ranks.
-          Expected FP is the model total; sim mean is the sampled average.
+          Expected FP is the model total; sim mean is the sampled average. When a contest
+          is configured, joint metrics include all selected entries in the same contest;
+          standalone metrics evaluate one entry at a time as a price-taking diagnostic.
         </div>
         <div id="result-note" class="note" hidden></div>
         <div id="portfolio"></div>
@@ -424,10 +427,13 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         Tournament EV. The page estimates Yahoo roster ownership from an archived
         completed-contest prior, normalizes marginal ownership to five roster slots,
         samples an opponent field, compresses duplicated field lineups into weighted
-        counts, and splits prizes across ties. Entry EV is expected payout minus the
-        entry fee. Multi-entry selection maximizes the sum of modeled entry EV subject
-        to the player, Superstar and overlap caps. This is a price-taking approximation:
-        your own entries are not inserted into one another's opponent ranks.</p>
+        counts, and splits prizes across ties. Candidate selection uses standalone
+        price-taking EV subject to the player, Superstar and overlap caps. After the
+        portfolio is built, all selected entries are inserted into the same simulated
+        contest at once, so they compete with one another for ranks and payouts. The
+        page reports that joint portfolio EV separately from the sum of standalone
+        entry EVs. The field prior is sparse, so all contest-EV outputs are experimental
+        until they are prospectively calibrated across substantially more contests.</p>
       <p>Without a configured contest, Automatic keeps the original shared-scenario
         coverage mode. Its first half selects complementary entries and its second
         half evaluates the completed portfolio against the single-lineup anchor.</p>
@@ -1117,14 +1123,22 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         match + "</div>" +
         '<div class="chips">' + chips + "</div>" +
         '<div class="metrics">' +
+        (lineup.joint_expected_profit === undefined ? "" :
+          "<span><strong>joint EV " + money2(lineup.joint_expected_profit) + "</strong></span>" +
+          "<span>joint ROI " + num(lineup.joint_roi * 100, 1) + "%</span>" +
+          "<span>joint cash " + num(lineup.joint_cash_rate * 100, 1) + "%</span>" +
+          "<span>joint top 1% " + num(lineup.joint_top_one_rate * 100, 2) + "%</span>" +
+          "<span>joint 1st " + num(lineup.joint_first_rate * 100, 2) + "%</span>" +
+          "<span>joint solo 1st " + num(lineup.joint_solo_first_rate * 100, 2) + "%</span>" +
+          "<span>joint opp duplicates " + num(lineup.joint_expected_duplicates, 1) + "</span>") +
         (lineup.expected_profit === undefined ? "" :
-          "<span><strong>EV " + money2(lineup.expected_profit) + "</strong></span>" +
-          "<span>ROI " + num(lineup.roi * 100, 1) + "%</span>" +
-          "<span>cash " + num(lineup.cash_rate * 100, 1) + "%</span>" +
-          "<span>top 1% " + num(lineup.top_one_rate * 100, 2) + "%</span>" +
-          "<span>1st " + num(lineup.first_rate * 100, 2) + "%</span>" +
-          "<span>solo 1st " + num(lineup.solo_first_rate * 100, 2) + "%</span>" +
-          "<span>opp duplicates " + num(lineup.expected_duplicates, 1) + "</span>") +
+          "<span>standalone EV " + money2(lineup.expected_profit) + "</span>" +
+          "<span>standalone ROI " + num(lineup.roi * 100, 1) + "%</span>" +
+          "<span>standalone cash " + num(lineup.cash_rate * 100, 1) + "%</span>" +
+          "<span>standalone top 1% " + num(lineup.top_one_rate * 100, 2) + "%</span>" +
+          "<span>standalone 1st " + num(lineup.first_rate * 100, 2) + "%</span>" +
+          "<span>standalone solo 1st " + num(lineup.solo_first_rate * 100, 2) + "%</span>" +
+          "<span>standalone opp duplicates " + num(lineup.expected_duplicates, 1) + "</span>") +
         "<span>sim mean " + num(lineup.sim_mean, 2) + "</span>" +
         "<span>floor " + num(lineup.floor_p25, 1) + "</span>" +
         "<span>ceiling " + num(lineup.ceiling_p90, 1) + "</span>" +
@@ -1166,11 +1180,33 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           "), not one Yahoo published" : "");
 
     var evaluation = message.scenario_evaluation;
-    if (evaluation && evaluation.objective === "total_modeled_contest_ev") {
-      note.innerHTML += "<br>Modeled portfolio EV: " + money2(evaluation.expected_profit) +
-        " profit on " + evaluation.entries + " entries · ROI " +
-        num(evaluation.roi * 100, 1) + "%. Entry EVs are summed against a fixed opponent field; " +
-        "your own entries are not inserted into one another's ranks.";
+    if (evaluation && evaluation.objective === "joint_portfolio_contest_ev") {
+      note.innerHTML += "<br><strong>Joint portfolio EV (experimental field model): " +
+        money2(evaluation.expected_profit) + "</strong> profit on " + evaluation.entries +
+        " entries · ROI " + num(evaluation.roi * 100, 1) + "%. All selected entries are " +
+        "ranked together against " + evaluation.opponent_entries.toLocaleString() +
+        " modeled opponents.";
+      note.innerHTML += "<br>Portfolio outcomes: profitable " +
+        num(evaluation.profitable_rate * 100, 1) + "% · any cash " +
+        num(evaluation.any_cash_rate * 100, 1) + "% · any top 1% " +
+        num(evaluation.any_top_one_rate * 100, 1) + "% · any 1st " +
+        num(evaluation.any_first_rate * 100, 2) + "% · expected cashes " +
+        num(evaluation.expected_cashes, 2) + " · expected top-1% finishes " +
+        num(evaluation.expected_top_one_finishes, 2) + ".";
+      note.innerHTML += "<br>Portfolio profit distribution: P10 " +
+        money2(evaluation.profit_p10) + " · median " + money2(evaluation.profit_median) +
+        " · P90 " + money2(evaluation.profit_p90) + " · range " +
+        money2(evaluation.worst_profit) + " to " + money2(evaluation.best_profit) + ".";
+      note.innerHTML += "<br>Sum of standalone entry EVs: " +
+        money2(evaluation.standalone_expected_profit) + " · ROI " +
+        num(evaluation.standalone_roi * 100, 1) +
+        "%. Standalone EV is a price-taking diagnostic: each entry is evaluated alone " +
+        "against a field of field size minus one, so it is not portfolio EV.";
+    } else if (evaluation && evaluation.objective === "total_modeled_contest_ev") {
+      // Backward-compatible rendering for an older cached worker.
+      note.innerHTML += "<br>Sum of standalone entry EVs: " + money2(evaluation.expected_profit) +
+        " · ROI " + num(evaluation.roi * 100, 1) +
+        "%. This older result did not insert your entries into one another's ranks.";
     } else if (evaluation && Number.isFinite(evaluation.evaluation_best_mean)) {
       note.innerHTML += "<br>Independent simulation check: best entry averages " +
         num(evaluation.evaluation_best_mean, 2) + " FP; gain over the single-lineup anchor " +
@@ -1179,12 +1215,23 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         "This measures performance inside the model, not historical accuracy.";
     }
     if (message.field_summary) {
+      var jointOpponents = message.field_summary.joint_opponent_entries;
+      var standaloneOpponents = message.field_summary.standalone_opponent_entries ||
+        message.field_summary.opponent_entries;
       note.innerHTML += "<br>Opponent field: " +
         message.field_summary.sampled_opponents.toLocaleString() + " sampled entries represent " +
-        message.field_summary.opponent_entries.toLocaleString() + " opponents across " +
-        message.field_summary.evaluation_scenarios.toLocaleString() + " football scenarios. " +
-        "Ownership prior archive: " + (message.field_summary.ownership_observations || "—") +
-        " observations / " + (message.field_summary.ownership_contests || "—") + " contests.";
+        (Number.isFinite(jointOpponents)
+          ? jointOpponents.toLocaleString() + " opponents in the joint portfolio evaluation"
+          : standaloneOpponents.toLocaleString() + " opponents") +
+        " across " + message.field_summary.evaluation_scenarios.toLocaleString() +
+        " football scenarios." +
+        (Number.isFinite(jointOpponents)
+          ? " Standalone entry diagnostics use " + standaloneOpponents.toLocaleString() +
+            " opponents." : "") +
+        " Ownership prior archive: " + (message.field_summary.ownership_observations || "—") +
+        " observations / " + (message.field_summary.ownership_contests || "—") +
+        " contests. Field-based EV is experimental; this archive is a sparse prior, " +
+        "not a full-field census.";
     }
     var diversity = message.diversity;
     el("diversity-card").hidden = !diversity;

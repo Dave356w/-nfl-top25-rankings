@@ -899,9 +899,11 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
     scored.soloFirstRate[c] = soloFirst / evCount;
     if ((c & 255) === 0 && progress) progress(c / Math.max(scored.total, 1));
   }
+  scored.fieldContext = {payouts, sampled, scenarioIds, distributions};
   scored.fieldSummary = {
     field_size: options.fieldSize,
     opponent_entries: sampled.opponents,
+    standalone_opponent_entries: sampled.opponents,
     sampled_opponents: sampled.draws,
     legal_field_rosters: fieldRosters.salary.length,
     legal_field_lineups: fieldLineups,
@@ -911,9 +913,169 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
       ? model.field_model.archive.observations : null,
     ownership_contests: model.field_model && model.field_model.archive
       ? model.field_model.archive.contests : null,
-    price_taking_portfolio: true,
+    price_taking_entry_ev: true,
+    joint_portfolio_evaluated: false,
   };
   return scored;
+}
+
+function sampleQuantile(values, fraction) {
+  if (!values.length) return NaN;
+  const ordered = Array.from(values).sort((a, b) => a - b);
+  const position = Math.max(0, Math.min(ordered.length - 1, fraction * (ordered.length - 1)));
+  const low = Math.floor(position), high = Math.ceil(position);
+  if (low === high) return ordered[low];
+  const weight = position - low;
+  return ordered[low] + weight * (ordered[high] - ordered[low]);
+}
+
+function evaluateJointPortfolioEV(scored, chosen, options) {
+  if (!scored.fieldContext || !chosen.length) return null;
+  const context = scored.fieldContext;
+  const entries = chosen.length;
+  const opponentEntries = options.fieldSize - entries;
+  if (opponentEntries < 1) {
+    throw new Error("Joint portfolio EV needs at least one opponent after inserting your entries.");
+  }
+
+  // Reuse the same sampled opponent lineups and football scenarios as the
+  // standalone entry calculation, but rescale the opponent weights from
+  // fieldSize - 1 to fieldSize - entries. This isolates the effect of inserting
+  // the user's entries into one another's ranks instead of introducing a second
+  // Monte Carlo field draw.
+  const scaleRatio = context.sampled.opponents > 0
+    ? opponentEntries / context.sampled.opponents : 0;
+  const evCount = context.scenarioIds.length;
+  const topOneRank = Math.max(1, Math.ceil(options.fieldSize * 0.01));
+  const entryPayout = new Float64Array(entries);
+  const entryCash = new Float64Array(entries);
+  const entryTopOne = new Float64Array(entries);
+  const entryFirst = new Float64Array(entries);
+  const entrySoloFirst = new Float64Array(entries);
+  const profitSamples = new Float64Array(evCount);
+  let profitable = 0, anyCash = 0, anyTopOne = 0, anyFirst = 0;
+  let cashFinishes = 0, topOneFinishes = 0, firstFinishes = 0;
+
+  for (let e = 0; e < evCount; e++) {
+    const scenario = context.scenarioIds[e];
+    const ownScores = Float64Array.from(chosen, (candidate) =>
+      candidateScoreAt(scored, candidate, scenario));
+    let scenarioPayout = 0, scenarioCash = 0, scenarioTopOne = 0, scenarioFirst = 0;
+
+    for (let i = 0; i < entries; i++) {
+      const value = ownScores[i];
+      const dist = context.distributions[e];
+      const epsilon = 1e-5 + 1e-6 * Math.abs(value);
+      const lo = lowerBound(dist.scores, value - epsilon);
+      const hi = upperBound(dist.scores, value + epsilon);
+      const belowStandalone = lo > 0 ? dist.cumulative[lo - 1] : 0;
+      const throughStandalone = hi > 0 ? dist.cumulative[hi - 1] : 0;
+      const below = belowStandalone * scaleRatio;
+      const through = throughStandalone * scaleRatio;
+      const tiedOpponents = Math.max(0, through - below);
+      const greaterOpponents = Math.max(0, dist.total * scaleRatio - through);
+
+      let ownGreater = 0, ownTied = 0;
+      for (let j = 0; j < entries; j++) {
+        if (j === i) continue;
+        const delta = ownScores[j] - value;
+        if (Math.abs(delta) <= epsilon) ownTied++;
+        else if (delta > 0) ownGreater++;
+      }
+
+      const greater = greaterOpponents + ownGreater;
+      const rank = greater + 1;
+      const tieCount = tiedOpponents + ownTied + 1;
+      const prize = payoutForTie(context.payouts, rank, tieCount);
+      scenarioPayout += prize;
+      entryPayout[i] += prize;
+
+      if (prize > 0) {
+        scenarioCash++;
+        entryCash[i]++;
+      }
+      if (rank <= topOneRank) {
+        scenarioTopOne++;
+        entryTopOne[i]++;
+      }
+      if (greater < 0.5) {
+        scenarioFirst++;
+        entryFirst[i]++;
+        if (tiedOpponents + ownTied < 0.5) entrySoloFirst[i]++;
+      }
+    }
+
+    const scenarioProfit = scenarioPayout - options.entryFee * entries;
+    profitSamples[e] = scenarioProfit;
+    if (scenarioProfit > 0) profitable++;
+    if (scenarioCash > 0) anyCash++;
+    if (scenarioTopOne > 0) anyTopOne++;
+    if (scenarioFirst > 0) anyFirst++;
+    cashFinishes += scenarioCash;
+    topOneFinishes += scenarioTopOne;
+    firstFinishes += scenarioFirst;
+  }
+
+  const jointEntryMetrics = new Map();
+  for (let i = 0; i < entries; i++) {
+    const candidate = chosen[i];
+    const expectedPayout = entryPayout[i] / evCount;
+    const expectedProfit = expectedPayout - options.entryFee;
+    jointEntryMetrics.set(candidate, {
+      expected_payout: expectedPayout,
+      expected_profit: expectedProfit,
+      roi: options.entryFee > 0 ? expectedProfit / options.entryFee : 0,
+      cash_rate: entryCash[i] / evCount,
+      top_one_rate: entryTopOne[i] / evCount,
+      first_rate: entryFirst[i] / evCount,
+      solo_first_rate: entrySoloFirst[i] / evCount,
+      expected_duplicates: scored.expectedDuplicates
+        ? scored.expectedDuplicates[candidate] * scaleRatio : null,
+    });
+  }
+  scored.jointEntryMetrics = jointEntryMetrics;
+
+  let standalonePayout = 0, standaloneProfit = 0;
+  for (const candidate of chosen) {
+    standalonePayout += scored.expectedPayout[candidate];
+    standaloneProfit += scored.expectedProfit[candidate];
+  }
+  const expectedPayout = entryPayout.reduce((a, b) => a + b, 0) / evCount;
+  const totalCost = options.entryFee * entries;
+  const expectedProfit = expectedPayout - totalCost;
+
+  if (scored.fieldSummary) {
+    scored.fieldSummary.joint_portfolio_evaluated = true;
+    scored.fieldSummary.joint_opponent_entries = opponentEntries;
+  }
+
+  return {
+    objective: "joint_portfolio_contest_ev",
+    entries,
+    expected_payout: expectedPayout,
+    expected_profit: expectedProfit,
+    roi: totalCost > 0 ? expectedProfit / totalCost : 0,
+    profitable_rate: profitable / evCount,
+    any_cash_rate: anyCash / evCount,
+    any_top_one_rate: anyTopOne / evCount,
+    any_first_rate: anyFirst / evCount,
+    expected_cashes: cashFinishes / evCount,
+    expected_top_one_finishes: topOneFinishes / evCount,
+    expected_first_finishes: firstFinishes / evCount,
+    profit_p10: sampleQuantile(profitSamples, 0.10),
+    profit_median: sampleQuantile(profitSamples, 0.50),
+    profit_p90: sampleQuantile(profitSamples, 0.90),
+    worst_profit: sampleQuantile(profitSamples, 0),
+    best_profit: sampleQuantile(profitSamples, 1),
+    opponent_entries: opponentEntries,
+    sampled_opponents: context.sampled.draws,
+    evaluation_scenarios: evCount,
+    standalone_expected_payout: standalonePayout,
+    standalone_expected_profit: standaloneProfit,
+    standalone_roi: totalCost > 0 ? standaloneProfit / totalCost : 0,
+    standalone_price_taking: true,
+    experimental_field_model: true,
+  };
 }
 
 /* ---------- selection ---------------------------------------------------- */
@@ -1283,7 +1445,7 @@ function portfolio(scored, order, options) {
   return attempts[0];
 }
 
-function describe(scored, indices, construction) {
+function describe(scored, indices, construction, includeContest = true) {
   return indices.map((c, position) => {
     const ids = candidateMembers(scored, c);
     const result = {
@@ -1300,7 +1462,7 @@ function describe(scored, indices, construction) {
       win_rate: scored.winRate[c],
       tournament_score: scored.tournament[c],
     };
-    if (scored.expectedPayout) {
+    if (includeContest && scored.expectedPayout) {
       result.expected_payout = scored.expectedPayout[c];
       result.expected_profit = scored.expectedProfit[c];
       result.roi = scored.roi[c];
@@ -1309,6 +1471,17 @@ function describe(scored, indices, construction) {
       result.first_rate = scored.firstRate[c];
       result.solo_first_rate = scored.soloFirstRate[c];
       result.expected_duplicates = scored.expectedDuplicates[c];
+    }
+    if (includeContest && scored.jointEntryMetrics && scored.jointEntryMetrics.has(c)) {
+      const joint = scored.jointEntryMetrics.get(c);
+      result.joint_expected_payout = joint.expected_payout;
+      result.joint_expected_profit = joint.expected_profit;
+      result.joint_roi = joint.roi;
+      result.joint_cash_rate = joint.cash_rate;
+      result.joint_top_one_rate = joint.top_one_rate;
+      result.joint_first_rate = joint.first_rate;
+      result.joint_solo_first_rate = joint.solo_first_rate;
+      result.joint_expected_duplicates = joint.expected_duplicates;
     }
     if (construction && construction[position]) result.construction_rule = construction[position];
     return result;
@@ -1354,7 +1527,7 @@ if (typeof module !== "undefined" && module.exports) {
     constructionSchedule, apportionedRuleCounts, matchesConstructionRule,
     contestReady, ownershipRates, superstarOwnershipRates, candidateFieldProbabilities,
     lineupFieldProbabilities, rosterFieldProbabilities, fieldScoreAt,
-    normalizePayouts, payoutForTie, applyFieldEV,
+    normalizePayouts, payoutForTie, applyFieldEV, evaluateJointPortfolioEV,
     covarianceMatrix: () => covariance,
   };
 }
@@ -1429,21 +1602,6 @@ self.onmessage = (event) => {
 
     const order = orderBy(scored, options.objective === "portfolio" ? "expected" : options.objective);
     const built = portfolio(scored, order, options);
-    if (options.objective === "field_ev") {
-      let payout = 0, profit = 0;
-      for (const candidate of built.chosen) {
-        payout += scored.expectedPayout[candidate];
-        profit += scored.expectedProfit[candidate];
-      }
-      built.evaluation = {
-        objective: "total_modeled_contest_ev",
-        expected_payout: payout,
-        expected_profit: profit,
-        roi: options.entryFee > 0 ? profit / (options.entryFee * built.chosen.length) : 0,
-        entries: built.chosen.length,
-        price_taking: true,
-      };
-    }
     if (built.chosen.length < options.entries) {
       const details = Object.entries(built.unfilled)
         .map(([name, count]) => `${name}: ${count}`).join(", ");
@@ -1455,6 +1613,10 @@ self.onmessage = (event) => {
         "Increase detail, disable construction quotas, relax limits, or restore excluded players."
       );
     }
+    if (options.objective === "field_ev") {
+      self.postMessage({ type: "stage", stage: "Evaluating all selected entries together in one contest" });
+      built.evaluation = evaluateJointPortfolioEV(scored, built.chosen, options);
+    }
 
     self.postMessage({
       type: "result",
@@ -1463,7 +1625,7 @@ self.onmessage = (event) => {
       portfolio: describe(scored, built.chosen, built.rules),
       scenario_evaluation: built.evaluation || null,
       field_summary: scored.fieldSummary || null,
-      h2h_anchor: describe(scored, orderBy(scored, "expected").slice(0, 1)),
+      h2h_anchor: describe(scored, orderBy(scored, "expected").slice(0, 1), null, false),
       strongest: describe(scored, order.slice(0, 10)),
       construction: {
         requested: options.entries,

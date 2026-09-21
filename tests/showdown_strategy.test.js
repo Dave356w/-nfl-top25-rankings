@@ -143,3 +143,51 @@ test('field EV prices a fully duplicated one-lineup field with tie splitting', (
   assert.ok(scored.expectedDuplicates[best] >= 0);
   assert.ok(scored.expectedPayout[best] > 0);
 });
+
+
+test('joint portfolio EV inserts all selected entries into the same contest ranks', () => {
+  const players = [12,11,10,9,8,7].map((fp,i)=>({
+    fp,cv:.05,salary:1,pos:i===0?'QB':'WR',team:i<3?'A':'B'
+  }));
+  w.setModel({players,latent:Array(15).fill(0),settings:{}});
+  w.simulate(400,356);
+  const options={salaryCap:5,minSalaryPct:0,ceilingWeight:.85,maxCandidates:40,
+    meanReserve:40,nearOptimalRatio:.95,objective:'field_ev',entries:2,
+    maxPlayerExposure:1,maxSuperstarExposure:1,maxShared:4,constructionRules:[],
+    simulations:400,seed:356,fieldSize:10,entryFee:1,
+    payouts:[{from:1,to:1,amount:20},{from:2,to:3,amount:5}],
+    fieldSampleSize:9,fieldSimulations:200};
+  const rosters=w.enumerate([0,1,2,3,4,5],options);
+  const scored=w.score(rosters,w.screen(rosters,options),options);
+  w.applyFieldEV(scored,rosters,options);
+  const chosen=w.orderBy(scored,'field_ev').slice(0,2);
+  const single=w.evaluateJointPortfolioEV(scored,[chosen[0]],options);
+  assert.ok(Math.abs(single.expected_profit-scored.expectedProfit[chosen[0]]) < 1e-9,
+    'a one-entry joint contest must reduce exactly to standalone EV');
+
+  const evaluation=w.evaluateJointPortfolioEV(scored,chosen,options);
+  const described=w.describe(scored,chosen);
+
+  assert.equal(evaluation.objective,'joint_portfolio_contest_ev');
+  assert.equal(evaluation.entries,2);
+  assert.equal(evaluation.opponent_entries,8);
+  assert.equal(evaluation.evaluation_scenarios,200);
+  assert.ok(evaluation.profitable_rate >= 0 && evaluation.profitable_rate <= 1);
+  assert.ok(evaluation.any_cash_rate >= 0 && evaluation.any_cash_rate <= 1);
+  assert.ok(evaluation.any_top_one_rate >= 0 && evaluation.any_top_one_rate <= 1);
+  assert.ok(evaluation.any_first_rate >= 0 && evaluation.any_first_rate <= 1);
+  assert.ok(evaluation.expected_cashes >= 0 && evaluation.expected_cashes <= 2);
+  assert.ok(evaluation.profit_p10 <= evaluation.profit_median);
+  assert.ok(evaluation.profit_median <= evaluation.profit_p90);
+
+  const jointProfit=described.reduce((sum,row)=>sum+row.joint_expected_profit,0);
+  assert.ok(Math.abs(jointProfit-evaluation.expected_profit) < 1e-9);
+  const standaloneProfit=chosen.reduce((sum,c)=>sum+scored.expectedProfit[c],0);
+  assert.ok(Math.abs(standaloneProfit-evaluation.standalone_expected_profit) < 1e-9);
+  assert.equal(scored.fieldSummary.joint_portfolio_evaluated,true);
+  assert.equal(scored.fieldSummary.joint_opponent_entries,8);
+
+  const h2h=w.describe(scored,[chosen[0]],null,false)[0];
+  assert.equal(h2h.expected_profit,undefined);
+  assert.equal(h2h.joint_expected_profit,undefined);
+});
