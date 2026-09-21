@@ -258,7 +258,10 @@ test("GPP results distinguish joint portfolio EV from standalone entry EV", asyn
     timing: { total: 10 }, diversity: null,
     field_summary: {sampled_opponents:500,opponent_entries:4699,
       standalone_opponent_entries:4699,joint_opponent_entries:4680,
-      evaluation_scenarios:1000,ownership_observations:25,ownership_contests:5},
+      evaluation_scenarios:1000,ownership_observations:25,ownership_contests:5,
+      opponent_expected_fp:{mean:61.2,median:62.1,p90:72.5,p99:80.4,min:40,max:85,
+        sample_size:500},
+      portfolio_expected_fp:{mean:75.4,min:70.1,max:82.2},h2h_expected_fp:83.0},
     scenario_evaluation: {objective:"joint_portfolio_contest_ev",expected_profit:1.10,
       expected_payout:6.10,roi:.22,entries:20,profitable_rate:.61,any_cash_rate:.88,
       any_top_one_rate:.42,any_first_rate:.07,expected_cashes:4.2,
@@ -284,9 +287,17 @@ test("GPP results distinguish joint portfolio EV from standalone entry EV", asyn
   assert.match(p.node("portfolio").innerHTML, /joint EV \+\$0\.12/);
   assert.match(p.node("portfolio").innerHTML, /standalone EV \+\$0\.15/);
   assert.match(p.node("portfolio").innerHTML, /joint opp duplicates 2\.4/);
-  assert.match(p.node("result-note").innerHTML, /Joint portfolio EV/);
+  assert.match(p.node("result-note").innerHTML, /Joint portfolio EV under experimental field prior/);
   assert.match(p.node("result-note").innerHTML, /Sum of standalone entry EVs/);
+  assert.match(p.node("result-note").innerHTML, /Not a calibrated return estimate/);
   assert.match(p.node("result-note").innerHTML, /Field-based EV is experimental/);
+  assert.equal(p.node("field-strength-card").hidden, false);
+  assert.match(p.node("field-strength").innerHTML, /Opponent expected FP/);
+  assert.match(p.node("field-strength").innerHTML, /mean 61\.20/);
+  assert.match(p.node("field-strength").innerHTML, /P90 72\.50/);
+  assert.match(p.node("field-strength").innerHTML, /Selected portfolio expected FP/);
+  assert.match(p.node("field-strength").innerHTML, /H2H anchor: 83\.00/);
+  assert.match(p.node("field-strength").innerHTML, /selection-biased sparse prior/);
   assert.equal(p.node("h2h-card").hidden, false);
   assert.match(p.node("h2h").innerHTML, /28\.00 expected FP/);
   assert.doesNotMatch(p.node("h2h").innerHTML, /ROI/);
