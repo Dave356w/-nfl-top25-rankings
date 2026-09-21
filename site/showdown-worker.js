@@ -569,8 +569,8 @@ function tournamentScore(p90, near, mean, sd) {
 
 /* ---------- Yahoo opponent field / contest EV ---------------------------- */
 
-const FALLBACK_OWNERSHIP_COEFFICIENTS = [-0.66081808, 0.78795766, 1.26916296,
-  0.76645081, -0.09163148, -0.51178316, -0.24098834, -0.06782876];
+const FALLBACK_OWNERSHIP_COEFFICIENTS = [-0.75809162, 0.39756914, 1.38752799,
+  0.85382224, 0.09300213, -0.32297409, -0.14321566, 0.08919589];
 
 function sigmoid(value) {
   const z = Math.max(-30, Math.min(30, value));
