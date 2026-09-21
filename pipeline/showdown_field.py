@@ -154,6 +154,7 @@ def export_field_model() -> dict:
         },
         "limitations": [
             "Archived Yahoo pages expose roster percentages for the displayed entry, not a full historical field export.",
+            "The historical strength feature is Yahoo FPPG; live inference uses Projected_FP as the closest pregame strength proxy, so this transfer is approximate.",
             "The ownership model is a sparse prior. Live rates are normalized to five roster slots and should be overridden by better contest-specific ownership when available.",
             "Superstar ownership is derived from roster ownership and projected scoring strength because archived pages do not expose field-wide Superstar percentages separately.",
         ],
