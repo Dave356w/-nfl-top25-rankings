@@ -813,19 +813,15 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
   const sampled = sampleOpponentField(probabilities, options);
   const fieldIds = Array.from(sampled.counts.keys());
   const fieldWeights = fieldIds.map((id) => sampled.counts.get(id) * sampled.scale);
-  const duplicateWeights = new Map();
-  function lineupKey(ids, base, superstar) {
-    let key = "";
-    for (let j = 0; j < LINEUP_SIZE; j++) key += (j ? "," : "") + ids[base + j];
-    return key + "|" + superstar;
+  const radix = model.players.length + 1;
+  function rosterKey(ids, base) {
+    let key = 0;
+    for (let j = 0; j < LINEUP_SIZE; j++) key = key * radix + ids[base + j] + 1;
+    return key;
   }
-  for (let index = 0; index < fieldIds.length; index++) {
-    const flat = fieldIds[index];
-    const roster = (flat / LINEUP_SIZE) | 0;
-    const slot = flat % LINEUP_SIZE;
-    const base = roster * LINEUP_SIZE;
-    const key = lineupKey(fieldRosters.ids, base, fieldRosters.ids[base + slot]);
-    duplicateWeights.set(key, (duplicateWeights.get(key) || 0) + fieldWeights[index]);
+  const rosterIndex = new Map();
+  for (let roster = 0; roster < fieldRosters.salary.length; roster++) {
+    rosterIndex.set(rosterKey(fieldRosters.ids, roster * LINEUP_SIZE), roster);
   }
   const evCount = Math.min(simCount, Math.max(100, Math.floor(Number(options.fieldSimulations) || 1200)));
   const scenarioIds = Int32Array.from({length: evCount}, (_, i) =>
@@ -861,9 +857,17 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
   for (let c = 0; c < scored.total; c++) {
     let payoutTotal = 0, cash = 0, topOne = 0, first = 0, soloFirst = 0;
     const candidateBase = c * LINEUP_SIZE;
-    const candidateKey = lineupKey(scored.ids, candidateBase, scored.superstars[c]);
-    const opponentCopies = duplicateWeights.get(candidateKey) || 0;
-    scored.expectedDuplicates[c] = opponentCopies;
+    const roster = rosterIndex.get(rosterKey(scored.ids, candidateBase));
+    let lineupProbability = 0;
+    if (roster !== undefined) {
+      const fieldBase = roster * LINEUP_SIZE;
+      let slot = -1;
+      for (let j = 0; j < LINEUP_SIZE; j++) {
+        if (fieldRosters.ids[fieldBase + j] === scored.superstars[c]) { slot = j; break; }
+      }
+      if (slot >= 0) lineupProbability = probabilities[fieldBase + slot];
+    }
+    scored.expectedDuplicates[c] = lineupProbability * sampled.opponents;
     for (let e = 0; e < evCount; e++) {
       const value = candidateScoreAt(scored, c, scenarioIds[e]);
       const dist = distributions[e];
