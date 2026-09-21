@@ -36,11 +36,12 @@ import pandas as pd
 from pipeline import notebook as nb
 from pipeline import portfolio_construction
 from pipeline import scenario_portfolio
+from pipeline import showdown_field
 
-# 2: players carry a fitted `zero` rate and the marginals are zero-hurdle
-# lognormals. A worker that ignores `zero` would silently simulate the wrong
-# floors, so the page refuses a schema it does not understand.
-SCHEMA = 2
+# 3: payloads also carry the archived-Yahoo field/ownership prior used by the
+# browser's contest-EV simulation. Schema 2 remains readable by old pages, but a
+# schema-3 page is required to expose ownership/field diagnostics.
+SCHEMA = 3
 
 # Fields the page needs per player. Short keys: the payload is mostly numbers and
 # this is the difference between 7 KB and 11 KB per game.
@@ -184,6 +185,7 @@ def build_game_payload(game_players, game, salary_cap=None, cfg=None, optimize=T
             "infeasible_pairs": int(model["infeasible_pairs"]),
             "max_infeasible_shift": round(float(model["max_infeasible_shift"]), 6),
         },
+        "field_model": showdown_field.export_field_model(),
         "dropped_from_pool": list(dropped),
         "reference": None,
     }

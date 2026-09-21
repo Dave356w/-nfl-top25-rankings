@@ -357,8 +357,16 @@ function enumerate(included, options) {
 
 /* ---------- candidate screen -------------------------------------------- */
 
+function contestReady(options) {
+  return Number.isInteger(options.fieldSize) && options.fieldSize > options.entries
+    && Number.isFinite(options.entryFee) && options.entryFee >= 0
+    && Array.isArray(options.payouts) && options.payouts.length > 0;
+}
+
 function resolvedObjective(options) {
-  return options.objective === "auto" ? (options.entries === 1 ? "expected" : "portfolio") : options.objective;
+  if (options.objective !== "auto") return options.objective;
+  if (contestReady(options)) return "field_ev";
+  return options.entries === 1 ? "expected" : "portfolio";
 }
 
 function screen(rosters, options) {
@@ -559,10 +567,360 @@ function tournamentScore(p90, near, mean, sd) {
   return out;
 }
 
+/* ---------- Yahoo opponent field / contest EV ---------------------------- */
+
+const FALLBACK_OWNERSHIP_COEFFICIENTS = [-0.75809162, 0.39756914, 1.38752799,
+  0.85382224, 0.09300213, -0.32297409, -0.14321566, 0.08919589];
+
+function sigmoid(value) {
+  const z = Math.max(-30, Math.min(30, value));
+  return 1 / (1 + Math.exp(-z));
+}
+
+function ownershipRates(options) {
+  const players = model.players;
+  const field = (model.field_model && model.field_model.ownership) || {};
+  const coefficients = Array.isArray(field.coefficients) && field.coefficients.length === 8
+    ? field.coefficients : FALLBACK_OWNERSHIP_COEFFICIENTS;
+  const logits = new Float64Array(players.length);
+  for (let i = 0; i < players.length; i++) {
+    const p = players[i], pos = String(p.pos || "").toUpperCase();
+    logits[i] = coefficients[0]
+      + coefficients[1] * Math.log1p(Math.max(Number(p.fp) || 0, 0))
+      + coefficients[2] * (pos === "QB" ? 1 : 0)
+      + coefficients[3] * (pos === "RB" ? 1 : 0)
+      + coefficients[4] * (pos === "TE" ? 1 : 0)
+      + coefficients[5] * (pos === "DEF" ? 1 : 0)
+      + coefficients[6] * Math.log1p(Math.max(options.fieldSize || 1, 1))
+      + coefficients[7] * Math.log1p(Math.max(options.entryFee || 0, 0));
+  }
+  let low = -20, high = 20;
+  for (let iteration = 0; iteration < 80; iteration++) {
+    const mid = 0.5 * (low + high);
+    let total = 0;
+    for (let i = 0; i < logits.length; i++) total += sigmoid(logits[i] + mid);
+    if (total < LINEUP_SIZE) low = mid; else high = mid;
+  }
+  const offset = 0.5 * (low + high);
+  return Float64Array.from(logits, (value) => sigmoid(value + offset));
+}
+
+function superstarOwnershipRates(rosterOwnership) {
+  const players = model.players;
+  const spec = (model.field_model && model.field_model.superstar) || {};
+  const exponent = Number(spec.exponent) || 1.15;
+  const multipliers = spec.position_multiplier || {QB:1.08,RB:1,WR:1,TE:.96,DEF:.72};
+  const weights = new Float64Array(players.length);
+  let total = 0;
+  for (let i = 0; i < players.length; i++) {
+    const p = players[i];
+    const multiplier = Number(multipliers[p.pos]) || 1;
+    weights[i] = rosterOwnership[i]
+      * Math.pow(Math.max(Number(p.fp) || 0, 0.25), exponent) * multiplier;
+    total += weights[i];
+  }
+  if (!(total > 0)) return Float64Array.from(weights, () => 1 / players.length);
+  for (let i = 0; i < weights.length; i++) weights[i] /= total;
+  return weights;
+}
+
+function candidateFieldProbabilities(scored, rosterOwnership, superstarOwnership, temperature) {
+  return lineupFieldProbabilities(scored.ids, scored.total, scored.superstars,
+    rosterOwnership, superstarOwnership, temperature);
+}
+
+function lineupFieldProbabilities(ids, count, superstars, rosterOwnership, superstarOwnership, temperature) {
+  const n = model.players.length;
+  let omitted = 0;
+  for (let i = 0; i < n; i++) omitted += Math.log(Math.max(1 - rosterOwnership[i], 1e-9));
+  const logits = new Float64Array(count);
+  let maximum = -Infinity;
+  const heat = Number.isFinite(temperature) && temperature > 0 ? temperature : 1.25;
+  for (let c = 0; c < count; c++) {
+    let value = omitted;
+    const base = c * LINEUP_SIZE;
+    for (let j = 0; j < LINEUP_SIZE; j++) {
+      const id = ids[base + j], own = Math.min(.999999, Math.max(1e-6, rosterOwnership[id]));
+      value += Math.log(own) - Math.log(1 - own);
+    }
+    const star = superstars[c];
+    value += Math.log(Math.max(superstarOwnership[star], 1e-9))
+      - Math.log(Math.max(rosterOwnership[star], 1e-9));
+    logits[c] = value / heat;
+    if (logits[c] > maximum) maximum = logits[c];
+  }
+  const weights = new Float64Array(count);
+  let total = 0;
+  for (let i = 0; i < weights.length; i++) {
+    weights[i] = Math.exp(logits[i] - maximum);
+    total += weights[i];
+  }
+  if (!(total > 0)) return Float64Array.from(weights, () => 1 / weights.length);
+  for (let i = 0; i < weights.length; i++) weights[i] /= total;
+  return weights;
+}
+
+function rosterFieldProbabilities(rosters, rosterOwnership, superstarOwnership, temperature) {
+  const count = rosters.salary.length * LINEUP_SIZE;
+  const logits = new Float64Array(count);
+  const heat = Number.isFinite(temperature) && temperature > 0 ? temperature : 1.25;
+  let omitted = 0;
+  for (let i = 0; i < model.players.length; i++) {
+    omitted += Math.log(Math.max(1 - rosterOwnership[i], 1e-9));
+  }
+  let maximum = -Infinity;
+  for (let roster = 0; roster < rosters.salary.length; roster++) {
+    const base = roster * LINEUP_SIZE;
+    let rosterLogit = omitted;
+    for (let j = 0; j < LINEUP_SIZE; j++) {
+      const id = rosters.ids[base + j];
+      const own = Math.min(.999999, Math.max(1e-6, rosterOwnership[id]));
+      rosterLogit += Math.log(own) - Math.log(1 - own);
+    }
+    for (let slot = 0; slot < LINEUP_SIZE; slot++) {
+      const star = rosters.ids[base + slot];
+      const value = (rosterLogit
+        + Math.log(Math.max(superstarOwnership[star], 1e-9))
+        - Math.log(Math.max(rosterOwnership[star], 1e-9))) / heat;
+      const flat = base + slot;
+      logits[flat] = value;
+      if (value > maximum) maximum = value;
+    }
+  }
+  const weights = new Float64Array(count);
+  let total = 0;
+  for (let i = 0; i < count; i++) {
+    weights[i] = Math.exp(logits[i] - maximum);
+    total += weights[i];
+  }
+  if (!(total > 0)) return Float64Array.from(weights, () => 1 / count);
+  for (let i = 0; i < count; i++) weights[i] /= total;
+  return weights;
+}
+
+function fieldScoreAt(rosters, flat, scenario) {
+  const roster = (flat / LINEUP_SIZE) | 0;
+  const slot = flat % LINEUP_SIZE;
+  const base = roster * LINEUP_SIZE;
+  let value = 0;
+  for (let j = 0; j < LINEUP_SIZE; j++) {
+    value += scenarios[rosters.ids[base + j] * simCount + scenario];
+  }
+  const superstar = rosters.ids[base + slot];
+  return value + 0.5 * scenarios[superstar * simCount + scenario];
+}
+
+function sampleOpponentField(probabilities, options) {
+  // Price-taking entry EV compares each candidate with a full contest-sized
+  // field of other entries. The user's other entries are not explicitly
+  // simulated against one another, so they are represented by the field prior.
+  const opponents = options.fieldSize - 1;
+  const requested = Math.max(1, Math.floor(Number(options.fieldSampleSize) || 700));
+  const draws = Math.min(opponents, requested);
+  const scale = opponents / draws;
+  const cdf = new Float64Array(probabilities.length);
+  let running = 0;
+  for (let i = 0; i < probabilities.length; i++) {
+    running += probabilities[i];
+    cdf[i] = running;
+  }
+  cdf[cdf.length - 1] = 1;
+  const random = makeRandom((options.seed ^ 0x51f15e5d) >>> 0);
+  const counts = new Map();
+  for (let draw = 0; draw < draws; draw++) {
+    const needle = random();
+    let low = 0, high = cdf.length - 1;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (cdf[mid] < needle) low = mid + 1; else high = mid;
+    }
+    counts.set(low, (counts.get(low) || 0) + 1);
+  }
+  return {opponents, draws, scale, counts};
+}
+
+function candidateScoreAt(scored, candidate, scenario) {
+  const base = candidate * LINEUP_SIZE;
+  let value = 0;
+  for (let j = 0; j < LINEUP_SIZE; j++) {
+    value += scenarios[scored.ids[base + j] * simCount + scenario];
+  }
+  value += 0.5 * scenarios[scored.superstars[candidate] * simCount + scenario];
+  return value;
+}
+
+function normalizePayouts(payouts, fieldSize) {
+  const rows = (payouts || []).map((row) => ({
+    from: Math.floor(Number(row.from)),
+    to: Math.floor(Number(row.to)),
+    amount: Number(row.amount),
+  })).sort((a, b) => a.from - b.from || a.to - b.to);
+  let previous = 0;
+  for (const row of rows) {
+    if (!Number.isInteger(row.from) || !Number.isInteger(row.to)
+        || row.from < 1 || row.to < row.from || row.to > fieldSize
+        || !Number.isFinite(row.amount) || row.amount < 0) {
+      throw new Error("Payout rows need valid ranks inside the field and non-negative dollar amounts.");
+    }
+    if (row.from <= previous) throw new Error("Payout rank ranges may not overlap.");
+    previous = row.to;
+  }
+  return rows;
+}
+
+function payoutForTie(payouts, startRank, tieCount) {
+  if (!(tieCount > 0)) return 0;
+  const start = startRank - 1;
+  const end = start + tieCount;
+  let pool = 0;
+  for (const row of payouts) {
+    const prizeStart = row.from - 1, prizeEnd = row.to;
+    const overlap = Math.max(0, Math.min(end, prizeEnd) - Math.max(start, prizeStart));
+    pool += overlap * row.amount;
+  }
+  return pool / tieCount;
+}
+
+function lowerBound(values, needle) {
+  let low = 0, high = values.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (values[mid] < needle) low = mid + 1; else high = mid;
+  }
+  return low;
+}
+
+function upperBound(values, needle) {
+  let low = 0, high = values.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (values[mid] <= needle) low = mid + 1; else high = mid;
+  }
+  return low;
+}
+
+function applyFieldEV(scored, fieldRosters, options, progress) {
+  if (!contestReady(options)) {
+    throw new Error("Tournament EV needs a field size larger than your entry count, an entry fee, and at least one payout row.");
+  }
+  const payouts = normalizePayouts(options.payouts, options.fieldSize);
+  const rosterOwnership = ownershipRates(options);
+  const superstarOwnership = superstarOwnershipRates(rosterOwnership);
+  const fieldLineups = fieldRosters.salary.length * LINEUP_SIZE;
+  const probabilities = rosterFieldProbabilities(
+    fieldRosters, rosterOwnership, superstarOwnership, options.fieldTemperature
+  );
+  const sampled = sampleOpponentField(probabilities, options);
+  const fieldIds = Array.from(sampled.counts.keys());
+  const fieldWeights = fieldIds.map((id) => sampled.counts.get(id) * sampled.scale);
+  const radix = model.players.length + 1;
+  function rosterKey(ids, base) {
+    let key = 0;
+    for (let j = 0; j < LINEUP_SIZE; j++) key = key * radix + ids[base + j] + 1;
+    return key;
+  }
+  const rosterIndex = new Map();
+  for (let roster = 0; roster < fieldRosters.salary.length; roster++) {
+    rosterIndex.set(rosterKey(fieldRosters.ids, roster * LINEUP_SIZE), roster);
+  }
+  const evCount = Math.min(simCount, Math.max(100, Math.floor(Number(options.fieldSimulations) || 1200)));
+  const scenarioIds = Int32Array.from({length: evCount}, (_, i) =>
+    Math.min(simCount - 1, Math.floor(i * simCount / evCount)));
+  const distributions = new Array(evCount);
+
+  for (let e = 0; e < evCount; e++) {
+    const pairs = fieldIds.map((id, index) => ({
+      score: fieldScoreAt(fieldRosters, id, scenarioIds[e]),
+      weight: fieldWeights[index],
+    })).sort((a, b) => a.score - b.score);
+    const scores = new Float64Array(pairs.length);
+    const cumulative = new Float64Array(pairs.length);
+    let total = 0;
+    for (let i = 0; i < pairs.length; i++) {
+      scores[i] = pairs[i].score;
+      total += pairs[i].weight;
+      cumulative[i] = total;
+    }
+    distributions[e] = {scores, cumulative, total};
+  }
+
+  scored.expectedPayout = new Float64Array(scored.total);
+  scored.expectedProfit = new Float64Array(scored.total);
+  scored.roi = new Float64Array(scored.total);
+  scored.cashRate = new Float64Array(scored.total);
+  scored.topOneRate = new Float64Array(scored.total);
+  scored.firstRate = new Float64Array(scored.total);
+  scored.soloFirstRate = new Float64Array(scored.total);
+  scored.expectedDuplicates = new Float64Array(scored.total);
+  const topOneRank = Math.max(1, Math.ceil(options.fieldSize * 0.01));
+
+  for (let c = 0; c < scored.total; c++) {
+    let payoutTotal = 0, cash = 0, topOne = 0, first = 0, soloFirst = 0;
+    const candidateBase = c * LINEUP_SIZE;
+    const roster = rosterIndex.get(rosterKey(scored.ids, candidateBase));
+    let lineupProbability = 0;
+    if (roster !== undefined) {
+      const fieldBase = roster * LINEUP_SIZE;
+      let slot = -1;
+      for (let j = 0; j < LINEUP_SIZE; j++) {
+        if (fieldRosters.ids[fieldBase + j] === scored.superstars[c]) { slot = j; break; }
+      }
+      if (slot >= 0) lineupProbability = probabilities[fieldBase + slot];
+    }
+    scored.expectedDuplicates[c] = lineupProbability * sampled.opponents;
+    for (let e = 0; e < evCount; e++) {
+      const value = candidateScoreAt(scored, c, scenarioIds[e]);
+      const dist = distributions[e];
+      const epsilon = 1e-5 + 1e-6 * Math.abs(value);
+      const lo = lowerBound(dist.scores, value - epsilon);
+      const hi = upperBound(dist.scores, value + epsilon);
+      const below = lo > 0 ? dist.cumulative[lo - 1] : 0;
+      const through = hi > 0 ? dist.cumulative[hi - 1] : 0;
+      const tiedOpponents = Math.max(0, through - below);
+      const greater = Math.max(0, dist.total - through);
+      const rank = greater + 1;
+      const prize = payoutForTie(payouts, rank, tiedOpponents + 1);
+      payoutTotal += prize;
+      if (prize > 0) cash++;
+      if (rank <= topOneRank) topOne++;
+      if (greater < 0.5) {
+        first++;
+        if (tiedOpponents < 0.5) soloFirst++;
+      }
+    }
+    const expectedPayout = payoutTotal / evCount;
+    const expectedProfit = expectedPayout - options.entryFee;
+    scored.expectedPayout[c] = expectedPayout;
+    scored.expectedProfit[c] = expectedProfit;
+    scored.roi[c] = options.entryFee > 0 ? expectedProfit / options.entryFee : 0;
+    scored.cashRate[c] = cash / evCount;
+    scored.topOneRate[c] = topOne / evCount;
+    scored.firstRate[c] = first / evCount;
+    scored.soloFirstRate[c] = soloFirst / evCount;
+    if ((c & 255) === 0 && progress) progress(c / Math.max(scored.total, 1));
+  }
+  scored.fieldSummary = {
+    field_size: options.fieldSize,
+    opponent_entries: sampled.opponents,
+    sampled_opponents: sampled.draws,
+    legal_field_rosters: fieldRosters.salary.length,
+    legal_field_lineups: fieldLineups,
+    sample_scale: sampled.scale,
+    evaluation_scenarios: evCount,
+    ownership_observations: model.field_model && model.field_model.archive
+      ? model.field_model.archive.observations : null,
+    ownership_contests: model.field_model && model.field_model.archive
+      ? model.field_model.archive.contests : null,
+    price_taking_portfolio: true,
+  };
+  return scored;
+}
+
 /* ---------- selection ---------------------------------------------------- */
 
 function objectiveValues(scored, objective) {
   return {
+    field_ev: scored.expectedProfit,
     tournament: scored.tournament,
     mean: scored.mean,
     floor: scored.p25,
@@ -714,7 +1072,8 @@ function unrestrictedPortfolio(scored, order, options, target) {
     superstarCounts.set(superstar, (superstarCounts.get(superstar) || 0) + 1);
     if (chosen.length === target) break;
   }
-  return { chosen, sets, rules: chosen.map(() => null), unfilled: {} };
+  const result = { chosen, sets, rules: chosen.map(() => null), unfilled: {} };
+  return result;
 }
 
 function selectionAttempt(scored, order, options, rules, ruleCounts, ruleData, values, mode) {
@@ -900,7 +1259,7 @@ function scenarioPortfolio(scored, options, data = scenarios, count = simCount) 
 
 /* Reserve mandatory future exposure and try several rule schedules. */
 function portfolio(scored, order, options) {
-  if (options.objective === "auto" || options.objective === "portfolio") {
+  if (options.objective === "portfolio") {
     return scenarioPortfolio(scored, options);
   }
   const target = options.entries;
@@ -941,6 +1300,16 @@ function describe(scored, indices, construction) {
       win_rate: scored.winRate[c],
       tournament_score: scored.tournament[c],
     };
+    if (scored.expectedPayout) {
+      result.expected_payout = scored.expectedPayout[c];
+      result.expected_profit = scored.expectedProfit[c];
+      result.roi = scored.roi[c];
+      result.cash_rate = scored.cashRate[c];
+      result.top_one_rate = scored.topOneRate[c];
+      result.first_rate = scored.firstRate[c];
+      result.solo_first_rate = scored.soloFirstRate[c];
+      result.expected_duplicates = scored.expectedDuplicates[c];
+    }
     if (construction && construction[position]) result.construction_rule = construction[position];
     return result;
   });
@@ -983,6 +1352,9 @@ if (typeof module !== "undefined" && module.exports) {
     portfolio, describe, diversity, latentMatrix, cholesky, scoreCorrelation,
     normalCdf, normalPpf, conditionalCv, hurdleCoefficients, hurdleScoreCorrelation,
     constructionSchedule, apportionedRuleCounts, matchesConstructionRule,
+    contestReady, ownershipRates, superstarOwnershipRates, candidateFieldProbabilities,
+    lineupFieldProbabilities, rosterFieldProbabilities, fieldScoreAt,
+    normalizePayouts, payoutForTie, applyFieldEV,
     covarianceMatrix: () => covariance,
   };
 }
@@ -1001,7 +1373,12 @@ self.onmessage = (event) => {
     }
     if (message.type !== "solve") return;
 
-    const options = message.options;
+    let options = message.options;
+    const effectiveObjective = resolvedObjective(options);
+    options = {...options, objective: effectiveObjective};
+    if (effectiveObjective === "field_ev" && !contestReady(options)) {
+      throw new Error("Tournament EV needs a field size larger than your entry count, an entry fee, and a payout schedule.");
+    }
     if (!Number.isFinite(options.salaryCap) || options.salaryCap <= 0) {
       // Yahoo does not price every single-game slate; those games publish a model
       // with no cap and the page collects one before asking for a solve.
@@ -1040,9 +1417,33 @@ self.onmessage = (event) => {
     const scored = score(rosters, screened, options, (fraction) => {
       self.postMessage({ type: "progress", fraction });
     });
+    if (options.objective === "field_ev") {
+      self.postMessage({ type: "stage", stage: "Enumerating Yahoo-legal opponent field" });
+      const allPlayers = Int32Array.from({length:model.players.length}, (_, i) => i);
+      const fieldRosters = enumerate(allPlayers, {...options, minSalaryPct:0, positionLimits:{}});
+      self.postMessage({ type: "stage", stage: "Simulating opponent field and contest payouts" });
+      applyFieldEV(scored, fieldRosters, options, (fraction) => {
+        self.postMessage({ type: "progress", fraction });
+      });
+    }
 
-    const order = orderBy(scored, ["auto", "portfolio"].includes(options.objective) ? "expected" : options.objective);
+    const order = orderBy(scored, options.objective === "portfolio" ? "expected" : options.objective);
     const built = portfolio(scored, order, options);
+    if (options.objective === "field_ev") {
+      let payout = 0, profit = 0;
+      for (const candidate of built.chosen) {
+        payout += scored.expectedPayout[candidate];
+        profit += scored.expectedProfit[candidate];
+      }
+      built.evaluation = {
+        objective: "total_modeled_contest_ev",
+        expected_payout: payout,
+        expected_profit: profit,
+        roi: options.entryFee > 0 ? profit / (options.entryFee * built.chosen.length) : 0,
+        entries: built.chosen.length,
+        price_taking: true,
+      };
+    }
     if (built.chosen.length < options.entries) {
       const details = Object.entries(built.unfilled)
         .map(([name, count]) => `${name}: ${count}`).join(", ");
@@ -1061,6 +1462,8 @@ self.onmessage = (event) => {
       candidates_scored: scored.total,
       portfolio: describe(scored, built.chosen, built.rules),
       scenario_evaluation: built.evaluation || null,
+      field_summary: scored.fieldSummary || null,
+      h2h_anchor: describe(scored, orderBy(scored, "expected").slice(0, 1)),
       strongest: describe(scored, order.slice(0, 10)),
       construction: {
         requested: options.entries,

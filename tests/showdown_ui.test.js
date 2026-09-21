@@ -226,3 +226,69 @@ test("a priced game hides the cap field entirely", async () => {
   p.node("run").handlers.click();
   assert.equal(p.workers.at(-1).messages.at(-1).options.salaryCap, 100);
 });
+
+
+test("Tournament EV requires contest inputs and sends the payout curve", async () => {
+  const p = await page();
+  p.node("objective").value = "field_ev";
+  p.node("objective").handlers.change();
+  assert.equal(p.node("run").disabled, true);
+
+  p.node("field-size").value = "4700";
+  p.node("field-size").handlers.change();
+  p.node("entry-fee").value = "0.25";
+  p.node("entry-fee").handlers.change();
+  p.node("payouts").value = "1=100\n2=50\n3-10=10";
+  p.node("payouts").handlers.input();
+
+  assert.equal(p.node("run").disabled, false);
+  p.node("run").handlers.click();
+  const options = p.workers.at(-1).messages.at(-1).options;
+  assert.equal(options.fieldSize, 4700);
+  assert.equal(options.entryFee, 0.25);
+  assert.equal(
+    JSON.stringify(options.payouts.map(row => [row.from, row.to, row.amount])),
+    JSON.stringify([[1,1,100],[2,2,50],[3,10,10]])
+  );
+});
+
+test("GPP results render contest EV while H2H stays on expected points", async () => {
+  const p = await page();
+  p.workers[0].emit({ type: "result", valid_rosters: 1, candidates_scored: 1,
+    timing: { total: 10 }, diversity: null,
+    field_summary: {sampled_opponents:500,opponent_entries:4699,evaluation_scenarios:1000,
+      ownership_observations:25,ownership_contests:5},
+    scenario_evaluation: {objective:"total_modeled_contest_ev",expected_profit:1.25,
+      expected_payout:6.25,roi:.25,entries:20,price_taking:true},
+    portfolio: [{
+      ids:[0,1,2,3,4],superstar:0,salary:50,expected_fp:27.5,sim_mean:27.3,
+      floor_p25:20,ceiling_p90:40,ceiling_p95:45,near_optimal_rate:.1,win_rate:.01,
+      tournament_score:1,expected_payout:.40,expected_profit:.15,roi:.6,cash_rate:.2,
+      top_one_rate:.03,first_rate:.001,expected_duplicates:2.5,
+    }],
+    h2h_anchor: [{
+      ids:[0,1,2,3,4],superstar:1,salary:50,expected_fp:28.0,sim_mean:27.8,
+      floor_p25:21,ceiling_p90:39,ceiling_p95:44,near_optimal_rate:.09,win_rate:.009,
+      tournament_score:.8,
+    }]
+  });
+  assert.match(p.node("portfolio").innerHTML, /EV \+\$0\.15/);
+  assert.match(p.node("portfolio").innerHTML, /opp duplicates 2\.5/);
+  assert.equal(p.node("h2h-card").hidden, false);
+  assert.match(p.node("h2h").innerHTML, /28\.00 expected FP/);
+  assert.doesNotMatch(p.node("h2h").innerHTML, /ROI/);
+});
+
+
+test("Yahoo quarter-dollar preset fills the 4704-entry payout ladder", async () => {
+  const p = await page();
+  p.node("contest-preset").value = "yahoo_025_1k";
+  p.node("contest-preset").handlers.change();
+  assert.equal(p.node("field-size").value, 4704);
+  assert.equal(p.node("entry-fee").value, 0.25);
+  assert.match(p.node("payouts").value, /1=100/);
+  assert.match(p.node("payouts").value, /501-915=0\.50/);
+  p.node("objective").value = "field_ev";
+  p.node("objective").handlers.change();
+  assert.equal(p.node("run").disabled, false);
+});
