@@ -246,9 +246,9 @@ test("Tournament EV requires contest inputs and sends the payout curve", async (
   const options = p.workers.at(-1).messages.at(-1).options;
   assert.equal(options.fieldSize, 4700);
   assert.equal(options.entryFee, 0.25);
-  assert.deepEqual(
-    options.payouts.map(row => [row.from, row.to, row.amount]),
-    [[1,1,100],[2,2,50],[3,10,10]]
+  assert.equal(
+    JSON.stringify(options.payouts.map(row => [row.from, row.to, row.amount])),
+    JSON.stringify([[1,1,100],[2,2,50],[3,10,10]])
   );
 });
 
