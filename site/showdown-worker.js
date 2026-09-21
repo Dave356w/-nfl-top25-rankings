@@ -660,20 +660,54 @@ function lineupFieldProbabilities(ids, count, superstars, rosterOwnership, super
   return weights;
 }
 
-function expandFieldRosters(rosters) {
+function rosterFieldProbabilities(rosters, rosterOwnership, superstarOwnership, temperature) {
   const count = rosters.salary.length * LINEUP_SIZE;
-  const ids = new Int32Array(count * LINEUP_SIZE);
-  const superstars = new Int32Array(count);
+  const logits = new Float64Array(count);
+  const heat = Number.isFinite(temperature) && temperature > 0 ? temperature : 1.25;
+  let omitted = 0;
+  for (let i = 0; i < model.players.length; i++) {
+    omitted += Math.log(Math.max(1 - rosterOwnership[i], 1e-9));
+  }
+  let maximum = -Infinity;
   for (let roster = 0; roster < rosters.salary.length; roster++) {
-    const rosterBase = roster * LINEUP_SIZE;
+    const base = roster * LINEUP_SIZE;
+    let rosterLogit = omitted;
+    for (let j = 0; j < LINEUP_SIZE; j++) {
+      const id = rosters.ids[base + j];
+      const own = Math.min(.999999, Math.max(1e-6, rosterOwnership[id]));
+      rosterLogit += Math.log(own) - Math.log(1 - own);
+    }
     for (let slot = 0; slot < LINEUP_SIZE; slot++) {
-      const candidate = rosterBase + slot;
-      const outBase = candidate * LINEUP_SIZE;
-      for (let j = 0; j < LINEUP_SIZE; j++) ids[outBase + j] = rosters.ids[rosterBase + j];
-      superstars[candidate] = rosters.ids[rosterBase + slot];
+      const star = rosters.ids[base + slot];
+      const value = (rosterLogit
+        + Math.log(Math.max(superstarOwnership[star], 1e-9))
+        - Math.log(Math.max(rosterOwnership[star], 1e-9))) / heat;
+      const flat = base + slot;
+      logits[flat] = value;
+      if (value > maximum) maximum = value;
     }
   }
-  return {ids, superstars, total:count};
+  const weights = new Float64Array(count);
+  let total = 0;
+  for (let i = 0; i < count; i++) {
+    weights[i] = Math.exp(logits[i] - maximum);
+    total += weights[i];
+  }
+  if (!(total > 0)) return Float64Array.from(weights, () => 1 / count);
+  for (let i = 0; i < count; i++) weights[i] /= total;
+  return weights;
+}
+
+function fieldScoreAt(rosters, flat, scenario) {
+  const roster = (flat / LINEUP_SIZE) | 0;
+  const slot = flat % LINEUP_SIZE;
+  const base = roster * LINEUP_SIZE;
+  let value = 0;
+  for (let j = 0; j < LINEUP_SIZE; j++) {
+    value += scenarios[rosters.ids[base + j] * simCount + scenario];
+  }
+  const superstar = rosters.ids[base + slot];
+  return value + 0.5 * scenarios[superstar * simCount + scenario];
 }
 
 function sampleOpponentField(probabilities, options) {
@@ -772,10 +806,9 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
   const payouts = normalizePayouts(options.payouts, options.fieldSize);
   const rosterOwnership = ownershipRates(options);
   const superstarOwnership = superstarOwnershipRates(rosterOwnership);
-  const expandedField = expandFieldRosters(fieldRosters);
-  const probabilities = lineupFieldProbabilities(
-    expandedField.ids, expandedField.total, expandedField.superstars,
-    rosterOwnership, superstarOwnership, options.fieldTemperature
+  const fieldLineups = fieldRosters.salary.length * LINEUP_SIZE;
+  const probabilities = rosterFieldProbabilities(
+    fieldRosters, rosterOwnership, superstarOwnership, options.fieldTemperature
   );
   const sampled = sampleOpponentField(probabilities, options);
   const fieldIds = Array.from(sampled.counts.keys());
@@ -787,8 +820,11 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
     return key + "|" + superstar;
   }
   for (let index = 0; index < fieldIds.length; index++) {
-    const flat = fieldIds[index], base = flat * LINEUP_SIZE;
-    const key = lineupKey(expandedField.ids, base, expandedField.superstars[flat]);
+    const flat = fieldIds[index];
+    const roster = (flat / LINEUP_SIZE) | 0;
+    const slot = flat % LINEUP_SIZE;
+    const base = roster * LINEUP_SIZE;
+    const key = lineupKey(fieldRosters.ids, base, fieldRosters.ids[base + slot]);
     duplicateWeights.set(key, (duplicateWeights.get(key) || 0) + fieldWeights[index]);
   }
   const evCount = Math.min(simCount, Math.max(100, Math.floor(Number(options.fieldSimulations) || 1200)));
@@ -798,7 +834,7 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
 
   for (let e = 0; e < evCount; e++) {
     const pairs = fieldIds.map((id, index) => ({
-      score: candidateScoreAt(expandedField, id, scenarioIds[e]),
+      score: fieldScoreAt(fieldRosters, id, scenarioIds[e]),
       weight: fieldWeights[index],
     })).sort((a, b) => a.score - b.score);
     const scores = new Float64Array(pairs.length);
@@ -859,7 +895,7 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
     opponent_entries: sampled.opponents,
     sampled_opponents: sampled.draws,
     legal_field_rosters: fieldRosters.salary.length,
-    legal_field_lineups: expandedField.total,
+    legal_field_lineups: fieldLineups,
     sample_scale: sampled.scale,
     evaluation_scenarios: evCount,
     ownership_observations: model.field_model && model.field_model.archive
@@ -1307,7 +1343,7 @@ if (typeof module !== "undefined" && module.exports) {
     normalCdf, normalPpf, conditionalCv, hurdleCoefficients, hurdleScoreCorrelation,
     constructionSchedule, apportionedRuleCounts, matchesConstructionRule,
     contestReady, ownershipRates, superstarOwnershipRates, candidateFieldProbabilities,
-    lineupFieldProbabilities, expandFieldRosters,
+    lineupFieldProbabilities, rosterFieldProbabilities, fieldScoreAt,
     normalizePayouts, payoutForTie, applyFieldEV,
     covarianceMatrix: () => covariance,
   };
