@@ -8,6 +8,7 @@
 "use strict";
 
 const LINEUP_SIZE = 5;
+const WORKER_PROTOCOL = 4;
 
 let model = null;
 let scenarios = null; // Float32Array, player-major
@@ -1598,7 +1599,7 @@ self.onmessage = (event) => {
     if (message.type === "load") {
       model = message.payload;
       scenarios = null;
-      self.postMessage({ type: "loaded", players: model.players.length });
+      self.postMessage({ type: "loaded", players: model.players.length, protocol: WORKER_PROTOCOL });
       return;
     }
     if (message.type !== "solve") return;

@@ -511,6 +511,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
   var DATA = "./data/showdown/";
   var LINEUP_SIZE = 5;
+  var WORKER_PROTOCOL = 4;
   var POSITIONS = ["QB", "RB", "WR", "TE", "DEF"];
   // Bump with pipeline/showdown.py's SCHEMA whenever the page learns to read a
   // new payload field.
@@ -952,12 +953,29 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
   function startWorker(payload) {
     if (worker) worker.terminate();
-    worker = new Worker("./showdown-worker.js");
+    var snapshot = encodeURIComponent(String(
+      payload.snapshot_id || payload.generated_utc || "unknown"
+    ));
+    worker = new Worker(
+      "./showdown-worker.js?protocol=" + WORKER_PROTOCOL + "&snapshot=" + snapshot
+    );
     var activeWorker = worker;
     worker.onmessage = function (event) {
       if (worker !== activeWorker) return;
       var message = event.data;
-      if (message.type === "stage") {
+      if (message.type === "loaded") {
+        if (message.protocol !== WORKER_PROTOCOL) {
+          activeWorker.terminate();
+          worker = null;
+          state.running = false;
+          syncRunButton();
+          setStatus(
+            "Optimizer assets are out of sync. Reload this page to fetch the current worker.",
+            "bad"
+          );
+          return;
+        }
+      } else if (message.type === "stage") {
         setStatus(text(message.stage) + "…", "busy");
       } else if (message.type === "progress") {
         el("progress-bar").style.width = (message.fraction * 100).toFixed(1) + "%";
@@ -1026,7 +1044,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
   function syncRunButton() {
     var needsContest = el("objective").value === "field_ev";
-    el("run").disabled = !state.payload || state.loading || state.running
+    el("run").disabled = !state.payload || state.loading || state.running || !worker
       || effectiveCap() === null || (needsContest && !contestReadyClient());
   }
 
