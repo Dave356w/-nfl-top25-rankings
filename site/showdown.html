@@ -253,6 +253,14 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       <section class="card">
         <h2>Contest</h2>
         <div class="body">
+          <div class="field">
+            <label for="contest-preset">Contest preset</label>
+            <select id="contest-preset">
+              <option value="">Custom</option>
+              <option value="yahoo_025_1k">Yahoo $1K Guaranteed [$100 to 1st] · $0.25 · 4,704</option>
+            </select>
+            <div class="hint">The preset mirrors Yahoo's standard 4,704-entry / 915-paid $1K ladder. Verify your contest page before lock.</div>
+          </div>
           <div class="grid-2">
             <div class="field">
               <label for="field-size">Field size</label>
@@ -705,9 +713,39 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
   function applyContestDefaults(payload) {
     var saved = state.contests[payload.game_id] || {};
+    el("contest-preset").value = saved.preset || "";
     el("field-size").value = saved.fieldSize === undefined ? "" : saved.fieldSize;
     el("entry-fee").value = saved.entryFee === undefined ? "" : saved.entryFee;
     el("payouts").value = saved.payoutText || "";
+    updateContestHint();
+  }
+
+  var CONTEST_PRESETS = {
+    yahoo_025_1k: {
+      fieldSize: 4704,
+      entryFee: 0.25,
+      payouts: [
+        "1=100", "2=40", "3=20", "4=15", "5=10", "6-10=5",
+        "11-20=4", "21-30=3", "31-50=2.50", "51-100=2",
+        "101-150=1.50", "151-250=1", "251-500=0.75", "501-915=0.50"
+      ].join("\n")
+    }
+  };
+
+  function applyContestPreset(name) {
+    var preset = CONTEST_PRESETS[name];
+    if (!preset) return;
+    el("field-size").value = preset.fieldSize;
+    el("entry-fee").value = preset.entryFee;
+    el("payouts").value = preset.payouts;
+    if (state.payload) {
+      state.contests[state.payload.game_id] = {
+        fieldSize: preset.fieldSize,
+        entryFee: preset.entryFee,
+        payoutText: preset.payouts,
+        preset: name
+      };
+    }
     updateContestHint();
   }
 
@@ -844,14 +882,21 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   });
   ["objective", "construction", "entries", "shared", "player-exposure", "superstar-exposure", "limits"]
     .forEach(function (id) { el(id).addEventListener("change", settingsChanged); });
+  el("contest-preset").addEventListener("change", function () {
+    if (el("contest-preset").value) applyContestPreset(el("contest-preset").value);
+    settingsChanged();
+    syncRunButton();
+  });
   ["field-size", "entry-fee", "payouts"].forEach(function (id) {
     el(id).addEventListener(id === "payouts" ? "input" : "change", function () {
       if (state.payload) {
         state.contests[state.payload.game_id] = {
           fieldSize: el("field-size").value === "" ? undefined : Number(el("field-size").value),
           entryFee: el("entry-fee").value === "" ? undefined : Number(el("entry-fee").value),
-          payoutText: el("payouts").value
+          payoutText: el("payouts").value,
+          preset: ""
         };
+        el("contest-preset").value = "";
       }
       updateContestHint();
       settingsChanged();
