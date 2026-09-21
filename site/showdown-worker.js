@@ -677,7 +677,10 @@ function expandFieldRosters(rosters) {
 }
 
 function sampleOpponentField(probabilities, options) {
-  const opponents = options.fieldSize - options.entries;
+  // Price-taking entry EV compares each candidate with a full contest-sized
+  // field of other entries. The user's other entries are not explicitly
+  // simulated against one another, so they are represented by the field prior.
+  const opponents = options.fieldSize - 1;
   const requested = Math.max(1, Math.floor(Number(options.fieldSampleSize) || 700));
   const draws = Math.min(opponents, requested);
   const scale = opponents / draws;
