@@ -161,6 +161,10 @@ test('joint portfolio EV inserts all selected entries into the same contest rank
   const scored=w.score(rosters,w.screen(rosters,options),options);
   w.applyFieldEV(scored,rosters,options);
   const chosen=w.orderBy(scored,'field_ev').slice(0,2);
+  const single=w.evaluateJointPortfolioEV(scored,[chosen[0]],options);
+  assert.ok(Math.abs(single.expected_profit-scored.expectedProfit[chosen[0]]) < 1e-9,
+    'a one-entry joint contest must reduce exactly to standalone EV');
+
   const evaluation=w.evaluateJointPortfolioEV(scored,chosen,options);
   const described=w.describe(scored,chosen);
 
