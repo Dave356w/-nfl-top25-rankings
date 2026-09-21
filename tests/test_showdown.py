@@ -131,13 +131,20 @@ class PayloadShapeTests(unittest.TestCase):
     def test_it_carries_every_key_the_page_reads(self):
         for key in ("schema", "game_id", "matchup", "away", "home", "kickoff_utc",
                     "salary_cap", "settings", "players", "latent", "model",
-                    "dropped_from_pool", "reference"):
+                    "field_model", "dropped_from_pool", "reference"):
             self.assertIn(key, self.payload)
         for key in ("schema", "status", "generated_utc", "games", "skipped",
                     "projection", "availability_removed"):
             self.assertIn(key, self.index)
         for key in showdown.EXPOSED_SETTINGS:
             self.assertIn(key, self.payload["settings"])
+
+        self.assertEqual(self.payload["schema"], 3)
+        self.assertEqual(
+            self.payload["field_model"]["ownership"]["family"],
+            "ridge_logit_roster_propensity",
+        )
+        self.assertGreater(self.payload["field_model"]["archive"]["observations"], 0)
 
     def test_every_player_carries_the_fields_the_page_renders(self):
         for player in self.payload["players"]:
