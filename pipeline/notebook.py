@@ -289,6 +289,17 @@ def normalize_yahoo_data(payload):
             errors="coerce",
         ).astype("Int64")
 
+    raw_caps = payload.get("salaryCapInfo", {}).get("result", [{}])
+    cap_map = raw_caps[0].get("singleGameSalaryCapMap", {}) if raw_caps else {}
+    cap_map = {str(key): float(value) for key, value in cap_map.items()}
+
+    # Yahoo can expose the ending week and the next week in one response. Reduce
+    # that feed before repairing game assignments: the repair logic correctly
+    # assumes each team has only one game in the selected NFL week.
+    df, cap_map = select_active_week_slate(
+        df, cap_map, validate_assignments=False
+    )
+
     # v3.2: the live feed carries rows whose `gameCode` points at a game their team is
     # not playing in - for example Corey Kiner, correctly listed as NE, filed under
     # ARI@LAC. v3.1 gave them a wrong Opponent and, worse, they registered as a third
@@ -310,10 +321,7 @@ def normalize_yahoo_data(payload):
         & df["Salary"].gt(0)
     ].copy()
     df = df.drop_duplicates(["Game ID", "Team", "Name", "Position"]).reset_index(drop=True)
-
-    raw_caps = payload.get("salaryCapInfo", {}).get("result", [{}])
-    cap_map = raw_caps[0].get("singleGameSalaryCapMap", {}) if raw_caps else {}
-    cap_map = {str(key): float(value) for key, value in cap_map.items()}
+    validate_single_game_assignments(df)
     return df, cap_map
 
 
@@ -357,6 +365,103 @@ def list_games(df):
     games = games.sort_values(["_sort", "Game ID"], na_position="last").drop(columns="_sort")
     games["Matchup"] = games["Away Team"] + " vs " + games["Home Team"]
     return games.reset_index(drop=True)
+
+
+def validate_single_game_assignments(players):
+    """Reject impossible duplicate game assignments inside one selected week."""
+    if players is None or players.empty:
+        return
+    collisions = (
+        players.groupby(["Team", "Name", "Position"], dropna=False)["Game ID"]
+        .nunique()
+    )
+    collisions = collisions[collisions.gt(1)]
+    if len(collisions):
+        labels = [
+            f"{team} {name} ({position})"
+            for team, name, position in collisions.index[:8]
+        ]
+        raise ValueError(
+            "Selected Yahoo week assigns a player/team to multiple games: "
+            + ", ".join(labels)
+        )
+
+
+def select_active_week_slate(
+    players, cap_map, now=None, validate_assignments=True
+):
+    """Keep exactly one NFL Thursday-Monday week before role/projection fitting.
+
+    Yahoo can expose the ending week and the next week in one response. Letting
+    both weeks share one frame makes the same player compete with his next-week
+    copy for team-position depth rank, which changes the fitted projection and
+    causes the rankings, lineup editor and Showdown pages to disagree.
+
+    Week blocks are anchored on Thursday in US Pacific time. The oldest block
+    whose final kickoff is no more than six hours old is considered active; once
+    that grace expires the selector rolls to the next block. The grace prevents
+    a Monday-night slate from switching to next week immediately after kickoff.
+    """
+    if players is None or players.empty:
+        return players, dict(cap_map or {})
+
+    out = players.copy()
+    kickoff = pd.to_datetime(out["Game Time"], errors="coerce", utc=True)
+    if kickoff.isna().any():
+        bad = out.loc[kickoff.isna(), "Game ID"].astype(str).drop_duplicates().tolist()
+        raise ValueError(
+            "Yahoo returned unparseable game times for: " + ", ".join(bad[:8])
+        )
+
+    local = kickoff.dt.tz_convert("America/Los_Angeles")
+    days_since_thursday = (local.dt.weekday - 3) % 7
+    week_start = local.dt.normalize() - pd.to_timedelta(days_since_thursday, unit="D")
+    game_rows = (
+        out.assign(_kickoff=kickoff, _week_start=week_start)
+        [["Game ID", "_kickoff", "_week_start"]]
+        .drop_duplicates("Game ID")
+    )
+
+    clock = pd.Timestamp(now if now is not None else datetime.now(timezone.utc))
+    if clock.tzinfo is None:
+        clock = clock.tz_localize("UTC")
+    else:
+        clock = clock.tz_convert("UTC")
+
+    blocks = (
+        game_rows.groupby("_week_start", sort=True)["_kickoff"]
+        .agg(["min", "max"])
+        .sort_index()
+    )
+    grace = pd.Timedelta(hours=6)
+    live_or_future = blocks[(blocks["max"] + grace) >= clock]
+    selected_start = (
+        live_or_future.index[0] if len(live_or_future) else blocks.index[-1]
+    )
+    selected_ids = set(
+        game_rows.loc[
+            game_rows["_week_start"].eq(selected_start), "Game ID"
+        ].astype(str)
+    )
+
+    selected = out[out["Game ID"].astype(str).isin(selected_ids)].copy()
+    if validate_assignments:
+        validate_single_game_assignments(selected)
+
+    selected_cap_map = {
+        str(game_id): value
+        for game_id, value in dict(cap_map or {}).items()
+        if str(game_id) in selected_ids
+    }
+
+    if len(blocks) > 1:
+        first = blocks.loc[selected_start, "min"].tz_convert("America/Los_Angeles")
+        last = blocks.loc[selected_start, "max"].tz_convert("America/Los_Angeles")
+        print(
+            f"Yahoo feed spans {len(blocks)} NFL week blocks; selected "
+            f"{len(selected_ids)} game(s), {first:%Y-%m-%d} through {last:%Y-%m-%d}."
+        )
+    return selected.reset_index(drop=True), selected_cap_map
 
 
 def select_game_interactive(games):
@@ -2844,9 +2949,11 @@ def prepare_slate_pool(cfg=None, purpose=""):
     cfg = _cfg(cfg)
     payload = fetch_yahoo_data()
     players, cap_map = normalize_yahoo_data(payload)
+    raw_inputs = {"yahoo": payload}
+    # normalize_yahoo_data has already reduced a multi-week Yahoo response to one
+    # active NFL week, before repair/depth/projection logic can mix duplicate players.
     # Preliminary salary depth makes the model usable if nflverse is unavailable.
     players = add_projection_priors(players, PROJECTION_OVERRIDES)
-    raw_inputs = {"yahoo": payload}
     games = list_games(players)
     if games.empty:
         raise ValueError("Yahoo returned no usable NFL games")
