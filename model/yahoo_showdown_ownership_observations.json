@@ -1,0 +1,230 @@
+{
+  "schema": 1,
+  "description": "Sparse public Yahoo NFL single-game ownership observations from indexed completed-contest pages. Each observation is a player's field-wide roster percentage from the displayed entry. This is not a full-field export.",
+  "sources": [
+    {
+      "contest_id": "15236154",
+      "url": "https://sports.yahoo.com/dailyfantasy/contest/15236154/232115570",
+      "matchup": "KC @ DAL",
+      "entries": 771,
+      "entry_fee": 20,
+      "first_place_ties": 18
+    },
+    {
+      "contest_id": "13545843",
+      "url": "https://sports.yahoo.com/dailyfantasy/contest/13545843/211871296",
+      "matchup": "SF @ KC",
+      "entries": 2340,
+      "entry_fee": 0.5,
+      "first_place_ties": 2
+    },
+    {
+      "contest_id": "12786466",
+      "url": "https://sports.yahoo.com/dailyfantasy/contest/12786466/198690633",
+      "matchup": "DET @ KC",
+      "entries": 22341,
+      "entry_fee": 0,
+      "first_place_ties": null
+    },
+    {
+      "contest_id": "11772338",
+      "url": "https://sports.yahoo.com/dailyfantasy/contest/11772338/182332264",
+      "matchup": "PIT @ IND",
+      "entries": 227,
+      "entry_fee": 0.25,
+      "first_place_ties": 1
+    },
+    {
+      "contest_id": "15747948",
+      "url": "https://sports.yahoo.com/dailyfantasy/contest/15747948/236931620",
+      "matchup": "DAL @ NYG",
+      "entries": 10,
+      "entry_fee": 109,
+      "first_place_ties": 1
+    }
+  ],
+  "observations": [
+    [
+      "15236154",
+      "Patrick Mahomes",
+      "QB",
+      21.2,
+      0.787
+    ],
+    [
+      "15236154",
+      "Travis Kelce",
+      "TE",
+      9.1,
+      0.59
+    ],
+    [
+      "15236154",
+      "Hollywood Brown",
+      "WR",
+      7.1,
+      0.18
+    ],
+    [
+      "15236154",
+      "Rashee Rice",
+      "WR",
+      15.5,
+      0.379
+    ],
+    [
+      "15236154",
+      "CeeDee Lamb",
+      "WR",
+      11.7,
+      0.482
+    ],
+    [
+      "13545843",
+      "Christian McCaffrey",
+      "RB",
+      11.3,
+      0.57
+    ],
+    [
+      "13545843",
+      "Jauan Jennings",
+      "WR",
+      9.4,
+      0.092
+    ],
+    [
+      "13545843",
+      "Brock Purdy",
+      "QB",
+      22.1,
+      0.464
+    ],
+    [
+      "13545843",
+      "Patrick Mahomes",
+      "QB",
+      21.2,
+      0.633
+    ],
+    [
+      "13545843",
+      "San Francisco 49ers",
+      "DEF",
+      8,
+      0.242
+    ],
+    [
+      "12786466",
+      "Patrick Mahomes",
+      "QB",
+      21.2,
+      0.95
+    ],
+    [
+      "12786466",
+      "Jared Goff",
+      "QB",
+      17.9,
+      0.602
+    ],
+    [
+      "12786466",
+      "Amon-Ra St. Brown",
+      "WR",
+      15.6,
+      0.708
+    ],
+    [
+      "12786466",
+      "Marquez Valdes-Scantling",
+      "WR",
+      2.9,
+      0.112
+    ],
+    [
+      "12786466",
+      "Rashee Rice",
+      "WR",
+      15.5,
+      0.028
+    ],
+    [
+      "11772338",
+      "Jonathan Taylor",
+      "RB",
+      20,
+      0.815
+    ],
+    [
+      "11772338",
+      "Diontae Johnson",
+      "WR",
+      6.2,
+      0.418
+    ],
+    [
+      "11772338",
+      "Najee Harris",
+      "RB",
+      3.4,
+      0.797
+    ],
+    [
+      "11772338",
+      "Kenny Pickett",
+      "QB",
+      1.6,
+      0.423
+    ],
+    [
+      "11772338",
+      "Michael Pittman Jr.",
+      "WR",
+      9.6,
+      0.507
+    ],
+    [
+      "15747948",
+      "Jaxson Dart",
+      "QB",
+      26.6,
+      1
+    ],
+    [
+      "15747948",
+      "Dak Prescott",
+      "QB",
+      15.4,
+      0.9
+    ],
+    [
+      "15747948",
+      "Javonte Williams",
+      "RB",
+      21.7,
+      0.8
+    ],
+    [
+      "15747948",
+      "Isaiah Likely",
+      "TE",
+      23.8,
+      0.4
+    ],
+    [
+      "15747948",
+      "New York Giants",
+      "DEF",
+      3,
+      0.1
+    ]
+  ],
+  "observation_columns": [
+    "contest_id",
+    "player",
+    "position",
+    "fppg",
+    "rostered"
+  ]
+}
