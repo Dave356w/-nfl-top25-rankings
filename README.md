@@ -236,9 +236,17 @@ simulated contest, reduces the modeled opponent count by the number of user
 entries, ranks the user entries against both opponents and one another, and
 tie-splits the payout curve once. The page therefore reports **joint portfolio
 EV** separately from the **sum of standalone entry EVs**, plus portfolio profit
-quantiles and any-cash/top-1%/first rates. The ownership archive is sparse, so
-field-based EV remains explicitly experimental rather than a calibrated win
-probability.
+quantiles and any-cash/top-1%/first rates.
+
+The same run now publishes a **Field strength / calibration** diagnostic. It
+computes the sampled opponent field's analytic expected-FP mean, median, P90 and
+P99 using the exact sampled lineup weights, then compares those with the selected
+portfolio's mean/min/max expected FP and the H2H expected-points anchor. This is
+a diagnostic for an opponent field that is too weak or too strong; it does not
+reweight EV or change lineup selection. The ownership archive is sparse and
+selection-biased, so field-based EV is labeled **not a calibrated return
+estimate** and remains experimental until prospective contest calibration is
+materially deeper.
 
 The feed boundary is the reason for the split, not the compute: Actions prepares
 one immutable model so every visitor sees the same inputs.
