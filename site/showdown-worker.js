@@ -854,11 +854,12 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
   scored.cashRate = new Float64Array(scored.total);
   scored.topOneRate = new Float64Array(scored.total);
   scored.firstRate = new Float64Array(scored.total);
+  scored.soloFirstRate = new Float64Array(scored.total);
   scored.expectedDuplicates = new Float64Array(scored.total);
   const topOneRank = Math.max(1, Math.ceil(options.fieldSize * 0.01));
 
   for (let c = 0; c < scored.total; c++) {
-    let payoutTotal = 0, cash = 0, topOne = 0, first = 0;
+    let payoutTotal = 0, cash = 0, topOne = 0, first = 0, soloFirst = 0;
     const candidateBase = c * LINEUP_SIZE;
     const candidateKey = lineupKey(scored.ids, candidateBase, scored.superstars[c]);
     const opponentCopies = duplicateWeights.get(candidateKey) || 0;
@@ -878,7 +879,10 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
       payoutTotal += prize;
       if (prize > 0) cash++;
       if (rank <= topOneRank) topOne++;
-      if (greater < 0.5) first++;
+      if (greater < 0.5) {
+        first++;
+        if (tiedOpponents < 0.5) soloFirst++;
+      }
     }
     const expectedPayout = payoutTotal / evCount;
     const expectedProfit = expectedPayout - options.entryFee;
@@ -888,6 +892,7 @@ function applyFieldEV(scored, fieldRosters, options, progress) {
     scored.cashRate[c] = cash / evCount;
     scored.topOneRate[c] = topOne / evCount;
     scored.firstRate[c] = first / evCount;
+    scored.soloFirstRate[c] = soloFirst / evCount;
     if ((c & 255) === 0 && progress) progress(c / Math.max(scored.total, 1));
   }
   scored.fieldSummary = {
@@ -1298,6 +1303,7 @@ function describe(scored, indices, construction) {
       result.cash_rate = scored.cashRate[c];
       result.top_one_rate = scored.topOneRate[c];
       result.first_rate = scored.firstRate[c];
+      result.solo_first_rate = scored.soloFirstRate[c];
       result.expected_duplicates = scored.expectedDuplicates[c];
     }
     if (construction && construction[position]) result.construction_rule = construction[position];
