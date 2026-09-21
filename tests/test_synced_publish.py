@@ -191,7 +191,7 @@ class ActiveWeekSlateTests(unittest.TestCase):
             return selector(
                 players,
                 caps,
-                now=datetime(2026, 9, 21, 20, 0, tzinfo=timezone.utc),
+                now=datetime(2026, 9, 20, 16, 0, tzinfo=timezone.utc),
                 validate_assignments=validate_assignments,
             )
 
