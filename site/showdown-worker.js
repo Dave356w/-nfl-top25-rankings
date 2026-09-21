@@ -1372,6 +1372,7 @@ self.onmessage = (event) => {
       portfolio: describe(scored, built.chosen, built.rules),
       scenario_evaluation: built.evaluation || null,
       field_summary: scored.fieldSummary || null,
+      h2h_anchor: describe(scored, orderBy(scored, "expected").slice(0, 1)),
       strongest: describe(scored, order.slice(0, 10)),
       construction: {
         requested: options.entries,
