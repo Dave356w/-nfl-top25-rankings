@@ -42,10 +42,6 @@
       "Position": "WR"
     },
     {
-      "Name": "Quentin Johnston",
-      "Position": "WR"
-    },
-    {
       "Name": "Harold Fannin Jr",
       "Position": "TE"
     },
@@ -58,11 +54,15 @@
       "Position": "RB"
     },
     {
-      "Name": "Caleb Douglas",
+      "Name": "Demond Claiborne",
+      "Position": "RB"
+    },
+    {
+      "Name": "Malachi Fields",
       "Position": "WR"
     },
     {
-      "Name": "Demond Claiborne",
+      "Name": "Devin Singletary",
       "Position": "RB"
     }
   ]
