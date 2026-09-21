@@ -149,6 +149,62 @@ class ActiveWeekSlateTests(unittest.TestCase):
             )
 
 
+    def test_normalization_filters_next_week_before_repairing_misfiled_rows(self):
+        def row(name, position, team, salary, game_id, kickoff, home, away):
+            return {
+                "name": name,
+                "position": position,
+                "team": team,
+                "salary": salary,
+                "fppg": 10,
+                "gameCode": game_id,
+                "gameStartTime": kickoff,
+                "homeTeam": home,
+                "awayTeam": away,
+            }
+
+        payload = {
+            "players": {"result": [
+                row("Caleb Williams", "QB", "CHI", 40, "current-chi",
+                    "2026-09-20T17:00:00Z", "CHI", "MIN"),
+                # Same-week Yahoo filing error: team CHI is attached to NE-PIT.
+                row("Misfiled Bear", "WR", "CHI", 12, "current-other",
+                    "2026-09-20T17:00:00Z", "NE", "PIT"),
+                row("Patriot Receiver", "WR", "NE", 15, "current-other",
+                    "2026-09-20T17:00:00Z", "NE", "PIT"),
+                # Next week's CHI game is the ambiguity that previously made the
+                # current-week repair unable to identify CHI's one real game.
+                row("Caleb Williams", "QB", "CHI", 41, "next-chi",
+                    "2026-09-27T17:00:00Z", "GB", "CHI"),
+            ]},
+            "salaryCapInfo": {"result": [{
+                "singleGameSalaryCapMap": {
+                    "current-chi": 200,
+                    "current-other": 200,
+                    "next-chi": 200,
+                }
+            }]},
+        }
+        selector = nb.select_active_week_slate
+
+        def fixed_selector(players, caps, now=None, validate_assignments=True):
+            return selector(
+                players,
+                caps,
+                now=datetime(2026, 9, 21, 20, 0, tzinfo=timezone.utc),
+                validate_assignments=validate_assignments,
+            )
+
+        with patch.object(nb, "select_active_week_slate", side_effect=fixed_selector):
+            normalized, caps = nb.normalize_yahoo_data(payload)
+
+        repaired = normalized.loc[normalized["Name"].eq("Misfiled Bear")].iloc[0]
+        self.assertEqual(repaired["Game ID"], "current-chi")
+        self.assertEqual(repaired["Opponent"], "MIN")
+        self.assertNotIn("next-chi", set(normalized["Game ID"]))
+        self.assertEqual(set(caps), {"current-chi", "current-other"})
+
+
 class ConsistencyGateTests(unittest.TestCase):
     def setUp(self):
         self.rankings = {
