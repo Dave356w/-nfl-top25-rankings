@@ -361,6 +361,7 @@ class BrowserAgreementTests(unittest.TestCase):
     def test_the_exposure_caps_are_honoured(self):
         settings = self.payload["settings"]
         entries = len(self.js["portfolio"])
+        self.assertEqual(entries, settings["tournament_lineups"])
         cap = 1 if entries == 1 else int(entries * settings["max_player_exposure"] + 1e-9)
         counts = {}
         for lineup in self.js["portfolio"]:
@@ -492,8 +493,15 @@ class RosterRuleTests(unittest.TestCase):
                     for index in chosen
                 ))
 
-    def test_the_salary_floor_is_off_by_default(self):
+    def test_the_strategy_defaults_match_the_archived_roster_review(self):
         self.assertEqual(nb.CFG.min_salary_used_pct, 0.0)
+        self.assertEqual(nb.CFG.max_player_exposure, 0.50)
+        self.assertEqual(nb.CFG.max_superstar_exposure, 0.35)
+        self.assertEqual(nb.CFG.max_shared_players, 3)
+        self.assertEqual(nb.CFG.position_limits, {
+            "QB": (0, 2), "RB": (0, 2), "WR": (0, 3),
+            "TE": (0, 2), "DEF": (0, 1),
+        })
 
     def test_the_floor_only_removes_rosters_below_it(self):
         pool = pd.concat([

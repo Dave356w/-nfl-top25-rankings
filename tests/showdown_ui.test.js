@@ -18,8 +18,9 @@ function payload(id) {
       name: `Player ${i}`, pos: "WR", team: i < 3 ? "A" : "B", salary: 10, fp: 5,
     })),
     settings: { tournament_lineups: 20, max_shared_players: 3,
-      max_player_exposure: 0.7, max_superstar_exposure: 0.35,
-      min_salary_used_pct: 0.75, simulations: 20000, max_candidate_lineups: 25000 },
+      max_player_exposure: 0.5, max_superstar_exposure: 0.35,
+      min_salary_used_pct: 0, simulations: 20000, max_candidate_lineups: 25000,
+      position_limits: { QB: [0, 2], RB: [0, 2], WR: [0, 3], TE: [0, 2], DEF: [0, 1] } },
     reference: null,
   };
 }
@@ -159,7 +160,7 @@ test("quota switch and integer exposure counts reach the worker", async () => {
   const p = await page();
   p.node("entries").value = 5;
   p.node("entries").handlers.change();
-  assert.match(p.node("exposure-hint").textContent, /at most 3 of 5/);
+  assert.match(p.node("exposure-hint").textContent, /at most 2 of 5/);
   assert.equal(p.node("construction").value, "off");
   p.node("run").handlers.click();
   assert.equal(p.workers.at(-1).messages.at(-1).options.constructionRules.length, 0);

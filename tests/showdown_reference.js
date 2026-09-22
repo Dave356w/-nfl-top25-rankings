@@ -39,7 +39,7 @@ const options = {
   simulations,
   seed: payload.settings.random_seed,
   objective: payload.settings.showdown_objective || "tournament",
-  positionLimits: {},
+  positionLimits: payload.settings.position_limits || {},
 };
 
 worker.simulate(simulations, options.seed);

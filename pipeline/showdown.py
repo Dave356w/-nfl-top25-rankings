@@ -54,7 +54,8 @@ EXPOSED_SETTINGS = (
     "lineup_size", "simulations", "random_seed", "tournament_lineups",
     "max_candidate_lineups", "mean_candidate_reserve", "min_salary_used_pct",
     "candidate_ceiling_weight", "near_optimal_ratio", "max_player_exposure",
-    "max_superstar_exposure", "max_shared_players", "use_construction_quotas", "showdown_objective",
+    "max_superstar_exposure", "max_shared_players", "use_construction_quotas",
+    "showdown_objective", "position_limits",
 )
 
 LINEUP_METRICS = (

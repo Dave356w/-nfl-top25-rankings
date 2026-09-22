@@ -711,15 +711,18 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     floor.value = Math.round(settings.min_salary_used_pct * 100);
     el("floor-value").textContent = floor.value + "%";
     el("limits").innerHTML = POSITIONS.map(function (position) {
+      var limit = settings.position_limits && settings.position_limits[position];
+      var low = limit ? limit[0] : 0;
+      var high = limit ? limit[1] : LINEUP_SIZE;
       return '<div class="field" style="margin:0">' +
         "<label>" + position + "</label>" +
         '<div class="range-row">' +
         '<input type="number" class="limit-low" data-position="' + position +
-        '" min="0" max="5" step="1" value="0" title="Minimum ' + position +
+        '" min="0" max="5" step="1" value="' + low + '" title="Minimum ' + position +
         ' per lineup" aria-label="' + position + ' minimum">' +
         '<span class="sep">to</span>' +
         '<input type="number" class="limit-high" data-position="' + position +
-        '" min="0" max="5" step="1" value="5" title="Maximum ' + position +
+        '" min="0" max="5" step="1" value="' + high + '" title="Maximum ' + position +
         ' per lineup" aria-label="' + position + ' maximum">' +
         "</div></div>";
     }).join("");

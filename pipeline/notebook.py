@@ -64,10 +64,9 @@ class Settings:
     mean_candidate_reserve: int = 750
     max_enumeration_players: int = 36
 
-    # This is a strategy filter, not a Yahoo rule, so v3.6 defaults it off. At the
-    # previous 0.75 it removed 161,439 of the 187,697 cap-legal rosters on the
-    # 2026-09-10 SF-LA slate -- 86% of the legal space -- before the model scored
-    # one of them. Raise it to refuse lineups that leave salary unused.
+    # This is a strategy filter, not a Yahoo rule. Leave it off by default: the
+    # 50% exposure cap needs a broad enough roster pool to complete 20 entries.
+    # The candidate objective still ranks cheap weak rosters on their merits.
     min_salary_used_pct: float = 0.0
     candidate_ceiling_weight: float = 0.85
     near_optimal_ratio: float = 0.95
@@ -76,7 +75,9 @@ class Settings:
     # entries that differ by a single player; the v3.1 default produced 19 such pairs
     # out of 190 on the NE-SEA slate. Lowered to 3 so every pair of entries differs by
     # at least two players. The diversity report prints the overlap actually used.
-    max_player_exposure: float = 0.70
+    # Twenty entries therefore allow each player at most 10 times and each
+    # Superstar at most 7 times. exposure_limit deliberately rounds down.
+    max_player_exposure: float = 0.50
     max_superstar_exposure: float = 0.35
     max_shared_players: int = 3
     use_construction_quotas: bool = False
@@ -168,9 +169,17 @@ AVAILABILITY_OVERRIDES = {}
 # Pair each name with DEPTH_OVERRIDES or PROJECTION_OVERRIDES; the run warns if you do not.
 INCLUDE_BACKUP_QBS = set()
 
-# Optional strategic limits, e.g. {"QB": (0, 2), "DEF": (0, 2)}.
-# Leave empty to follow Yahoo's position-flexible single-game construction.
-POSITION_LIMITS = {}
+# Strategy defaults from the 2026 Weeks 1-2 archive, not Yahoo requirements.
+# Keep the shapes permissive: two of five best portfolios used two tight ends,
+# while none needed two defenses. QB stays optional because a minimum of one,
+# combined with two starters capped at 50%, would eliminate every two-QB build.
+POSITION_LIMITS = {
+    "QB": (0, 2),
+    "RB": (0, 2),
+    "WR": (0, 3),
+    "TE": (0, 2),
+    "DEF": (0, 1),
+}
 CFG = replace(CFG, position_limits=POSITION_LIMITS)
 
 
