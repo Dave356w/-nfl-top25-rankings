@@ -1,0 +1,441 @@
+{
+  "schema": 1,
+  "phase": "P0",
+  "as_of_utc": "2026-09-11T22:09:42.997537+00:00",
+  "source": "nflverse schedules via nflreadpy",
+  "corpus": {
+    "seasons": [
+      1999,
+      2025
+    ],
+    "scheduled_games": 7276,
+    "settled_games": 7276,
+    "unscheduled_outcomes": 0,
+    "sealed_seasons": [
+      2024,
+      2025
+    ],
+    "outcome_statistics_span": "unsealed seasons only",
+    "unsealed_settled_games": 6706,
+    "home_win_rate": 0.565,
+    "home_win_rate_ties_as_half": 0.5661,
+    "ties": 14,
+    "margin_sd": 14.617,
+    "margin_mean": 2.361,
+    "teams": 32,
+    "context_columns": [
+      "away_rest",
+      "away_team",
+      "div_game",
+      "game_id",
+      "game_type",
+      "gameday",
+      "gametime",
+      "home_rest",
+      "home_team",
+      "location",
+      "neutral",
+      "roof",
+      "season",
+      "stadium_id",
+      "surface",
+      "week"
+    ],
+    "withheld_from_context": [
+      "away_coach",
+      "away_moneyline",
+      "away_qb_id",
+      "away_qb_name",
+      "away_score",
+      "away_spread_odds",
+      "home_coach",
+      "home_moneyline",
+      "home_qb_id",
+      "home_qb_name",
+      "home_score",
+      "home_spread_odds",
+      "over_odds",
+      "overtime",
+      "referee",
+      "result",
+      "spread_line",
+      "temp",
+      "total",
+      "total_line",
+      "under_odds",
+      "wind"
+    ],
+    "per_season_outcomes_unsealed": [
+      {
+        "season": 1999,
+        "games": 259,
+        "home_win_rate": 0.5985,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.0
+      },
+      {
+        "season": 2000,
+        "games": 259,
+        "home_win_rate": 0.5637,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.0
+      },
+      {
+        "season": 2001,
+        "games": 259,
+        "home_win_rate": 0.556,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.0
+      },
+      {
+        "season": 2002,
+        "games": 267,
+        "home_win_rate": 0.588,
+        "ties": 1,
+        "closing_moneyline_coverage": 0.0
+      },
+      {
+        "season": 2003,
+        "games": 267,
+        "home_win_rate": 0.6142,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.0
+      },
+      {
+        "season": 2004,
+        "games": 267,
+        "home_win_rate": 0.5655,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.0
+      },
+      {
+        "season": 2005,
+        "games": 267,
+        "home_win_rate": 0.5843,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.0
+      },
+      {
+        "season": 2006,
+        "games": 267,
+        "home_win_rate": 0.5393,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.824
+      },
+      {
+        "season": 2007,
+        "games": 267,
+        "home_win_rate": 0.5693,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.9963
+      },
+      {
+        "season": 2008,
+        "games": 267,
+        "home_win_rate": 0.5655,
+        "ties": 1,
+        "closing_moneyline_coverage": 0.7266
+      },
+      {
+        "season": 2009,
+        "games": 267,
+        "home_win_rate": 0.573,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.9476
+      },
+      {
+        "season": 2010,
+        "games": 267,
+        "home_win_rate": 0.5543,
+        "ties": 0,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2011,
+        "games": 267,
+        "home_win_rate": 0.573,
+        "ties": 0,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2012,
+        "games": 267,
+        "home_win_rate": 0.5693,
+        "ties": 1,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2013,
+        "games": 267,
+        "home_win_rate": 0.5955,
+        "ties": 1,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2014,
+        "games": 267,
+        "home_win_rate": 0.573,
+        "ties": 1,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2015,
+        "games": 267,
+        "home_win_rate": 0.5431,
+        "ties": 0,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2016,
+        "games": 267,
+        "home_win_rate": 0.5805,
+        "ties": 2,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2017,
+        "games": 267,
+        "home_win_rate": 0.5693,
+        "ties": 0,
+        "closing_moneyline_coverage": 0.9963
+      },
+      {
+        "season": 2018,
+        "games": 267,
+        "home_win_rate": 0.5918,
+        "ties": 2,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2019,
+        "games": 267,
+        "home_win_rate": 0.5206,
+        "ties": 1,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2020,
+        "games": 269,
+        "home_win_rate": 0.4981,
+        "ties": 1,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2021,
+        "games": 285,
+        "home_win_rate": 0.5158,
+        "ties": 1,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2022,
+        "games": 284,
+        "home_win_rate": 0.5634,
+        "ties": 2,
+        "closing_moneyline_coverage": 1.0
+      },
+      {
+        "season": 2023,
+        "games": 285,
+        "home_win_rate": 0.5649,
+        "ties": 0,
+        "closing_moneyline_coverage": 1.0
+      }
+    ],
+    "per_season_coverage": [
+      {
+        "season": 1999,
+        "scheduled_games": 259,
+        "closing_moneyline_coverage": 0.0,
+        "sealed": false
+      },
+      {
+        "season": 2000,
+        "scheduled_games": 259,
+        "closing_moneyline_coverage": 0.0,
+        "sealed": false
+      },
+      {
+        "season": 2001,
+        "scheduled_games": 259,
+        "closing_moneyline_coverage": 0.0,
+        "sealed": false
+      },
+      {
+        "season": 2002,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 0.0,
+        "sealed": false
+      },
+      {
+        "season": 2003,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 0.0,
+        "sealed": false
+      },
+      {
+        "season": 2004,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 0.0,
+        "sealed": false
+      },
+      {
+        "season": 2005,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 0.0,
+        "sealed": false
+      },
+      {
+        "season": 2006,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 0.824,
+        "sealed": false
+      },
+      {
+        "season": 2007,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 0.9963,
+        "sealed": false
+      },
+      {
+        "season": 2008,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 0.7266,
+        "sealed": false
+      },
+      {
+        "season": 2009,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 0.9476,
+        "sealed": false
+      },
+      {
+        "season": 2010,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2011,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2012,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2013,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2014,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2015,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2016,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2017,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 0.9963,
+        "sealed": false
+      },
+      {
+        "season": 2018,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2019,
+        "scheduled_games": 267,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2020,
+        "scheduled_games": 269,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2021,
+        "scheduled_games": 285,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2022,
+        "scheduled_games": 284,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2023,
+        "scheduled_games": 285,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": false
+      },
+      {
+        "season": 2024,
+        "scheduled_games": 285,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": true
+      },
+      {
+        "season": 2025,
+        "scheduled_games": 285,
+        "closing_moneyline_coverage": 1.0,
+        "sealed": true
+      }
+    ]
+  },
+  "design": {
+    "rows": 7276,
+    "features": [
+      "bye_diff",
+      "crowd_absent",
+      "div_game",
+      "dome",
+      "elo_diff",
+      "home_field",
+      "neutral_site",
+      "prior_margin_diff",
+      "rest_diff",
+      "short_week_diff"
+    ],
+    "note": "Harness exercise only. The candidate feature set is fixed at P2."
+  },
+  "as_of_audit": {
+    "checkpoints": 572,
+    "audited_every_nth_week": 1,
+    "clean": true,
+    "findings": []
+  },
+  "limitations": [
+    "Schedules only. Play-by-play efficiency, rosters and injuries are not in this corpus.",
+    "Closing lines are held in a separate frame as an evaluation benchmark and are never features.",
+    "Recorded weather, starting quarterback, officials and coaches are withheld: nflverse records or restates them after the fact.",
+    "History is resolved to whole weeks, so a Thursday result is not available to that week's later games.",
+    "No model is fitted and nothing is promoted at P0.",
+    "Outcome statistics cover unsealed seasons only; coverage counts span the corpus.",
+    "The as-of audit does run over sealed weeks: it reports whether the boundary held, never what happened in those games, so it reads nothing the seal protects."
+  ]
+}
