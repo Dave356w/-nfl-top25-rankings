@@ -348,8 +348,8 @@ def _attempt_selection(
     }
 
 
-def _select_unrestricted(scored: pd.DataFrame, cfg, target: int):
-    """Original exposure/overlap selector, used when no archetypes apply."""
+def _unrestricted_attempt(ordered, cfg, target: int, balance_exposure: bool):
+    """Select once, optionally preferring the least-used feasible players."""
     max_player_count = exposure_limit(target, cfg.max_player_exposure)
     max_superstar_count = exposure_limit(target, cfg.max_superstar_exposure)
     player_counts = Counter()
@@ -357,23 +357,50 @@ def _select_unrestricted(scored: pd.DataFrame, cfg, target: int):
     selected = []
     selected_sets = []
 
-    for idx, candidate in scored.sort_values("Tournament_Score", ascending=False).iterrows():
-        ids = tuple(int(value) for value in candidate["Player_Ids"])
-        superstar = int(candidate["Superstar_Id"])
-        if any(player_counts[player] >= max_player_count for player in ids):
-            continue
-        if superstar_counts[superstar] >= max_superstar_count:
-            continue
-        candidate_set = set(ids)
-        if any(len(candidate_set & prior) > int(cfg.max_shared_players) for prior in selected_sets):
-            continue
+    selected_indices = set()
+    while len(selected) < target:
+        feasible = []
+        for rank, (idx, ids, superstar) in enumerate(ordered):
+            if idx in selected_indices:
+                continue
+            if any(player_counts[player] >= max_player_count for player in ids):
+                continue
+            if superstar_counts[superstar] >= max_superstar_count:
+                continue
+            candidate_set = set(ids)
+            if any(len(candidate_set & prior) > int(cfg.max_shared_players)
+                   for prior in selected_sets):
+                continue
+            counts = [player_counts[player] for player in ids]
+            key = (max(counts), sum(counts), superstar_counts[superstar], rank)
+            feasible.append((key, idx, ids, superstar, candidate_set))
+            if not balance_exposure:
+                break
+        if not feasible:
+            break
+        _, idx, ids, superstar, candidate_set = min(feasible, key=lambda row: row[0])
         selected.append(idx)
+        selected_indices.add(idx)
         selected_sets.append(candidate_set)
         player_counts.update(ids)
         superstar_counts.update([superstar])
-        if len(selected) == target:
-            break
     return selected
+
+
+def _select_unrestricted(scored: pd.DataFrame, cfg, target: int):
+    """Try quality-first selection, then a completion-oriented exposure balance."""
+    ordered = [
+        (idx, tuple(int(value) for value in candidate["Player_Ids"]),
+         int(candidate["Superstar_Id"]))
+        for idx, candidate in scored.sort_values(
+            "Tournament_Score", ascending=False
+        ).iterrows()
+    ]
+    quality_first = _unrestricted_attempt(ordered, cfg, target, False)
+    if len(quality_first) == target:
+        return quality_first
+    balanced = _unrestricted_attempt(ordered, cfg, target, True)
+    return balanced if len(balanced) > len(quality_first) else quality_first
 
 
 def select_portfolio(scored: pd.DataFrame, players: pd.DataFrame, cfg, rules=None):

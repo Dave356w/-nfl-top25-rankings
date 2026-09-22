@@ -181,6 +181,32 @@ computed nflverse offensive points are reported as a cross-source audit. The
 current CV and correlation constants are reused, so a strict parameter backtest
 must additionally freeze or refit those constants before each test season.
 
+To grade the exact model saved before kickoff instead of rebuilding historical
+features with the current backtester, use the immutable projection archive:
+
+```bash
+python tools/grade_archived_showdown.py \
+  --snapshot-id 2026-09-22T17:31:01Z \
+  --nflverse-fallback \
+  --output backtest_output/showdown-2026-09-22.json
+```
+
+The report never pools the two provenance classes. A portfolio present in the
+snapshot is `published_forward`. If the page lacked a salary cap before kickoff,
+the tool may add the immutable cap from Yahoo's completed series and rerun the
+saved browser model; that result is
+`reconstructed_from_pregame_snapshot`. Missing settled identities are skipped,
+not converted to zero. The completed Yahoo endpoint must expose the series before
+the report can be produced. A reconstruction uses the archived simulation count
+unless `--reconstruct-simulations` is explicitly supplied for a smoke test.
+When `--nflverse-fallback` is enabled, Yahoo settled points remain primary.
+If Yahoo has not exposed the completed series, nflverse weekly player stats are
+used to reconstruct offensive Yahoo points and play-by-play is used for DEF
+scoring, including Yahoo's points-allowed exclusions. These rows are labeled
+`nflverse_reconstructed`. A missing weekly player row is left unmatched rather
+than treated as a played zero, and nflverse cannot reconstruct a portfolio whose
+salary cap was absent from the pregame archive.
+
 ## Failure behaviour
 
 If any feed fails hard, `run_synced.py` writes neither page and exits non-zero.
@@ -519,21 +545,27 @@ all 16 games either way. What the cap unlocks is enumeration and optimization.
 Yahoo requires five players, the salary cap, and **at least one non-DEF player
 from each team**. A team defense does not satisfy that requirement.
 
-`Settings.min_salary_used_pct` is a strategy filter, not a Yahoo rule, and now
-defaults to `0.0`. At the previous `0.75` it removed 161,439 of the 187,697
-cap-legal rosters on that same slate — 86% of the legal space — before the model
-scored one of them. The candidate screen already ranks on the analytic ceiling,
-so it discards weak cheap rosters on their merits: with the floor off, only 449
-of the 25,000 retained candidates are newly admitted, none of them inside the
-top 1,000. The page keeps the slider for anyone who wants the filter back.
+`Settings.min_salary_used_pct` is a strategy filter, not a Yahoo rule, and defaults
+to `0.0`. The best lineups in the 2026 Weeks 1-2 archive left $0, $0, $1, $1 and
+$4 unused, while testing showed that a tight floor can prevent the 50% exposure
+cap from completing all 20 entries on a thin slate. The candidate screen ranks
+cheap weak rosters on their merits; raise the slider only deliberately.
 
 ### Showdown selection controls
 
-Exposure percentages round down to whole appearances among the requested entries:
-70% across five entries allows three appearances. Single-entry selection bypasses
-exposure caps and construction quotas. The page displays the permitted counts and
-refuses to present an incomplete portfolio as a completed result; incomplete
-published reference portfolios are hidden for the same reason.
+Exposure percentages round down to whole appearances among the requested entries.
+The default 50% player cap permits 10 of 20 entries; the 35% Superstar cap permits
+7 of 20. Single-entry selection bypasses exposure caps and construction quotas.
+The page displays the permitted counts and refuses to present an incomplete
+portfolio as a completed result; incomplete published reference portfolios are
+hidden for the same reason.
+
+The default strategy limits are QB 0-2, RB 0-2, WR 0-3, TE 0-2 and DEF 0-1.
+Yahoo itself imposes no position limits. A QB minimum of one would combine with
+the 50% player cap to consume every available appearance of the two starters and
+silently eliminate two-QB builds. The defaults retain those builds, the two-TE
+shapes that won two of the five reviewed portfolios, and both 3-2 and 4-1 team
+splits. Construction quotas remain disabled.
 
 Roster-shape quotas are optional. New builds default `use_construction_quotas` to
 `False`; the page can enable the existing preset mix. These quotas can exclude

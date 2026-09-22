@@ -1272,28 +1272,52 @@ function exposureLimit(entries, fraction) {
   return Math.min(entries, Math.floor(entries * fraction + 1e-9));
 }
 
-function unrestrictedPortfolio(scored, order, options, target) {
+function unrestrictedAttempt(scored, order, options, target, balanceExposure) {
   const maxPlayer = exposureLimit(target, options.maxPlayerExposure);
   const maxSuperstar = exposureLimit(target, options.maxSuperstarExposure);
   const playerCounts = new Map();
   const superstarCounts = new Map();
   const chosen = [];
   const sets = [];
-  for (const candidate of order) {
-    const members = candidateMembers(scored, candidate);
-    if (members.some((id) => (playerCounts.get(id) || 0) >= maxPlayer)) continue;
-    const superstar = scored.superstars[candidate];
-    if ((superstarCounts.get(superstar) || 0) >= maxSuperstar) continue;
-    const set = new Set(members);
-    if (overlapsPrior(set, sets, options.maxShared)) continue;
+  while (chosen.length < target) {
+    let candidate = null, members = null, superstar = null, set = null, bestKey = null;
+    for (let rank = 0; rank < order.length; rank++) {
+      const possible = order[rank];
+      if (chosen.includes(possible)) continue;
+      const possibleMembers = candidateMembers(scored, possible);
+      if (possibleMembers.some((id) => (playerCounts.get(id) || 0) >= maxPlayer)) continue;
+      const possibleSuperstar = scored.superstars[possible];
+      if ((superstarCounts.get(possibleSuperstar) || 0) >= maxSuperstar) continue;
+      const possibleSet = new Set(possibleMembers);
+      if (overlapsPrior(possibleSet, sets, options.maxShared)) continue;
+      if (!balanceExposure) {
+        candidate = possible; members = possibleMembers;
+        superstar = possibleSuperstar; set = possibleSet;
+        break;
+      }
+      const counts = possibleMembers.map((id) => playerCounts.get(id) || 0);
+      const key = [Math.max(...counts), counts.reduce((a, b) => a + b, 0),
+        superstarCounts.get(possibleSuperstar) || 0, rank];
+      if (bestKey === null || key.some((value, i) =>
+        value < bestKey[i] && key.slice(0, i).every((prior, j) => prior === bestKey[j]))) {
+        candidate = possible; members = possibleMembers;
+        superstar = possibleSuperstar; set = possibleSet; bestKey = key;
+      }
+    }
+    if (candidate === null) break;
     chosen.push(candidate);
     sets.push(set);
     for (const id of members) playerCounts.set(id, (playerCounts.get(id) || 0) + 1);
     superstarCounts.set(superstar, (superstarCounts.get(superstar) || 0) + 1);
-    if (chosen.length === target) break;
   }
-  const result = { chosen, sets, rules: chosen.map(() => null), unfilled: {} };
-  return result;
+  return { chosen, sets, rules: chosen.map(() => null), unfilled: {} };
+}
+
+function unrestrictedPortfolio(scored, order, options, target) {
+  const qualityFirst = unrestrictedAttempt(scored, order, options, target, false);
+  if (qualityFirst.chosen.length === target) return qualityFirst;
+  const balanced = unrestrictedAttempt(scored, order, options, target, true);
+  return balanced.chosen.length > qualityFirst.chosen.length ? balanced : qualityFirst;
 }
 
 function selectionAttempt(scored, order, options, rules, ruleCounts, ruleData, values, mode) {
