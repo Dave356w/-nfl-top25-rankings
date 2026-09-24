@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-24T22:58:23Z",
-  "snapshot_id": "2026-09-24T22:58:23Z",
+  "generated_utc": "2026-09-24T23:44:41Z",
+  "snapshot_id": "2026-09-24T23:44:41Z",
   "run_date": "2026-09-24",
   "top_n": 25,
   "positions": [
@@ -2120,7 +2120,7 @@
     "Yahoo salary-position-depth regression (trained through 2025)": 466
   },
   "log": [
-    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-24T22:58:23Z)",
+    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-24T23:44:41Z)",
     "  nflverse: depth chart 2026: 582 offensive rows, snapshot 2026-09-24 12:42 UTC",
     "  nflverse: roster status 2026: 2,543 rows",
     "  nflverse: injury report week 3, 259 rows.",
