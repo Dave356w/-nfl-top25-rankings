@@ -127,6 +127,12 @@ class Settings:
     # expectation input to the fitted projection model.
     role_salary_rank_weight: float = 0.5
 
+    # Promote same-team teammates past a player who is ruled Out or off the active
+    # roster, before roles, opportunity ranks and projections are computed. With
+    # this off, an injured starter's backup is projected (or, at QB, filtered)
+    # as a backup until the published chart catches up.
+    promote_past_unavailable: bool = True
+
     nflverse_season: int | None = None  # None infers the season from the slate
     nflverse_timeout: int = 30
     nflverse_cache_dir: str = "nflverse_cache"
@@ -1162,6 +1168,102 @@ def apply_nflverse_injuries(players, injuries):
                 out.at[index, column] = row[column]
     is_out = out["report_status"].fillna("").astype(str).str.casefold().eq("out")
     return out.loc[~is_out].reset_index(drop=True), out.loc[is_out].reset_index(drop=True)
+
+
+def unavailable_chart_keys(roster_status, injuries, cfg=None):
+    """Team|name keys the chart should no longer count toward anyone's depth.
+
+    Only explicit evidence counts: a weekly roster status outside the allowed set
+    (IR, practice squad, cut...) or an official Out designation. A player the
+    roster feed simply has no row for is a possible join failure, not a vacancy,
+    so nobody is promoted past him. An AVAILABILITY_OVERRIDES entry saying a
+    player is available keeps him on the chart.
+    """
+    cfg = _cfg(cfg)
+    allowed = set(cfg.nflverse_available_status)
+    forced_available = {
+        normalize_person_name(name)
+        for name, value in (AVAILABILITY_OVERRIDES or {}).items() if bool(value)
+    }
+    reasons = {}
+    if roster_status is not None and len(roster_status):
+        status = roster_status["status"].astype(str)
+        blocked = roster_status[~status.isin(allowed)]
+        for team, name, code in zip(blocked["team"], blocked["player_name"], blocked["status"]):
+            key = str(team).upper() + "|" + normalize_person_name(name)
+            reasons[key] = NFLVERSE_STATUS_MEANING.get(str(code), f"status {code}")
+    if injuries is not None and len(injuries) and "report_status" in injuries:
+        out = injuries[
+            injuries["report_status"].fillna("").astype(str).str.casefold().eq("out")
+        ]
+        for key in out["_key"]:
+            reasons[str(key)] = "ruled Out"
+    return {
+        key: reason for key, reason in reasons.items()
+        if key.split("|", 1)[1] not in forced_available
+    }
+
+
+def promote_past_unavailable(depth_chart, unavailable):
+    """Move teammates up the chart past players who will not play.
+
+    The nflverse chart often still lists an injured starter at the top of his
+    slot for days after he is ruled out, which leaves his replacement projected
+    as a backup and, at quarterback, filtered out entirely as one. Removing the
+    unavailable rows and recomputing the flat rank and the per-slot tier promotes
+    exactly the players behind them. A chart that already reflects the injury is
+    unchanged, so the step is safe to run every day.
+
+    Pure function. Returns the promoted chart and one row per promoted player.
+    """
+    columns = ["Team", "Position", "Player", "Role slot", "Old rank", "New rank",
+               "Old tier", "New tier", "Replacing"]
+    if depth_chart is None or depth_chart.empty or not unavailable:
+        return depth_chart, pd.DataFrame(columns=columns)
+    chart = depth_chart.copy()
+    keys = chart["team"].astype(str).str.upper() + "|" + chart["player_name"].map(normalize_person_name)
+    gone = keys.isin(set(unavailable))
+    if not gone.any():
+        return depth_chart, pd.DataFrame(columns=columns)
+
+    position = chart["pos_abb"].replace(NFLVERSE_POSITION_ALIASES)
+    affected = set(zip(chart.loc[gone, "team"], position[gone]))
+    vacated = {}
+    for team, pos, name, key in zip(chart.loc[gone, "team"], position[gone],
+                                    chart.loc[gone, "player_name"], keys[gone]):
+        vacated.setdefault((team, pos), []).append(f"{name} ({unavailable[key]})")
+
+    before = chart.loc[~gone].copy()
+    kept = before.copy()
+    kept["_pos"] = position[~gone]
+    kept["pos_rank"] = pd.to_numeric(kept["pos_rank"], errors="coerce")
+    in_affected = [(t, p) in affected for t, p in zip(kept["team"], kept["_pos"])]
+    subset = kept[in_affected].sort_values(["team", "_pos", "pos_rank"], na_position="last")
+    compact = (subset.groupby(["team", "_pos"]).cumcount() + 1).astype(float)
+    compact[subset["pos_rank"].isna()] = np.nan
+    kept.loc[subset.index, "pos_rank"] = compact
+    kept = add_slot_role_tiers(kept.drop(columns=["_pos"]))
+
+    rows = []
+    old_rank = pd.to_numeric(before["pos_rank"], errors="coerce")
+    old_tier = pd.to_numeric(before.get("Role_Tier"), errors="coerce") if "Role_Tier" in before else old_rank
+    for index in subset.index:
+        new_rank, new_tier = kept.at[index, "pos_rank"], kept.at[index, "Role_Tier"]
+        if old_rank[index] == new_rank and old_tier[index] == new_tier:
+            continue
+        team, pos = kept.at[index, "team"], position[index]
+        rows.append({
+            "Team": team,
+            "Position": pos,
+            "Player": kept.at[index, "player_name"],
+            "Role slot": kept.at[index, "Role_Slot"],
+            "Old rank": old_rank[index],
+            "New rank": new_rank,
+            "Old tier": old_tier[index],
+            "New tier": new_tier,
+            "Replacing": ", ".join(vacated[(team, pos)]),
+        })
+    return kept, pd.DataFrame(rows, columns=columns)
 
 
 def apply_nflverse_roles(players, report, cfg=None):
@@ -2979,6 +3081,9 @@ def prepare_slate_pool(cfg=None, purpose=""):
     nflverse_report = pd.DataFrame()
     nflverse_applied = pd.DataFrame()
     nflverse_blocked = pd.DataFrame()
+    injury_report = pd.DataFrame()
+    injury_removed = pd.DataFrame()
+    depth_promotions = pd.DataFrame()
     if cfg.use_nflverse:
         first_kickoff = games.iloc[0]["Game Time"]
         season = cfg.nflverse_season or infer_season(first_kickoff)
@@ -2987,6 +3092,30 @@ def prepare_slate_pool(cfg=None, purpose=""):
         )
         for note in notes:
             print(f"  nflverse: {note}")
+        # The injury report is read before roles are assigned so a teammate
+        # behind an Out player is promoted before his projection is computed.
+        try:
+            injury_report, injury_week = fetch_nflverse_injury_report(season, cfg)
+            print(
+                f"  nflverse: injury report week {injury_week}, "
+                f"{len(injury_report)} rows."
+            )
+        except Exception as exc:
+            injury_report = pd.DataFrame()
+            warnings.warn(f"nflverse injury report unavailable: {exc}")
+        if cfg.promote_past_unavailable and depth_chart is not None:
+            depth_chart, depth_promotions = promote_past_unavailable(
+                depth_chart,
+                unavailable_chart_keys(roster_status, injury_report, cfg),
+            )
+            for row in depth_promotions.to_dict("records"):
+                print(
+                    f"  Depth promotion: {row['Player']} ({row['Team']} "
+                    f"{row['Position']}) "
+                    f"{role_label(row['Position'], row['Old tier'])} -> "
+                    f"{role_label(row['Position'], row['New tier'])}, "
+                    f"replacing {row['Replacing']}"
+                )
         if depth_chart is not None or roster_status is not None:
             nflverse_report = build_nflverse_role_report(
                 players, depth_chart, roster_status, cfg
@@ -3000,12 +3129,8 @@ def prepare_slate_pool(cfg=None, purpose=""):
                 "of the skill pool."
             )
 
-    players = apply_opportunity_ranks(players, cfg)
-    # Recompute after the chart establishes the final role tier. The fitted model
-    # already contains the depth effect, so there is no second depth haircut.
-    players = add_projection_priors(players, PROJECTION_OVERRIDES)
-    players["Baseline_Projected_FP"] = players["Projected_FP"]
-
+    # Unavailable players leave the pool before opportunity is ranked, so the
+    # salary side of the blend promotes the teammates behind them as well.
     if cfg.use_nflverse and not nflverse_report.empty:
         players, nflverse_blocked = apply_nflverse_availability(
             players, nflverse_report, cfg
@@ -3014,19 +3139,15 @@ def prepare_slate_pool(cfg=None, purpose=""):
             print(
                 f"  Availability filter removed {len(nflverse_blocked)} player(s)."
             )
-
-    injury_report = pd.DataFrame()
-    injury_removed = pd.DataFrame()
     if cfg.use_nflverse:
-        try:
-            injury_report, injury_week = fetch_nflverse_injury_report(season, cfg)
-            players, injury_removed = apply_nflverse_injuries(players, injury_report)
-            print(
-                f"  nflverse: injury report week {injury_week}, "
-                f"{len(injury_report)} rows; removed {len(injury_removed)} listed Out."
-            )
-        except Exception as exc:
-            warnings.warn(f"nflverse injury report unavailable: {exc}")
+        players, injury_removed = apply_nflverse_injuries(players, injury_report)
+        print(f"  Injury report removed {len(injury_removed)} player(s) listed Out.")
+
+    players = apply_opportunity_ranks(players, cfg)
+    # Recompute after the chart establishes the final role tier. The fitted model
+    # already contains the depth effect, so there is no second depth haircut.
+    players = add_projection_priors(players, PROJECTION_OVERRIDES)
+    players["Baseline_Projected_FP"] = players["Projected_FP"]
 
     players, backup_qbs_removed = apply_default_role_filters(
         players, INCLUDE_BACKUP_QBS, cfg
@@ -3049,6 +3170,7 @@ def prepare_slate_pool(cfg=None, purpose=""):
         "nflverse_removed": nflverse_blocked,
         "injury_report": injury_report,
         "injury_removed": injury_removed,
+        "depth_promotions": depth_promotions,
         "backup_qbs_removed": backup_qbs_removed,
         "excluded": sorted(excluded),
     }
@@ -3162,6 +3284,7 @@ def run_position_rankings(
         "nflverse_depth_applied": nflverse_applied,
         "nflverse_removed": nflverse_blocked,
         "injury_removed": slate["injury_removed"],
+        "depth_promotions": slate.get("depth_promotions", pd.DataFrame()),
         "csv": csv_path,
     }
 

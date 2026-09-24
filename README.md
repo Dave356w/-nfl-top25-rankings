@@ -57,6 +57,26 @@ keeps the role tier; a straight swap of two adjacent players is decided by the
 salary expectation. `Settings.role_salary_rank_weight` sets the balance — 0.0
 trusts the chart alone, 1.0 ignores it.
 
+### Teammates move up when a player ahead of them is out
+
+The published chart can keep an injured starter at the top of his slot for days
+after he is ruled out. So before any role or projection is computed, the run
+reads the injury report and weekly roster, takes every player listed **Out** or
+off the active roster (IR, practice squad, cut…) off the chart, and recomputes
+the flat rank and per-slot tier for the teammates behind him. Those players are
+also removed from the Yahoo pool before the salary ordering is ranked, so both
+halves of the opportunity blend promote the replacement.
+
+Only the injured player's own slot moves: if a starting receiver is out, the
+second man at *his* slot becomes a starter; the other parallel starters are
+unchanged. A backup quarterback whose starter is out becomes tier 1, gets the
+starter's depth coefficient in the regression, and is no longer dropped by the
+backup-QB filter. A chart that already reflects the injury is left as is. Each
+promotion is printed in the run log and published as `depth_promotions` in
+`latest.json`. `Questionable` and `Doubtful` do not trigger promotion;
+`AVAILABILITY_OVERRIDES` keeps a named player on the chart, and
+`Settings.promote_past_unavailable = False` turns the step off.
+
 ## Setup (one time)
 
 1. **Enable Pages.** Settings → Pages → *Build and deployment* → Source:

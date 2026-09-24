@@ -678,6 +678,12 @@ footer{
       "Yahoo salary model + NFLVerse depth, roster and injury reports" +
       (d.availability_removed
         ? ". Availability filter removed " + d.availability_removed + " player(s)."
+        : "") +
+      ((d.depth_promotions || []).length
+        ? ". Promoted past injuries: " + d.depth_promotions.map(function (p) {
+            return p.player + " (" + p.team + " " + p.position + ", " + p.role +
+              " for " + p.replacing + ")";
+          }).join("; ") + "."
         : "");
 
     el("log").textContent = (d.log || []).join("\n") || "No log recorded.";
