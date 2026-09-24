@@ -1529,7 +1529,9 @@ function portfolio(scored, order, options) {
 
 /* ---------- multi-entry H2H ---------------------------------------------- */
 
-const H2H_MODES = ["repeat", "rotate", "next_best"];
+const H2H_MODES = ["top_stars", "repeat", "rotate", "next_best"];
+const H2H_STAR_POOL = 5;       // the game's top five projected players are the Superstars
+const H2H_FILLER_POOL = 10;    // ranks 6-10 are the preferred fillers
 const H2H_SHARP_OPPONENTS = 100;
 const H2H_PUBLIC_OPPONENTS = 400;
 const H2H_MAX_ENTRIES = 50;
@@ -1547,8 +1549,15 @@ const H2H_MAX_ENTRIES = 50;
  *              player that fits is swapped in -- one-swap rosters first, then
  *              two-swap, each in order of expected points
  *   next_best  the highest-expected distinct pairs in order
+ *   top_stars  the game's five highest-projected players take turns as
+ *              Superstar, round-robin. Round one gives each its best lineup;
+ *              later rounds keep rotating the same five but change the
+ *              supporting players, preferring the players ranked 6-10 as
+ *              fillers: a lineup whose other four all come from the top ten
+ *              comes first, and when the cap allows none, the one with the
+ *              fewest players from outside it
  *
- * rotate and next_best respect the H2H exposure limits (a player, or a
+ * top_stars, rotate and next_best respect the H2H exposure limits (a player, or a
  * Superstar, in at most that share of the entries); the salary cap, salary
  * floor, position limits and exclusions hold because every roster comes from
  * the run's own enumeration. repeat is one lineup by definition, so it is the
@@ -1641,7 +1650,65 @@ function h2hMultiEntry(scored, options, rosters) {
     }
   }
 
+  // Top-five Superstars, round-robin, with ranks 6-10 as preferred fillers.
+  function topStarRounds() {
+    const source = rosters && rosters.ids ? rosters : null;
+    const pool = new Set();
+    if (source) for (const id of source.ids) pool.add(id);
+    else for (let c = 0; c < scored.total; c++) candidateMembers(scored, c).forEach((id) => pool.add(id));
+    const ranked = Array.from(pool).sort((a, b) => (fp(b) - fp(a)) || (a - b));
+    const stars = ranked.slice(0, H2H_STAR_POOL);
+    const topTen = new Set(ranked.slice(0, H2H_FILLER_POOL));
+    const fillerSet = new Set(ranked.slice(H2H_STAR_POOL, H2H_FILLER_POOL));
+    const lists = stars.map((star) => {
+      const offers = [];
+      const push = (ids) => {
+        if (ids.indexOf(star) < 0) return;
+        const entry = pair(ids, star);
+        entry.outsiders = entry.ids.filter((id) => id !== star && !topTen.has(id)).length;
+        offers.push(entry);
+      };
+      if (source) {
+        for (let r = 0; r < source.salary.length; r++) {
+          push(Array.from(source.ids.subarray(r * LINEUP_SIZE, (r + 1) * LINEUP_SIZE)));
+        }
+      } else {
+        for (const c of order) if (scored.superstars[c] === star) push(candidateMembers(scored, c));
+      }
+      return {
+        first: offers.slice().sort(byExpected),
+        later: offers.slice().sort((a, b) => (a.outsiders - b.outsiders) || byExpected(a, b)),
+      };
+    });
+
+    const chosen = [], seen = new Set(), used = new Map(), starred = new Map();
+    const take = (entry, round) => {
+      const key = keyOf(entry);
+      if (seen.has(key)) return false;
+      if ((starred.get(entry.superstar) || 0) >= starLimit) return false;
+      if (entry.ids.some((id) => (used.get(id) || 0) >= playerLimit)) return false;
+      seen.add(key);
+      const { outsiders, ...clean } = entry;
+      chosen.push({ ...clean, round, fillers: entry.ids.filter((id) => fillerSet.has(id)) });
+      for (const id of entry.ids) used.set(id, (used.get(id) || 0) + 1);
+      starred.set(entry.superstar, (starred.get(entry.superstar) || 0) + 1);
+      return true;
+    };
+    for (let round = 1; chosen.length < count; round++) {
+      let added = false;
+      for (const list of lists) {
+        if (chosen.length === count) break;
+        const offers = round === 1 ? list.first : list.later;
+        for (const entry of offers) if (take(entry, round)) { added = true; break; }
+      }
+      if (!added) break;
+    }
+    return { entries: chosen, stars, fillers: Array.from(fillerSet) };
+  }
+  const topStars = topStarRounds();
+
   const modes = {
+    top_stars: topStars.entries,
     repeat: Array.from({ length: count }, () => best),
     rotate: fill(rotationThenSwaps()),
     next_best: fill(order.map(fromCandidate)),
@@ -1683,7 +1750,8 @@ function h2hMultiEntry(scored, options, rosters) {
 
   const result = { entries: count, opponents: {
     sharp: sharp.length, public: publicField.length,
-  }, limits: { player: playerLimit, superstar: starLimit }, modes: {} };
+  }, limits: { player: playerLimit, superstar: starLimit },
+  pools: { superstars: topStars.stars, fillers: topStars.fillers }, modes: {} };
   for (const mode of H2H_MODES) {
     result.modes[mode] = { entries: modes[mode], filled: modes[mode].length };
   }

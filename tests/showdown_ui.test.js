@@ -385,3 +385,25 @@ test("head-to-head still shows when the tournament portfolio cannot be filled", 
   assert.equal(p.node("h2h-multi-wrap").hidden, false);
   assert.match(p.node("h2h-multi").innerHTML, /win vs sharp 60\.0%/);
 });
+
+test("top-5 Superstar entries show their round and fillers", async () => {
+  const p = await page();
+  const stats = { expected_wins: 1.1, win_rate: .55, sd_wins: .7, zero_wins: .1,
+    all_wins: .3, winning_record: .3, per_entry: [.6, .5] };
+  const entries = [
+    { ids: [0, 1, 2, 3, 4], superstar: 0, expected_fp: 30, salary: 50, round: 1, fillers: [] },
+    { ids: [0, 1, 2, 3, 4], superstar: 1, expected_fp: 29, salary: 50, round: 2, fillers: [3, 4] },
+  ];
+  p.workers[0].emit({ type: "result", valid_rosters: 1, candidates_scored: 1,
+    timing: { total: 10 }, diversity: null, field_summary: null, portfolio: [],
+    h2h_anchor: [{ ids: [0, 1, 2, 3, 4], superstar: 0, salary: 50, expected_fp: 30 }],
+    h2h_multi: { entries: 2, opponents: { sharp: 100, public: 400 },
+      limits: { player: 2, superstar: 1 },
+      pools: { superstars: [0, 1, 2], fillers: [3, 4] },
+      modes: { top_stars: { entries, filled: 2, sharp: stats, public: stats } } } });
+  assert.match(p.node("h2h-compare").innerHTML, /Top-5 Superstars/);
+  assert.match(p.node("h2h-multi").innerHTML, /round 1</);
+  assert.match(p.node("h2h-multi").innerHTML, /round 2 · fillers Player 3, Player 4/);
+  assert.match(p.node("h2h-multi-note").textContent, /Top-5 Superstars: Player 0, Player 1, Player 2/);
+  assert.match(p.node("h2h-multi-note").textContent, /fillers \(ranks 6–10\): Player 3, Player 4/);
+});

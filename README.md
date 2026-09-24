@@ -320,8 +320,12 @@ estimate** and remains experimental until prospective contest calibration is
 materially deeper.
 
 **Multi-entry head-to-head.** Set *Head-to-head entries* (1–50) and the run
-also prices that many separate one-on-one contests, filled three ways:
-**rotate Superstar, then swaps** (the top lineup's five players with the 1.5×
+also prices that many separate one-on-one contests, filled four ways:
+**top-5 Superstars, 6–10 fillers** (the game's five highest-projected players
+take turns as Superstar; round one gives each its best lineup, and later rounds
+keep rotating them while changing the supporting players, preferring lineups
+whose other four all come from the top ten and, when the cap allows none, the
+fewest from outside it), **rotate Superstar, then swaps** (the top lineup's five players with the 1.5×
 slot moved down the other four by projection; once those five are used, the
 next-best player that fits the cap and position rules is swapped in, one-swap
 rosters first and then two-swap, each best first), **repeat top lineup**, and
@@ -329,7 +333,8 @@ rosters first and then two-swap, each best first), **repeat top lineup**, and
 the top Superstar and swap a supporting player). *H2H max player exposure* and
 *H2H max Superstar exposure* cap how many of those entries one player or one
 Superstar may appear in (1 means no limit; they are separate from the
-tournament limits). Rotation and next-best entries respect them and say how
+tournament limits — 0.25 gives each top-5 Superstar a quarter of the entries).
+Top-5, rotation and next-best entries respect them and say how
 many they could fill; repeat is the one-lineup baseline and ignores them. Every
 roster comes from the run's own enumeration, so the salary cap, salary floor,
 position limits and exclusions always hold. Each entry has its own opponent, drawn either from a

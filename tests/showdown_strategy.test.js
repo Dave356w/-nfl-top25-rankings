@@ -326,3 +326,37 @@ test('multi-entry H2H: rotation and next-best respect the H2H exposure limits', 
   // Repeat is the one-lineup baseline and is not limited.
   assert.equal(fixture.modes.repeat.entries.length, entries);
 });
+
+test('multi-entry H2H: top-5 Superstars take turns, then ranks 6-10 fill in', () => {
+  const f = h2hFixture(12);
+  const options = {...f.options, h2hSuperstarExposure: 0.25};
+  w.setModel(f.payload);
+  w.simulate(options.simulations, options.seed);
+  const rosters = w.enumerate(f.payload.players.map((_, i) => i), options);
+  const scored = w.score(rosters, w.screen(rosters, options), options, () => {});
+  const result = w.h2hMultiEntry(scored, options, rosters);
+  const byFp = f.payload.players.map((p, i) => i).sort((a, b) =>
+    (f.payload.players[b].fp - f.payload.players[a].fp) || (a - b));
+  assert.deepEqual(result.pools.superstars, byFp.slice(0, 5));
+  assert.deepEqual(result.pools.fillers.slice().sort(), byFp.slice(5, 10).sort());
+  const entries = result.modes.top_stars.entries;
+  assert.equal(entries.length, 12);
+  // Round one: each top-5 player as Superstar once, in projection order.
+  assert.deepEqual(entries.slice(0, 5).map((e) => e.superstar), byFp.slice(0, 5));
+  assert.ok(entries.slice(0, 5).every((e) => e.round === 1));
+  // 12 entries at 0.25 exposure: no Superstar more than three times.
+  const starred = new Map();
+  entries.forEach((e) => starred.set(e.superstar, (starred.get(e.superstar) || 0) + 1));
+  assert.deepEqual(result.limits.superstar, 3);
+  assert.ok(Math.max(...starred.values()) <= 3);
+  assert.ok(entries.every((e) => byFp.slice(0, 5).includes(e.superstar)));
+  // Later rounds keep the other four inside the top ten while the cap allows it.
+  const topTen = new Set(byFp.slice(0, 10));
+  for (const e of entries.filter((x) => x.round > 1)) {
+    assert.ok(e.ids.every((id) => topTen.has(id)), `round ${e.round} lineup uses a player outside the top ten`);
+    assert.ok(e.salary <= 120);
+    assert.deepEqual(e.fillers.slice().sort(), e.ids.filter((id) => result.pools.fillers.includes(id)).sort());
+  }
+  const key = (e) => e.ids.slice().sort((a, b) => a - b).join(',') + '*' + e.superstar;
+  assert.equal(new Set(entries.map(key)).size, 12);
+});

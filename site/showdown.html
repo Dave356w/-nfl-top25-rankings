@@ -380,9 +380,11 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
               <input type="number" id="h2h-superstar-exposure" min="0.05" max="1" step="0.05" value="1">
             </div>
           </div>
-          <div class="hint" style="margin:-6px 0 13px">
-            Share of the head-to-head entries one player, or one Superstar, may appear in.
-            1 means no limit. Separate from the tournament limits above.
+          <div class="field">
+            <div class="hint" style="margin-top:-8px">
+              Share of the head-to-head entries one player, or one Superstar, may appear in.
+              1 means no limit. Separate from the tournament limits above.
+            </div>
           </div>
           <div class="hint" id="exposure-hint"></div>
           <div class="field">
@@ -446,6 +448,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
             <div class="field">
               <label for="h2h-mode">Fill <span id="h2h-count">3</span> head-to-head entries by</label>
               <select id="h2h-mode">
+                <option value="top_stars">Top-5 Superstars in turn, ranks 6&ndash;10 as fillers</option>
                 <option value="rotate">Rotating the Superstar, then next-best player swaps</option>
                 <option value="repeat">Repeating the top lineup</option>
                 <option value="next_best">Next-best lineups</option>
@@ -1378,6 +1381,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
   /* ---------- multi-entry head-to-head ---------- */
   var H2H_MODES = [
+    ["top_stars", "Top-5 Superstars, 6–10 fillers"],
     ["rotate", "Rotate Superstar, then swaps"],
     ["repeat", "Repeat top lineup"],
     ["next_best", "Next-best lineups"]
@@ -1399,7 +1403,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     var wrap = el("h2h-multi-wrap");
     if (!multi || !multi.modes) { wrap.hidden = true; return; }
     wrap.hidden = false;
-    var picked = multi.modes[el("h2h-mode").value] ? el("h2h-mode").value : "rotate";
+    var picked = multi.modes[el("h2h-mode").value] ? el("h2h-mode").value
+      : H2H_MODES.map(function (pair) { return pair[0]; })
+          .filter(function (key) { return multi.modes[key]; })[0];
     el("h2h-count").textContent = multi.entries;
 
     el("h2h-compare").innerHTML =
@@ -1428,8 +1434,16 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       "columns are against a sharp opponent (one of the " + multi.opponents.sharp +
       " highest-projected lineups); the last is against the public ownership prior. " +
       "Neither opponent model is calibrated to real H2H contests." +
+      (multi.pools && multi.pools.superstars
+        ? " Top-5 Superstars: " + multi.pools.superstars.map(function (id) {
+            return state.payload.players[id].name; }).join(", ") +
+          "; fillers (ranks 6–10): " + multi.pools.fillers.map(function (id) {
+            return state.payload.players[id].name; }).join(", ") +
+          ". Later rounds prefer lineups whose other four all come from the top ten; " +
+          "when the cap allows none, the fewest from outside it."
+        : "") +
       (multi.limits && (multi.limits.player < multi.entries || multi.limits.superstar < multi.entries)
-        ? " Rotation and next-best entries hold each player to " + multi.limits.player +
+        ? " Top-5, rotation and next-best entries hold each player to " + multi.limits.player +
           " and each Superstar to " + multi.limits.superstar + " of " + multi.entries +
           " entries; repeating the top lineup is shown as the baseline and ignores them."
         : "") +
@@ -1447,7 +1461,13 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           text(player.name) + " <small>" + text(player.pos) + " " + money(player.salary) +
           "</small></span>";
       }).join("");
-      var how = !entry.swap ? (picked === "rotate" ? "Superstar rotation" : "")
+      var names = function (ids) {
+        return ids.map(function (id) { return players[id].name; }).join(", ");
+      };
+      var how = entry.round !== undefined
+        ? "round " + entry.round + (entry.round > 1 && entry.fillers && entry.fillers.length
+            ? " · fillers " + names(entry.fillers) : "")
+        : !entry.swap ? (picked === "rotate" ? "Superstar rotation" : "")
         : "swap in " + entry.swap["in"].map(function (id) { return players[id].name; }).join(", ") +
           " for " + entry.swap.out.map(function (id) { return players[id].name; }).join(", ");
       var sharp = mode.sharp && mode.sharp.per_entry ? mode.sharp.per_entry[i] : NaN;
