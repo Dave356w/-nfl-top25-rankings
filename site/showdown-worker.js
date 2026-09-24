@@ -1527,6 +1527,144 @@ function portfolio(scored, order, options) {
   return attempts[0];
 }
 
+/* ---------- multi-entry H2H ---------------------------------------------- */
+
+const H2H_MODES = ["repeat", "rotate", "next_best"];
+const H2H_SHARP_OPPONENTS = 100;
+const H2H_PUBLIC_OPPONENTS = 400;
+const H2H_MAX_ENTRIES = 10;
+
+/* Several separate head-to-head contests, each against its own opponent.
+ *
+ * Expected wins is the sum of each entry's win probability, whatever the
+ * entries are. What the choice of entries changes is how the wins are spread:
+ * every entry is scored in the same game, so entries that share players rise
+ * and fall together. Three ways to fill N entries are compared:
+ *
+ *   repeat     the highest-expected (roster, superstar) pair, N times
+ *   rotate     that pair's roster, the superstar moved down the other four
+ *              players in order of expected points, cycling past five
+ *   next_best  the N highest-expected distinct pairs
+ *
+ * Opponents are drawn independently per contest from two models: "sharp" is
+ * uniform over the highest-expected pairs, "public" is the ownership prior the
+ * GPP field uses, priced for a two-entry contest. Neither is calibrated; they
+ * bracket a skilled and a casual opponent.
+ */
+function h2hMultiEntry(scored, options) {
+  const players = model.players;
+  const requested = Math.floor(Number(options.h2hEntries) || 3);
+  const count = Math.max(1, Math.min(H2H_MAX_ENTRIES, requested));
+  const order = orderBy(scored, "expected");
+  if (!order.length) return null;
+  const fp = (id) => Number(players[id].fp) || 0;
+  const pair = (ids, superstar) => {
+    let expected = 0, salary = 0;
+    for (const id of ids) { expected += fp(id); salary += Number(players[id].salary) || 0; }
+    return { ids: Array.from(ids), superstar, expected_fp: expected + 0.5 * fp(superstar), salary };
+  };
+  const fromCandidate = (c) => pair(candidateMembers(scored, c), scored.superstars[c]);
+
+  const best = fromCandidate(order[0]);
+  const stars = best.ids.slice().sort((a, b) => (fp(b) - fp(a)) || (a - b));
+  // The best pair's own superstar first, then the rest by expected points.
+  stars.splice(stars.indexOf(best.superstar), 1);
+  stars.unshift(best.superstar);
+  const modes = {
+    repeat: Array.from({ length: count }, () => best),
+    rotate: Array.from({ length: count }, (_, i) => pair(best.ids, stars[i % stars.length])),
+    next_best: order.slice(0, count).map(fromCandidate),
+  };
+
+  // Opponents: sharp from the scored candidates, public from every legal
+  // roster of the whole pool, so a visitor's exclusions do not shape the field.
+  const sharp = order.slice(0, Math.min(H2H_SHARP_OPPONENTS, order.length)).map(fromCandidate);
+  const everyone = Int32Array.from({ length: players.length }, (_, i) => i);
+  const field = enumerate(everyone, { ...options, minSalaryPct: 0, positionLimits: {} });
+  const own = ownershipRates({
+    fieldSize: 2, entryFee: Number.isFinite(options.entryFee) ? options.entryFee : 5,
+  });
+  const weights = rosterFieldProbabilities(field, own, superstarOwnershipRates(own),
+    options.fieldTemperature);
+  const cdf = new Float64Array(weights.length);
+  let running = 0;
+  for (let i = 0; i < weights.length; i++) { running += weights[i]; cdf[i] = running; }
+  const random = makeRandom((options.seed ^ 0x2b2b2b2b) >>> 0);
+  const publicField = [];
+  for (let draw = 0; draw < H2H_PUBLIC_OPPONENTS && running > 0; draw++) {
+    const needle = random() * running;
+    let low = 0, high = cdf.length - 1;
+    while (low < high) { const mid = (low + high) >> 1; if (cdf[mid] < needle) low = mid + 1; else high = mid; }
+    const base = Math.floor(low / LINEUP_SIZE) * LINEUP_SIZE;
+    publicField.push(pair(field.ids.subarray(base, base + LINEUP_SIZE), field.ids[low]));
+  }
+  const opponents = { sharp, public: publicField };
+
+  const scoreAt = (entry, s) => {
+    let value = 0;
+    for (const id of entry.ids) value += scenarios[id * simCount + s];
+    return value + 0.5 * scenarios[entry.superstar * simCount + s];
+  };
+  const keyOf = (entry) => entry.ids.slice().sort((a, b) => a - b).join(",") + "*" + entry.superstar;
+  const unique = new Map();
+  for (const entries of Object.values(modes)) {
+    for (const entry of entries) if (!unique.has(keyOf(entry))) unique.set(keyOf(entry), entry);
+  }
+
+  const result = { entries: count, opponents: {
+    sharp: sharp.length, public: publicField.length,
+  }, modes: {} };
+  for (const mode of H2H_MODES) result.modes[mode] = { entries: modes[mode] };
+
+  for (const [name, opps] of Object.entries(opponents)) {
+    if (!opps.length) continue;
+    // chance[key][s]: the entry beats one opponent drawn from this model in
+    // scenario s, ties counted as half a win.
+    const chance = new Map();
+    for (const key of unique.keys()) chance.set(key, new Float64Array(simCount));
+    const values = new Float64Array(opps.length);
+    for (let s = 0; s < simCount; s++) {
+      for (let o = 0; o < opps.length; o++) values[o] = scoreAt(opps[o], s);
+      values.sort();
+      for (const [key, entry] of unique) {
+        const x = scoreAt(entry, s);
+        const below = lowerBound(values, x), notAbove = upperBound(values, x);
+        chance.get(key)[s] = (below + 0.5 * (notAbove - below)) / values.length;
+      }
+    }
+    for (const mode of H2H_MODES) {
+      const entries = modes[mode];
+      const n = entries.length;
+      const wins = new Float64Array(n + 1);
+      const step = new Float64Array(n + 1);
+      for (let s = 0; s < simCount; s++) {
+        step.fill(0); step[0] = 1;
+        for (const entry of entries) {
+          const q = chance.get(keyOf(entry))[s];
+          for (let k = n; k >= 0; k--) step[k] = step[k] * (1 - q) + (k ? step[k - 1] * q : 0);
+        }
+        for (let k = 0; k <= n; k++) wins[k] += step[k] / simCount;
+      }
+      let mean = 0, square = 0, winning = 0;
+      for (let k = 0; k <= n; k++) {
+        mean += k * wins[k]; square += k * k * wins[k];
+        if (2 * k > n) winning += wins[k];
+      }
+      result.modes[mode][name] = {
+        expected_wins: mean,
+        win_rate: mean / n,
+        sd_wins: Math.sqrt(Math.max(square - mean * mean, 0)),
+        zero_wins: wins[0],
+        all_wins: wins[n],
+        winning_record: winning,
+        per_entry: entries.map((entry) =>
+          chance.get(keyOf(entry)).reduce((sum, value) => sum + value, 0) / simCount),
+      };
+    }
+  }
+  return result;
+}
+
 function describe(scored, indices, construction, includeContest = true) {
   return indices.map((c, position) => {
     const ids = candidateMembers(scored, c);
@@ -1610,6 +1748,7 @@ if (typeof module !== "undefined" && module.exports) {
     contestReady, ownershipRates, superstarOwnershipRates, candidateFieldProbabilities,
     lineupFieldProbabilities, rosterFieldProbabilities, fieldScoreAt, fieldExpectedAt,
     weightedDistributionSummary, normalizePayouts, payoutForTie, applyFieldEV, evaluateJointPortfolioEV,
+    h2hMultiEntry,
     covarianceMatrix: () => covariance,
   };
 }
@@ -1619,6 +1758,7 @@ if (typeof self === "undefined") {
 } else {
 self.onmessage = (event) => {
   const message = event.data;
+  let h2hResult = null;
   try {
     if (message.type === "load") {
       model = message.payload;
@@ -1682,6 +1822,14 @@ self.onmessage = (event) => {
       });
     }
 
+    // Head-to-head does not depend on the tournament portfolio, so it is priced
+    // first and still reaches the page when the portfolio cannot be filled.
+    self.postMessage({ type: "stage", stage: "Pricing multi-entry head-to-head" });
+    h2hResult = {
+      h2h_anchor: describe(scored, orderBy(scored, "expected").slice(0, 1), null, false),
+      h2h_multi: h2hMultiEntry(scored, options),
+    };
+
     const order = orderBy(scored, options.objective === "portfolio" ? "expected" : options.objective);
     const built = portfolio(scored, order, options);
     if (built.chosen.length < options.entries) {
@@ -1707,7 +1855,8 @@ self.onmessage = (event) => {
       portfolio: describe(scored, built.chosen, built.rules),
       scenario_evaluation: built.evaluation || null,
       field_summary: scored.fieldSummary || null,
-      h2h_anchor: describe(scored, orderBy(scored, "expected").slice(0, 1), null, false),
+      h2h_anchor: h2hResult.h2h_anchor,
+      h2h_multi: h2hResult.h2h_multi,
       strongest: describe(scored, order.slice(0, 10)),
       construction: {
         requested: options.entries,
@@ -1721,7 +1870,8 @@ self.onmessage = (event) => {
       },
     });
   } catch (error) {
-    self.postMessage({ type: "error", message: String(error && error.message || error) });
+    self.postMessage({ type: "error", message: String(error && error.message || error),
+      ...(h2hResult || {}) });
   }
 };
 }

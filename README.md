@@ -319,6 +319,21 @@ selection-biased, so field-based EV is labeled **not a calibrated return
 estimate** and remains experimental until prospective contest calibration is
 materially deeper.
 
+**Multi-entry head-to-head.** Set *Head-to-head entries* (1–10) and the run
+also prices that many separate one-on-one contests, filled three ways:
+**rotate Superstar** (the top lineup's five players, the 1.5× slot moved down the
+other four by projection), **repeat top lineup**, and **next-best lineups** (the
+highest-expected distinct lineups, which mostly keep the top Superstar and swap a
+supporting player). Each entry has its own opponent, drawn either from a
+**sharp** pool (the 100 highest-projected lineups) or the **public** ownership
+prior. The table shows expected wins, the win rate per entry, the chance of
+winning none, and the chance of a winning record; switching the strategy only
+re-renders, it does not re-solve. Expected wins is the sum of per-entry win
+chances whatever the entries are; what the choice changes is how often they all
+lose together, since every entry is scored in the same game. Head-to-head is
+priced before the tournament portfolio, so it still shows when the portfolio
+cannot be filled. Neither opponent model is calibrated to real H2H contests.
+
 The feed boundary is the reason for the split, not the compute: Actions prepares
 one immutable model so every visitor sees the same inputs.
 
