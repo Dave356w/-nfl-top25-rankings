@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-24T17:44:03Z",
-  "snapshot_id": "2026-09-24T17:44:03Z",
+  "generated_utc": "2026-09-24T20:52:59Z",
+  "snapshot_id": "2026-09-24T20:52:59Z",
   "run_date": "2026-09-24",
   "season": 2026,
   "week": 3,
@@ -24,7 +24,7 @@
     "WR",
     "TE"
   ],
-  "roster_fingerprint": "dak prescott:QB|breece hall:RB|james cook:RB|jaylen waddle:WR|tee higgins:WR|brenton strange:TE|brandon aubrey:K|denver broncos:DEF|jaylen warren:RB|jameson williams:WR|harold fannin:TE|los angeles rams:DEF|emmett johnson:RB|demond claiborne:RB|malachi fields:WR|devin singletary:RB",
+  "roster_fingerprint": "dak prescott:QB|james cook:RB|breece hall:RB|tee higgins:WR|jaylen waddle:WR|harold fannin:TE|brandon aubrey:K|denver broncos:DEF|jaylen warren:RB|jameson williams:WR|brenton strange:TE|los angeles rams:DEF|emmett johnson:RB|malachi fields:WR|oronde gadsden:TE|geno smith:QB",
   "totals": {
     "mean": 112.27,
     "floor": 61.75,
@@ -210,6 +210,24 @@
   ],
   "bench": [
     {
+      "player": "Geno Smith",
+      "key": "geno smith",
+      "pos": "QB",
+      "team": "NYJ",
+      "opponent": "DET",
+      "kickoff_utc": "2026-09-27 17:00",
+      "mean": 11.29,
+      "floor": 7.43,
+      "ceiling": 18.35,
+      "salary": 22.0,
+      "fppg": 12.44,
+      "depth": 1.0,
+      "depth_source": "nflverse latest depth",
+      "source": "Yahoo salary-position-depth regression (trained through 2025)",
+      "injury": null,
+      "review": "ok"
+    },
+    {
       "player": "Jameson Williams",
       "key": "jameson williams",
       "pos": "WR",
@@ -246,24 +264,6 @@
       "review": "ok"
     },
     {
-      "player": "Devin Singletary",
-      "key": "devin singletary",
-      "pos": "RB",
-      "team": "NYG",
-      "opponent": "TEN",
-      "kickoff_utc": "2026-09-27 17:00",
-      "mean": 6.16,
-      "floor": 2.67,
-      "ceiling": 12.38,
-      "salary": 15.0,
-      "fppg": 6.35,
-      "depth": 2.0,
-      "depth_source": "nflverse latest depth",
-      "source": "Yahoo salary-position-depth regression (trained through 2025)",
-      "injury": null,
-      "review": "ok"
-    },
-    {
       "player": "Los Angeles Rams",
       "key": "los angeles rams",
       "pos": "DEF",
@@ -277,6 +277,24 @@
       "fppg": 6.5,
       "depth": 1.0,
       "depth_source": "Yahoo salary-order fallback",
+      "source": "Yahoo salary-position-depth regression (trained through 2025)",
+      "injury": null,
+      "review": "ok"
+    },
+    {
+      "player": "Oronde Gadsden",
+      "key": "oronde gadsden",
+      "pos": "TE",
+      "team": "LAC",
+      "opponent": "BUF",
+      "kickoff_utc": "2026-09-27 17:00",
+      "mean": 4.96,
+      "floor": 1.52,
+      "ceiling": 10.85,
+      "salary": 11.0,
+      "fppg": 6.5,
+      "depth": 2.0,
+      "depth_source": "nflverse latest depth",
       "source": "Yahoo salary-position-depth regression (trained through 2025)",
       "injury": null,
       "review": "ok"
@@ -316,24 +334,6 @@
       "source": "Yahoo salary-position-depth regression (trained through 2025)",
       "injury": null,
       "review": "ok"
-    },
-    {
-      "player": "Demond Claiborne",
-      "key": "demond claiborne",
-      "pos": "RB",
-      "team": "MIN",
-      "opponent": "TB",
-      "kickoff_utc": "2026-09-27 20:05",
-      "mean": 1.43,
-      "floor": 0.62,
-      "ceiling": 2.88,
-      "salary": 10.0,
-      "fppg": 0.7,
-      "depth": 2.0,
-      "depth_source": "nflverse latest depth",
-      "source": "Yahoo salary-position-depth regression (trained through 2025)",
-      "injury": null,
-      "review": "ok"
     }
   ],
   "benched_by_request": [],
@@ -342,7 +342,7 @@
     "trained_through_season": 2025
   },
   "log": [
-    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-24T17:44:03Z)",
+    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-24T20:52:59Z)",
     "  nflverse: depth chart 2026: 582 offensive rows, snapshot 2026-09-24 12:42 UTC",
     "  nflverse: roster status 2026: 2,543 rows",
     "  nflverse: role tiers for 504 player(s); roster status matched 99% of the skill pool.",
@@ -491,7 +491,7 @@
     "[25 rows x 13 columns]",
     "Ranking run time: 0.1s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-09-24T17:44:03Z (shared with position rankings).",
+    "Projection snapshot: 2026-09-24T20:52:59Z (shared with position rankings).",
     "Season 2026 week 3; depth snapshot 2026-09-24T12:42:08Z.",
     "Add pool: 301 player(s) resolved for the page's roster editor."
   ]
