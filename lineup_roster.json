@@ -6,23 +6,23 @@
       "Position": "QB"
     },
     {
-      "Name": "Breece Hall",
-      "Position": "RB"
-    },
-    {
       "Name": "James Cook III",
       "Position": "RB"
     },
     {
-      "Name": "Jaylen Waddle",
-      "Position": "WR"
+      "Name": "Breece Hall",
+      "Position": "RB"
     },
     {
       "Name": "Tee Higgins",
       "Position": "WR"
     },
     {
-      "Name": "Brenton Strange",
+      "Name": "Jaylen Waddle",
+      "Position": "WR"
+    },
+    {
+      "Name": "Harold Fannin Jr",
       "Position": "TE"
     },
     {
@@ -42,7 +42,7 @@
       "Position": "WR"
     },
     {
-      "Name": "Harold Fannin Jr",
+      "Name": "Brenton Strange",
       "Position": "TE"
     },
     {
@@ -54,16 +54,16 @@
       "Position": "RB"
     },
     {
-      "Name": "Demond Claiborne",
-      "Position": "RB"
-    },
-    {
       "Name": "Malachi Fields",
       "Position": "WR"
     },
     {
-      "Name": "Devin Singletary",
-      "Position": "RB"
+      "Name": "Oronde Gadsden",
+      "Position": "TE"
+    },
+    {
+      "Name": "Geno Smith",
+      "Position": "QB"
     }
   ]
 }
