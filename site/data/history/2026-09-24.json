@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-24T20:52:59Z",
-  "snapshot_id": "2026-09-24T20:52:59Z",
+  "generated_utc": "2026-09-24T21:29:12Z",
+  "snapshot_id": "2026-09-24T21:29:12Z",
   "run_date": "2026-09-24",
   "top_n": 25,
   "positions": [
@@ -2030,16 +2030,115 @@
     }
   },
   "availability_removed": 18,
+  "depth_promotions": [
+    {
+      "player": "Michael Burton",
+      "team": "CLE",
+      "position": "RB",
+      "role": "starter",
+      "replacing": "Dylan Sampson (reserve / injured reserve)"
+    },
+    {
+      "player": "Hunter Luepke",
+      "team": "DAL",
+      "position": "RB",
+      "role": "starter",
+      "replacing": "Malik Davis (reserve / injured reserve)"
+    },
+    {
+      "player": "Matthew Golden",
+      "team": "GB",
+      "position": "WR",
+      "role": "starter",
+      "replacing": "Jayden Reed (ruled Out), Savion Williams (reserve / injured reserve)"
+    },
+    {
+      "player": "Skyy Moore",
+      "team": "GB",
+      "position": "WR",
+      "role": "rotation",
+      "replacing": "Jayden Reed (ruled Out), Savion Williams (reserve / injured reserve)"
+    },
+    {
+      "player": "Bo Melton",
+      "team": "GB",
+      "position": "WR",
+      "role": "starter",
+      "replacing": "Jayden Reed (ruled Out), Savion Williams (reserve / injured reserve)"
+    },
+    {
+      "player": "J. Michael Sturdivant",
+      "team": "GB",
+      "position": "WR",
+      "role": "rotation",
+      "replacing": "Jayden Reed (ruled Out), Savion Williams (reserve / injured reserve)"
+    },
+    {
+      "player": "Connor Heyward",
+      "team": "LV",
+      "position": "RB",
+      "role": "starter",
+      "replacing": "Chris Collier (reserve / injured reserve)"
+    },
+    {
+      "player": "Max Bredeson",
+      "team": "MIN",
+      "position": "RB",
+      "role": "starter",
+      "replacing": "Jordan Mason (reserve / injured reserve)"
+    },
+    {
+      "player": "Reggie Gilliam",
+      "team": "NE",
+      "position": "RB",
+      "role": "starter",
+      "replacing": "Myles Montgomery (reserve / injured reserve)"
+    },
+    {
+      "player": "Brady Russell",
+      "team": "SEA",
+      "position": "RB",
+      "role": "starter",
+      "replacing": "Robbie Ouzts (reserve / injured reserve), Zach Charbonnet (reserve / injured reserve)"
+    },
+    {
+      "player": "Kyle Juszczyk",
+      "team": "SF",
+      "position": "RB",
+      "role": "starter",
+      "replacing": "Isaac Guerendo (reserve / injured reserve)"
+    },
+    {
+      "player": "Brandon Aiyuk",
+      "team": "SF",
+      "position": "WR",
+      "role": "backup",
+      "replacing": "Christian Kirk (reserve / injured reserve), De'Zhaun Stribling (reserve / injured reserve), Ricky Pearsall (reserve / injured reserve)"
+    }
+  ],
   "method_counts": {
     "Yahoo salary-position-depth regression (trained through 2025)": 466
   },
   "log": [
-    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-24T20:52:59Z)",
+    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-24T21:29:12Z)",
     "  nflverse: depth chart 2026: 582 offensive rows, snapshot 2026-09-24 12:42 UTC",
     "  nflverse: roster status 2026: 2,543 rows",
-    "  nflverse: role tiers for 504 player(s); roster status matched 99% of the skill pool.",
+    "  nflverse: injury report week 3, 259 rows.",
+    "  Depth promotion: Michael Burton (CLE RB) starter -> starter, replacing Dylan Sampson (reserve / injured reserve)",
+    "  Depth promotion: Hunter Luepke (DAL RB) starter -> starter, replacing Malik Davis (reserve / injured reserve)",
+    "  Depth promotion: Matthew Golden (GB WR) starter -> starter, replacing Jayden Reed (ruled Out), Savion Williams (reserve / injured reserve)",
+    "  Depth promotion: Skyy Moore (GB WR) rotation -> rotation, replacing Jayden Reed (ruled Out), Savion Williams (reserve / injured reserve)",
+    "  Depth promotion: Bo Melton (GB WR) rotation -> starter, replacing Jayden Reed (ruled Out), Savion Williams (reserve / injured reserve)",
+    "  Depth promotion: J. Michael Sturdivant (GB WR) rotation -> rotation, replacing Jayden Reed (ruled Out), Savion Williams (reserve / injured reserve)",
+    "  Depth promotion: Connor Heyward (LV RB) starter -> starter, replacing Chris Collier (reserve / injured reserve)",
+    "  Depth promotion: Max Bredeson (MIN RB) starter -> starter, replacing Jordan Mason (reserve / injured reserve)",
+    "  Depth promotion: Reggie Gilliam (NE RB) starter -> starter, replacing Myles Montgomery (reserve / injured reserve)",
+    "  Depth promotion: Brady Russell (SEA RB) starter -> starter, replacing Robbie Ouzts (reserve / injured reserve), Zach Charbonnet (reserve / injured reserve)",
+    "  Depth promotion: Kyle Juszczyk (SF RB) starter -> starter, replacing Isaac Guerendo (reserve / injured reserve)",
+    "  Depth promotion: Brandon Aiyuk (SF WR) reserve -> backup, replacing Christian Kirk (reserve / injured reserve), De'Zhaun Stribling (reserve / injured reserve), Ricky Pearsall (reserve / injured reserve)",
+    "  nflverse: role tiers for 490 player(s); roster status matched 99% of the skill pool.",
     "  Availability filter removed 18 player(s).",
-    "  nflverse: injury report week 3, 259 rows; removed 1 listed Out.",
+    "  Injury report removed 1 player(s) listed Out.",
     "  Backup-QB filter removed 55 player(s).",
     "TOP 25 QB",
     "    Rank  ...                                  Projection method",
