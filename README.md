@@ -77,6 +77,31 @@ promotion is printed in the run log and published as `depth_promotions` in
 `AVAILABILITY_OVERRIDES` keeps a named player on the chart, and
 `Settings.promote_past_unavailable = False` turns the step off.
 
+### Editing depth on the pages
+
+Every page lets you change a player's depth rank in the browser and see what
+the same frozen model says about it: the **Depth** column on the rankings and
+lineup pages, and the `D1`–`D6` picker beside each player in the Showdown lab's
+pool. Moving a player shifts the teammates between his old and new spot by one,
+the way moving a name on a depth chart does.
+
+| Page | What a depth edit re-runs |
+| --- | --- |
+| Rankings | the regression mean, then re-ranks the position from the whole priced pool (`pool` in `latest.json`), so a promoted backup outside the top 25 can climb into it |
+| My lineup | the regression mean and the P25/P90 band, then re-picks the lineup |
+| Showdown lab | the mean, CV and scoreless rate handed to the in-browser optimizer; the latent correlation matrix stays as published |
+
+`site/depth-model.js` reads the exact coefficients and fitted tables from
+`site/data/depth_model.json`; regenerate that file with
+`python tools/export_depth_model.py` after refitting, and
+`tests/test_depth_model_js.py` checks the JavaScript against
+`salary_projection.predict` through Node. Edits stay in that browser, are tied
+to one published snapshot, and never change what the workflow publishes. The
+fitted model has no depth effect on the mean for QB or DEF (only starting QBs
+were in the training data), so there an edit changes volatility and teammate
+order, not the projection. Manual overrides and rolling-stat fallbacks keep
+their published means.
+
 ## Setup (one time)
 
 1. **Enable Pages.** Settings → Pages → *Build and deployment* → Source:

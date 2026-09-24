@@ -3228,9 +3228,12 @@ def run_position_rankings(
     ).copy()
 
     tables = {}
+    pools = {}
     combined = []
     for position in requested_positions:
-        group = ordered[ordered["Position"].eq(position)].head(top_n).copy()
+        # The whole priced pool is kept alongside the top N so a page can re-rank
+        # after a visitor edits someone's depth and a teammate climbs into it.
+        group = ordered[ordered["Position"].eq(position)].copy()
         group.insert(0, "Rank", np.arange(1, len(group) + 1))
         group["Estimated FP"] = group["Projected_FP"].round(2)
         group["FP / salary"] = group["FP_per_Salary"].round(3)
@@ -3248,9 +3251,11 @@ def run_position_rankings(
             "Salary", "FP / salary", "Role", "Role slot", "Depth_Rank",
             "Kickoff UTC", "Projection method",
         ]
-        view = group[columns].rename(
+        pool_view = group[columns].rename(
             columns={"Name": "Player", "Depth_Rank": "Depth"}
         ).reset_index(drop=True)
+        pools[position] = pool_view
+        view = pool_view.head(top_n).copy()
         tables[position] = view
         combined.append(view.assign(Position=position))
 
@@ -3276,6 +3281,7 @@ def run_position_rankings(
     print(f"Ranking run time: {time.perf_counter() - started:.1f}s")
     return {
         "rankings": tables,
+        "pool": pools,
         "combined": combined_table,
         "players": players.reset_index(drop=True),
         "games": games,

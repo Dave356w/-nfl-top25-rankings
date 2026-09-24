@@ -158,6 +158,20 @@ tbody tr.out{opacity:.62}
 .badge.fallback{background:var(--warn-soft); color:var(--warn)}
 .badge.bad{background:var(--warn-soft); color:var(--warn)}
 .note-cell{font-size:12.5px; color:var(--ink-2); min-width:120px}
+/* ---------- depth edits ---------- */
+.depth-pick{
+  font:inherit; font-family:var(--mono); font-size:13px; color:var(--ink);
+  background:var(--panel); border:1px solid var(--line); border-radius:7px;
+  padding:2px 4px; min-height:28px; cursor:pointer;
+}
+.depth-pick.changed{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink)}
+.was{display:block; font-family:var(--mono); font-size:11.5px; color:var(--ink-3);
+     text-decoration:line-through}
+.depth-edits{
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:0 0 14px;
+  padding:10px 14px; border-radius:10px; font-size:13.5px;
+  background:var(--accent-soft); color:var(--accent-ink);
+}
 
 .empty{padding:44px 20px; text-align:center; color:var(--ink-2)}
 .empty h3{margin:0 0 6px; color:var(--ink); font-size:17px; font-weight:620}
@@ -357,6 +371,11 @@ footer{
     </div>
   </details>
 
+  <div class="depth-edits" id="depth-edits" role="status" hidden>
+    <span id="depth-edits-text"></span>
+    <button class="btn sm" type="button" id="depth-reset">Reset depth edits</button>
+  </div>
+
   <h2 id="starters-head" hidden>Starters <span class="note" id="starters-note"></span></h2>
   <div class="card" id="starters-card" hidden>
     <div class="scroll">
@@ -441,6 +460,7 @@ footer{
   </footer>
 </div>
 <script src="lineup-picker.js"></script>
+<script src="depth-model.js"></script>
 <script>
 (function () {
   "use strict";
@@ -559,6 +579,12 @@ footer{
   var canEdit = false;     // false against a lineup published before `key` existed
   var filterPos = "ALL";
   var query = "";
+  // Depth edits: { player key: depth }, re-run through the published model.
+  var DEPTH_KEY = "nfl-lineup-depth-v1";
+  var DEPTH_POSITIONS = ["QB", "RB", "WR", "TE"];
+  var depthModel = null;
+  var depths = {};
+  var depthStore = null;
 
   function remember(rows) {
     (rows || []).forEach(function (r) { if (r && r.key) known[r.key] = r; });
@@ -603,15 +629,94 @@ footer{
     return benchedByRun(row);
   }
 
+  /* ---------- depth edits ---------- */
+  function hasDepth(key) { return Object.prototype.hasOwnProperty.call(depths, key); }
+  function depthCount() { return Object.keys(depths).length; }
+
+  function canEditDepth(r) {
+    return !!depthModel && canEdit && DEPTH_POSITIONS.indexOf(r.pos) >= 0 && num(r.depth);
+  }
+
+  // The row as the run would have priced it at the edited depth. The mean is
+  // re-run only where the regression produced it; the band's width follows the
+  // depth either way, as it does in lineup_optimizer.build_roster.
+  function adjust(row) {
+    if (!depthModel || !row || !hasDepth(row.key)) return row;
+    var out = Object.assign({}, row, { depth: depths[row.key], published_depth: row.depth });
+    if (DepthModel.isModelled(row.source)) {
+      var mean = DepthModel.predict(depthModel, row.pos, row.salary, out.depth);
+      if (mean !== null) {
+        out.published_mean = row.mean;
+        out.mean = Math.round(mean * 100) / 100;
+      }
+    }
+    var cv = DepthModel.cv(depthModel, row.pos, out.depth);
+    if (cv !== null && num(out.mean)) {
+      var band = DepthModel.band(out.mean, cv);
+      out.floor = Math.round(band.floor * 100) / 100;
+      out.ceiling = Math.round(band.ceiling * 100) / 100;
+    }
+    return out;
+  }
+
+  function knownRows() {
+    return Object.keys(known).map(function (k) { return known[k]; })
+      .filter(function (r) { return r && r.key && num(r.depth); });
+  }
+
+  function setDepth(key, depth) {
+    ensurePool().then(function () {
+      var rows = knownRows();
+      var changes = DepthModel.move(rows.map(function (r) {
+        return {
+          id: r.key, group: r.team + "|" + r.pos,
+          depth: hasDepth(r.key) ? depths[r.key] : Math.round(r.depth)
+        };
+      }), key, depth);
+      var published = {};
+      rows.forEach(function (r) { published[r.key] = Math.round(r.depth); });
+      Object.keys(changes).forEach(function (k) {
+        if (changes[k] === published[k]) delete depths[k];
+        else depths[k] = changes[k];
+      });
+      depthStore.write(depths);
+      renderAll();
+    });
+  }
+
+  function depthControl(r) {
+    if (!canEditDepth(r)) return num(r.depth) ? String(r.depth) : "—";
+    var current = Math.round(r.depth);
+    var original = num(r.published_depth) ? Math.round(r.published_depth) : current;
+    var options = [];
+    for (var d = 1; d <= Math.max(6, current, original); d++) {
+      options.push('<option value="' + d + '"' + (d === current ? " selected" : "") + ">" +
+        d + (d === original && current !== original ? "*" : "") + "</option>");
+    }
+    return '<select class="depth-pick' + (current !== original ? " changed" : "") +
+      '" data-key="' + escapeHtml(r.key) + '" title="Published depth ' + original +
+      ' (marked *)" aria-label="Depth for ' +
+      escapeHtml(r.player) + '">' + options.join("") + "</select>";
+  }
+
+  function renderDepthEdits() {
+    var n = depthCount();
+    el("depth-edits").hidden = !n;
+    if (n) {
+      el("depth-edits-text").textContent = n + (n === 1 ? " depth rank" : " depth ranks") +
+        " edited in this browser; affected projections are re-run and the lineup re-picked.";
+    }
+  }
+
   function buildView() {
-    if (!edits) {
+    if (!edits && !depthCount()) {
       return {
         starters: published.starters || [], bench: published.bench || [],
         totals: published.totals || {}, counts: published.counts || {},
         custom: false
       };
     }
-    var rows = rosterRows();
+    var rows = rosterRows().map(adjust);
     var picked = LineupPicker.pick(rows, {
       slots: published.slots,
       flexEligible: published.flex_eligible,
@@ -741,6 +846,7 @@ footer{
 
   function rosterRowHtml(r) {
     var benched = isBenched(r);
+    r = adjust(r);
     var line = [matchup(r), fmt(r.mean, 1) + " proj"];
     if (r.review && r.review !== "ok") line.push(r.review);
     return '<div class="roster-row' + (benched ? " benched" : "") + '">' +
@@ -851,7 +957,7 @@ footer{
     var meta = [
       '<span class="badge ' + src.cls + '">' + src.label + "</span>",
       "<span>P25 " + fmt(r.floor) + " · P90 " + fmt(r.ceiling) + "</span>",
-      "<span>Depth " + (num(r.depth) ? r.depth : "—") + "</span>",
+      "<span>Depth " + depthControl(r) + "</span>",
       kickoff ? "<span>" + escapeHtml(kickoff) + "</span>" : "",
       r.review && r.review !== "ok" ? "<span>" + escapeHtml(r.review) + "</span>" : ""
     ].join("");
@@ -863,10 +969,13 @@ footer{
         escapeHtml(where) + (kickoff ? " · " + escapeHtml(kickoff) : "") + "</span></span></td>" +
       '<td class="num" data-cell="fp"><span class="fp"><b>' + fmt(r.mean) +
         '</b><span class="track"><span class="fill" style="width:' +
-        pct.toFixed(1) + '%"></span></span></span></td>' +
+        pct.toFixed(1) + '%"></span></span>' +
+        (num(r.published_mean) && r.published_mean !== r.mean
+          ? '<span class="was" title="Published projection">' + fmt(r.published_mean) + "</span>"
+          : "") + "</span></td>" +
       '<td class="num mono">' + fmt(r.floor) + "</td>" +
       '<td class="num mono">' + fmt(r.ceiling) + "</td>" +
-      '<td class="num mono">' + (num(r.depth) ? r.depth : "—") + "</td>" +
+      '<td class="num mono">' + depthControl(r) + "</td>" +
       '<td><span class="badge ' + src.cls + '" title="' + escapeHtml(r.source) + '">' +
         src.label + "</span></td>" +
       '<td class="note-cell">' + escapeHtml(r.review === "ok" ? "—" : r.review) + "</td>" +
@@ -914,14 +1023,17 @@ footer{
       (num(d.week) ? "Week " + d.week + " " : "") + "lineup from " +
       counts.roster + " rostered player(s), maximizing " +
       objectiveLabel(d.objective).toLowerCase() + "." +
-      (view.custom ? " Re-picked in your browser from your edited roster." : "");
+      (view.custom
+        ? (edits ? " Re-picked in your browser from your edited roster."
+                 : " Re-picked in your browser with your depth edits.")
+        : "");
 
     setStatus(
       "Published <strong>" + escapeHtml(d.generated_utc) + "</strong> (" +
       escapeHtml(ago(d.generated_utc)) + ") <span class=\"sep\">·</span> " +
       escapeHtml(counts.projected + " of " + counts.roster) + " players projected" +
       (view.custom
-        ? " <span class=\"badge custom\">edited roster</span>"
+        ? " <span class=\"badge custom\">" + (edits ? "edited roster" : "edited depth") + "</span>"
         : ""),
       "ok"
     );
@@ -1005,6 +1117,7 @@ footer{
   /* ---------- render ---------- */
   function renderAll() {
     var d = published;
+    renderDepthEdits();
     var view = buildView();
     var starters = view.starters.slice().sort(function (a, b) {
       var diff = slotRank(a.slot) - slotRank(b.slot);
@@ -1089,6 +1202,20 @@ footer{
     renderResults();
   });
 
+  ["starters", "bench"].forEach(function (id) {
+    el(id).addEventListener("change", function (event) {
+      var pick = event.target;
+      if (!pick.classList || !pick.classList.contains("depth-pick")) return;
+      setDepth(pick.getAttribute("data-key"), Number(pick.value));
+    });
+  });
+
+  el("depth-reset").addEventListener("click", function () {
+    depths = {};
+    if (depthStore) depthStore.write(depths);
+    renderAll();
+  });
+
   el("reset").addEventListener("click", function () {
     edits = null;
     commit();
@@ -1130,6 +1257,7 @@ footer{
       // to the wrong player.
       canEdit = publishedRows().every(function (r) { return !!r.key; });
       edits = canEdit ? loadEdits() : null;
+      depthStore = DepthModel.store(DEPTH_KEY, d.snapshot_id || d.generated_utc);
       el("edit-footnote").innerHTML =
         "Edits live in this browser only. To make one stick — so the next " +
         "scheduled run picks from it — copy the JSON into " +
@@ -1138,6 +1266,14 @@ footer{
       // A stored edit can name a player the lineup itself never mentions, so
       // his projection has to be on hand before the first render settles.
       if (edits) ensurePool().then(renderAll);
+      // The model is optional: without it the depth column is read-only.
+      if (canEdit) {
+        DepthModel.load("data/depth_model.json").then(function (m) {
+          depthModel = m;
+          depths = depthStore.read();
+          if (depthCount()) ensurePool().then(renderAll); else renderAll();
+        }).catch(function () { /* published depths stand */ });
+      }
     })
     .catch(function (err) {
       el("sub").textContent = "No published lineup yet.";

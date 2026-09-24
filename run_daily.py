@@ -151,6 +151,12 @@ def build_payload(results, top_n, log_lines, generated_at=None, snapshot_id=None
             "first_kickoff_utc": games[0]["kickoff_utc"] if games else None,
         },
         "rankings": rankings,
+        # Every priced player, not just the top N, so the page can re-rank after
+        # a visitor edits a depth rank. Only latest.json carries it.
+        "pool": {
+            position: _rows(view)
+            for position, view in (results.get("pool") or {}).items()
+        },
         "projection": {
             "method": "Yahoo salary-position-depth regression",
             "trained_through_season": (results.get("projection_model") or {}).get("trained_through_season"),
@@ -183,7 +189,10 @@ def write_outputs(payload, combined, data_dir=None):
 
     text = json.dumps(payload, indent=2, sort_keys=False)
     (data / "latest.json").write_text(text + "\n", encoding="utf-8")
-    (history / f"{payload['run_date']}.json").write_text(text + "\n", encoding="utf-8")
+    archived = {key: value for key, value in payload.items() if key != "pool"}
+    (history / f"{payload['run_date']}.json").write_text(
+        json.dumps(archived, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
 
     if isinstance(combined, pd.DataFrame) and not combined.empty:
         combined.to_csv(data / "latest.csv", index=False)
