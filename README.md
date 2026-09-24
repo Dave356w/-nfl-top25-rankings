@@ -272,83 +272,64 @@ warning rather than dropping a slate on the strength of a name-matching bug.
 
 ## Showdown lineup lab
 
-`site/showdown.html` is an interactive Yahoo single-game optimizer that runs on
-GitHub Pages. Pages is static, so the interesting question was which half of the
-Colab showdown runner can live in a browser. The answer turned out to be: all of
-the part that matters.
+`site/showdown.html` builds Yahoo single-game Showdown lineups in the browser
+from the published projections. It asks four things: the **game**, the
+**contest** (head-to-head or tournament), the number of **entries**, and — only
+for a game Yahoo has not priced yet — the **salary cap**. A collapsed
+*Advanced* section holds the two exposure limits and an accuracy setting
+(*Quick*, *Standard*, or *Full*, which repeats the published run's scenario and
+candidate counts). The player list lets you leave players out and edit depth
+(see [Editing depth on the pages](#editing-depth-on-the-pages)). The result is a
+four-number summary, one sentence on how the entries were chosen, and the
+entries themselves.
 
-**What runs in Actions.** `run_synced.py` fetches Yahoo and the nflverse depth,
-roster and injury data once for all three pages. `pipeline/showdown.py`
-reuses those final means, builds the fitted
-coefficients of variation, and publishes the PSD-repaired latent correlation
-matrix for each game. That payload is about 7 KB for a 36-player pool — 36
-players plus the 630-term upper triangle — or 1 KB gzipped. A server-side
-reference portfolio is published with it, so the page opens on an answer.
-
-**What runs in the browser.** `site/showdown-worker.js` draws the scenarios,
-enumerates every Yahoo-valid roster, screens them on the analytic ceiling,
-scores the survivors against shared scenarios and applies the exposure caps.
-Exclusions, the salary floor, position limits, the objective and the portfolio
-size are all controls, and none of them touches a feed.
-
-Changing games cancels a running calculation; late responses from a previous
-selection are ignored. Changing a control clears the old result and asks for
-Optimize again. The page rejects game files with a different snapshot from the
-index. Entry numbers identify construction order, not performance ranks.
-Expected FP is analytic; the sampled mean is shown separately. Candidate-best
-and near-best rates compare only screened candidates in the sampled scenarios,
-depend on the selected detail level, and are not contest-win probabilities.
-
-When contest size, entry fee and payouts are configured, Tournament EV uses the
-archived Yahoo ownership prior to price candidates against a sampled opponent
-field. Candidate selection still uses standalone price-taking EV. After the
-portfolio is built, the worker inserts every selected entry into the same
-simulated contest, reduces the modeled opponent count by the number of user
-entries, ranks the user entries against both opponents and one another, and
-tie-splits the payout curve once. The page therefore reports **joint portfolio
-EV** separately from the **sum of standalone entry EVs**, plus portfolio profit
-quantiles and any-cash/top-1%/first rates.
-
-The same run now publishes a **Field strength / calibration** diagnostic. It
-computes the sampled opponent field's analytic expected-FP mean, median, P90 and
-P99 using the exact sampled lineup weights, then compares those with the selected
-portfolio's mean/min/max expected FP and the top lineup's expected points. This is
-a diagnostic for an opponent field that is too weak or too strong; it does not
-reweight EV or change lineup selection. The ownership archive is sparse and
-selection-biased, so field-based EV is labeled **not a calibrated return
-estimate** and remains experimental until prospective contest calibration is
-materially deeper.
-
-**Head-to-head.** Set *Head-to-head entries* (1–50) and the run also builds and
-prices that many separate one-on-one contests:
+**Head-to-head** (default 3 entries, up to 50):
 
 1. The game's five highest-projected players (after exclusions) are the
    Superstars and take turns, in projection order.
-2. Each Superstar is in at most *H2H max Superstar exposure* of the entries
+2. Each Superstar is in at most *Max Superstar exposure* of the entries
    (default 0.25), rounded down with a minimum of one. With five Superstars at
    0.25, 6, 7 and 11 entries cannot all be filled (they fill 5, 5 and 10); the
-   page says so.
+   page says so. *Max player exposure* defaults to 1, no limit.
 3. Round one gives each Superstar its highest-expected lineup.
 4. Later rounds keep rotating the same five but change the supporting players:
    a Superstar's next lineup is its unused one with the fewest supporting
    players from outside the top ten (ranks 6–10 are the fillers), then the
    highest expected points. Other top-five players can support.
-5. Every lineup comes from the run's own enumeration, so the salary cap, salary
-   floor, position limits and exclusions hold; no two entries repeat; and
-   *H2H max player exposure* (default 1, no limit) caps any one player.
+5. No two entries repeat, and the salary cap, position rules and exclusions
+   always hold.
 
-Each entry has its own opponent, drawn either from a **sharp** pool (the 100
-highest-projected lineups) or the **public** ownership prior. The card shows
-expected wins, the win rate per entry, the chance of winning none and of a
-winning record, and each entry's round, fillers and win chances. Expected wins
-is the sum of per-entry win chances; since every entry is scored in the same
-game, entries that share players win and lose together, which the zero-wins
-figure carries. Head-to-head is priced before the tournament portfolio, so it
-still shows when the portfolio cannot be filled. Neither opponent model is
-calibrated to real H2H contests.
+Each contest's opponent plays one of the 100 highest-projected lineups from the
+**whole** pool — a player you leave out is still available to them. The summary
+shows expected wins (the sum of each entry's win chance), the win rate per
+entry, the chance every entry loses, and the chance of a winning record; entries
+share one game, so the last two carry how often they win and lose together. The
+opponent model is not calibrated to real Yahoo head-to-heads.
 
-The feed boundary is the reason for the split, not the compute: Actions prepares
-one immutable model so every visitor sees the same inputs.
+**Tournament** (default 20 entries, up to 150) uses the same shared-scenario
+coverage portfolio the daily run publishes: each entry is the one that adds the
+most to your best score across the simulated games, with at most three players
+shared between any two entries and the published exposure limits (50% per
+player, 35% per Superstar). Small pools often cannot fit 20 entries under those
+limits; the page shows the entries that fit and says how many that was, instead
+of refusing. Entries the daily run also chose are marked *also published*.
+
+**What runs where.** `run_synced.py` fetches Yahoo and the nflverse depth,
+roster and injury data once for all three pages; `pipeline/showdown.py` reuses
+those means, builds the fitted coefficients of variation and publishes the
+PSD-repaired latent correlation matrix for each game — about 7 KB for a
+36-player pool. `site/showdown-worker.js` draws the scenarios, enumerates every
+Yahoo-valid roster, screens and scores them and builds the entries. Its single
+entry point is `solve(request)`: the page sends only the visitor's choices, and
+`engineOptions` fills every other setting from the published run, so the page
+never mirrors the engine's knobs. Changing games cancels a running solve and
+late responses are ignored; changing any setting clears the old result; a game
+file from a different snapshot than the index is refused.
+
+The worker still carries the selection objectives and construction quotas the
+page no longer offers, because `tools/reconstruct_archived_showdown.js` replays
+archived runs with their saved settings and `tests/test_showdown.py` checks the
+worker against the Python pipeline on the same payload.
 
 Two properties of the model make the browser half cheap:
 
@@ -357,28 +338,17 @@ Two properties of the model make the browser half cheap:
 * Because of that the scenarios are never redrawn on an exclusion. They are
   drawn once per pool; a control change only re-decides which lineups are legal.
 
-**Speed.** A lineup is five of at most 36 players, so scoring one against a
-scenario is five multiply-adds rather than the thirty-six a dense
-(players × candidates) product would do. On a full 36-player pool at 20,000
-scenarios and 25,000 candidates the browser solves in about 14 seconds, against
-25 seconds for the NumPy path — the JavaScript is faster because it exploits
-that sparsity instead of handing a dense matrix to BLAS. The page also offers
-smaller presets; at 5,000 scenarios it is well under a second.
+**Speed.** Scoring a lineup against a scenario is five multiply-adds. A
+Standard solve (10,000 scenarios) takes about 4 seconds for head-to-head and 7
+for a 20-entry tournament on a 27-player pool; *Full* at 20,000 scenarios on a
+36-player pool takes about 14 seconds.
 
 **Why your numbers differ from the published run.** The page seeds its own
-generator, so simulated means and percentiles land within Monte Carlo error of
-the published ones rather than on top of them. The page also defaults to a
-smaller detail setting than the published run; *Full* matches its scenario and
-candidate counts. Everything analytic — salary,
-expected points, the analytic standard deviation, the count of valid rosters —
-matches exactly, and `tests/test_showdown.py` pins that agreement by driving the
-worker through Node against the same payload.
-
-Entries the page marks *also published* were selected by both runs. That overlap
-is worth reading: at twenty entries the portfolio is genuinely seed-sensitive —
-changing only the seed turns over about half of it — so an entry that survives
-two independent scenario sets is one the ranking actually prefers rather than
-one that won a near-tie on sampling noise.
+generator, so simulated figures land within Monte Carlo error of the published
+ones. Everything analytic — salary, expected points, the analytic standard
+deviation, the count of valid rosters — matches exactly. At twenty entries the
+tournament portfolio is seed-sensitive, so an entry marked *also published*,
+chosen by two independent scenario sets, is one the ranking genuinely prefers.
 
 ## Weekly lineup optimizer
 
@@ -601,8 +571,8 @@ variation, the zero rates and the latent correlation matrix are all built from
 the players alone; the cap enters only when rosters are enumerated. So a capless
 game now publishes a **complete model with no reference portfolio**, `salary_cap`
 is `null`, and the page collects the cap from the visitor before it will optimize.
-The picker labels those games and Optimize stays disabled until a positive number
-is entered.
+The picker labels those games and *Build lineups* stays disabled until a
+positive number is entered.
 
 The original refusal was right about one thing and it still holds: a *guessed*
 cap would silently change which lineups are legal. So nothing is guessed. The cap
@@ -626,33 +596,17 @@ cheap weak rosters on their merits; raise the slider only deliberately.
 
 ### Showdown selection controls
 
-Exposure percentages round down to whole appearances among the requested entries.
-The default 50% player cap permits 10 of 20 entries; the 35% Superstar cap permits
-7 of 20. Single-entry selection bypasses exposure caps and construction quotas.
-The page displays the permitted counts and refuses to present an incomplete
-portfolio as a completed result; incomplete published reference portfolios are
-hidden for the same reason.
+Exposure shares round down to whole appearances among the requested entries.
+The tournament's 50% player cap permits 10 of 20 entries and the 35% Superstar
+cap 7 of 20; a single entry bypasses both. The page shows the entries that fit
+the limits and says so when that is fewer than requested.
 
-The default strategy limits are QB 0-2, RB 0-2, WR 0-3, TE 0-2 and DEF 0-1.
-Yahoo itself imposes no position limits. A QB minimum of one would combine with
-the 50% player cap to consume every available appearance of the two starters and
-silently eliminate two-QB builds. The defaults retain those builds, the two-TE
-shapes that won two of the five reviewed portfolios, and both 3-2 and 4-1 team
-splits. Construction quotas remain disabled.
-
-Roster-shape quotas are optional. New builds default `use_construction_quotas` to
-`False`; the page can enable the existing preset mix. These quotas can exclude
-higher-ranked lineups and are not required for a legal roster.
-
-Expected-points objectives screen by analytic mean. Floor and ceiling screen by
-approximate P25 and P90 from a lognormal matched to lineup mean and variance,
-then rank retained candidates using simulated quantiles. This is an approximation
-to a sum of correlated lognormals; screening can still miss the global optimum.
-The experimental upside score retains its existing screening and 40% P90 / 25%
-near-best / 25% mean / 10% volatility weights. All screens reserve high-mean
-candidates. Greedy selection enforces exposure and overlap limits; it does not
-optimize joint scenario coverage. Compare detail settings to assess stability.
-
+The daily run's position limits (QB 0-2, RB 0-2, WR 0-3, TE 0-2, DEF 0-1) and
+salary floor apply on the page too; Yahoo itself imposes no position limits.
+The page no longer exposes position limits, the salary floor, roster-shape
+quotas, alternative selection objectives or contest-EV pricing; the worker keeps
+the objectives and quotas only so archived runs can be replayed with their
+saved settings.
 
 ### Default projection and portfolio process
 

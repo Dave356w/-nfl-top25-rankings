@@ -129,9 +129,11 @@ class PayloadShapeTests(unittest.TestCase):
             self.assertNotIn("NaN", json.dumps(document))
 
     def test_it_carries_every_key_the_page_reads(self):
-        for key in ("schema", "game_id", "matchup", "away", "home", "kickoff_utc",
-                    "salary_cap", "settings", "players", "latent", "model",
-                    "field_model", "dropped_from_pool", "reference"):
+        for key in ("schema", "game_id", "matchup", "snapshot_id", "generated_utc",
+                    "kickoff_utc", "salary_cap", "settings", "players", "latent",
+                    "reference"):
+            self.assertIn(key, self.payload)
+        for key in ("away", "home", "model", "dropped_from_pool"):
             self.assertIn(key, self.payload)
         for key in ("schema", "status", "generated_utc", "games", "skipped",
                     "projection", "availability_removed"):
@@ -140,6 +142,10 @@ class PayloadShapeTests(unittest.TestCase):
             self.assertIn(key, self.payload["settings"])
 
         self.assertEqual(self.payload["schema"], 3)
+
+    def test_the_research_field_model_is_still_published(self):
+        # The page no longer prices contests, but the field-model research and
+        # backtest tools read the archived payload.
         self.assertEqual(
             self.payload["field_model"]["ownership"]["family"],
             "ridge_logit_roster_propensity",
