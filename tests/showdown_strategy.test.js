@@ -217,3 +217,99 @@ test('joint portfolio EV inserts all selected entries into the same contest rank
   assert.equal(h2h.expected_profit,undefined);
   assert.equal(h2h.joint_expected_profit,undefined);
 });
+
+function h2hFixture(h2hEntries) {
+  // A self-contained two-team game: published slates are replaced every week.
+  const spec = [
+    ['QB', 'A', 22, 38], ['QB', 'B', 20, 36], ['RB', 'A', 17, 32], ['RB', 'B', 15, 30],
+    ['WR', 'A', 14, 28], ['WR', 'B', 13, 27], ['WR', 'A', 9, 18], ['WR', 'B', 8, 16],
+    ['TE', 'A', 8, 17], ['TE', 'B', 6, 13], ['DEF', 'A', 7, 12], ['DEF', 'B', 6, 11],
+  ];
+  const players = spec.map(([pos, team, fp, salary], i) => ({
+    name: `P${i}`, pos, team, fp, salary, cv: pos === 'QB' ? .5 : .75, zero: .02,
+  }));
+  const n = players.length;
+  const payload = {players, latent: Array(n * (n - 1) / 2).fill(0.1), settings: {}};
+  const options = {salaryCap:120,minSalaryPct:0,ceilingWeight:.85,maxCandidates:2000,
+    meanReserve:750,nearOptimalRatio:.95,entries:20,objective:'tournament',positionLimits:{},
+    simulations:2000,seed:356,fieldTemperature:1.25,h2hEntries};
+  w.setModel(payload);
+  w.simulate(options.simulations, options.seed);
+  const rosters = w.enumerate(players.map((_, i) => i), options);
+  const scored = w.score(rosters, w.screen(rosters, options), options, () => {});
+  return {payload, options, result: w.h2hMultiEntry(scored, options, rosters)};
+}
+
+function h2hRun(h2hEntries, extra = {}) {
+  const f = h2hFixture(h2hEntries);
+  const options = {...f.options, ...extra};
+  w.setModel(f.payload);
+  w.simulate(options.simulations, options.seed);
+  const rosters = w.enumerate(f.payload.players.map((_, i) => i), options);
+  const scored = w.score(rosters, w.screen(rosters, options), options, () => {});
+  const byFp = f.payload.players.map((p, i) => i).sort((a, b) =>
+    (f.payload.players[b].fp - f.payload.players[a].fp) || (a - b));
+  return {result: w.h2hMultiEntry(scored, options, rosters), byFp};
+}
+const pairKey = (e) => e.ids.slice().sort((a, b) => a - b).join(',') + '*' + e.superstar;
+
+test('H2H: the top five take turns as Superstar, then ranks 6-10 fill in', () => {
+  const {result, byFp} = h2hRun(12);
+  assert.deepEqual(result.pools.superstars, byFp.slice(0, 5));
+  assert.deepEqual(result.pools.fillers.slice().sort(), byFp.slice(5, 10).sort());
+  const entries = result.entries;
+  assert.equal(result.filled, 12);
+  assert.equal(entries.length, 12);
+  // Round one: each top-5 player as Superstar once, in projection order.
+  assert.deepEqual(entries.slice(0, 5).map((e) => e.superstar), byFp.slice(0, 5));
+  assert.ok(entries.slice(0, 5).every((e) => e.round === 1));
+  // Rounds continue in the same order.
+  assert.deepEqual(entries.slice(5, 10).map((e) => e.superstar), byFp.slice(0, 5));
+  assert.ok(entries.slice(5, 10).every((e) => e.round === 2));
+  // Later rounds keep the other four inside the top ten while the cap allows it.
+  const topTen = new Set(byFp.slice(0, 10));
+  for (const e of entries.filter((x) => x.round > 1)) {
+    assert.ok(e.ids.every((id) => topTen.has(id)), `round ${e.round} lineup uses a player outside the top ten`);
+    assert.ok(e.salary <= 120);
+    assert.deepEqual(e.fillers.slice().sort(), e.ids.filter((id) => result.pools.fillers.includes(id)).sort());
+  }
+  assert.equal(new Set(entries.map(pairKey)).size, 12);
+});
+
+test('H2H: the Superstar limit defaults to 0.25, rounded down', () => {
+  const {result} = h2hRun(12);
+  assert.deepEqual(result.limits, {player: 12, superstar: 3});
+  const starred = new Map();
+  result.entries.forEach((e) => starred.set(e.superstar, (starred.get(e.superstar) || 0) + 1));
+  assert.ok(Math.max(...starred.values()) <= 3);
+  // Five Superstars at one entry each cannot fill six.
+  const six = h2hRun(6).result;
+  assert.equal(six.limits.superstar, 1);
+  assert.equal(six.filled, 5);
+  assert.equal(six.requested, 6);
+});
+
+test('H2H: the player exposure limit holds', () => {
+  const {result} = h2hRun(12, {h2hPlayerExposure: 0.5});
+  assert.equal(result.limits.player, 6);
+  const count = new Map();
+  result.entries.forEach((e) => e.ids.forEach((id) => count.set(id, (count.get(id) || 0) + 1)));
+  assert.ok(Math.max(...count.values()) <= 6);
+});
+
+test('H2H: expected wins is the sum of entry win chances', () => {
+  const {result} = h2hRun(8);
+  for (const opponent of ['sharp', 'public']) {
+    const m = result[opponent];
+    const sum = m.per_entry.reduce((a, b) => a + b, 0);
+    assert.ok(Math.abs(m.expected_wins - sum) < 1e-9);
+    assert.equal(m.per_entry.length, result.entries.length);
+    assert.ok(m.zero_wins >= 0 && m.zero_wins <= 1);
+    assert.ok(Math.abs(m.win_rate - m.expected_wins / result.entries.length) < 1e-12);
+  }
+});
+
+test('H2H: the entry count is clamped to 1..50', () => {
+  assert.equal(h2hRun(80).result.requested, 50);
+  assert.equal(h2hRun(0).result.requested, 3);    // missing -> default
+});

@@ -91,6 +91,9 @@ h1{font-size:clamp(24px,3.4vw,34px); line-height:1.15; margin:0 0 6px;
 
 .layout{display:grid; gap:16px; grid-template-columns:minmax(0,340px) minmax(0,1fr)}
 @media (max-width:960px){ .layout{grid-template-columns:1fr} }
+/* A grid item's minimum width defaults to its content's, so a wide table in a
+   scroll box would otherwise widen the whole column past a phone screen. */
+.layout > *{min-width:0}
 
 .card{
   background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
@@ -195,6 +198,9 @@ th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06
 td{padding:7px 16px; border-bottom:1px solid var(--line-soft)}
 tr:last-child td{border-bottom:0}
 td.num{font-family:var(--mono); text-align:right; color:var(--ink-2)}
+th.num{text-align:right}
+.scroll{overflow-x:auto}
+#h2h-summary td, #h2h-summary th{white-space:nowrap}
 
 details.panel{margin-top:16px; background:var(--panel); border:1px solid var(--line);
               border-radius:var(--radius); box-shadow:var(--shadow)}
@@ -355,6 +361,29 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
               <input type="number" id="superstar-exposure" min="0.05" max="1" step="0.05">
             </div>
           </div>
+          <div class="field">
+            <label for="h2h-entries">Head-to-head entries</label>
+            <input type="number" id="h2h-entries" min="1" max="50" step="1" value="3">
+            <div class="hint">
+              Separate one-on-one contests, priced beside the portfolio (1&ndash;50).
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="h2h-player-exposure">H2H max player exposure</label>
+              <input type="number" id="h2h-player-exposure" min="0.05" max="1" step="0.05" value="1">
+            </div>
+            <div class="field">
+              <label for="h2h-superstar-exposure">H2H max Superstar exposure</label>
+              <input type="number" id="h2h-superstar-exposure" min="0.05" max="1" step="0.05" value="0.25">
+            </div>
+          </div>
+          <div class="field">
+            <div class="hint" style="margin-top:-8px">
+              Share of the head-to-head entries one player, or one Superstar, may appear in,
+              rounded down. 1 means no limit. Separate from the tournament limits above.
+            </div>
+          </div>
           <div class="hint" id="exposure-hint"></div>
           <div class="field">
             <label>Position limits per lineup</label>
@@ -404,14 +433,11 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       </section>
 
       <section class="card" id="h2h-card" hidden>
-        <h2>H2H anchor</h2>
-        <div class="note">
-          Highest analytic expected-points lineup from the same candidate set.
-          Ownership, duplication and the GPP payout curve do not affect this lineup.
-          Using the same anchor in multiple H2Hs maximizes the model's expected score
-          for each match; diversify only if you intentionally want different outcome exposure.
-        </div>
-        <div id="h2h"></div>
+        <h2>Head-to-head</h2>
+        <div class="note" id="h2h-how"></div>
+        <div class="scroll"><table id="h2h-summary"></table></div>
+        <div class="note" id="h2h-multi-note"></div>
+        <div id="h2h-multi"></div>
       </section>
 
       <section class="card" id="diversity-card" hidden>
@@ -454,7 +480,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         contest at once, so they compete with one another for ranks and payouts. The
         page reports that joint portfolio EV separately from the sum of standalone
         entry EVs. A field-strength diagnostic compares the sampled opponent field's
-        analytic expected-FP distribution with the selected portfolio and H2H anchor.
+        analytic expected-FP distribution with the selected portfolio and the top lineup.
         The field prior is sparse and selection-biased, so all contest-EV outputs are
         experimental and are not calibrated return estimates until prospectively
         evaluated across substantially more contests.</p>
@@ -1032,7 +1058,8 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     updateDetailHint();
     settingsChanged();
   });
-  ["objective", "construction", "entries", "shared", "player-exposure", "superstar-exposure", "limits"]
+  ["objective", "construction", "entries", "shared", "player-exposure", "superstar-exposure", "limits",
+   "h2h-entries", "h2h-player-exposure", "h2h-superstar-exposure"]
     .forEach(function (id) { el(id).addEventListener("change", settingsChanged); });
   el("contest-preset").addEventListener("change", function () {
     if (el("contest-preset").value) applyContestPreset(el("contest-preset").value);
@@ -1127,6 +1154,12 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         note.hidden = false;
         note.className = "note bad";
         note.textContent = message.message;
+        // The head-to-head section is priced before the tournament portfolio,
+        // so a portfolio that cannot be filled still leaves it to show.
+        if (message.h2h_multi) {
+          state.result = { h2h_multi: message.h2h_multi };
+          renderH2H();
+        }
       }
     };
     worker.onerror = function (error) {
@@ -1194,6 +1227,13 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     settingsChanged();
   });
 
+  // A blank or out-of-range H2H exposure falls back to its default rather than
+  // failing the solve.
+  function exposureShare(value, fallback) {
+    var share = Number(value);
+    return value !== "" && isFinite(share) && share > 0 && share <= 1 ? share : fallback;
+  }
+
   function options() {
     var payload = state.payload;
     var preset = PRESETS[el("detail").value];
@@ -1221,6 +1261,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       meanReserve: payload.settings.mean_candidate_reserve,
       nearOptimalRatio: payload.settings.near_optimal_ratio,
       entries: Number(el("entries").value),
+      h2hEntries: Math.max(1, Math.min(50, Math.floor(Number(el("h2h-entries").value) || 3))),
+      h2hPlayerExposure: exposureShare(el("h2h-player-exposure").value, 1),
+      h2hSuperstarExposure: exposureShare(el("h2h-superstar-exposure").value, 0.25),
       constructionRules: el("construction").value === "on"
         ? payload.settings.portfolio_construction_rules || [] : [],
       maxPlayerExposure: Number(el("player-exposure").value),
@@ -1314,6 +1357,78 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     }).join("");
   }
 
+  /* ---------- multi-entry head-to-head ---------- */
+  function pct(value, places) {
+    return Number.isFinite(value) ? num(value * 100, places === undefined ? 1 : places) + "%" : "—";
+  }
+
+  function renderH2H() {
+    var h2h = state.result && state.result.h2h_multi;
+    el("h2h-card").hidden = !(h2h && h2h.entries && h2h.entries.length);
+    if (el("h2h-card").hidden) return;
+    var players = state.payload.players;
+    var names = function (ids) {
+      return ids.map(function (id) { return players[id].name; }).join(", ");
+    };
+    var limits = h2h.limits || {};
+
+    el("h2h-how").textContent =
+      "Superstars: " + names(h2h.pools.superstars) + ", in turn, each in at most " +
+      limits.superstar + " of " + h2h.requested + " entries. Round 1 gives each its best " +
+      "lineup; later rounds change the supporting players, preferring the top ten " +
+      "(fillers ranked 6–10: " + names(h2h.pools.fillers) + ") and, when the salary cap " +
+      "allows none, the fewest from outside it." +
+      (limits.player < h2h.requested
+        ? " No player is in more than " + limits.player + " entries." : "");
+
+    var sharp = h2h.sharp || {}, pub = h2h.public || {};
+    el("h2h-summary").innerHTML =
+      "<thead><tr><th>Entries</th><th class='num'>Expected wins</th>" +
+      "<th class='num'>Per entry</th><th class='num'>0 wins</th>" +
+      "<th class='num'>Winning record</th><th class='num'>Exp. wins vs public</th>" +
+      "</tr></thead><tbody><tr>" +
+      "<td>" + h2h.filled + (h2h.filled < h2h.requested ? " of " + h2h.requested : "") + "</td>" +
+      "<td class='num'>" + num(sharp.expected_wins, 2) + "</td>" +
+      "<td class='num'>" + pct(sharp.win_rate) + "</td>" +
+      "<td class='num'>" + pct(sharp.zero_wins) + "</td>" +
+      "<td class='num'>" + pct(sharp.winning_record) + "</td>" +
+      "<td class='num'>" + num(pub.expected_wins, 2) + "</td></tr></tbody>";
+
+    el("h2h-multi-note").textContent =
+      (h2h.filled < h2h.requested
+        ? "Only " + h2h.filled + " of " + h2h.requested + " entries fit the exposure limits: " +
+          "raise the Superstar limit or change the entry count. "
+        : "") +
+      "Each entry is its own contest against its own opponent, so expected wins is the " +
+      "sum of the entries' win chances. Entries share one game, so lineups that share " +
+      "players win and lose together: that is what \"0 wins\" measures. Figures are " +
+      "against a sharp opponent (one of the " + h2h.opponents.sharp + " highest-projected " +
+      "lineups) except the last, which is against the public ownership prior. Neither " +
+      "opponent model is calibrated to real H2H contests.";
+
+    el("h2h-multi").innerHTML = h2h.entries.map(function (entry, i) {
+      var chips = entry.ids.map(function (id) {
+        var player = players[id];
+        var star = id === entry.superstar;
+        return '<span class="chip' + (star ? " star" : "") + '">' + (star ? "★ " : "") +
+          text(player.name) + " <small>" + text(player.pos) + " " + money(player.salary) +
+          "</small></span>";
+      }).join("");
+      var how = "round " + entry.round + (entry.round > 1 && entry.fillers && entry.fillers.length
+        ? " · fillers " + names(entry.fillers) : "");
+      var win = sharp.per_entry ? sharp.per_entry[i] : NaN;
+      var winPublic = pub.per_entry ? pub.per_entry[i] : NaN;
+      return '<div class="lineup"><div class="lineup-head">' +
+        '<span class="rank">H2H ' + (i + 1) + "</span>" +
+        '<span class="score">' + num(entry.expected_fp, 2) + " expected FP</span>" +
+        '<span class="mono" style="color:var(--ink-3)">' + money(entry.salary) + "</span>" +
+        '<span class="badge">' + text(how) + "</span></div>" +
+        '<div class="chips">' + chips + "</div>" +
+        '<div class="metrics"><span><strong>win vs sharp ' + pct(win) + "</strong></span>" +
+        "<span>win vs public " + pct(winPublic) + "</span></div></div>";
+    }).join("");
+  }
+
   function finish(message) {
     state.running = false;
     state.result = message;
@@ -1323,9 +1438,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
     var published = publishedKeys();
     renderLineups(el("portfolio"), message.portfolio, published);
-    var h2h = message.h2h_anchor || [];
-    el("h2h-card").hidden = !h2h.length;
-    if (h2h.length) renderLineups(el("h2h"), h2h, published);
+    renderH2H();
 
     var shared = message.portfolio.filter(function (lineup) {
       return published.has(lineupKey(lineup));
@@ -1414,7 +1527,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           "<p><strong>Selected portfolio expected FP:</strong> mean " +
           num(portfolioFP.mean, 2) + " · min " + num(portfolioFP.min, 2) +
           " · max " + num(portfolioFP.max, 2) +
-          (Number.isFinite(h2hFP) ? ". H2H anchor: " + num(h2hFP, 2) + "." : ".") +
+          (Number.isFinite(h2hFP) ? ". Top lineup: " + num(h2hFP, 2) + "." : ".") +
           "</p>" +
           "<p><strong>Ownership calibration:</strong> " +
           (message.field_summary.ownership_observations || "—") + " observations / " +

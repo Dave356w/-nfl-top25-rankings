@@ -1527,6 +1527,194 @@ function portfolio(scored, order, options) {
   return attempts[0];
 }
 
+/* ---------- multi-entry H2H ---------------------------------------------- */
+
+const H2H_STAR_POOL = 5;       // the game's top five projected players are the Superstars
+const H2H_FILLER_POOL = 10;    // supporting players are preferred from the top ten
+const H2H_SHARP_OPPONENTS = 100;
+const H2H_PUBLIC_OPPONENTS = 400;
+const H2H_MAX_ENTRIES = 50;
+
+/* Several separate head-to-head contests, each against its own opponent.
+ *
+ * Entries: the game's five highest-projected players take turns as Superstar,
+ * in projection order, round-robin. Round one gives each its highest-expected
+ * lineup. Later rounds keep rotating the same five but change the supporting
+ * players: a Superstar's next lineup is its unused one with the fewest
+ * supporting players from outside the top ten (ranks 6-10 are the fillers),
+ * then the highest expected points. Every lineup comes from the run's own
+ * enumeration, so the salary cap, salary floor, position limits and
+ * exclusions hold; no two entries repeat; and the H2H exposure limits cap how
+ * many entries a player, or a Superstar, may appear in (rounded down, at least
+ * one). Fewer entries than requested come back when the limits run out.
+ *
+ * Expected wins is the sum of each entry's win probability. Every entry is
+ * scored in the same game, so entries that share players rise and fall
+ * together; the zero-wins and winning-record figures carry that.
+ *
+ * Opponents are drawn independently per contest from two models: "sharp" is
+ * uniform over the highest-expected pairs, "public" is the ownership prior the
+ * GPP field uses, priced for a two-entry contest. Neither is calibrated; they
+ * bracket a skilled and a casual opponent.
+ */
+function h2hMultiEntry(scored, options, rosters) {
+  const players = model.players;
+  const requested = Math.floor(Number(options.h2hEntries) || 3);
+  const count = Math.max(1, Math.min(H2H_MAX_ENTRIES, requested));
+  const order = orderBy(scored, "expected");
+  if (!order.length) return null;
+  const fp = (id) => Number(players[id].fp) || 0;
+  const pair = (ids, superstar) => {
+    let expected = 0, salary = 0;
+    for (const id of ids) { expected += fp(id); salary += Number(players[id].salary) || 0; }
+    return { ids: Array.from(ids), superstar, expected_fp: expected + 0.5 * fp(superstar), salary };
+  };
+  const fromCandidate = (c) => pair(candidateMembers(scored, c), scored.superstars[c]);
+  const keyOf = (entry) => entry.ids.slice().sort((a, b) => a - b).join(",") + "*" + entry.superstar;
+  const byExpected = (a, b) => (b.expected_fp - a.expected_fp) || (keyOf(a) < keyOf(b) ? -1 : 1);
+
+  const playerShare = Number.isFinite(options.h2hPlayerExposure) ? options.h2hPlayerExposure : 1;
+  const starShare = Number.isFinite(options.h2hSuperstarExposure) ? options.h2hSuperstarExposure : 0.25;
+  const playerLimit = Math.max(1, exposureLimit(count, playerShare));
+  const starLimit = Math.max(1, exposureLimit(count, starShare));
+
+  // Rank the players the run could use; the top five are the Superstars.
+  const source = rosters && rosters.ids ? rosters : null;
+  const pool = new Set();
+  if (source) for (const id of source.ids) pool.add(id);
+  else for (let c = 0; c < scored.total; c++) candidateMembers(scored, c).forEach((id) => pool.add(id));
+  const ranked = Array.from(pool).sort((a, b) => (fp(b) - fp(a)) || (a - b));
+  const stars = ranked.slice(0, H2H_STAR_POOL);
+  const topTen = new Set(ranked.slice(0, H2H_FILLER_POOL));
+  const fillerSet = new Set(ranked.slice(H2H_STAR_POOL, H2H_FILLER_POOL));
+
+  // Each Superstar's lineups: by expected points for round one, then by
+  // fewest supporting players from outside the top ten for later rounds.
+  const lists = stars.map((star) => {
+    const offers = [];
+    const push = (ids) => {
+      if (ids.indexOf(star) < 0) return;
+      const entry = pair(ids, star);
+      entry.outsiders = entry.ids.filter((id) => id !== star && !topTen.has(id)).length;
+      offers.push(entry);
+    };
+    if (source) {
+      for (let r = 0; r < source.salary.length; r++) {
+        push(Array.from(source.ids.subarray(r * LINEUP_SIZE, (r + 1) * LINEUP_SIZE)));
+      }
+    } else {
+      for (const c of order) if (scored.superstars[c] === star) push(candidateMembers(scored, c));
+    }
+    return {
+      first: offers.slice().sort(byExpected),
+      later: offers.slice().sort((a, b) => (a.outsiders - b.outsiders) || byExpected(a, b)),
+    };
+  });
+
+  const entries = [], seen = new Set(), used = new Map(), starred = new Map();
+  const take = (entry, round) => {
+    const key = keyOf(entry);
+    if (seen.has(key)) return false;
+    if ((starred.get(entry.superstar) || 0) >= starLimit) return false;
+    if (entry.ids.some((id) => (used.get(id) || 0) >= playerLimit)) return false;
+    seen.add(key);
+    const { outsiders, ...clean } = entry;
+    entries.push({ ...clean, round, fillers: entry.ids.filter((id) => fillerSet.has(id)) });
+    for (const id of entry.ids) used.set(id, (used.get(id) || 0) + 1);
+    starred.set(entry.superstar, (starred.get(entry.superstar) || 0) + 1);
+    return true;
+  };
+  for (let round = 1; entries.length < count; round++) {
+    let added = false;
+    for (const list of lists) {
+      if (entries.length === count) break;
+      const offers = round === 1 ? list.first : list.later;
+      for (const entry of offers) if (take(entry, round)) { added = true; break; }
+    }
+    if (!added) break;
+  }
+
+  // Opponents: sharp from the scored candidates, public from every legal
+  // roster of the whole pool, so a visitor's exclusions do not shape the field.
+  const sharp = order.slice(0, Math.min(H2H_SHARP_OPPONENTS, order.length)).map(fromCandidate);
+  const everyone = Int32Array.from({ length: players.length }, (_, i) => i);
+  const field = enumerate(everyone, { ...options, minSalaryPct: 0, positionLimits: {} });
+  const own = ownershipRates({
+    fieldSize: 2, entryFee: Number.isFinite(options.entryFee) ? options.entryFee : 5,
+  });
+  const weights = rosterFieldProbabilities(field, own, superstarOwnershipRates(own),
+    options.fieldTemperature);
+  const cdf = new Float64Array(weights.length);
+  let running = 0;
+  for (let i = 0; i < weights.length; i++) { running += weights[i]; cdf[i] = running; }
+  const random = makeRandom((options.seed ^ 0x2b2b2b2b) >>> 0);
+  const publicField = [];
+  for (let draw = 0; draw < H2H_PUBLIC_OPPONENTS && running > 0; draw++) {
+    const needle = random() * running;
+    let low = 0, high = cdf.length - 1;
+    while (low < high) { const mid = (low + high) >> 1; if (cdf[mid] < needle) low = mid + 1; else high = mid; }
+    const base = Math.floor(low / LINEUP_SIZE) * LINEUP_SIZE;
+    publicField.push(pair(field.ids.subarray(base, base + LINEUP_SIZE), field.ids[low]));
+  }
+
+  const scoreAt = (entry, s) => {
+    let value = 0;
+    for (const id of entry.ids) value += scenarios[id * simCount + s];
+    return value + 0.5 * scenarios[entry.superstar * simCount + s];
+  };
+  const result = {
+    requested: count, filled: entries.length, entries,
+    opponents: { sharp: sharp.length, public: publicField.length },
+    limits: { player: playerLimit, superstar: starLimit },
+    pools: { superstars: stars, fillers: Array.from(fillerSet) },
+  };
+  if (!entries.length) return result;
+
+  for (const [name, opps] of Object.entries({ sharp, public: publicField })) {
+    if (!opps.length) continue;
+    // chance[e][s]: entry e beats one opponent drawn from this model in
+    // scenario s, ties counted as half a win.
+    const chance = entries.map(() => new Float64Array(simCount));
+    const values = new Float64Array(opps.length);
+    for (let s = 0; s < simCount; s++) {
+      for (let o = 0; o < opps.length; o++) values[o] = scoreAt(opps[o], s);
+      values.sort();
+      entries.forEach((entry, e) => {
+        const x = scoreAt(entry, s);
+        const below = lowerBound(values, x), notAbove = upperBound(values, x);
+        chance[e][s] = (below + 0.5 * (notAbove - below)) / values.length;
+      });
+    }
+    // Wins distribution: Poisson-binomial within a scenario, mixed over scenarios.
+    const n = entries.length;
+    const wins = new Float64Array(n + 1);
+    const step = new Float64Array(n + 1);
+    for (let s = 0; s < simCount; s++) {
+      step.fill(0); step[0] = 1;
+      for (let e = 0; e < n; e++) {
+        const q = chance[e][s];
+        for (let k = n; k >= 0; k--) step[k] = step[k] * (1 - q) + (k ? step[k - 1] * q : 0);
+      }
+      for (let k = 0; k <= n; k++) wins[k] += step[k] / simCount;
+    }
+    let mean = 0, square = 0, winning = 0;
+    for (let k = 0; k <= n; k++) {
+      mean += k * wins[k]; square += k * k * wins[k];
+      if (2 * k > n) winning += wins[k];
+    }
+    result[name] = {
+      expected_wins: mean,
+      win_rate: mean / n,
+      sd_wins: Math.sqrt(Math.max(square - mean * mean, 0)),
+      zero_wins: wins[0],
+      all_wins: wins[n],
+      winning_record: winning,
+      per_entry: chance.map((values) => values.reduce((sum, value) => sum + value, 0) / simCount),
+    };
+  }
+  return result;
+}
+
 function describe(scored, indices, construction, includeContest = true) {
   return indices.map((c, position) => {
     const ids = candidateMembers(scored, c);
@@ -1610,6 +1798,7 @@ if (typeof module !== "undefined" && module.exports) {
     contestReady, ownershipRates, superstarOwnershipRates, candidateFieldProbabilities,
     lineupFieldProbabilities, rosterFieldProbabilities, fieldScoreAt, fieldExpectedAt,
     weightedDistributionSummary, normalizePayouts, payoutForTie, applyFieldEV, evaluateJointPortfolioEV,
+    h2hMultiEntry,
     covarianceMatrix: () => covariance,
   };
 }
@@ -1619,6 +1808,7 @@ if (typeof self === "undefined") {
 } else {
 self.onmessage = (event) => {
   const message = event.data;
+  let h2hResult = null;
   try {
     if (message.type === "load") {
       model = message.payload;
@@ -1682,6 +1872,11 @@ self.onmessage = (event) => {
       });
     }
 
+    // Head-to-head does not depend on the tournament portfolio, so it is priced
+    // first and still reaches the page when the portfolio cannot be filled.
+    self.postMessage({ type: "stage", stage: "Pricing multi-entry head-to-head" });
+    h2hResult = { h2h_multi: h2hMultiEntry(scored, options, rosters) };
+
     const order = orderBy(scored, options.objective === "portfolio" ? "expected" : options.objective);
     const built = portfolio(scored, order, options);
     if (built.chosen.length < options.entries) {
@@ -1707,7 +1902,7 @@ self.onmessage = (event) => {
       portfolio: describe(scored, built.chosen, built.rules),
       scenario_evaluation: built.evaluation || null,
       field_summary: scored.fieldSummary || null,
-      h2h_anchor: describe(scored, orderBy(scored, "expected").slice(0, 1), null, false),
+      h2h_multi: h2hResult.h2h_multi,
       strongest: describe(scored, order.slice(0, 10)),
       construction: {
         requested: options.entries,
@@ -1721,7 +1916,8 @@ self.onmessage = (event) => {
       },
     });
   } catch (error) {
-    self.postMessage({ type: "error", message: String(error && error.message || error) });
+    self.postMessage({ type: "error", message: String(error && error.message || error),
+      ...(h2hResult || {}) });
   }
 };
 }

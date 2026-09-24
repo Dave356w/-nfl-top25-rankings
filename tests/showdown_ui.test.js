@@ -296,11 +296,6 @@ test("GPP results distinguish joint portfolio EV from standalone entry EV", asyn
       joint_cash_rate:.18,joint_top_one_rate:.025,joint_first_rate:.0008,
       joint_solo_first_rate:.0008,joint_expected_duplicates:2.4,
     }],
-    h2h_anchor: [{
-      ids:[0,1,2,3,4],superstar:1,salary:50,expected_fp:28.0,sim_mean:27.8,
-      floor_p25:21,ceiling_p90:39,ceiling_p95:44,near_optimal_rate:.09,win_rate:.009,
-      tournament_score:.8,
-    }]
   });
   assert.match(p.node("portfolio").innerHTML, /joint EV \+\$0\.12/);
   assert.match(p.node("portfolio").innerHTML, /standalone EV \+\$0\.15/);
@@ -314,11 +309,10 @@ test("GPP results distinguish joint portfolio EV from standalone entry EV", asyn
   assert.match(p.node("field-strength").innerHTML, /mean 61\.20/);
   assert.match(p.node("field-strength").innerHTML, /P90 72\.50/);
   assert.match(p.node("field-strength").innerHTML, /Selected portfolio expected FP/);
-  assert.match(p.node("field-strength").innerHTML, /H2H anchor: 83\.00/);
+  assert.match(p.node("field-strength").innerHTML, /Top lineup: 83\.00/);
   assert.match(p.node("field-strength").innerHTML, /selection-biased sparse prior/);
-  assert.equal(p.node("h2h-card").hidden, false);
-  assert.match(p.node("h2h").innerHTML, /28\.00 expected FP/);
-  assert.doesNotMatch(p.node("h2h").innerHTML, /ROI/);
+  // No head-to-head section without head-to-head entries.
+  assert.equal(p.node("h2h-card").hidden, true);
 });
 
 
@@ -333,4 +327,66 @@ test("Yahoo quarter-dollar preset fills the 4704-entry payout ladder", async () 
   p.node("objective").value = "field_ev";
   p.node("objective").handlers.change();
   assert.equal(p.node("run").disabled, false);
+});
+
+function h2hMessage(extra) {
+  const stats = (wins, perEntry) => ({ expected_wins: wins, win_rate: wins / perEntry.length,
+    sd_wins: .7, zero_wins: .12, all_wins: .3, winning_record: .4, per_entry: perEntry });
+  return { entries: [
+      { ids: [0, 1, 2, 3, 4], superstar: 0, expected_fp: 30, salary: 50, round: 1, fillers: [] },
+      { ids: [0, 1, 2, 3, 4], superstar: 1, expected_fp: 29, salary: 50, round: 2, fillers: [3, 4] },
+    ], requested: 2, filled: 2, opponents: { sharp: 100, public: 400 },
+    limits: { player: 2, superstar: 1 },
+    pools: { superstars: [0, 1, 2], fillers: [3, 4] },
+    sharp: stats(1.1, [.6, .5]), public: stats(1.8, [.9, .9]), ...extra };
+}
+
+test("head-to-head shows its summary, rounds and fillers", async () => {
+  const p = await page();
+  p.workers[0].emit({ type: "result", valid_rosters: 1, candidates_scored: 1,
+    timing: { total: 10 }, diversity: null, field_summary: null, portfolio: [],
+    h2h_multi: h2hMessage() });
+  assert.equal(p.node("h2h-card").hidden, false);
+  assert.match(p.node("h2h-how").textContent, /Superstars: Player 0, Player 1, Player 2, in turn, each in at most 1 of 2 entries/);
+  assert.match(p.node("h2h-how").textContent, /fillers ranked 6–10: Player 3, Player 4/);
+  assert.match(p.node("h2h-summary").innerHTML, /1\.10/);
+  assert.match(p.node("h2h-summary").innerHTML, /12\.0%/);
+  assert.match(p.node("h2h-summary").innerHTML, /1\.80/);
+  assert.match(p.node("h2h-multi").innerHTML, /round 1</);
+  assert.match(p.node("h2h-multi").innerHTML, /round 2 · fillers Player 3, Player 4/);
+  assert.match(p.node("h2h-multi").innerHTML, /★ Player 1/);
+  assert.match(p.node("h2h-multi").innerHTML, /win vs sharp 50\.0%/);
+  assert.doesNotMatch(p.node("h2h-multi-note").textContent, /Only/);
+});
+
+test("head-to-head says when the limits could not fill every entry", async () => {
+  const p = await page();
+  p.workers[0].emit({ type: "result", valid_rosters: 1, candidates_scored: 1,
+    timing: { total: 10 }, diversity: null, field_summary: null, portfolio: [],
+    h2h_multi: h2hMessage({ requested: 6, filled: 2 }) });
+  assert.match(p.node("h2h-summary").innerHTML, /2 of 6/);
+  assert.match(p.node("h2h-multi-note").textContent, /Only 2 of 6 entries fit the exposure limits/);
+});
+
+test("head-to-head still shows when the tournament portfolio cannot be filled", async () => {
+  const p = await page();
+  p.workers[0].emit({ type: "error", message: "Built 14 of 20 entries under the construction rules.",
+    h2h_multi: h2hMessage() });
+  assert.match(p.node("result-note").textContent, /Built 14 of 20/);
+  assert.equal(p.node("h2h-card").hidden, false);
+  assert.match(p.node("h2h-multi").innerHTML, /win vs sharp 60\.0%/);
+});
+
+test("the H2H options reach the worker with their defaults", async () => {
+  const p = await page();
+  p.node("h2h-entries").value = "12";
+  p.node("h2h-superstar-exposure").value = "";
+  p.node("h2h-player-exposure").value = "";
+  p.node("cap").value = "100";
+  p.node("run").handlers.click();
+  const solve = p.workers[0].messages.filter((m) => m.type === "solve").pop();
+  assert.ok(solve, "a solve was sent");
+  assert.equal(solve.options.h2hEntries, 12);
+  assert.equal(solve.options.h2hSuperstarExposure, 0.25);
+  assert.equal(solve.options.h2hPlayerExposure, 1);
 });
