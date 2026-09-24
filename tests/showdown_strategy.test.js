@@ -240,116 +240,32 @@ function h2hFixture(h2hEntries) {
   return {payload, options, result: w.h2hMultiEntry(scored, options, rosters)};
 }
 
-test('multi-entry H2H: each mode fills the requested entries the way it says', () => {
-  const {result} = h2hFixture(4);
-  assert.equal(result.entries, 4);
-  const {repeat, rotate, next_best: next} = result.modes;
-  const key = (e) => e.ids.slice().sort((a, b) => a - b).join(',') + '*' + e.superstar;
-  // Repeat: one pair four times. Next-best starts from that same pair.
-  assert.equal(new Set(repeat.entries.map(key)).size, 1);
-  assert.equal(key(next.entries[0]), key(repeat.entries[0]));
-  assert.equal(new Set(next.entries.map(key)).size, 4);
-  // Rotate: the same five players, a different Superstar on each entry.
-  const roster = (e) => e.ids.slice().sort((a, b) => a - b).join(',');
-  assert.equal(new Set(rotate.entries.map(roster)).size, 1);
-  assert.equal(new Set(rotate.entries.map((e) => e.superstar)).size, 4);
-  assert.equal(rotate.entries[0].superstar, repeat.entries[0].superstar);
-});
-
-test('multi-entry H2H: expected wins is the sum of entry win chances', () => {
-  const {result} = h2hFixture(3);
-  for (const mode of Object.values(result.modes)) {
-    for (const opponent of ['sharp', 'public']) {
-      const m = mode[opponent];
-      const sum = m.per_entry.reduce((a, b) => a + b, 0);
-      assert.ok(Math.abs(m.expected_wins - sum) < 1e-9);
-      assert.ok(m.zero_wins >= 0 && m.zero_wins <= 1);
-      assert.ok(m.all_wins >= 0 && m.all_wins <= 1);
-      assert.ok(Math.abs(m.win_rate - m.expected_wins / 3) < 1e-12);
-    }
-  }
-  // Repeated entries all have the same chance; a rotated Superstar never beats the best one.
-  const repeat = result.modes.repeat.sharp.per_entry;
-  assert.ok(repeat.every((p) => Math.abs(p - repeat[0]) < 1e-12));
-  const rotate = result.modes.rotate.sharp.per_entry;
-  assert.ok(rotate.slice(1).every((p) => p <= rotate[0] + 1e-9));
-});
-
-test('multi-entry H2H: the entry count is clamped to 1..50', () => {
-  assert.equal(h2hFixture(80).result.entries, 50);
-  assert.equal(h2hFixture(0).result.entries, 3);    // missing -> default
-});
-
-test('multi-entry H2H: after the five rotations, next-best player swaps fill the rest', () => {
-  const {result} = h2hFixture(10);
-  const rotate = result.modes.rotate.entries;
-  assert.equal(rotate.length, 10);
-  const top = new Set(rotate[0].ids);
-  // Entries 1-5: the top roster with each of its five players as Superstar.
-  assert.ok(rotate.slice(0, 5).every((e) => e.swap === null && e.ids.every((id) => top.has(id))));
-  assert.equal(new Set(rotate.slice(0, 5).map((e) => e.superstar)).size, 5);
-  // Entries 6+: one player swapped for another that fits, best first.
-  for (const e of rotate.slice(5)) {
-    assert.equal(e.swap.in.length, 1);
-    assert.equal(e.swap.out.length, 1);
-    assert.ok(e.salary <= 120);
-  }
-  for (let i = 6; i < 10; i++) assert.ok(rotate[i].expected_fp <= rotate[i - 1].expected_fp + 1e-9);
-  // Every entry is a different (roster, Superstar) pair.
-  const key = (e) => e.ids.slice().sort((a, b) => a - b).join(',') + '*' + e.superstar;
-  assert.equal(new Set(rotate.map(key)).size, 10);
-});
-
-test('multi-entry H2H: rotation and next-best respect the H2H exposure limits', () => {
-  const players = 0.6, stars = 0.3, entries = 10;
-  const fixture = (() => {
-    const f = h2hFixture(entries);
-    const options = {...f.options, h2hPlayerExposure: players, h2hSuperstarExposure: stars};
-    w.setModel(f.payload);
-    w.simulate(options.simulations, options.seed);
-    const rosters = w.enumerate(f.payload.players.map((_, i) => i), options);
-    const scored = w.score(rosters, w.screen(rosters, options), options, () => {});
-    return w.h2hMultiEntry(scored, options, rosters);
-  })();
-  assert.deepEqual(fixture.limits, {player: 6, superstar: 3});
-  for (const mode of ['rotate', 'next_best']) {
-    const chosen = fixture.modes[mode].entries;
-    const count = new Map(), starred = new Map();
-    for (const e of chosen) {
-      e.ids.forEach((id) => count.set(id, (count.get(id) || 0) + 1));
-      starred.set(e.superstar, (starred.get(e.superstar) || 0) + 1);
-    }
-    assert.ok(Math.max(...count.values()) <= 6, mode);
-    assert.ok(Math.max(...starred.values()) <= 3, mode);
-    assert.equal(fixture.modes[mode].filled, chosen.length);
-  }
-  // Repeat is the one-lineup baseline and is not limited.
-  assert.equal(fixture.modes.repeat.entries.length, entries);
-});
-
-test('multi-entry H2H: top-5 Superstars take turns, then ranks 6-10 fill in', () => {
-  const f = h2hFixture(12);
-  const options = {...f.options, h2hSuperstarExposure: 0.25};
+function h2hRun(h2hEntries, extra = {}) {
+  const f = h2hFixture(h2hEntries);
+  const options = {...f.options, ...extra};
   w.setModel(f.payload);
   w.simulate(options.simulations, options.seed);
   const rosters = w.enumerate(f.payload.players.map((_, i) => i), options);
   const scored = w.score(rosters, w.screen(rosters, options), options, () => {});
-  const result = w.h2hMultiEntry(scored, options, rosters);
   const byFp = f.payload.players.map((p, i) => i).sort((a, b) =>
     (f.payload.players[b].fp - f.payload.players[a].fp) || (a - b));
+  return {result: w.h2hMultiEntry(scored, options, rosters), byFp};
+}
+const pairKey = (e) => e.ids.slice().sort((a, b) => a - b).join(',') + '*' + e.superstar;
+
+test('H2H: the top five take turns as Superstar, then ranks 6-10 fill in', () => {
+  const {result, byFp} = h2hRun(12);
   assert.deepEqual(result.pools.superstars, byFp.slice(0, 5));
   assert.deepEqual(result.pools.fillers.slice().sort(), byFp.slice(5, 10).sort());
-  const entries = result.modes.top_stars.entries;
+  const entries = result.entries;
+  assert.equal(result.filled, 12);
   assert.equal(entries.length, 12);
   // Round one: each top-5 player as Superstar once, in projection order.
   assert.deepEqual(entries.slice(0, 5).map((e) => e.superstar), byFp.slice(0, 5));
   assert.ok(entries.slice(0, 5).every((e) => e.round === 1));
-  // 12 entries at 0.25 exposure: no Superstar more than three times.
-  const starred = new Map();
-  entries.forEach((e) => starred.set(e.superstar, (starred.get(e.superstar) || 0) + 1));
-  assert.deepEqual(result.limits.superstar, 3);
-  assert.ok(Math.max(...starred.values()) <= 3);
-  assert.ok(entries.every((e) => byFp.slice(0, 5).includes(e.superstar)));
+  // Rounds continue in the same order.
+  assert.deepEqual(entries.slice(5, 10).map((e) => e.superstar), byFp.slice(0, 5));
+  assert.ok(entries.slice(5, 10).every((e) => e.round === 2));
   // Later rounds keep the other four inside the top ten while the cap allows it.
   const topTen = new Set(byFp.slice(0, 10));
   for (const e of entries.filter((x) => x.round > 1)) {
@@ -357,6 +273,43 @@ test('multi-entry H2H: top-5 Superstars take turns, then ranks 6-10 fill in', ()
     assert.ok(e.salary <= 120);
     assert.deepEqual(e.fillers.slice().sort(), e.ids.filter((id) => result.pools.fillers.includes(id)).sort());
   }
-  const key = (e) => e.ids.slice().sort((a, b) => a - b).join(',') + '*' + e.superstar;
-  assert.equal(new Set(entries.map(key)).size, 12);
+  assert.equal(new Set(entries.map(pairKey)).size, 12);
+});
+
+test('H2H: the Superstar limit defaults to 0.25, rounded down', () => {
+  const {result} = h2hRun(12);
+  assert.deepEqual(result.limits, {player: 12, superstar: 3});
+  const starred = new Map();
+  result.entries.forEach((e) => starred.set(e.superstar, (starred.get(e.superstar) || 0) + 1));
+  assert.ok(Math.max(...starred.values()) <= 3);
+  // Five Superstars at one entry each cannot fill six.
+  const six = h2hRun(6).result;
+  assert.equal(six.limits.superstar, 1);
+  assert.equal(six.filled, 5);
+  assert.equal(six.requested, 6);
+});
+
+test('H2H: the player exposure limit holds', () => {
+  const {result} = h2hRun(12, {h2hPlayerExposure: 0.5});
+  assert.equal(result.limits.player, 6);
+  const count = new Map();
+  result.entries.forEach((e) => e.ids.forEach((id) => count.set(id, (count.get(id) || 0) + 1)));
+  assert.ok(Math.max(...count.values()) <= 6);
+});
+
+test('H2H: expected wins is the sum of entry win chances', () => {
+  const {result} = h2hRun(8);
+  for (const opponent of ['sharp', 'public']) {
+    const m = result[opponent];
+    const sum = m.per_entry.reduce((a, b) => a + b, 0);
+    assert.ok(Math.abs(m.expected_wins - sum) < 1e-9);
+    assert.equal(m.per_entry.length, result.entries.length);
+    assert.ok(m.zero_wins >= 0 && m.zero_wins <= 1);
+    assert.ok(Math.abs(m.win_rate - m.expected_wins / result.entries.length) < 1e-12);
+  }
+});
+
+test('H2H: the entry count is clamped to 1..50', () => {
+  assert.equal(h2hRun(80).result.requested, 50);
+  assert.equal(h2hRun(0).result.requested, 3);    // missing -> default
 });

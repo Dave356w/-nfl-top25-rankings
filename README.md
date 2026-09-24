@@ -312,40 +312,40 @@ quantiles and any-cash/top-1%/first rates.
 The same run now publishes a **Field strength / calibration** diagnostic. It
 computes the sampled opponent field's analytic expected-FP mean, median, P90 and
 P99 using the exact sampled lineup weights, then compares those with the selected
-portfolio's mean/min/max expected FP and the H2H expected-points anchor. This is
+portfolio's mean/min/max expected FP and the top lineup's expected points. This is
 a diagnostic for an opponent field that is too weak or too strong; it does not
 reweight EV or change lineup selection. The ownership archive is sparse and
 selection-biased, so field-based EV is labeled **not a calibrated return
 estimate** and remains experimental until prospective contest calibration is
 materially deeper.
 
-**Multi-entry head-to-head.** Set *Head-to-head entries* (1–50) and the run
-also prices that many separate one-on-one contests, filled four ways:
-**top-5 Superstars, 6–10 fillers** (the game's five highest-projected players
-take turns as Superstar; round one gives each its best lineup, and later rounds
-keep rotating them while changing the supporting players, preferring lineups
-whose other four all come from the top ten and, when the cap allows none, the
-fewest from outside it), **rotate Superstar, then swaps** (the top lineup's five players with the 1.5×
-slot moved down the other four by projection; once those five are used, the
-next-best player that fits the cap and position rules is swapped in, one-swap
-rosters first and then two-swap, each best first), **repeat top lineup**, and
-**next-best lineups** (the highest-expected distinct lineups, which mostly keep
-the top Superstar and swap a supporting player). *H2H max player exposure* and
-*H2H max Superstar exposure* cap how many of those entries one player or one
-Superstar may appear in (1 means no limit; they are separate from the
-tournament limits — 0.25 gives each top-5 Superstar a quarter of the entries).
-Top-5, rotation and next-best entries respect them and say how
-many they could fill; repeat is the one-lineup baseline and ignores them. Every
-roster comes from the run's own enumeration, so the salary cap, salary floor,
-position limits and exclusions always hold. Each entry has its own opponent, drawn either from a
-**sharp** pool (the 100 highest-projected lineups) or the **public** ownership
-prior. The table shows expected wins, the win rate per entry, the chance of
-winning none, and the chance of a winning record; switching the strategy only
-re-renders, it does not re-solve. Expected wins is the sum of per-entry win
-chances whatever the entries are; what the choice changes is how often they all
-lose together, since every entry is scored in the same game. Head-to-head is
-priced before the tournament portfolio, so it still shows when the portfolio
-cannot be filled. Neither opponent model is calibrated to real H2H contests.
+**Head-to-head.** Set *Head-to-head entries* (1–50) and the run also builds and
+prices that many separate one-on-one contests:
+
+1. The game's five highest-projected players (after exclusions) are the
+   Superstars and take turns, in projection order.
+2. Each Superstar is in at most *H2H max Superstar exposure* of the entries
+   (default 0.25), rounded down with a minimum of one. With five Superstars at
+   0.25, 6, 7 and 11 entries cannot all be filled (they fill 5, 5 and 10); the
+   page says so.
+3. Round one gives each Superstar its highest-expected lineup.
+4. Later rounds keep rotating the same five but change the supporting players:
+   a Superstar's next lineup is its unused one with the fewest supporting
+   players from outside the top ten (ranks 6–10 are the fillers), then the
+   highest expected points. Other top-five players can support.
+5. Every lineup comes from the run's own enumeration, so the salary cap, salary
+   floor, position limits and exclusions hold; no two entries repeat; and
+   *H2H max player exposure* (default 1, no limit) caps any one player.
+
+Each entry has its own opponent, drawn either from a **sharp** pool (the 100
+highest-projected lineups) or the **public** ownership prior. The card shows
+expected wins, the win rate per entry, the chance of winning none and of a
+winning record, and each entry's round, fillers and win chances. Expected wins
+is the sum of per-entry win chances; since every entry is scored in the same
+game, entries that share players win and lose together, which the zero-wins
+figure carries. Head-to-head is priced before the tournament portfolio, so it
+still shows when the portfolio cannot be filled. Neither opponent model is
+calibrated to real H2H contests.
 
 The feed boundary is the reason for the split, not the compute: Actions prepares
 one immutable model so every visitor sees the same inputs.
