@@ -215,6 +215,25 @@ tr[data-rank="1"] .rank,tr[data-rank="2"] .rank,tr[data-rank="3"] .rank{
    he is third in a flattened depth list. */
 .role{font-size:12.5px; color:var(--ink-2); white-space:nowrap; cursor:help}
 
+/* ---------- depth edits ---------- */
+.depth-pick{
+  font:inherit; font-family:var(--mono); font-size:13px; color:var(--ink);
+  background:var(--panel); border:1px solid var(--line); border-radius:7px;
+  padding:2px 4px; min-height:28px; cursor:pointer;
+}
+.depth-pick.changed{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink)}
+.was{display:block; font-family:var(--mono); font-size:11.5px; color:var(--ink-3);
+     text-decoration:line-through}
+.depth-edits{
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:-6px 0 14px;
+  padding:10px 14px; border-radius:10px; font-size:13.5px;
+  background:var(--accent-soft); color:var(--accent-ink);
+}
+.depth-edits button{
+  font:inherit; font-size:13px; color:var(--accent-ink); background:var(--panel);
+  border:1px solid var(--line); border-radius:8px; padding:4px 10px; cursor:pointer;
+}
+
 .empty{padding:44px 20px; text-align:center; color:var(--ink-2)}
 .empty h3{margin:0 0 6px; color:var(--ink); font-size:17px; font-weight:620}
 .empty p{margin:0 auto; max-width:44ch; font-size:14px}
@@ -357,6 +376,11 @@ footer{
     </div>
   </div>
 
+  <div class="depth-edits" id="depth-edits" role="status" hidden>
+    <span id="depth-edits-text"></span>
+    <button type="button" id="depth-reset">Reset depth edits</button>
+  </div>
+
   <div class="card">
     <div class="scroll">
       <table id="table">
@@ -392,6 +416,16 @@ footer{
          starters rather than as a starter and two reserves. <b>Depth</b> is the
          separate expected-opportunity rank, which blends that chart ordering with
          Yahoo salary and is what the volatility model is keyed on.</p>
+      <p><b>Editing depth.</b> Change a player's <b>Depth</b> to re-run the same
+         frozen regression in your browser: teammates between his old and new spot
+         shift by one, every affected mean is recomputed, and the position is
+         re-ranked from the whole priced pool. Edits stay in this browser, apply
+         only to this run, and never change the published data. The fitted model
+         has no depth effect on the <em>mean</em> for quarterbacks or defenses,
+         so there a depth edit reorders teammates without moving the projection.
+         Manual overrides
+         are not recomputed, and players the run already removed (Out, injured
+         reserve, unconfirmed backup QBs) cannot be brought back here.</p>
       <div class="legend">
         <div><span class="badge model">model</span> Yahoo salary-position-depth regression</div>
         <div><span class="badge override">override</span> manual value</div>
@@ -420,12 +454,15 @@ footer{
   </footer>
 </div>
 
+<script src="depth-model.js"></script>
 <script>
 (function () {
   "use strict";
 
   var THEME_KEY = "nfl-top25-theme";
-  var state = { data: null, position: null, query: "", sort: "rank", dir: 1 };
+  var DEPTH_KEY = "nfl-top25-depth-v1";
+  var state = { data: null, position: null, query: "", sort: "rank", dir: 1,
+                model: null, depths: {}, store: null };
 
   /* ---------- theme ---------- */
   var root = document.documentElement;
@@ -518,8 +555,106 @@ footer{
   }
 
   /* ---------- rendering ---------- */
+  /* ---------- depth edits ---------- */
+  // A player's identity within one run. Names repeat across teams, so the team
+  // and position are part of it.
+  function idOf(position, r) { return position + "|" + r.team + "|" + r.player; }
+
+  function canEditDepth() {
+    return !!(state.model && state.data && state.data.pool &&
+              typeof DepthModel !== "undefined");
+  }
+
+  function editCount() { return Object.keys(state.depths).length; }
+
+  // The position's rows with every stored depth edit applied and re-ranked.
+  // With no edits the published table is returned untouched, so the page shows
+  // exactly what the run published until the visitor changes something.
+  function rankedRows(position) {
+    var published = state.data.rankings[position] || [];
+    if (!canEditDepth()) return published.slice();
+    var pool = state.data.pool[position] || [];
+    var touched = pool.some(function (r) {
+      return Object.prototype.hasOwnProperty.call(state.depths, idOf(position, r));
+    });
+    if (!touched) {
+      return published.map(function (r) { return Object.assign({}, r, { id: idOf(position, r) }); });
+    }
+    var list = pool.map(function (r) {
+      var id = idOf(position, r);
+      var row = Object.assign({}, r, { id: id, published_depth: r.depth });
+      if (Object.prototype.hasOwnProperty.call(state.depths, id)) {
+        row.depth = state.depths[id];
+        if (DepthModel.isModelled(r.method)) {
+          var fp = DepthModel.predict(state.model, position, r.salary, row.depth);
+          if (fp !== null) {
+            row.published_fp = r.fp;
+            row.fp = Math.round(fp * 100) / 100;
+            row.fp_per_salary = r.salary > 0 ? Math.round(row.fp / r.salary * 1000) / 1000 : null;
+          }
+        }
+      }
+      return row;
+    });
+    // run_position_rankings' tie-breaks: projection, then FPPG, salary, name.
+    list.sort(function (a, b) {
+      return (b.fp - a.fp) || ((b.fppg || 0) - (a.fppg || 0)) ||
+        ((b.salary || 0) - (a.salary || 0)) || String(a.player).localeCompare(String(b.player));
+    });
+    return list.slice(0, Number(state.data.top_n) || list.length).map(function (r, i) {
+      r.rank = i + 1;
+      return r;
+    });
+  }
+
+  function currentDepth(position, r) {
+    var id = idOf(position, r);
+    return Object.prototype.hasOwnProperty.call(state.depths, id) ? state.depths[id] : r.depth;
+  }
+
+  function setDepth(position, id, depth) {
+    var pool = state.data.pool[position] || [];
+    var players = pool.map(function (r) {
+      return { id: idOf(position, r), group: r.team, depth: currentDepth(position, r) };
+    });
+    var changes = DepthModel.move(players, id, depth);
+    var published = {};
+    pool.forEach(function (r) { published[idOf(position, r)] = r.depth; });
+    Object.keys(changes).forEach(function (key) {
+      if (changes[key] === published[key]) delete state.depths[key];
+      else state.depths[key] = changes[key];
+    });
+    state.store.write(state.depths);
+    renderTabs();
+    render();
+  }
+
+  function depthControl(r) {
+    if (!canEditDepth() || !num(r.depth)) return num(r.depth) ? String(r.depth) : "—";
+    var published = num(r.published_depth) ? r.published_depth : r.depth;
+    var top = Math.max(6, r.depth, published);
+    var options = [];
+    for (var d = 1; d <= top; d++) {
+      options.push('<option value="' + d + '"' + (d === r.depth ? " selected" : "") + ">" +
+        d + (d === published && r.depth !== published ? "*" : "") + "</option>");
+    }
+    return '<select class="depth-pick' + (r.depth !== published ? " changed" : "") +
+      '" data-id="' + escapeHtml(r.id) + '" title="Published depth ' + published +
+      ' (marked *)" aria-label="Depth for ' + escapeHtml(r.player) +
+      '">' + options.join("") + "</select>";
+  }
+
+  function renderDepthEdits() {
+    var n = editCount();
+    el("depth-edits").hidden = !n;
+    if (n) {
+      el("depth-edits-text").textContent = n + (n === 1 ? " depth rank" : " depth ranks") +
+        " edited in this browser. Projections and ranks are re-run from the published model.";
+    }
+  }
+
   function rows() {
-    var all = (state.data.rankings[state.position] || []).slice();
+    var all = rankedRows(state.position);
     var q = state.query.trim().toLowerCase();
     if (q) {
       all = all.filter(function (r) {
@@ -543,6 +678,7 @@ footer{
   }
 
   function render() {
+    renderDepthEdits();
     var list = rows();
     var table = el("table");
     var body = el("body");
@@ -572,7 +708,7 @@ footer{
         "<span>" + fmt(r.fp_per_salary, 3) + " FP/$</span>",
         "<span>" + escapeHtml(r.role || "role unknown") +
           (r.role_slot ? " · " + escapeHtml(r.role_slot) : "") + "</span>",
-        "<span>Depth " + (num(r.depth) ? r.depth : "—") + "</span>",
+        "<span>Depth " + depthControl(r) + "</span>",
         "<span>" + escapeHtml(localKickoff(r.kickoff_utc)) + "</span>"
       ].join("");
 
@@ -585,13 +721,16 @@ footer{
           "</span></span></td>" +
         '<td class="num" data-cell="fp"><span class="fp"><b>' + fmt(r.fp) +
           '</b><span class="track"><span class="fill" style="width:' +
-          pct.toFixed(1) + '%"></span></span></span></td>' +
+          pct.toFixed(1) + '%"></span></span>' +
+          (num(r.published_fp) && r.published_fp !== r.fp
+            ? '<span class="was" title="Published projection">' + fmt(r.published_fp) + "</span>"
+            : "") + "</span></td>" +
         '<td class="num mono">' + fmt(r.fppg) + "</td>" +
         '<td class="num mono">' + money(r.salary) + "</td>" +
         '<td class="num mono">' + fmt(r.fp_per_salary, 3) + "</td>" +
         '<td><span class="role" title="' + escapeHtml(r.role_slot || "") + '">' +
           escapeHtml(r.role || "—") + "</span></td>" +
-        '<td class="num mono">' + (num(r.depth) ? r.depth : "—") + "</td>" +
+        '<td class="num mono">' + depthControl(r) + "</td>" +
         '<td class="mono">' + escapeHtml(localKickoff(r.kickoff_utc)) + "</td>" +
         '<td><span class="badge ' + methodClass(r.method) + '">' +
           escapeHtml(r.method || "—") + "</span></td>" +
@@ -678,6 +817,12 @@ footer{
       "Yahoo salary model + NFLVerse depth, roster and injury reports" +
       (d.availability_removed
         ? ". Availability filter removed " + d.availability_removed + " player(s)."
+        : "") +
+      ((d.depth_promotions || []).length
+        ? ". Promoted past injuries: " + d.depth_promotions.map(function (p) {
+            return p.player + " (" + p.team + " " + p.position + ", " + p.role +
+              " for " + p.replacing + ")";
+          }).join("; ") + "."
         : "");
 
     el("log").textContent = (d.log || []).join("\n") || "No log recorded.";
@@ -688,6 +833,18 @@ footer{
   }
 
   /* ---------- events ---------- */
+  el("body").addEventListener("change", function (e) {
+    var pick = e.target;
+    if (!pick.classList || !pick.classList.contains("depth-pick")) return;
+    setDepth(state.position, pick.dataset.id, Number(pick.value));
+  });
+  el("depth-reset").addEventListener("click", function () {
+    state.depths = {};
+    if (state.store) state.store.write(state.depths);
+    renderTabs();
+    render();
+  });
+
   el("q").addEventListener("input", function (e) {
     state.query = e.target.value;
     el("clear").hidden = !state.query;
@@ -736,7 +893,20 @@ footer{
       return r.json();
     })
     .then(function (d) {
+      // The model is optional: without it the page is the published table.
+      var model = typeof DepthModel === "undefined" || !d.pool
+        ? Promise.resolve(null)
+        : DepthModel.load("data/depth_model.json").catch(function () { return null; });
+      return model.then(function (m) { return [d, m]; });
+    })
+    .then(function (loaded) {
+      var d = loaded[0];
       state.data = d;
+      state.model = loaded[1];
+      if (typeof DepthModel !== "undefined") {
+        state.store = DepthModel.store(DEPTH_KEY, d.snapshot_id || d.generated_utc);
+        state.depths = state.model ? state.store.read() : {};
+      }
       state.position = (d.positions && d.positions[0]) || "QB";
       el("controls").hidden = false;
       renderMeta(d);

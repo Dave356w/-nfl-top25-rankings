@@ -124,7 +124,7 @@ input[type="range"]{width:100%; accent-color:var(--accent)}
 
 .pool{max-height:420px; overflow:auto; border-top:1px solid var(--line-soft)}
 .pool-row{
-  display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:9px;
+  display:grid; grid-template-columns:22px minmax(0,1fr) auto auto; gap:9px;
   align-items:center; padding:7px 16px; border-bottom:1px solid var(--line-soft);
   font-size:13.5px;
 }
@@ -137,6 +137,18 @@ input[type="range"]{width:100%; accent-color:var(--accent)}
 .pool-row .num{font-family:var(--mono); font-size:12.5px; color:var(--ink-2);
                text-align:right; white-space:nowrap}
 .pool-actions{display:flex; gap:8px; padding:10px 16px; border-bottom:1px solid var(--line-soft)}
+.depth-pick{
+  font:inherit; font-family:var(--mono); font-size:12px; color:var(--ink);
+  background:var(--panel); border:1px solid var(--line); border-radius:7px;
+  padding:2px 3px; min-height:26px; cursor:pointer;
+}
+.depth-pick.changed{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink)}
+.depth-edits{
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; padding:9px 16px;
+  font-size:12.5px; background:var(--accent-soft); color:var(--accent-ink);
+  border-bottom:1px solid var(--line-soft);
+}
+.depth-edits .btn{height:28px; font-size:12px}
 .pool-actions .btn{height:30px; font-size:12.5px; flex:1}
 
 .progress{height:4px; background:var(--mute-soft); border-radius:3px; overflow:hidden;
@@ -361,6 +373,10 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           <button class="btn" id="all" type="button">All in</button>
           <button class="btn" id="none" type="button">Clear</button>
         </div>
+        <div class="depth-edits" id="depth-edits" role="status" hidden>
+          <span id="depth-edits-text"></span>
+          <button class="btn" id="depth-reset" type="button">Reset depth</button>
+        </div>
         <div class="pool" id="pool"></div>
       </section>
     </div>
@@ -505,6 +521,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   </details>
 </div>
 
+<script src="depth-model.js"></script>
 <script>
 (function () {
   "use strict";
@@ -523,9 +540,17 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     full: null   // taken from the payload's own settings
   };
 
+  var DEPTH_KEY = "nfl-showdown-depth-v1";
+  var DEPTH_POSITIONS = ["QB", "RB", "WR", "TE"];
+
   var state = {
     index: null,
     payload: null,
+    // The payload exactly as published; `payload` is it with depth edits applied.
+    published: null,
+    depthModel: null,
+    depths: {},
+    depthStore: null,
     // Yahoo does not price every single-game slate. Where it did not, the model
     // is published without a cap and the visitor supplies one; it is kept per
     // game so switching games does not silently carry a cap across.
@@ -583,6 +608,22 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       if (!response.ok) throw new Error(url + " returned " + response.status);
       return response.json();
     });
+  }
+
+  el("depth-reset").addEventListener("click", function () {
+    state.depths = {};
+    if (state.published) depthsChanged();
+  });
+
+  // Optional: without the model the pool simply shows no depth controls.
+  if (typeof DepthModel !== "undefined") {
+    DepthModel.load("data/depth_model.json").then(function (model) {
+      state.depthModel = model;
+      if (state.published && !state.loading) {
+        state.depths = state.depthStore ? state.depthStore.read() : {};
+        if (depthCount()) depthsChanged(); else renderPool();
+      }
+    }).catch(function () { /* published depths stand */ });
   }
 
   load(DATA + "index.json").then(function (index) {
@@ -653,6 +694,12 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           text(payload.schema) + "; this page understands " + SUPPORTED_SCHEMA +
           "). Reload to pick up the current page.");
       }
+      state.published = payload;
+      state.depthStore = typeof DepthModel === "undefined" ? null
+        : DepthModel.store(DEPTH_KEY + ":" + payload.game_id,
+                           payload.snapshot_id || payload.generated_utc);
+      state.depths = state.depthModel && state.depthStore ? state.depthStore.read() : {};
+      payload = withDepthEdits(payload);
       state.payload = payload;
       state.loading = false;
       state.excluded = new Set();
@@ -843,9 +890,90 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   }
 
   /* ---------- pool ---------- */
+  /* ---------- depth edits ---------- */
+  // The worker re-runs nothing about depth itself; it is handed a payload whose
+  // means, CVs and scoreless rates were re-read from the published model at the
+  // edited depth. The latent correlation matrix stays as published: rebuilding
+  // it needs the Python hurdle inversion, and a depth edit moves it little.
+  function depthId(player) { return player.team + "|" + player.pos + "|" + player.name; }
+  function hasDepth(id) { return Object.prototype.hasOwnProperty.call(state.depths, id); }
+  function depthCount() { return Object.keys(state.depths).length; }
+
+  function withDepthEdits(payload) {
+    if (!state.depthModel || !depthCount()) return payload;
+    var model = state.depthModel;
+    return Object.assign({}, payload, {
+      players: payload.players.map(function (player) {
+        var id = depthId(player);
+        if (!hasDepth(id)) return player;
+        var out = Object.assign({}, player, {
+          depth: state.depths[id], published_depth: player.depth, published_fp: player.fp
+        });
+        if (DepthModel.isModelled(player.source)) {
+          var fp = DepthModel.predict(model, player.pos, player.salary, out.depth);
+          if (fp !== null) out.fp = Math.round(fp * 10000) / 10000;
+        }
+        var cv = DepthModel.cv(model, player.pos, out.depth);
+        var zero = DepthModel.zero(model, player.pos, out.depth);
+        if (cv !== null) out.cv = cv;
+        if (zero !== null && typeof player.zero === "number") out.zero = zero;
+        return out;
+      })
+    });
+  }
+
+  function setDepth(id, depth) {
+    var players = state.published.players;
+    var changes = DepthModel.move(players.map(function (p) {
+      var key = depthId(p);
+      return { id: key, group: p.team + "|" + p.pos, depth: hasDepth(key) ? state.depths[key] : p.depth };
+    }), id, depth);
+    var published = {};
+    players.forEach(function (p) { published[depthId(p)] = p.depth; });
+    Object.keys(changes).forEach(function (key) {
+      if (changes[key] === published[key]) delete state.depths[key];
+      else state.depths[key] = changes[key];
+    });
+    depthsChanged();
+  }
+
+  function depthsChanged() {
+    if (state.depthStore) state.depthStore.write(state.depths);
+    state.payload = withDepthEdits(state.published);
+    renderPool();
+    stopWorker();
+    startWorker(state.payload);
+    settingsChanged();
+  }
+
+  function depthControl(player, index) {
+    if (!state.depthModel || DEPTH_POSITIONS.indexOf(player.pos) < 0 ||
+        typeof player.depth !== "number") return "";
+    var original = typeof player.published_depth === "number" ? player.published_depth : player.depth;
+    var options = [];
+    for (var d = 1; d <= Math.max(6, player.depth, original); d++) {
+      options.push('<option value="' + d + '"' + (d === player.depth ? " selected" : "") + ">" +
+        "D" + d + (d === original && player.depth !== original ? "*" : "") + "</option>");
+    }
+    return '<select class="depth-pick' + (player.depth !== original ? " changed" : "") +
+      '" data-index="' + index + '" title="Published depth ' + original +
+      ' (marked *)" aria-label="Depth for ' + text(player.name) + '">' +
+      options.join("") + "</select>";
+  }
+
+  function renderDepthEdits() {
+    var n = depthCount();
+    el("depth-edits").hidden = !n;
+    if (n) {
+      el("depth-edits-text").textContent = n + (n === 1 ? " depth edit" : " depth edits") +
+        ": projections and volatility re-read from the model; correlations as published.";
+    }
+  }
+
   function renderPool() {
     var payload = state.payload;
     if (!payload) return;
+    renderDepthEdits();
     var order = payload.players.map(function (player, index) { return index; });
     order.sort(function (a, b) {
       var players = payload.players;
@@ -862,12 +990,17 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         "<span>" + text(player.team) + " " + text(player.pos) + " · " +
         text(player.role) + "</span></span>" +
         '<span class="num">' + money(player.salary) + "<br>" + num(player.fp, 1) + "</span>" +
+        "<span>" + depthControl(player, index) + "</span>" +
         "</label>";
     }).join("");
   }
 
   el("pool").addEventListener("change", function (event) {
     var box = event.target;
+    if (box.classList && box.classList.contains("depth-pick")) {
+      setDepth(depthId(state.published.players[Number(box.dataset.index)]), Number(box.value));
+      return;
+    }
     if (!box.matches('input[type="checkbox"]')) return;
     var index = Number(box.dataset.index);
     if (box.checked) state.excluded.delete(index); else state.excluded.add(index);

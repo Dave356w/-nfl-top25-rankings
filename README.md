@@ -57,6 +57,51 @@ keeps the role tier; a straight swap of two adjacent players is decided by the
 salary expectation. `Settings.role_salary_rank_weight` sets the balance — 0.0
 trusts the chart alone, 1.0 ignores it.
 
+### Teammates move up when a player ahead of them is out
+
+The published chart can keep an injured starter at the top of his slot for days
+after he is ruled out. So before any role or projection is computed, the run
+reads the injury report and weekly roster, takes every player listed **Out** or
+off the active roster (IR, practice squad, cut…) off the chart, and recomputes
+the flat rank and per-slot tier for the teammates behind him. Those players are
+also removed from the Yahoo pool before the salary ordering is ranked, so both
+halves of the opportunity blend promote the replacement.
+
+Only the injured player's own slot moves: if a starting receiver is out, the
+second man at *his* slot becomes a starter; the other parallel starters are
+unchanged. A backup quarterback whose starter is out becomes tier 1, gets the
+starter's depth coefficient in the regression, and is no longer dropped by the
+backup-QB filter. A chart that already reflects the injury is left as is. Each
+promotion is printed in the run log and published as `depth_promotions` in
+`latest.json`. `Questionable` and `Doubtful` do not trigger promotion;
+`AVAILABILITY_OVERRIDES` keeps a named player on the chart, and
+`Settings.promote_past_unavailable = False` turns the step off.
+
+### Editing depth on the pages
+
+Every page lets you change a player's depth rank in the browser and see what
+the same frozen model says about it: the **Depth** column on the rankings and
+lineup pages, and the `D1`–`D6` picker beside each player in the Showdown lab's
+pool. Moving a player shifts the teammates between his old and new spot by one,
+the way moving a name on a depth chart does.
+
+| Page | What a depth edit re-runs |
+| --- | --- |
+| Rankings | the regression mean, then re-ranks the position from the whole priced pool (`pool` in `latest.json`), so a promoted backup outside the top 25 can climb into it |
+| My lineup | the regression mean and the P25/P90 band, then re-picks the lineup |
+| Showdown lab | the mean, CV and scoreless rate handed to the in-browser optimizer; the latent correlation matrix stays as published |
+
+`site/depth-model.js` reads the exact coefficients and fitted tables from
+`site/data/depth_model.json`; regenerate that file with
+`python tools/export_depth_model.py` after refitting, and
+`tests/test_depth_model_js.py` checks the JavaScript against
+`salary_projection.predict` through Node. Edits stay in that browser, are tied
+to one published snapshot, and never change what the workflow publishes. The
+fitted model has no depth effect on the mean for QB or DEF (only starting QBs
+were in the training data), so there an edit changes volatility and teammate
+order, not the projection. Manual overrides and rolling-stat fallbacks keep
+their published means.
+
 ## Setup (one time)
 
 1. **Enable Pages.** Settings → Pages → *Build and deployment* → Source:

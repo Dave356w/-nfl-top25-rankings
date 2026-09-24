@@ -135,6 +135,7 @@ def build_payload(results, top_n, log_lines, generated_at=None, snapshot_id=None
     }
     games = _games(results.get("games"))
     removed = results.get("nflverse_removed")
+    promotions = results.get("depth_promotions")
     return {
         "schema": 1,
         "status": "ok",
@@ -150,12 +151,31 @@ def build_payload(results, top_n, log_lines, generated_at=None, snapshot_id=None
             "first_kickoff_utc": games[0]["kickoff_utc"] if games else None,
         },
         "rankings": rankings,
+        # Every priced player, not just the top N, so the page can re-rank after
+        # a visitor edits a depth rank. Only latest.json carries it.
+        "pool": {
+            position: _rows(view)
+            for position, view in (results.get("pool") or {}).items()
+        },
         "projection": {
             "method": "Yahoo salary-position-depth regression",
             "trained_through_season": (results.get("projection_model") or {}).get("trained_through_season"),
             "holdout_metrics": (results.get("projection_model") or {}).get("holdout_metrics"),
         },
         "availability_removed": int(len(removed)) if isinstance(removed, pd.DataFrame) else 0,
+        "depth_promotions": (
+            [
+                {
+                    "player": row["Player"],
+                    "team": row["Team"],
+                    "position": row["Position"],
+                    "role": nb.role_label(row["Position"], row["New tier"]),
+                    "replacing": row["Replacing"],
+                }
+                for row in promotions.to_dict("records")
+            ]
+            if isinstance(promotions, pd.DataFrame) else []
+        ),
         "method_counts": _method_counts(results),
         "log": log_lines,
     }
@@ -169,7 +189,10 @@ def write_outputs(payload, combined, data_dir=None):
 
     text = json.dumps(payload, indent=2, sort_keys=False)
     (data / "latest.json").write_text(text + "\n", encoding="utf-8")
-    (history / f"{payload['run_date']}.json").write_text(text + "\n", encoding="utf-8")
+    archived = {key: value for key, value in payload.items() if key != "pool"}
+    (history / f"{payload['run_date']}.json").write_text(
+        json.dumps(archived, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
 
     if isinstance(combined, pd.DataFrame) and not combined.empty:
         combined.to_csv(data / "latest.csv", index=False)
