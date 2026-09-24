@@ -237,7 +237,7 @@ function h2hFixture(h2hEntries) {
   w.simulate(options.simulations, options.seed);
   const rosters = w.enumerate(players.map((_, i) => i), options);
   const scored = w.score(rosters, w.screen(rosters, options), options, () => {});
-  return {payload, options, result: w.h2hMultiEntry(scored, options)};
+  return {payload, options, result: w.h2hMultiEntry(scored, options, rosters)};
 }
 
 test('multi-entry H2H: each mode fills the requested entries the way it says', () => {
@@ -275,10 +275,54 @@ test('multi-entry H2H: expected wins is the sum of entry win chances', () => {
   assert.ok(rotate.slice(1).every((p) => p <= rotate[0] + 1e-9));
 });
 
-test('multi-entry H2H: the entry count is clamped to 1..10', () => {
-  assert.equal(h2hFixture(25).result.entries, 10);
+test('multi-entry H2H: the entry count is clamped to 1..50', () => {
+  assert.equal(h2hFixture(80).result.entries, 50);
   assert.equal(h2hFixture(0).result.entries, 3);    // missing -> default
-  const ten = h2hFixture(10).result.modes.rotate.entries;
-  // Past five entries the rotation starts over.
-  assert.equal(ten[5].superstar, ten[0].superstar);
+});
+
+test('multi-entry H2H: after the five rotations, next-best player swaps fill the rest', () => {
+  const {result} = h2hFixture(10);
+  const rotate = result.modes.rotate.entries;
+  assert.equal(rotate.length, 10);
+  const top = new Set(rotate[0].ids);
+  // Entries 1-5: the top roster with each of its five players as Superstar.
+  assert.ok(rotate.slice(0, 5).every((e) => e.swap === null && e.ids.every((id) => top.has(id))));
+  assert.equal(new Set(rotate.slice(0, 5).map((e) => e.superstar)).size, 5);
+  // Entries 6+: one player swapped for another that fits, best first.
+  for (const e of rotate.slice(5)) {
+    assert.equal(e.swap.in.length, 1);
+    assert.equal(e.swap.out.length, 1);
+    assert.ok(e.salary <= 120);
+  }
+  for (let i = 6; i < 10; i++) assert.ok(rotate[i].expected_fp <= rotate[i - 1].expected_fp + 1e-9);
+  // Every entry is a different (roster, Superstar) pair.
+  const key = (e) => e.ids.slice().sort((a, b) => a - b).join(',') + '*' + e.superstar;
+  assert.equal(new Set(rotate.map(key)).size, 10);
+});
+
+test('multi-entry H2H: rotation and next-best respect the H2H exposure limits', () => {
+  const players = 0.6, stars = 0.3, entries = 10;
+  const fixture = (() => {
+    const f = h2hFixture(entries);
+    const options = {...f.options, h2hPlayerExposure: players, h2hSuperstarExposure: stars};
+    w.setModel(f.payload);
+    w.simulate(options.simulations, options.seed);
+    const rosters = w.enumerate(f.payload.players.map((_, i) => i), options);
+    const scored = w.score(rosters, w.screen(rosters, options), options, () => {});
+    return w.h2hMultiEntry(scored, options, rosters);
+  })();
+  assert.deepEqual(fixture.limits, {player: 6, superstar: 3});
+  for (const mode of ['rotate', 'next_best']) {
+    const chosen = fixture.modes[mode].entries;
+    const count = new Map(), starred = new Map();
+    for (const e of chosen) {
+      e.ids.forEach((id) => count.set(id, (count.get(id) || 0) + 1));
+      starred.set(e.superstar, (starred.get(e.superstar) || 0) + 1);
+    }
+    assert.ok(Math.max(...count.values()) <= 6, mode);
+    assert.ok(Math.max(...starred.values()) <= 3, mode);
+    assert.equal(fixture.modes[mode].filled, chosen.length);
+  }
+  // Repeat is the one-lineup baseline and is not limited.
+  assert.equal(fixture.modes.repeat.entries.length, entries);
 });

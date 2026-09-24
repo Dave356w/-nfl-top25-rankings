@@ -319,12 +319,20 @@ selection-biased, so field-based EV is labeled **not a calibrated return
 estimate** and remains experimental until prospective contest calibration is
 materially deeper.
 
-**Multi-entry head-to-head.** Set *Head-to-head entries* (1–10) and the run
+**Multi-entry head-to-head.** Set *Head-to-head entries* (1–50) and the run
 also prices that many separate one-on-one contests, filled three ways:
-**rotate Superstar** (the top lineup's five players, the 1.5× slot moved down the
-other four by projection), **repeat top lineup**, and **next-best lineups** (the
-highest-expected distinct lineups, which mostly keep the top Superstar and swap a
-supporting player). Each entry has its own opponent, drawn either from a
+**rotate Superstar, then swaps** (the top lineup's five players with the 1.5×
+slot moved down the other four by projection; once those five are used, the
+next-best player that fits the cap and position rules is swapped in, one-swap
+rosters first and then two-swap, each best first), **repeat top lineup**, and
+**next-best lineups** (the highest-expected distinct lineups, which mostly keep
+the top Superstar and swap a supporting player). *H2H max player exposure* and
+*H2H max Superstar exposure* cap how many of those entries one player or one
+Superstar may appear in (1 means no limit; they are separate from the
+tournament limits). Rotation and next-best entries respect them and say how
+many they could fill; repeat is the one-lineup baseline and ignores them. Every
+roster comes from the run's own enumeration, so the salary cap, salary floor,
+position limits and exclusions always hold. Each entry has its own opponent, drawn either from a
 **sharp** pool (the 100 highest-projected lineups) or the **public** ownership
 prior. The table shows expected wins, the win rate per entry, the chance of
 winning none, and the chance of a winning record; switching the strategy only

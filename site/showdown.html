@@ -365,10 +365,24 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           </div>
           <div class="field">
             <label for="h2h-entries">Head-to-head entries</label>
-            <input type="number" id="h2h-entries" min="1" max="10" step="1" value="3">
+            <input type="number" id="h2h-entries" min="1" max="50" step="1" value="3">
             <div class="hint">
-              Separate one-on-one contests, priced beside the portfolio (1&ndash;10).
+              Separate one-on-one contests, priced beside the portfolio (1&ndash;50).
             </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="h2h-player-exposure">H2H max player exposure</label>
+              <input type="number" id="h2h-player-exposure" min="0.05" max="1" step="0.05" value="1">
+            </div>
+            <div class="field">
+              <label for="h2h-superstar-exposure">H2H max Superstar exposure</label>
+              <input type="number" id="h2h-superstar-exposure" min="0.05" max="1" step="0.05" value="1">
+            </div>
+          </div>
+          <div class="hint" style="margin:-6px 0 13px">
+            Share of the head-to-head entries one player, or one Superstar, may appear in.
+            1 means no limit. Separate from the tournament limits above.
           </div>
           <div class="hint" id="exposure-hint"></div>
           <div class="field">
@@ -432,7 +446,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
             <div class="field">
               <label for="h2h-mode">Fill <span id="h2h-count">3</span> head-to-head entries by</label>
               <select id="h2h-mode">
-                <option value="rotate">Rotating the Superstar on the top lineup</option>
+                <option value="rotate">Rotating the Superstar, then next-best player swaps</option>
                 <option value="repeat">Repeating the top lineup</option>
                 <option value="next_best">Next-best lineups</option>
               </select>
@@ -1063,7 +1077,7 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     settingsChanged();
   });
   ["objective", "construction", "entries", "shared", "player-exposure", "superstar-exposure", "limits",
-   "h2h-entries"]
+   "h2h-entries", "h2h-player-exposure", "h2h-superstar-exposure"]
     .forEach(function (id) { el(id).addEventListener("change", settingsChanged); });
   el("contest-preset").addEventListener("change", function () {
     if (el("contest-preset").value) applyContestPreset(el("contest-preset").value);
@@ -1233,6 +1247,12 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     settingsChanged();
   });
 
+  // A blank or out-of-range H2H exposure means no limit rather than an error.
+  function exposureShare(value) {
+    var share = Number(value);
+    return value !== "" && isFinite(share) && share > 0 && share <= 1 ? share : 1;
+  }
+
   function options() {
     var payload = state.payload;
     var preset = PRESETS[el("detail").value];
@@ -1260,7 +1280,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       meanReserve: payload.settings.mean_candidate_reserve,
       nearOptimalRatio: payload.settings.near_optimal_ratio,
       entries: Number(el("entries").value),
-      h2hEntries: Math.max(1, Math.min(10, Math.floor(Number(el("h2h-entries").value) || 3))),
+      h2hEntries: Math.max(1, Math.min(50, Math.floor(Number(el("h2h-entries").value) || 3))),
+      h2hPlayerExposure: exposureShare(el("h2h-player-exposure").value),
+      h2hSuperstarExposure: exposureShare(el("h2h-superstar-exposure").value),
       constructionRules: el("construction").value === "on"
         ? payload.settings.portfolio_construction_rules || [] : [],
       maxPlayerExposure: Number(el("player-exposure").value),
@@ -1356,13 +1378,20 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
 
   /* ---------- multi-entry head-to-head ---------- */
   var H2H_MODES = [
-    ["rotate", "Rotate Superstar"],
+    ["rotate", "Rotate Superstar, then swaps"],
     ["repeat", "Repeat top lineup"],
     ["next_best", "Next-best lineups"]
   ];
 
   function pct(value, places) {
     return Number.isFinite(value) ? num(value * 100, places === undefined ? 1 : places) + "%" : "—";
+  }
+
+  function anyModeShort(multi) {
+    return Object.keys(multi.modes).some(function (key) {
+      var mode = multi.modes[key];
+      return mode.filled !== undefined && mode.filled < multi.entries;
+    });
   }
 
   function renderH2HMulti() {
@@ -1382,7 +1411,9 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
         var mode = multi.modes[pair[0]];
         if (!mode) return "";
         var sharp = mode.sharp || {}, pub = mode.public || {};
-        return "<tr" + (pair[0] === picked ? " class='picked'" : "") + "><td>" + text(pair[1]) + "</td>" +
+        var short = mode.filled !== undefined && mode.filled < multi.entries
+          ? " <small>(" + mode.filled + " of " + multi.entries + ")</small>" : "";
+        return "<tr" + (pair[0] === picked ? " class='picked'" : "") + "><td>" + text(pair[1]) + short + "</td>" +
           "<td class='num'>" + num(sharp.expected_wins, 2) + "</td>" +
           "<td class='num'>" + pct(sharp.win_rate) + "</td>" +
           "<td class='num'>" + pct(sharp.zero_wins) + "</td>" +
@@ -1396,7 +1427,15 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
       "players win and lose together: that is what \"0 wins\" measures. First four " +
       "columns are against a sharp opponent (one of the " + multi.opponents.sharp +
       " highest-projected lineups); the last is against the public ownership prior. " +
-      "Neither opponent model is calibrated to real H2H contests.";
+      "Neither opponent model is calibrated to real H2H contests." +
+      (multi.limits && (multi.limits.player < multi.entries || multi.limits.superstar < multi.entries)
+        ? " Rotation and next-best entries hold each player to " + multi.limits.player +
+          " and each Superstar to " + multi.limits.superstar + " of " + multi.entries +
+          " entries; repeating the top lineup is shown as the baseline and ignores them."
+        : "") +
+      (anyModeShort(multi)
+        ? " A strategy that could not fill every entry under those limits shows how many it filled."
+        : "");
 
     var players = state.payload.players;
     var mode = multi.modes[picked];
@@ -1408,12 +1447,16 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
           text(player.name) + " <small>" + text(player.pos) + " " + money(player.salary) +
           "</small></span>";
       }).join("");
+      var how = !entry.swap ? (picked === "rotate" ? "Superstar rotation" : "")
+        : "swap in " + entry.swap["in"].map(function (id) { return players[id].name; }).join(", ") +
+          " for " + entry.swap.out.map(function (id) { return players[id].name; }).join(", ");
       var sharp = mode.sharp && mode.sharp.per_entry ? mode.sharp.per_entry[i] : NaN;
       var pub = mode.public && mode.public.per_entry ? mode.public.per_entry[i] : NaN;
       return '<div class="lineup"><div class="lineup-head">' +
         '<span class="rank">H2H ' + (i + 1) + "</span>" +
         '<span class="score">' + num(entry.expected_fp, 2) + " expected FP</span>" +
-        '<span class="mono" style="color:var(--ink-3)">' + money(entry.salary) + "</span></div>" +
+        '<span class="mono" style="color:var(--ink-3)">' + money(entry.salary) + "</span>" +
+        (how ? '<span class="badge">' + text(how) + "</span>" : "") + "</div>" +
         '<div class="chips">' + chips + "</div>" +
         '<div class="metrics"><span><strong>win vs sharp ' + pct(sharp) + "</strong></span>" +
         "<span>win vs public " + pct(pub) + "</span></div></div>";
