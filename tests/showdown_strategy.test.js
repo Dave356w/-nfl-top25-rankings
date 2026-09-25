@@ -116,19 +116,20 @@ function counts(entries, pick) {
   return map;
 }
 
-test('engine options: the page names a contest, the published settings fill the rest', () => {
+test('engine options: both contests share the lab rules, the published settings fill the rest', () => {
   w.setModel(game);
   const tournament = w.engineOptions({contest: 'tournament', entries: 20, salaryCap: 120, detail: 'full'});
   assert.equal(tournament.objective, 'portfolio');
-  assert.equal(tournament.maxPlayerExposure, .5);
-  assert.equal(tournament.maxSuperstarExposure, .35);
-  assert.equal(tournament.maxShared, 3);
+  assert.equal(tournament.maxPlayerExposure, .75);   // not the published run's .5
+  assert.equal(tournament.maxSuperstarExposure, .25); // not the published run's .35
+  assert.equal(tournament.maxShared, null);           // no overlap limit
   assert.deepEqual(tournament.constructionRules, []);
   assert.equal(tournament.simulations, 2000);
   const h2h = w.engineOptions({contest: 'h2h', entries: 3, salaryCap: 120});
   assert.equal(h2h.objective, 'expected');
-  assert.equal(h2h.maxPlayerExposure, 1);
+  assert.equal(h2h.maxPlayerExposure, .75);
   assert.equal(h2h.maxSuperstarExposure, .25);
+  assert.equal(h2h.maxShared, null);
   assert.equal(h2h.simulations, 10000);          // standard is the default detail
   assert.equal(w.engineOptions({contest: 'h2h', detail: 'quick'}).simulations, 5000);
   assert.equal(w.engineOptions({contest: 'h2h', maxSuperstarExposure: .5}).maxSuperstarExposure, .5);
@@ -143,35 +144,80 @@ test('solve refuses requests it cannot answer, in words a visitor can act on', (
   assert.throws(() => solve({contest: 'h2h', entries: 3, maxPlayerExposure: 1.5}), /between 0 and 1/);
 });
 
-test('H2H: the top five take turns as Superstar, then ranks 6-10 fill in', () => {
+// The rules every lab entry obeys, whichever contest built it.
+function assertLabRules(result, included = game.players.map((_, i) => i), shares = {player: .75, superstar: .25}) {
+  const {player, superstar} = result.limits;
+  assert.equal(player, Math.max(1, Math.floor(result.requested * shares.player + 1e-9)));
+  assert.equal(superstar, Math.max(1, Math.floor(result.requested * shares.superstar + 1e-9)));
+  assert.ok(Math.max(...counts(result.entries, (e) => e.ids).values()) <= player);
+  assert.ok(Math.max(...counts(result.entries, (e) => [e.superstar]).values()) <= superstar);
+  assert.equal(new Set(result.entries.map(pairKey)).size, result.entries.length, 'an exact repeat');
+  const pool = new Set(included);
+  for (const e of result.entries) {
+    assert.equal(new Set(e.ids).size, 5);
+    assert.ok(e.ids.includes(e.superstar));
+    assert.ok(e.salary <= 120);
+    assert.ok(e.ids.every((id) => pool.has(id)), 'an excluded player was used');
+    assert.deepEqual(new Set(e.ids.map((id) => game.players[id].team)), new Set(['A', 'B']));
+  }
+}
+
+test('H2H: entries follow projected points under the lab rules', () => {
   const result = solve({contest: 'h2h', entries: 12});
   assert.equal(result.contest, 'h2h');
-  assert.deepEqual(result.pools.superstars, byFp.slice(0, 5));
-  assert.deepEqual(result.pools.fillers.slice().sort(), byFp.slice(5, 10).sort());
   assert.equal(result.filled, 12);
-  const entries = result.entries;
-  assert.deepEqual(entries.slice(0, 5).map((e) => e.superstar), byFp.slice(0, 5));
-  assert.deepEqual(entries.slice(5, 10).map((e) => e.superstar), byFp.slice(0, 5));
-  assert.ok(entries.slice(0, 5).every((e) => e.round === 1));
-  assert.ok(entries.slice(5, 10).every((e) => e.round === 2));
-  const topTen = new Set(byFp.slice(0, 10));
-  for (const e of entries.filter((x) => x.round > 1)) {
-    assert.ok(e.ids.every((id) => topTen.has(id)), `round ${e.round} uses a player outside the top ten`);
-    assert.ok(e.salary <= 120);
-  }
-  assert.equal(new Set(entries.map(pairKey)).size, 12);
+  assert.deepEqual(result.limits, {player: 9, superstar: 3});
+  assertLabRules(result);
+  const fps = result.entries.map((e) => e.expected_fp);
+  assert.deepEqual(fps, fps.slice().sort((a, b) => b - a));
+  // The best pair is always the first entry.
+  w.setModel(game);
+  const rosters = w.enumerate(game.players.map((_, i) => i), {salaryCap: 120, minSalaryPct: 0});
+  assert.equal(pairKey(result.entries[0]), pairKey(w.topPairs(rosters, 1)[0]));
 });
 
-test('H2H: the Superstar limit defaults to 0.25, rounded down', () => {
-  const result = solve({contest: 'h2h', entries: 12});
-  assert.equal(result.limits.superstar, 3);
-  assert.ok(Math.max(...counts(result.entries, (e) => [e.superstar]).values()) <= 3);
-  const six = solve({contest: 'h2h', entries: 6});      // five Superstars, one each
-  assert.equal(six.filled, 5);
-  assert.equal(six.requested, 6);
+test('H2H: entries may share players, and the same five may return under a new Superstar', () => {
+  const result = solve({contest: 'h2h', entries: 4});
+  assertLabRules(result);
+  assert.deepEqual(result.limits, {player: 3, superstar: 1});
+  const rosterKey = (e) => e.ids.slice().sort((a, b) => a - b).join(',');
+  const rosters = counts(result.entries, (e) => [rosterKey(e)]);
+  assert.ok(Math.max(...rosters.values()) > 1, 'no roster was reused with another Superstar');
 });
 
-test('H2H: the player limit holds and expected wins sums the entries', () => {
+test('H2H: small counts still allow each player and Superstar once', () => {
+  const three = solve({contest: 'h2h', entries: 3});
+  assert.deepEqual(three.limits, {player: 2, superstar: 1});
+  assert.equal(three.filled, 3);
+  assertLabRules(three);
+});
+
+test('a pick leaves room for the rest instead of spending a last appearance', () => {
+  // Three entries, each player twice at most, each Superstar once. Taking the
+  // two best (the same five under two Superstars) spends all five players'
+  // last appearance and strands the third entry; the lookahead takes the
+  // third-best instead and fills all three.
+  w.setModel({players: Array.from({length: 10}, () => ({fp: 1})), settings: {}});
+  const lineups = [[0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 5, 6, 7, 8], [1, 5, 6, 7, 9]];
+  const pairs = {total: 4, ids: Int32Array.from(lineups.flat()),
+    superstars: Int32Array.from([0, 1, 5, 6]), expected: Float64Array.from([40, 39, 30, 29])};
+  const order = [0, 1, 2, 3];
+  const build = (lookahead) => {
+    const track = w.labTracker(pairs, {player: 2, superstar: 1}), chosen = [];
+    while (chosen.length < 3) {
+      const pick = lookahead ? w.lookaheadPick(track, order, 3 - chosen.length - 1)
+        : order.find((c) => track.fits(c));
+      if (pick === undefined || pick < 0) break;
+      track.take(pick);
+      chosen.push(pick);
+    }
+    return chosen;
+  };
+  assert.deepEqual(build(false), [0, 1]);       // plain greedy strands the third entry
+  assert.deepEqual(build(true), [0, 2, 3]);
+});
+
+test('H2H: a custom player limit holds and expected wins sums the entries', () => {
   const result = solve({contest: 'h2h', entries: 12, maxPlayerExposure: .5});
   assert.equal(result.limits.player, 6);
   assert.ok(Math.max(...counts(result.entries, (e) => e.ids).values()) <= 6);
@@ -182,12 +228,27 @@ test('H2H: the player limit holds and expected wins sums the entries', () => {
   assert.equal(result.opponents, 100);
 });
 
+test('exclusions and depth-edited projections carry into every entry', () => {
+  const included = game.players.map((_, i) => i).filter((i) => i !== byFp[1]);
+  for (const contest of ['h2h', 'tournament']) {
+    assertLabRules(solve({contest, entries: 8, included}), included);
+  }
+  // A depth edit reaches the worker as a changed projection in the payload:
+  // the promoted player fills their 75% share and leads the first entry.
+  const before = solve({contest: 'h2h', entries: 4});
+  assert.notEqual(before.entries[0].superstar, 7);
+  const promoted = {...game, players: game.players.map((p, i) => i === 7 ? {...p, fp: 40} : p)};
+  w.setModel(promoted);
+  const after = w.solve({contest: 'h2h', entries: 4, salaryCap: 120, detail: 'full'});
+  assert.equal(after.entries[0].superstar, 7);
+  assert.equal(after.entries.filter((e) => e.ids.includes(7)).length, after.limits.player);
+});
+
 test('H2H: opponents may play a player you left out', () => {
   const star = byFp[0];
   const without = solve({contest: 'h2h', entries: 5,
     included: game.players.map((_, i) => i).filter((i) => i !== star)});
   assert.ok(without.entries.every((e) => !e.ids.includes(star)));
-  assert.ok(!without.pools.superstars.includes(star));
   const all = solve({contest: 'h2h', entries: 5});
   // Your best player is gone but the opponents' is not: you win less often.
   assert.ok(without.expected_wins < all.expected_wins - .3,
@@ -208,17 +269,22 @@ test('topPairs is the highest-expected pairs of an enumeration', () => {
   top.forEach((v, i) => assert.ok(Math.abs(v - all[i]) < 1e-9));
 });
 
-test('tournament: entries respect exposure and overlap, and a short list comes back', () => {
+test('tournament: entries follow the lab rules with no overlap limit', () => {
   const result = solve({contest: 'tournament', entries: 20});
   assert.equal(result.contest, 'tournament');
   assert.equal(result.requested, 20);
-  assert.ok(result.filled >= 1 && result.filled <= 20);
+  assert.equal(result.filled, 20);
   assert.equal(result.entries.length, result.filled);
-  assert.deepEqual(result.limits, {player: 10, superstar: 7, shared: 3});
-  assert.ok(Math.max(...counts(result.entries, (e) => e.ids).values()) <= 10);
-  assert.ok(Math.max(...counts(result.entries, (e) => [e.superstar]).values()) <= 7);
-  assert.ok(result.diversity === null || result.diversity.max_shared <= 3);
-  assert.ok(result.entries.every((e) => e.salary <= 120 && e.ids.includes(e.superstar)));
+  assert.deepEqual(result.limits, {player: 15, superstar: 5});
+  assertLabRules(result);
+  // The published run caps shared players at three; the lab does not.
+  assert.ok(result.diversity.max_shared > 3, `max shared ${result.diversity.max_shared}`);
+});
+
+test('tournament: a short list comes back when the limits run out', () => {
+  const result = solve({contest: 'tournament', entries: 20, maxPlayerExposure: .1});
+  assert.ok(result.filled >= 1 && result.filled < 20);
+  assertLabRules(result, undefined, {player: .1, superstar: .25});
 });
 
 test('tournament: one entry is the highest-expected lineup', () => {

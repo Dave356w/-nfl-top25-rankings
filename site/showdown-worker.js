@@ -8,7 +8,7 @@
 "use strict";
 
 const LINEUP_SIZE = 5;
-const WORKER_PROTOCOL = 5;
+const WORKER_PROTOCOL = 6;
 
 let model = null;
 let scenarios = null; // Float32Array, player-major
@@ -651,6 +651,7 @@ function candidateMembers(scored, candidate) {
 }
 
 function overlapsPrior(set, sets, maxShared) {
+  if (!Number.isFinite(maxShared)) return false; // no overlap limit
   for (const prior of sets) {
     let shared = 0;
     for (const id of set) if (prior.has(id)) shared++;
@@ -837,10 +838,16 @@ function scenarioPortfolio(scored, options, data = scenarios, count = simCount) 
   }
   const split = Math.floor(count / 2);
   if (target > 1 && split < 2) throw new Error("At least four scenarios are required.");
-  const maxPlayer = exposureLimit(target, options.maxPlayerExposure);
-  const maxStar = exposureLimit(target, options.maxSuperstarExposure);
+  // The lab passes its own counts (see labLimits); the published run uses shares.
+  const maxPlayer = options.limits ? options.limits.player
+    : exposureLimit(target, options.maxPlayerExposure);
+  const maxStar = options.limits ? options.limits.superstar
+    : exposureLimit(target, options.maxSuperstarExposure);
   const order = orderBy(scored, "expected");
   const chosen = [], sets = [], playerCounts = new Map(), starCounts = new Map();
+  // The lab looks ahead so a pick does not strand the remaining entries.
+  const track = options.limits ? labTracker(scored, options.limits) : null;
+  let misses = 0, skips = 0, failed = [];
   let best = new Float64Array(split);
   function scores(i, start, stop) {
     const out = new Float64Array(stop - start), ids = candidateMembers(scored, i);
@@ -852,6 +859,7 @@ function scenarioPortfolio(scored, options, data = scenarios, count = simCount) 
     return out;
   }
   function feasible(i) {
+    if (track && !track.fits(i)) return false;   // also refuses a repeat
     const members = candidateMembers(scored, i);
     return !members.some(id => (playerCounts.get(id) || 0) >= maxPlayer) &&
       (starCounts.get(scored.superstars[i]) || 0) < maxStar &&
@@ -862,6 +870,8 @@ function scenarioPortfolio(scored, options, data = scenarios, count = simCount) 
     chosen.push(i); sets.push(new Set(members));
     for (const id of members) playerCounts.set(id, (playerCounts.get(id) || 0) + 1);
     const star = scored.superstars[i]; starCounts.set(star, (starCounts.get(star) || 0) + 1);
+    if (track) track.take(i);
+    misses = skips = 0; failed = [];
   }
   if (target > 0 && order.length && feasible(order[0])) {
     take(order[0]);
@@ -895,8 +905,10 @@ function scenarioPortfolio(scored, options, data = scenarios, count = simCount) 
   if (target > 1) for (const id of order) {
     if (!chosen.includes(id)) push({id, bound: Infinity, epoch: -1});
   }
-  while (heap.length && chosen.length < target) {
-    const item = pop();
+  const deferred = [];
+  while ((heap.length || deferred.length) && chosen.length < target) {
+    // Out of candidates with some set aside: stop looking ahead and take one.
+    const item = heap.length ? pop() : (misses = LOOKAHEAD_TRIES, deferred.shift());
     if (!feasible(item.id)) continue;
     const values = scores(item.id, 0, split);
     if (item.epoch !== chosen.length) {
@@ -905,8 +917,25 @@ function scenarioPortfolio(scored, options, data = scenarios, count = simCount) 
       push({id:item.id, bound:gain / split, epoch:chosen.length});
       continue;
     }
-    take(item.id);
-    for (let s = 0; s < split; s++) best[s] = Math.max(best[s], values[s]);
+    let pick = item.id;
+    const spent = track && misses < LOOKAHEAD_TRIES ? track.spent(pick) : null;
+    if (spent && failed.some((f) => f.every((x) => spent.includes(x)))) {
+      deferred.push(item);   // uses up everything an earlier miss did
+      if (++skips === LOOKAHEAD_SKIPS) misses = LOOKAHEAD_TRIES;
+      continue;
+    }
+    if (track && !track.completes(order, target - chosen.length - 1, pick)) {
+      // Set it aside for this round; after a few misses take the least-used
+      // candidate instead, which keeps the rest fillable.
+      if (spent) failed.push(spent);
+      if (++misses < LOOKAHEAD_TRIES) { deferred.push(item); continue; }
+      if (track.completes(order, target - chosen.length, -1)) pick = track.leastUsed(order);
+    }
+    take(pick);
+    const picked = pick === item.id ? values : scores(pick, 0, split);
+    for (let s = 0; s < split; s++) best[s] = Math.max(best[s], picked[s]);
+    if (pick !== item.id) push({id:item.id, bound:item.bound, epoch:-1});
+    while (deferred.length) push({...deferred.pop(), epoch:-1});
   }
   const evaluation = {objective: target === 1 ? "expected_points" : "expected_best",
     selection_scenarios: target === 1 ? 0 : split, evaluation_scenarios: count - split};
@@ -951,13 +980,155 @@ function portfolio(scored, order, options) {
   return attempts[0];
 }
 
+/* ---------- lab rules ----------------------------------------------------- */
+
+/* Both contests build entries under the same rules:
+ *
+ *  - every lineup comes from the run's own enumeration, so the salary cap,
+ *    salary floor, position limits, exclusions and depth edits all hold;
+ *  - no player is in more than 75% of the entries and no Superstar in more
+ *    than 25% (shares of the requested count, rounded down, at least one);
+ *  - entries may share any number of players. The only repeat that is refused
+ *    is an exact one: the same five players with the same Superstar. The same
+ *    five with a different Superstar is a different entry.
+ */
+const LAB_DEFAULTS = { maxPlayerExposure: 0.75, maxSuperstarExposure: 0.25 };
+
+function labLimits(entries, options) {
+  return {
+    player: Math.max(1, exposureLimit(entries, options.maxPlayerExposure)),
+    superstar: Math.max(1, exposureLimit(entries, options.maxSuperstarExposure)),
+  };
+}
+
+/* Tracks a lab portfolio as it grows: which candidates are taken and how many
+ * entries each player and Superstar is in. Lookahead keeps a greedy pick from
+ * spending a player's last appearances where the remaining entries needed them:
+ * `completes` fills the rest by always taking the least-used candidate, so a
+ * `false` can miss a completion. A pick that uses up nobody's last appearance
+ * passes without the check. */
+const LOOKAHEAD_TRIES = 8;
+const LOOKAHEAD_SKIPS = 400;   // tournament: candidates set aside unchecked per pick
+
+function labTracker(scored, limits) {
+  const players = model.players.length;
+  const used = new Int32Array(players), starred = new Int32Array(players);
+  const taken = new Uint8Array(scored.total);
+  const ids = scored.ids, stars = scored.superstars;
+
+  function fits(c, u, st, t) {
+    if (t[c] || st[stars[c]] >= limits.superstar) return false;
+    for (let i = 0; i < LINEUP_SIZE; i++) if (u[ids[c * LINEUP_SIZE + i]] >= limits.player) return false;
+    return true;
+  }
+  function apply(c, u, st, t) {
+    t[c] = 1; st[stars[c]]++;
+    for (let i = 0; i < LINEUP_SIZE; i++) u[ids[c * LINEUP_SIZE + i]]++;
+  }
+  function binds(c) {
+    if (starred[stars[c]] + 1 >= limits.superstar) return true;
+    for (let i = 0; i < LINEUP_SIZE; i++) if (used[ids[c * LINEUP_SIZE + i]] + 1 >= limits.player) return true;
+    return false;
+  }
+  // The players (and Superstar) a pick would use up, as a sorted key list.
+  function spent(c) {
+    const out = [];
+    for (let i = 0; i < LINEUP_SIZE; i++) {
+      const id = ids[c * LINEUP_SIZE + i];
+      if (used[id] + 1 >= limits.player) out.push(id);
+    }
+    out.sort((a, b) => a - b);
+    if (starred[stars[c]] + 1 >= limits.superstar) out.push(-1 - stars[c]);
+    return out;
+  }
+  // The candidate whose players and Superstar are least used, best-ranked
+  // first. Load is the players' total appearances so far, so a lineup sharing
+  // one player beats the same five under a new Superstar.
+  function leastUsed(order, u, st, t) {
+    let best = -1, bestLoad = Infinity, bestStar = Infinity;
+    for (const c of order) {
+      if (!fits(c, u, st, t)) continue;
+      let load = 0;
+      for (let i = 0; i < LINEUP_SIZE; i++) load += u[ids[c * LINEUP_SIZE + i]];
+      const star = st[stars[c]];
+      if (load < bestLoad || (load === bestLoad && star < bestStar)) {
+        best = c; bestLoad = load; bestStar = star;
+        if (load === 0 && star === 0) break;
+      }
+    }
+    return best;
+  }
+  function completes(order, need, first) {
+    if (need <= 0) return true;
+    // A pick that fills no one's last appearance blocks no other lineup.
+    if (first >= 0 && !binds(first)) return true;
+    const u = used.slice(), st = starred.slice(), t = taken.slice();
+    if (first >= 0) apply(first, u, st, t);
+    for (let k = 0; k < need; k++) {
+      const c = leastUsed(order, u, st, t);
+      if (c < 0) return false;
+      apply(c, u, st, t);
+    }
+    return true;
+  }
+  return {
+    fits: (c) => fits(c, used, starred, taken),
+    take: (c) => apply(c, used, starred, taken),
+    completes,
+    spent,
+    // The pick that the completion check itself would make next.
+    leastUsed: (order) => leastUsed(order, used, starred, taken),
+  };
+}
+
+/* The best-ranked candidate in `order` that leaves room for `need` more
+ * entries; else the least-used candidate when the rest can still be filled;
+ * else the best that fits. -1 when none fits. A failed check is remembered by
+ * what the pick used up, and a later candidate that would use up all of that
+ * too is skipped unchecked. */
+function lookaheadPick(track, order, need) {
+  let fallback = -1, tries = 0;
+  const failed = [];
+  const covers = (big, small) => small.every((x) => big.includes(x));
+  for (const c of order) {
+    if (!track.fits(c)) continue;
+    if (fallback < 0) fallback = c;
+    const used = track.spent(c);
+    if (failed.some((f) => covers(used, f))) continue;
+    if (track.completes(order, need, c)) return c;
+    failed.push(used);
+    if (++tries === LOOKAHEAD_TRIES) break;
+  }
+  if (track.completes(order, need + 1, -1)) return track.leastUsed(order);
+  return fallback;
+}
+
 /* ---------- multi-entry H2H ---------------------------------------------- */
 
-const H2H_STAR_POOL = 5;       // the game's top five projected players are the Superstars
-const H2H_FILLER_POOL = 10;    // supporting players are preferred from the top ten
+/* Every (roster, Superstar) pair of an enumeration, shaped like `score()`'s
+ * output as far as selection needs: ids, superstars and expected points. */
+function allPairs(rosters) {
+  const players = model.players;
+  const count = rosters.salary.length, total = count * LINEUP_SIZE;
+  const ids = new Int32Array(total * LINEUP_SIZE);
+  const superstars = new Int32Array(total);
+  const expected = new Float64Array(total);
+  for (let r = 0; r < count; r++) {
+    const base = r * LINEUP_SIZE;
+    let sum = 0;
+    for (let j = 0; j < LINEUP_SIZE; j++) sum += Number(players[rosters.ids[base + j]].fp) || 0;
+    for (let slot = 0; slot < LINEUP_SIZE; slot++) {
+      const c = base + slot;
+      ids.set(rosters.ids.subarray(base, base + LINEUP_SIZE), c * LINEUP_SIZE);
+      superstars[c] = rosters.ids[c];
+      expected[c] = sum + 0.5 * (Number(players[superstars[c]].fp) || 0);
+    }
+  }
+  return { total, ids, superstars, expected };
+}
+
 const H2H_OPPONENTS = 100;     // an opponent is one of the highest-expected lineups
 const H2H_MAX_ENTRIES = 50;
-const H2H_DEFAULTS = { maxPlayerExposure: 1, maxSuperstarExposure: 0.25 };
 
 function lowerBound(values, needle) {
   let low = 0, high = values.length;
@@ -977,27 +1148,6 @@ function upperBound(values, needle) {
   return low;
 }
 
-/* Several separate head-to-head contests, each against its own opponent.
- *
- * Entries: the game's five highest-projected players take turns as Superstar,
- * in projection order, round-robin. Round one gives each its highest-expected
- * lineup. Later rounds keep rotating the same five but change the supporting
- * players: a Superstar's next lineup is its unused one with the fewest
- * supporting players from outside the top ten (ranks 6-10 are the fillers),
- * then the highest expected points. Every lineup comes from the run's own
- * enumeration, so the salary cap, salary floor, position limits and
- * exclusions hold; no two entries repeat; and the H2H exposure limits cap how
- * many entries a player, or a Superstar, may appear in (rounded down, at least
- * one). Fewer entries than requested come back when the limits run out.
- *
- * Expected wins is the sum of each entry's win probability. Every entry is
- * scored in the same game, so entries that share players rise and fall
- * together; the zero-wins and winning-record figures carry that.
- *
- * Each contest's opponent is drawn independently and uniformly from the
- * highest-expected lineups: a skilled opponent, not a calibrated model of who
- * actually enters Yahoo head-to-heads.
- */
 /* The k highest-expected (roster, Superstar) pairs of an enumeration. */
 function topPairs(rosters, k) {
   const players = model.players;
@@ -1024,90 +1174,57 @@ function topPairs(rosters, k) {
   }));
 }
 
-/* `opponentRosters` is every legal roster of the whole pool: an opponent may
- * play a player you left out. It defaults to your own rosters. */
-function h2hMultiEntry(scored, options, rosters, opponentRosters) {
+/* Several separate head-to-head contests, each against its own opponent.
+ *
+ * Entries are taken in order of expected points, skipping any (lineup,
+ * Superstar) pair that would break the lab rules above or strand the entries
+ * still to come (see lookaheadPick). Fewer entries than requested come back
+ * when the limits run out.
+ *
+ * Expected wins is the sum of each entry's win probability. Every entry is
+ * scored in the same game, so entries that share players rise and fall
+ * together; the zero-wins and winning-record figures carry that.
+ *
+ * Each contest's opponent is drawn independently and uniformly from the
+ * highest-expected lineups: a skilled opponent, not a calibrated model of who
+ * actually enters Yahoo head-to-heads.
+ *
+ * `opponentRosters` is every legal roster of the whole pool: an opponent may
+ * play a player you left out. Without it the opponents come from `scored`.
+ */
+function h2hMultiEntry(scored, options, opponentRosters) {
   const players = model.players;
   const requested = Math.floor(Number(options.entries) || 3);
   const count = Math.max(1, Math.min(H2H_MAX_ENTRIES, requested));
   const order = orderBy(scored, "expected");
   if (!order.length) return null;
   const fp = (id) => Number(players[id].fp) || 0;
-  const pair = (ids, superstar) => {
+  const fromCandidate = (c) => {
+    const ids = candidateMembers(scored, c), superstar = scored.superstars[c];
     let expected = 0, salary = 0;
     for (const id of ids) { expected += fp(id); salary += Number(players[id].salary) || 0; }
-    return { ids: Array.from(ids), superstar, expected_fp: expected + 0.5 * fp(superstar), salary };
+    return { ids, superstar, expected_fp: expected + 0.5 * fp(superstar), salary };
   };
-  const fromCandidate = (c) => pair(candidateMembers(scored, c), scored.superstars[c]);
-  const keyOf = (entry) => entry.ids.slice().sort((a, b) => a - b).join(",") + "*" + entry.superstar;
-  const byExpected = (a, b) => (b.expected_fp - a.expected_fp) || (keyOf(a) < keyOf(b) ? -1 : 1);
-
-  const playerShare = Number.isFinite(options.maxPlayerExposure)
-    ? options.maxPlayerExposure : H2H_DEFAULTS.maxPlayerExposure;
-  const starShare = Number.isFinite(options.maxSuperstarExposure)
-    ? options.maxSuperstarExposure : H2H_DEFAULTS.maxSuperstarExposure;
-  const playerLimit = Math.max(1, exposureLimit(count, playerShare));
-  const starLimit = Math.max(1, exposureLimit(count, starShare));
-
-  // Rank the players the run could use; the top five are the Superstars.
-  const source = rosters && rosters.ids ? rosters : null;
-  const pool = new Set();
-  if (source) for (const id of source.ids) pool.add(id);
-  else for (let c = 0; c < scored.total; c++) candidateMembers(scored, c).forEach((id) => pool.add(id));
-  const ranked = Array.from(pool).sort((a, b) => (fp(b) - fp(a)) || (a - b));
-  const stars = ranked.slice(0, H2H_STAR_POOL);
-  const topTen = new Set(ranked.slice(0, H2H_FILLER_POOL));
-  const fillerSet = new Set(ranked.slice(H2H_STAR_POOL, H2H_FILLER_POOL));
-
-  // Each Superstar's lineups: by expected points for round one, then by
-  // fewest supporting players from outside the top ten for later rounds.
-  const lists = stars.map((star) => {
-    const offers = [];
-    const push = (ids) => {
-      if (ids.indexOf(star) < 0) return;
-      const entry = pair(ids, star);
-      entry.outsiders = entry.ids.filter((id) => id !== star && !topTen.has(id)).length;
-      offers.push(entry);
-    };
-    if (source) {
-      for (let r = 0; r < source.salary.length; r++) {
-        push(Array.from(source.ids.subarray(r * LINEUP_SIZE, (r + 1) * LINEUP_SIZE)));
-      }
-    } else {
-      for (const c of order) if (scored.superstars[c] === star) push(candidateMembers(scored, c));
-    }
-    return {
-      first: offers.slice().sort(byExpected),
-      later: offers.slice().sort((a, b) => (a.outsiders - b.outsiders) || byExpected(a, b)),
-    };
+  const limits = options.limits || labLimits(count, {
+    maxPlayerExposure: Number.isFinite(options.maxPlayerExposure)
+      ? options.maxPlayerExposure : LAB_DEFAULTS.maxPlayerExposure,
+    maxSuperstarExposure: Number.isFinite(options.maxSuperstarExposure)
+      ? options.maxSuperstarExposure : LAB_DEFAULTS.maxSuperstarExposure,
   });
 
-  const entries = [], seen = new Set(), used = new Map(), starred = new Map();
-  const take = (entry, round) => {
-    const key = keyOf(entry);
-    if (seen.has(key)) return false;
-    if ((starred.get(entry.superstar) || 0) >= starLimit) return false;
-    if (entry.ids.some((id) => (used.get(id) || 0) >= playerLimit)) return false;
-    seen.add(key);
-    const { outsiders, ...clean } = entry;
-    entries.push({ ...clean, round, fillers: entry.ids.filter((id) => fillerSet.has(id)) });
-    for (const id of entry.ids) used.set(id, (used.get(id) || 0) + 1);
-    starred.set(entry.superstar, (starred.get(entry.superstar) || 0) + 1);
-    return true;
-  };
-  for (let round = 1; entries.length < count; round++) {
-    let added = false;
-    for (const list of lists) {
-      if (entries.length === count) break;
-      const offers = round === 1 ? list.first : list.later;
-      for (const entry of offers) if (take(entry, round)) { added = true; break; }
-    }
-    if (!added) break;
+  // Each candidate is one (roster, Superstar) pair, so no candidate taken
+  // twice means no exact entry repeats.
+  const entries = [], track = labTracker(scored, limits);
+  while (entries.length < count) {
+    const pick = lookaheadPick(track, order, count - entries.length - 1);
+    if (pick < 0) break;
+    track.take(pick);
+    entries.push(fromCandidate(pick));
   }
+  entries.sort((a, b) => b.expected_fp - a.expected_fp);
 
-  const opponentSource = opponentRosters || rosters;
-  const opponents = opponentSource && opponentSource.ids
-    ? topPairs(opponentSource, H2H_OPPONENTS)
+  const opponents = opponentRosters && opponentRosters.ids
+    ? topPairs(opponentRosters, H2H_OPPONENTS)
     : order.slice(0, Math.min(H2H_OPPONENTS, order.length)).map(fromCandidate);
 
   const scoreAt = (entry, s) => {
@@ -1117,8 +1234,7 @@ function h2hMultiEntry(scored, options, rosters, opponentRosters) {
   };
   const result = {
     requested: count, filled: entries.length, entries, opponents: opponents.length,
-    limits: { player: playerLimit, superstar: starLimit },
-    pools: { superstars: stars, fillers: Array.from(fillerSet) },
+    limits: { player: limits.player, superstar: limits.superstar },
   };
   if (!entries.length || !opponents.length) return result;
 
@@ -1225,7 +1341,9 @@ const DETAIL = {
 const TOURNAMENT_MAX_ENTRIES = 150;
 
 /* Everything the engine needs, from the few choices the page offers plus the
- * published run's settings. The page never has to know the engine's knobs. */
+ * published run's settings. The page never has to know the engine's knobs.
+ * Exposure follows the lab rules, not the published run's portfolio settings,
+ * and there is no cap on players shared between entries. */
 function engineOptions(request, settings = model.settings || {}) {
   const contest = request.contest === "h2h" ? "h2h" : "tournament";
   const detail = DETAIL[request.detail] || (request.detail === "full"
@@ -1249,14 +1367,12 @@ function engineOptions(request, settings = model.settings || {}) {
     meanReserve: settings.mean_candidate_reserve,
     nearOptimalRatio: settings.near_optimal_ratio,
     positionLimits: settings.position_limits || {},
-    maxShared: settings.max_shared_players,
+    maxShared: null,
     constructionRules: [],
-    // Tournament entries cover the scenarios; head-to-head screens on the mean.
+    // Tournament entries cover the scenarios; head-to-head ranks on the mean.
     objective: tournament ? "portfolio" : "expected",
-    maxPlayerExposure: share(request.maxPlayerExposure,
-      tournament ? settings.max_player_exposure : H2H_DEFAULTS.maxPlayerExposure),
-    maxSuperstarExposure: share(request.maxSuperstarExposure,
-      tournament ? settings.max_superstar_exposure : H2H_DEFAULTS.maxSuperstarExposure),
+    maxPlayerExposure: share(request.maxPlayerExposure, LAB_DEFAULTS.maxPlayerExposure),
+    maxSuperstarExposure: share(request.maxSuperstarExposure, LAB_DEFAULTS.maxSuperstarExposure),
   };
 }
 
@@ -1277,11 +1393,7 @@ function solve(request, report = () => {}) {
   for (const share of [options.maxPlayerExposure, options.maxSuperstarExposure]) {
     if (!(share > 0 && share <= 1)) throw new Error("Exposure limits must be between 0 and 1.");
   }
-  if (options.contest === "tournament" && (
-      exposureLimit(options.entries, options.maxPlayerExposure) === 0 ||
-      exposureLimit(options.entries, options.maxSuperstarExposure) === 0)) {
-    throw new Error("The exposure limits allow zero appearances. Raise a limit or add entries.");
-  }
+  options.limits = labLimits(options.entries, options);
 
   const started = Date.now();
   if (!scenarios || simCount !== options.simulations || simSeed !== options.seed) {
@@ -1299,19 +1411,23 @@ function solve(request, report = () => {}) {
     throw new Error("No valid roster fits the salary cap with these players. Put a player back.");
   }
 
-  report("Scoring lineups");
-  const scored = score(rosters, screen(rosters, options), options,
-    (fraction) => report("Scoring lineups", fraction));
   const common = { contest: options.contest, valid_rosters: rosters.salary.length };
 
   if (options.contest === "h2h") {
+    // Head-to-head ranks on projected points and prices only the entries it
+    // takes, so it chooses from every legal pair rather than a screened few.
     report("Pricing head-to-head");
+    const pairs = allPairs(rosters);
     // Opponents are not bound by your exclusions.
     const everyone = included.length === model.players.length ? rosters
       : enumerate(Int32Array.from(model.players, (_, i) => i), options);
-    const h2h = h2hMultiEntry(scored, options, rosters, everyone);
+    const h2h = h2hMultiEntry(pairs, options, everyone);
     return { ...common, ...h2h, elapsed_ms: Date.now() - started };
   }
+
+  report("Scoring lineups");
+  const scored = score(rosters, screen(rosters, options), options,
+    (fraction) => report("Scoring lineups", fraction));
 
   report("Building entries");
   // Entries that fit the limits come back even when fewer than requested: the
@@ -1319,7 +1435,7 @@ function solve(request, report = () => {}) {
   // more diverse than asked for, and the page says how many fitted.
   const built = portfolio(scored, orderBy(scored, "expected"), options);
   if (!built.chosen.length) {
-    throw new Error("No entry fits the exposure and overlap limits. Raise a limit.");
+    throw new Error("No entry fits the exposure limits. Raise a limit.");
   }
   const entries = describe(scored, built.chosen);
   return {
@@ -1331,18 +1447,15 @@ function solve(request, report = () => {}) {
     best_score: built.evaluation ? built.evaluation.evaluation_best_mean : null,
     gain_over_single: built.evaluation ? built.evaluation.evaluation_gain_over_single : null,
     diversity: diversity(built.sets, options.maxShared),
-    limits: {
-      player: exposureLimit(options.entries, options.maxPlayerExposure),
-      superstar: exposureLimit(options.entries, options.maxSuperstarExposure),
-      shared: options.maxShared,
-    },
+    limits: options.limits,
     elapsed_ms: Date.now() - started,
   };
 }
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
-    LINEUP_SIZE, WORKER_PROTOCOL, exposureLimit, scenarioPortfolio, setModel, simulate,
+    LINEUP_SIZE, WORKER_PROTOCOL, LAB_DEFAULTS, exposureLimit, labLimits, labTracker, lookaheadPick,
+    allPairs, scenarioPortfolio, setModel, simulate,
     enumerate, screen, score, orderBy, portfolio, describe, diversity, latentMatrix,
     cholesky, scoreCorrelation, normalCdf, normalPpf, conditionalCv, hurdleCoefficients,
     hurdleScoreCorrelation, constructionSchedule, apportionedRuleCounts,
