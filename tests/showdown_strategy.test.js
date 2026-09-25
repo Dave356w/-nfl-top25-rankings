@@ -79,147 +79,10 @@ test('disabling construction quotas admits otherwise excluded shapes', () => {
   assert.equal(free.chosen.length,5);
 });
 
-test('worker refuses partial portfolios even with construction quotas off', () => {
-  const {payload,options} = scoringFixture();
-  const messages=[];
-  const self={postMessage:m=>messages.push(m)};
-  vm.runInNewContext(fs.readFileSync(workerPath,'utf8'),{self,performance});
-  self.onmessage({data:{type:'load',payload}});
-  self.onmessage({data:{type:'solve',included:[0,1,2,3,4,5],options:{...options,
-    entries:5,maxPlayerExposure:1,maxSuperstarExposure:1,maxShared:3,
-    constructionRules:[],simulations:100,seed:356}}});
-  assert.equal(messages.at(-1).type,'error');
-  assert.match(messages.at(-1).message,/partial result/);
-  assert.ok(!messages.some(m=>m.type==='result'));
-});
+/* ---------- solve(): the page's single entry point ---------- */
 
-
-test('tie splitting shares the occupied payout ranks', () => {
-  const payouts = w.normalizePayouts([
-    {from:1,to:1,amount:100},
-    {from:2,to:2,amount:50},
-    {from:3,to:5,amount:10},
-  ], 10);
-  assert.equal(w.payoutForTie(payouts, 1, 2), 75);
-  assert.equal(w.payoutForTie(payouts, 2, 3), (50 + 10 + 10) / 3);
-});
-
-
-test('weighted field-strength summary respects sampled lineup weights', () => {
-  const summary=w.weightedDistributionSummary([1,2,10],[1,2,1]);
-  assert.equal(summary.mean,3.75);
-  assert.equal(summary.median,2);
-  assert.equal(summary.p90,10);
-  assert.equal(summary.p99,10);
-  assert.equal(summary.min,1);
-  assert.equal(summary.max,10);
-});
-
-test('contest readiness requires opponents and payouts', () => {
-  assert.equal(w.contestReady({fieldSize:100,entries:5,entryFee:1,payouts:[{from:1,to:1,amount:20}]}), true);
-  assert.equal(w.contestReady({fieldSize:5,entries:5,entryFee:1,payouts:[{from:1,to:1,amount:20}]}), false);
-  assert.equal(w.contestReady({fieldSize:100,entries:5,entryFee:1,payouts:[]}), false);
-});
-
-test('ownership prior always fills exactly five Yahoo roster slots', () => {
-  const players = [
-    {fp:22,pos:'QB'},{fp:19,pos:'QB'},{fp:17,pos:'RB'},{fp:14,pos:'WR'},
-    {fp:10,pos:'WR'},{fp:8,pos:'TE'},{fp:6,pos:'DEF'}
-  ].map((p,i)=>({...p,team:i<4?'A':'B',salary:10,cv:.5}));
-  w.setModel({players,latent:Array(21).fill(0),settings:{}});
-  const own = w.ownershipRates({fieldSize:2000,entryFee:1});
-  assert.ok(Math.abs(Array.from(own).reduce((a,b)=>a+b,0)-5) < 1e-8);
-  const star = w.superstarOwnershipRates(own);
-  assert.ok(Math.abs(Array.from(star).reduce((a,b)=>a+b,0)-1) < 1e-8);
-});
-
-test('field EV prices a fully duplicated one-lineup field with tie splitting', () => {
-  const players = [10,9,8,7,6].map((fp,i)=>({
-    fp,cv:.01,salary:1,pos:i===0?'QB':'WR',team:i<4?'A':'B'
-  }));
-  const payload={players,latent:Array(10).fill(0),settings:{}};
-  w.setModel(payload);
-  w.simulate(200,356);
-  const options={salaryCap:5,minSalaryPct:0,ceilingWeight:.85,maxCandidates:10,
-    meanReserve:10,nearOptimalRatio:.95,objective:'field_ev',entries:1,
-    maxPlayerExposure:1,maxSuperstarExposure:1,maxShared:4,constructionRules:[],
-    simulations:200,seed:356,fieldSize:10,entryFee:1,
-    payouts:[{from:1,to:1,amount:100}],fieldSampleSize:9,fieldSimulations:100};
-  const rosters=w.enumerate([0,1,2,3,4],options);
-  const scored=w.score(rosters,w.screen(rosters,options),options);
-  w.applyFieldEV(scored,rosters,options);
-  assert.equal(scored.total,5);
-  const best=w.orderBy(scored,'field_ev')[0];
-  assert.ok(Number.isFinite(scored.expectedProfit[best]));
-  assert.ok(scored.expectedDuplicates[best] >= 0);
-  assert.ok(scored.expectedPayout[best] > 0);
-});
-
-
-test('joint portfolio EV inserts all selected entries into the same contest ranks', () => {
-  const players = [12,11,10,9,8,7].map((fp,i)=>({
-    fp,cv:.05,salary:1,pos:i===0?'QB':'WR',team:i<3?'A':'B'
-  }));
-  w.setModel({players,latent:Array(15).fill(0),settings:{}});
-  w.simulate(400,356);
-  const options={salaryCap:5,minSalaryPct:0,ceilingWeight:.85,maxCandidates:40,
-    meanReserve:40,nearOptimalRatio:.95,objective:'field_ev',entries:2,
-    maxPlayerExposure:1,maxSuperstarExposure:1,maxShared:4,constructionRules:[],
-    simulations:400,seed:356,fieldSize:10,entryFee:1,
-    payouts:[{from:1,to:1,amount:20},{from:2,to:3,amount:5}],
-    fieldSampleSize:9,fieldSimulations:200};
-  const rosters=w.enumerate([0,1,2,3,4,5],options);
-  const scored=w.score(rosters,w.screen(rosters,options),options);
-  w.applyFieldEV(scored,rosters,options);
-  const chosen=w.orderBy(scored,'field_ev').slice(0,2);
-  const single=w.evaluateJointPortfolioEV(scored,[chosen[0]],options);
-  assert.ok(Math.abs(single.expected_profit-scored.expectedProfit[chosen[0]]) < 1e-9,
-    'a one-entry joint contest must reduce exactly to standalone EV');
-
-  const evaluation=w.evaluateJointPortfolioEV(scored,chosen,options);
-  const described=w.describe(scored,chosen);
-
-  assert.equal(evaluation.objective,'joint_portfolio_contest_ev');
-  assert.equal(evaluation.entries,2);
-  assert.equal(evaluation.opponent_entries,8);
-  assert.equal(evaluation.evaluation_scenarios,200);
-  assert.ok(evaluation.profitable_rate >= 0 && evaluation.profitable_rate <= 1);
-  assert.ok(evaluation.any_cash_rate >= 0 && evaluation.any_cash_rate <= 1);
-  assert.ok(evaluation.any_top_one_rate >= 0 && evaluation.any_top_one_rate <= 1);
-  assert.ok(evaluation.any_first_rate >= 0 && evaluation.any_first_rate <= 1);
-  assert.ok(evaluation.expected_cashes >= 0 && evaluation.expected_cashes <= 2);
-  assert.ok(evaluation.profit_p10 <= evaluation.profit_median);
-  assert.ok(evaluation.profit_median <= evaluation.profit_p90);
-
-  const jointProfit=described.reduce((sum,row)=>sum+row.joint_expected_profit,0);
-  assert.ok(Math.abs(jointProfit-evaluation.expected_profit) < 1e-9);
-  const standaloneProfit=chosen.reduce((sum,c)=>sum+scored.expectedProfit[c],0);
-  assert.ok(Math.abs(standaloneProfit-evaluation.standalone_expected_profit) < 1e-9);
-  assert.equal(scored.fieldSummary.joint_portfolio_evaluated,true);
-  assert.equal(scored.fieldSummary.joint_opponent_entries,8);
-  const opponentFP=scored.fieldSummary.opponent_expected_fp;
-  assert.equal(opponentFP.sample_size,9);
-  assert.ok(opponentFP.min <= opponentFP.median);
-  assert.ok(opponentFP.median <= opponentFP.p90);
-  assert.ok(opponentFP.p90 <= opponentFP.p99);
-  assert.ok(opponentFP.p99 <= opponentFP.max);
-  assert.ok(opponentFP.mean >= opponentFP.min && opponentFP.mean <= opponentFP.max);
-
-  const selectedExpected=chosen.map(c=>scored.expected[c]);
-  const portfolioFP=scored.fieldSummary.portfolio_expected_fp;
-  assert.ok(Math.abs(portfolioFP.mean-
-    selectedExpected.reduce((a,b)=>a+b,0)/selectedExpected.length) < 1e-9);
-  assert.equal(portfolioFP.min,Math.min(...selectedExpected));
-  assert.equal(portfolioFP.max,Math.max(...selectedExpected));
-  assert.equal(scored.fieldSummary.h2h_expected_fp,Math.max(...scored.expected));
-
-  const h2h=w.describe(scored,[chosen[0]],null,false)[0];
-  assert.equal(h2h.expected_profit,undefined);
-  assert.equal(h2h.joint_expected_profit,undefined);
-});
-
-function h2hFixture(h2hEntries) {
-  // A self-contained two-team game: published slates are replaced every week.
+// A self-contained two-team game: published slates are replaced every week.
+function syntheticGame() {
   const spec = [
     ['QB', 'A', 22, 38], ['QB', 'B', 20, 36], ['RB', 'A', 17, 32], ['RB', 'B', 15, 30],
     ['WR', 'A', 14, 28], ['WR', 'B', 13, 27], ['WR', 'A', 9, 18], ['WR', 'B', 8, 16],
@@ -229,87 +92,155 @@ function h2hFixture(h2hEntries) {
     name: `P${i}`, pos, team, fp, salary, cv: pos === 'QB' ? .5 : .75, zero: .02,
   }));
   const n = players.length;
-  const payload = {players, latent: Array(n * (n - 1) / 2).fill(0.1), settings: {}};
-  const options = {salaryCap:120,minSalaryPct:0,ceilingWeight:.85,maxCandidates:2000,
-    meanReserve:750,nearOptimalRatio:.95,entries:20,objective:'tournament',positionLimits:{},
-    simulations:2000,seed:356,fieldTemperature:1.25,h2hEntries};
-  w.setModel(payload);
-  w.simulate(options.simulations, options.seed);
-  const rosters = w.enumerate(players.map((_, i) => i), options);
-  const scored = w.score(rosters, w.screen(rosters, options), options, () => {});
-  return {payload, options, result: w.h2hMultiEntry(scored, options, rosters)};
+  return {
+    players, latent: Array(n * (n - 1) / 2).fill(0.1),
+    settings: {
+      random_seed: 356, simulations: 2000, max_candidate_lineups: 2000,
+      min_salary_used_pct: 0, candidate_ceiling_weight: .85, mean_candidate_reserve: 750,
+      near_optimal_ratio: .95, max_shared_players: 3, max_player_exposure: .5,
+      max_superstar_exposure: .35, tournament_lineups: 20, position_limits: {},
+    },
+  };
 }
-
-function h2hRun(h2hEntries, extra = {}) {
-  const f = h2hFixture(h2hEntries);
-  const options = {...f.options, ...extra};
-  w.setModel(f.payload);
-  w.simulate(options.simulations, options.seed);
-  const rosters = w.enumerate(f.payload.players.map((_, i) => i), options);
-  const scored = w.score(rosters, w.screen(rosters, options), options, () => {});
-  const byFp = f.payload.players.map((p, i) => i).sort((a, b) =>
-    (f.payload.players[b].fp - f.payload.players[a].fp) || (a - b));
-  return {result: w.h2hMultiEntry(scored, options, rosters), byFp};
+const game = syntheticGame();
+const byFp = game.players.map((_, i) => i)
+  .sort((a, b) => (game.players[b].fp - game.players[a].fp) || (a - b));
+function solve(request) {
+  w.setModel(game);
+  return w.solve({salaryCap: 120, detail: 'full', ...request});
 }
 const pairKey = (e) => e.ids.slice().sort((a, b) => a - b).join(',') + '*' + e.superstar;
+function counts(entries, pick) {
+  const map = new Map();
+  for (const e of entries) for (const id of pick(e)) map.set(id, (map.get(id) || 0) + 1);
+  return map;
+}
+
+test('engine options: the page names a contest, the published settings fill the rest', () => {
+  w.setModel(game);
+  const tournament = w.engineOptions({contest: 'tournament', entries: 20, salaryCap: 120, detail: 'full'});
+  assert.equal(tournament.objective, 'portfolio');
+  assert.equal(tournament.maxPlayerExposure, .5);
+  assert.equal(tournament.maxSuperstarExposure, .35);
+  assert.equal(tournament.maxShared, 3);
+  assert.deepEqual(tournament.constructionRules, []);
+  assert.equal(tournament.simulations, 2000);
+  const h2h = w.engineOptions({contest: 'h2h', entries: 3, salaryCap: 120});
+  assert.equal(h2h.objective, 'expected');
+  assert.equal(h2h.maxPlayerExposure, 1);
+  assert.equal(h2h.maxSuperstarExposure, .25);
+  assert.equal(h2h.simulations, 10000);          // standard is the default detail
+  assert.equal(w.engineOptions({contest: 'h2h', detail: 'quick'}).simulations, 5000);
+  assert.equal(w.engineOptions({contest: 'h2h', maxSuperstarExposure: .5}).maxSuperstarExposure, .5);
+});
+
+test('solve refuses requests it cannot answer, in words a visitor can act on', () => {
+  w.setModel(game);
+  assert.throws(() => w.solve({contest: 'h2h', entries: 3}), /no salary cap/);
+  assert.throws(() => solve({contest: 'h2h', entries: 51}), /between 1 and 50/);
+  assert.throws(() => solve({contest: 'tournament', entries: 151}), /between 1 and 150/);
+  assert.throws(() => solve({contest: 'h2h', entries: 3, included: [0, 1, 2]}), /five are required/);
+  assert.throws(() => solve({contest: 'h2h', entries: 3, maxPlayerExposure: 1.5}), /between 0 and 1/);
+});
 
 test('H2H: the top five take turns as Superstar, then ranks 6-10 fill in', () => {
-  const {result, byFp} = h2hRun(12);
+  const result = solve({contest: 'h2h', entries: 12});
+  assert.equal(result.contest, 'h2h');
   assert.deepEqual(result.pools.superstars, byFp.slice(0, 5));
   assert.deepEqual(result.pools.fillers.slice().sort(), byFp.slice(5, 10).sort());
-  const entries = result.entries;
   assert.equal(result.filled, 12);
-  assert.equal(entries.length, 12);
-  // Round one: each top-5 player as Superstar once, in projection order.
+  const entries = result.entries;
   assert.deepEqual(entries.slice(0, 5).map((e) => e.superstar), byFp.slice(0, 5));
-  assert.ok(entries.slice(0, 5).every((e) => e.round === 1));
-  // Rounds continue in the same order.
   assert.deepEqual(entries.slice(5, 10).map((e) => e.superstar), byFp.slice(0, 5));
+  assert.ok(entries.slice(0, 5).every((e) => e.round === 1));
   assert.ok(entries.slice(5, 10).every((e) => e.round === 2));
-  // Later rounds keep the other four inside the top ten while the cap allows it.
   const topTen = new Set(byFp.slice(0, 10));
   for (const e of entries.filter((x) => x.round > 1)) {
-    assert.ok(e.ids.every((id) => topTen.has(id)), `round ${e.round} lineup uses a player outside the top ten`);
+    assert.ok(e.ids.every((id) => topTen.has(id)), `round ${e.round} uses a player outside the top ten`);
     assert.ok(e.salary <= 120);
-    assert.deepEqual(e.fillers.slice().sort(), e.ids.filter((id) => result.pools.fillers.includes(id)).sort());
   }
   assert.equal(new Set(entries.map(pairKey)).size, 12);
 });
 
 test('H2H: the Superstar limit defaults to 0.25, rounded down', () => {
-  const {result} = h2hRun(12);
-  assert.deepEqual(result.limits, {player: 12, superstar: 3});
-  const starred = new Map();
-  result.entries.forEach((e) => starred.set(e.superstar, (starred.get(e.superstar) || 0) + 1));
-  assert.ok(Math.max(...starred.values()) <= 3);
-  // Five Superstars at one entry each cannot fill six.
-  const six = h2hRun(6).result;
-  assert.equal(six.limits.superstar, 1);
+  const result = solve({contest: 'h2h', entries: 12});
+  assert.equal(result.limits.superstar, 3);
+  assert.ok(Math.max(...counts(result.entries, (e) => [e.superstar]).values()) <= 3);
+  const six = solve({contest: 'h2h', entries: 6});      // five Superstars, one each
   assert.equal(six.filled, 5);
   assert.equal(six.requested, 6);
 });
 
-test('H2H: the player exposure limit holds', () => {
-  const {result} = h2hRun(12, {h2hPlayerExposure: 0.5});
+test('H2H: the player limit holds and expected wins sums the entries', () => {
+  const result = solve({contest: 'h2h', entries: 12, maxPlayerExposure: .5});
   assert.equal(result.limits.player, 6);
-  const count = new Map();
-  result.entries.forEach((e) => e.ids.forEach((id) => count.set(id, (count.get(id) || 0) + 1)));
-  assert.ok(Math.max(...count.values()) <= 6);
+  assert.ok(Math.max(...counts(result.entries, (e) => e.ids).values()) <= 6);
+  const sum = result.entries.reduce((total, e) => total + e.win_chance, 0);
+  assert.ok(Math.abs(result.expected_wins - sum) < 1e-9);
+  assert.ok(Math.abs(result.win_rate - sum / result.filled) < 1e-12);
+  assert.ok(result.zero_wins >= 0 && result.zero_wins <= 1);
+  assert.equal(result.opponents, 100);
 });
 
-test('H2H: expected wins is the sum of entry win chances', () => {
-  const {result} = h2hRun(8);
-  for (const opponent of ['sharp', 'public']) {
-    const m = result[opponent];
-    const sum = m.per_entry.reduce((a, b) => a + b, 0);
-    assert.ok(Math.abs(m.expected_wins - sum) < 1e-9);
-    assert.equal(m.per_entry.length, result.entries.length);
-    assert.ok(m.zero_wins >= 0 && m.zero_wins <= 1);
-    assert.ok(Math.abs(m.win_rate - m.expected_wins / result.entries.length) < 1e-12);
+test('H2H: opponents may play a player you left out', () => {
+  const star = byFp[0];
+  const without = solve({contest: 'h2h', entries: 5,
+    included: game.players.map((_, i) => i).filter((i) => i !== star)});
+  assert.ok(without.entries.every((e) => !e.ids.includes(star)));
+  assert.ok(!without.pools.superstars.includes(star));
+  const all = solve({contest: 'h2h', entries: 5});
+  // Your best player is gone but the opponents' is not: you win less often.
+  assert.ok(without.expected_wins < all.expected_wins - .3,
+    `${without.expected_wins} vs ${all.expected_wins}`);
+});
+
+test('topPairs is the highest-expected pairs of an enumeration', () => {
+  w.setModel(game);
+  const rosters = w.enumerate(game.players.map((_, i) => i), {salaryCap: 120, minSalaryPct: 0});
+  const value = (ids, star) => ids.reduce((s, i) => s + game.players[i].fp, 0) + .5 * game.players[star].fp;
+  const all = [];
+  for (let r = 0; r < rosters.salary.length; r++) {
+    const ids = Array.from(rosters.ids.subarray(r * 5, r * 5 + 5));
+    for (const star of ids) all.push(value(ids, star));
   }
+  all.sort((a, b) => b - a);
+  const top = w.topPairs(rosters, 25).map((p) => value(p.ids, p.superstar));
+  top.forEach((v, i) => assert.ok(Math.abs(v - all[i]) < 1e-9));
 });
 
-test('H2H: the entry count is clamped to 1..50', () => {
-  assert.equal(h2hRun(80).result.requested, 50);
-  assert.equal(h2hRun(0).result.requested, 3);    // missing -> default
+test('tournament: entries respect exposure and overlap, and a short list comes back', () => {
+  const result = solve({contest: 'tournament', entries: 20});
+  assert.equal(result.contest, 'tournament');
+  assert.equal(result.requested, 20);
+  assert.ok(result.filled >= 1 && result.filled <= 20);
+  assert.equal(result.entries.length, result.filled);
+  assert.deepEqual(result.limits, {player: 10, superstar: 7, shared: 3});
+  assert.ok(Math.max(...counts(result.entries, (e) => e.ids).values()) <= 10);
+  assert.ok(Math.max(...counts(result.entries, (e) => [e.superstar]).values()) <= 7);
+  assert.ok(result.diversity === null || result.diversity.max_shared <= 3);
+  assert.ok(result.entries.every((e) => e.salary <= 120 && e.ids.includes(e.superstar)));
+});
+
+test('tournament: one entry is the highest-expected lineup', () => {
+  const one = solve({contest: 'tournament', entries: 1});
+  w.setModel(game);
+  const rosters = w.enumerate(game.players.map((_, i) => i), {salaryCap: 120, minSalaryPct: 0});
+  const best = w.topPairs(rosters, 1)[0];
+  assert.equal(pairKey(one.entries[0]), pairKey(best));
+});
+
+test('the worker wraps solve in load / solve / result messages', () => {
+  const messages = [];
+  const self = {postMessage: (m) => messages.push(m)};
+  vm.runInNewContext(fs.readFileSync(workerPath, 'utf8'), {self, Date, Math});
+  self.onmessage({data: {type: 'load', payload: game}});
+  assert.equal(messages[0].type, 'loaded');
+  assert.equal(messages[0].protocol, w.WORKER_PROTOCOL);
+  self.onmessage({data: {type: 'solve', request: {contest: 'h2h', entries: 3, salaryCap: 120, detail: 'full'}}});
+  assert.ok(messages.some((m) => m.type === 'progress' && m.stage === 'Pricing head-to-head'));
+  assert.equal(messages.at(-1).type, 'result');
+  assert.equal(messages.at(-1).result.filled, 3);
+  self.onmessage({data: {type: 'solve', request: {contest: 'h2h', entries: 3, detail: 'full'}}});
+  assert.equal(messages.at(-1).type, 'error');
+  assert.match(messages.at(-1).message, /no salary cap/);
 });

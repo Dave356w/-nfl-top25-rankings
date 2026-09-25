@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Showdown lineup lab</title>
-<meta name="description" content="Interactive Yahoo single-game lineup optimizer: the correlation model is published daily, the Monte Carlo and the enumeration run in your browser.">
+<meta name="description" content="Build Yahoo single-game Showdown lineups from the published projections, head-to-head or tournament, on your own device.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
 <style>
 :root{
@@ -16,7 +16,6 @@
   --warn:#9a6207; --warn-soft:#fdf2dc;
   --bad:#b4362f; --bad-soft:#fbe9e7;
   --mute-soft:#eef0f4;
-  --bar:#c9d9f7; --bar-top:#1f5fd8;
   --shadow:0 1px 2px rgba(18,21,28,.06), 0 8px 24px -12px rgba(18,21,28,.18);
   --radius:14px;
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
@@ -31,7 +30,6 @@
     --warn:#e6b662; --warn-soft:#332612;
     --bad:#f08b80; --bad-soft:#3a1c19;
     --mute-soft:#1f2430;
-    --bar:#26355a; --bar-top:#6d9bff;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
   }
 }
@@ -43,7 +41,6 @@
   --warn:#e6b662; --warn-soft:#332612;
   --bad:#f08b80; --bad-soft:#3a1c19;
   --mute-soft:#1f2430;
-  --bar:#26355a; --bar-top:#6d9bff;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
 }
 
@@ -55,163 +52,132 @@ body{
   font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
 }
 .wrap{max-width:1180px; margin:0 auto; padding:24px 20px 72px}
+@media (max-width:600px){ .wrap{padding:18px 16px 56px} }
 a{color:var(--accent)}
-.mono{font-family:var(--mono); font-size:13px}
 
+/* ---------- header ---------- */
 .top{display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px}
 .brand{flex:1 1 320px; min-width:0}
-h1{font-size:clamp(24px,3.4vw,34px); line-height:1.15; margin:0 0 6px;
-   letter-spacing:-.02em; font-weight:680}
-.sub{color:var(--ink-2); font-size:14.5px; margin:0}
-.top-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-
+h1{margin:0; font-size:26px; font-weight:680; letter-spacing:-.02em}
+.sub{margin:4px 0 0; color:var(--ink-2); font-size:14.5px}
+.top-actions{display:flex; gap:8px; flex-wrap:wrap}
 .btn{
-  display:inline-flex; align-items:center; justify-content:center; gap:7px;
-  height:36px; padding:0 13px; border:1px solid var(--line); border-radius:9px;
-  background:var(--panel); color:var(--ink); font:inherit; font-size:13.5px;
-  font-weight:520; cursor:pointer; text-decoration:none; white-space:nowrap;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  height:36px; padding:0 13px; font:inherit; font-size:13.5px; font-weight:560;
+  color:var(--ink); background:var(--panel); border:1px solid var(--line);
+  border-radius:10px; cursor:pointer; text-decoration:none; box-shadow:var(--shadow);
 }
-.btn:hover{background:var(--panel-2); border-color:var(--ink-3)}
-.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
-.btn.primary:hover{background:var(--accent-ink); border-color:var(--accent-ink)}
-.btn:disabled{opacity:.55; cursor:not-allowed}
+.btn:hover{border-color:var(--ink-3)}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn.small{height:30px; padding:0 10px; font-size:12.5px; box-shadow:none}
 
 .status{
-  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  padding:11px 14px; margin-bottom:18px; background:var(--panel);
-  border:1px solid var(--line); border-radius:11px;
+  display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:16px;
+  background:var(--panel); border:1px solid var(--line); border-radius:11px;
   font-size:13.5px; color:var(--ink-2); box-shadow:var(--shadow);
 }
-.dot{width:8px; height:8px; border-radius:50%; background:var(--good); flex:none;
-     box-shadow:0 0 0 3px var(--good-soft)}
-.dot.busy{background:var(--warn); box-shadow:0 0 0 3px var(--warn-soft)}
-.dot.bad{background:var(--bad); box-shadow:0 0 0 3px var(--bad-soft)}
-.status strong{color:var(--ink); font-weight:600}
-.sep{color:var(--ink-3)}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--good); flex:none}
+.dot.busy{background:var(--warn)}
+.dot.bad{background:var(--bad)}
 
-.layout{display:grid; gap:16px; grid-template-columns:minmax(0,340px) minmax(0,1fr)}
+/* ---------- layout ---------- */
+.layout{display:grid; gap:16px; grid-template-columns:minmax(0,360px) minmax(0,1fr); align-items:start}
 @media (max-width:960px){ .layout{grid-template-columns:1fr} }
-/* A grid item's minimum width defaults to its content's, so a wide table in a
-   scroll box would otherwise widen the whole column past a phone screen. */
+/* A grid item's minimum width is its content's; without this a long row would
+   widen the column past a phone screen. */
 .layout > *{min-width:0}
-
 .card{
   background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
   box-shadow:var(--shadow); overflow:hidden;
 }
-.card h2{
-  margin:0; padding:13px 16px; font-size:12px; font-weight:660;
-  text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3);
-  border-bottom:1px solid var(--line-soft); background:var(--panel-2);
-}
-.card .body{padding:14px 16px}
 .card + .card{margin-top:16px}
+.card h2{
+  margin:0; padding:12px 16px; font-size:12px; font-weight:660; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--ink-3); background:var(--panel-2);
+  border-bottom:1px solid var(--line-soft); display:flex; gap:8px; align-items:center;
+}
+.card h2 .count{margin-left:auto; text-transform:none; letter-spacing:0; font-weight:500}
+.body{padding:14px 16px}
 
-.field{margin-bottom:13px}
+/* ---------- form ---------- */
+.field{margin-bottom:14px}
 .field:last-child{margin-bottom:0}
-.field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-2);
-             margin-bottom:5px}
-.field .hint{font-size:12px; color:var(--ink-3); margin-top:4px; line-height:1.45}
-select, input[type="number"], textarea{
-  width:100%; padding:0 9px; font:inherit; font-size:13.5px;
-  color:var(--ink); background:var(--panel); border:1px solid var(--line);
-  border-radius:9px;
+label, .label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-2); margin-bottom:5px}
+.hint{font-size:12.5px; color:var(--ink-3); margin-top:5px; line-height:1.45}
+select, input[type="number"]{
+  width:100%; height:38px; padding:0 10px; font:inherit; font-size:14px; color:var(--ink);
+  background:var(--panel); border:1px solid var(--line); border-radius:9px;
 }
-select, input[type="number"]{height:36px}
-textarea{min-height:92px; padding:8px 9px; resize:vertical; line-height:1.4; font-family:var(--mono)}
-input[type="range"]{width:100%; accent-color:var(--accent)}
-.range-row{display:flex; align-items:center; gap:10px}
-.range-row output{font-family:var(--mono); font-size:12.5px; color:var(--ink-2);
-                  min-width:52px; text-align:right}
-.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.pair{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.segmented{position:relative; display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px;
+           background:var(--mute-soft); border-radius:11px}
+.segmented input{position:absolute; width:1px; height:1px; opacity:0; pointer-events:none}
+.segmented label{
+  margin:0; padding:8px 6px; text-align:center; border-radius:8px; cursor:pointer;
+  font-size:13.5px; font-weight:600; color:var(--ink-2);
+}
+.segmented input:checked + label{background:var(--panel); color:var(--ink); box-shadow:var(--shadow)}
+.segmented input:focus-visible + label{outline:2px solid var(--accent); outline-offset:1px}
+details.advanced{margin:2px 0 14px; border-top:1px solid var(--line-soft); padding-top:10px}
+details.advanced summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--ink-2)}
+details.advanced[open] summary{margin-bottom:10px}
+.run{width:100%; height:42px; font-size:15px}
+.progress{height:4px; background:var(--mute-soft); border-radius:3px; overflow:hidden; margin-top:10px}
+.progress i{display:block; height:100%; width:0; background:var(--accent); transition:width .15s linear}
 
-.pool{max-height:420px; overflow:auto; border-top:1px solid var(--line-soft)}
-.pool-row{
-  display:grid; grid-template-columns:22px minmax(0,1fr) auto auto; gap:9px;
-  align-items:center; padding:7px 16px; border-bottom:1px solid var(--line-soft);
-  font-size:13.5px;
-}
-.pool-row:last-child{border-bottom:0}
-.pool-row.out{opacity:.45}
-.pool-row .who{min-width:0}
-.pool-row .who b{display:block; font-weight:600; white-space:nowrap;
-                 overflow:hidden; text-overflow:ellipsis}
-.pool-row .who span{font-size:11.5px; color:var(--ink-3)}
-.pool-row .num{font-family:var(--mono); font-size:12.5px; color:var(--ink-2);
-               text-align:right; white-space:nowrap}
+/* ---------- player pool ---------- */
 .pool-actions{display:flex; gap:8px; padding:10px 16px; border-bottom:1px solid var(--line-soft)}
-.depth-pick{
-  font:inherit; font-family:var(--mono); font-size:12px; color:var(--ink);
-  background:var(--panel); border:1px solid var(--line); border-radius:7px;
-  padding:2px 3px; min-height:26px; cursor:pointer;
+.pool{max-height:460px; overflow:auto}
+.player{
+  display:grid; grid-template-columns:22px minmax(0,1fr) auto auto; gap:10px; align-items:center;
+  padding:7px 16px; border-bottom:1px solid var(--line-soft); font-size:13.5px;
 }
-.depth-pick.changed{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink)}
-.depth-edits{
-  display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; padding:9px 16px;
-  font-size:12.5px; background:var(--accent-soft); color:var(--accent-ink);
-  border-bottom:1px solid var(--line-soft);
-}
-.depth-edits .btn{height:28px; font-size:12px}
-.pool-actions .btn{height:30px; font-size:12.5px; flex:1}
+.player:last-child{border-bottom:0}
+.player.out{opacity:.45}
+.player b{display:block; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.player small{font-size:11.5px; color:var(--ink-3)}
+.player .num{font-family:var(--mono); font-size:12.5px; color:var(--ink-2); text-align:right; white-space:nowrap}
+.depth{font:inherit; font-family:var(--mono); font-size:12px; height:28px; width:auto; padding:0 4px}
+.depth.changed{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink)}
+.notice{padding:10px 16px; font-size:13px; background:var(--accent-soft); color:var(--accent-ink);
+        display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.notice.warn{background:var(--warn-soft); color:var(--warn)}
+.notice.bad{background:var(--bad-soft); color:var(--bad)}
 
-.progress{height:4px; background:var(--mute-soft); border-radius:3px; overflow:hidden;
-          margin-top:10px}
-.progress i{display:block; height:100%; width:0; background:var(--bar-top);
-            transition:width .15s linear}
-
-.lineup{border-bottom:1px solid var(--line-soft); padding:12px 16px}
-.lineup:last-child{border-bottom:0}
-.lineup-head{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin-bottom:7px}
-.rank{font-family:var(--mono); font-size:12px; color:var(--ink-3); font-weight:600;
-      min-width:24px}
-.lineup-head .score{font-weight:660; font-size:15px}
-.chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px}
-.chip{
-  display:inline-flex; align-items:baseline; gap:5px; padding:3px 9px;
-  border-radius:999px; background:var(--mute-soft); font-size:12.5px;
-  border:1px solid transparent;
-}
-.chip.star{background:var(--accent-soft); color:var(--accent-ink); font-weight:600;
-           border-color:var(--accent)}
+/* ---------- results ---------- */
+.stats{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-bottom:1px solid var(--line-soft)}
+@media (max-width:600px){ .stats{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.stat{padding:13px 16px; border-right:1px solid var(--line-soft)}
+.stat:last-child{border-right:0}
+.stat .k{font-size:11.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:.05em}
+.stat .v{font-size:22px; font-weight:680; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.explain{padding:12px 16px; font-size:13px; color:var(--ink-2); border-bottom:1px solid var(--line-soft)}
+.entry{padding:12px 16px; border-bottom:1px solid var(--line-soft)}
+.entry:last-child{border-bottom:0}
+.entry-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:7px}
+.entry-head .n{font-family:var(--mono); font-size:12px; color:var(--ink-3); min-width:26px}
+.entry-head .fp{font-weight:660}
+.entry-head .meta{font-size:12.5px; color:var(--ink-2)}
+.entry-head .win{margin-left:auto; font-weight:660; font-variant-numeric:tabular-nums}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{padding:3px 9px; border-radius:999px; background:var(--mute-soft); font-size:12.5px}
 .chip small{color:var(--ink-3); font-size:11px}
-.chip.star small{color:var(--accent-ink); opacity:.8}
-.metrics{display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--ink-2);
-         font-family:var(--mono)}
-.badge{
-  display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px;
-  font-weight:600; background:var(--mute-soft); color:var(--ink-2);
-}
-.badge.match{background:var(--good-soft); color:var(--good)}
-
-.note{
-  padding:12px 16px; font-size:13px; color:var(--ink-2);
-  border-bottom:1px solid var(--line-soft); background:var(--panel-2);
-}
-.note.bad{color:var(--bad); background:var(--bad-soft)}
+.chip.star{background:var(--accent-soft); color:var(--accent-ink); font-weight:600;
+           box-shadow:inset 0 0 0 1px var(--accent)}
+.badge{padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600;
+       background:var(--mute-soft); color:var(--ink-2)}
+.badge.good{background:var(--good-soft); color:var(--good)}
 .empty{padding:44px 20px; text-align:center; color:var(--ink-2)}
-.empty h3{margin:0 0 6px; color:var(--ink); font-size:17px; font-weight:620}
-
-table{width:100%; border-collapse:collapse; font-size:13px}
-th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
-   color:var(--ink-3); font-weight:650; padding:8px 16px;
-   border-bottom:1px solid var(--line-soft)}
-td{padding:7px 16px; border-bottom:1px solid var(--line-soft)}
-tr:last-child td{border-bottom:0}
-td.num{font-family:var(--mono); text-align:right; color:var(--ink-2)}
-th.num{text-align:right}
-.scroll{overflow-x:auto}
-#h2h-summary td, #h2h-summary th{white-space:nowrap}
+.empty h3{margin:0 0 6px; color:var(--ink); font-size:17px}
+.empty p{margin:0}
 
 details.panel{margin-top:16px; background:var(--panel); border:1px solid var(--line);
               border-radius:var(--radius); box-shadow:var(--shadow)}
-details.panel summary{padding:13px 16px; cursor:pointer; font-size:13.5px;
-                      font-weight:600; color:var(--ink-2)}
-details.panel .panel-body{padding:0 16px 16px; font-size:13.5px; color:var(--ink-2)}
-details.panel h4{margin:14px 0 6px; font-size:12px; text-transform:uppercase;
-                 letter-spacing:.06em; color:var(--ink-3)}
-pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-radius:9px;
-        padding:11px 13px; overflow:auto; max-height:240px; font-family:var(--mono);
-        font-size:12px; color:var(--ink-2); white-space:pre-wrap}
+details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
+.panel-body{padding:0 16px 16px; font-size:14px; color:var(--ink-2)}
+.panel-body h4{margin:16px 0 4px; color:var(--ink); font-size:14px}
+.panel-body p{margin:0 0 8px}
 </style>
 </head>
 <body>
@@ -220,329 +186,138 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   <header class="top">
     <div class="brand">
       <h1>Showdown lineup lab</h1>
-      <p class="sub">
-        Player projections share a snapshot with Rankings and My lineup.
-        Change the controls, then press Optimize to recalculate on this device.
-      </p>
+      <p class="sub">Build Yahoo single-game lineups from today's projections. Everything runs on this device.</p>
     </div>
-    <div class="top-actions">
+    <nav class="top-actions">
       <a class="btn" href="./index.html">Rankings</a>
       <a class="btn" href="./lineup.html">My lineup</a>
       <button class="btn" id="theme" type="button">Theme</button>
-    </div>
+    </nav>
   </header>
 
-  <div class="status">
-    <span class="dot" id="dot"></span>
-    <span id="status-text">Loading published models…</span>
+  <div class="status" role="status" aria-live="polite">
+    <span class="dot busy" id="dot"></span>
+    <span id="status-text">Loading today's games…</span>
   </div>
 
   <div class="layout">
     <div>
       <section class="card">
-        <h2>Slate</h2>
+        <h2>Setup</h2>
         <div class="body">
           <div class="field">
             <label for="game">Game</label>
             <select id="game"></select>
             <div class="hint" id="game-hint"></div>
           </div>
+
           <div class="field">
-            <label for="detail">Detail</label>
-            <select id="detail">
-              <option value="fast">Fast — 5,000 scenarios, 4,000 candidates</option>
-              <option value="balanced" selected>Balanced — 10,000 / 10,000</option>
-              <option value="full">Full — matches the published run</option>
-            </select>
-            <div class="hint" id="detail-hint"></div>
+            <span class="label" id="contest-label">Contest</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="contest-label">
+              <input type="radio" name="contest" id="contest-h2h" value="h2h" checked>
+              <label for="contest-h2h">Head-to-head</label>
+              <input type="radio" name="contest" id="contest-tournament" value="tournament">
+              <label for="contest-tournament">Tournament</label>
+            </div>
+            <div class="hint" id="contest-hint"></div>
           </div>
+
+          <div class="field">
+            <label for="entries">Entries</label>
+            <input type="number" id="entries" min="1" step="1">
+          </div>
+
           <div class="field" id="cap-field" hidden>
             <label for="cap">Salary cap</label>
-            <input type="number" id="cap" min="1" step="1" placeholder="e.g. 130">
-            <div class="hint" id="cap-hint"></div>
+            <input type="number" id="cap" min="1" step="1" placeholder="From your contest page">
+            <div class="hint">Yahoo has not published a cap for this game yet.</div>
           </div>
-          <button class="btn primary" id="run" style="width:100%" type="button" disabled>
-            Optimize
-          </button>
+
+          <details class="advanced">
+            <summary>Advanced</summary>
+            <div class="pair">
+              <div class="field">
+                <label for="player-exposure">Max player exposure</label>
+                <input type="number" id="player-exposure" min="0.05" max="1" step="0.05">
+              </div>
+              <div class="field">
+                <label for="superstar-exposure">Max Superstar exposure</label>
+                <input type="number" id="superstar-exposure" min="0.05" max="1" step="0.05">
+              </div>
+            </div>
+            <div class="hint" style="margin:-8px 0 12px">
+              The share of your entries one player, or one Superstar, may appear in,
+              rounded down. 1 means no limit.
+            </div>
+            <div class="field">
+              <label for="detail">Accuracy</label>
+              <select id="detail">
+                <option value="quick">Quick</option>
+                <option value="standard" selected>Standard</option>
+                <option value="full">Full (matches the published run; slower)</option>
+              </select>
+            </div>
+          </details>
+
+          <button class="btn primary run" id="run" type="button" disabled>Build lineups</button>
           <div class="progress" id="progress" hidden><i id="progress-bar"></i></div>
         </div>
       </section>
 
       <section class="card">
-        <h2>Contest</h2>
-        <div class="body">
-          <div class="field">
-            <label for="contest-preset">Contest preset</label>
-            <select id="contest-preset">
-              <option value="">Custom</option>
-              <option value="yahoo_025_1k">Yahoo $1K Guaranteed [$100 to 1st] · $0.25 · 4,704</option>
-            </select>
-            <div class="hint">The preset mirrors Yahoo's standard 4,704-entry / 915-paid $1K ladder. Verify your contest page before lock.</div>
-          </div>
-          <div class="grid-2">
-            <div class="field">
-              <label for="field-size">Field size</label>
-              <input type="number" id="field-size" min="2" step="1" placeholder="e.g. 2390">
-            </div>
-            <div class="field">
-              <label for="entry-fee">Entry fee ($)</label>
-              <input type="number" id="entry-fee" min="0" step="0.01" placeholder="e.g. 1">
-            </div>
-          </div>
-          <div class="field">
-            <label for="payouts">Payout schedule</label>
-            <textarea id="payouts" placeholder="1=200&#10;2=100&#10;3-5=50&#10;6-20=10"></textarea>
-            <div class="hint" id="contest-hint">
-              Enter one rank or rank range per line. Tournament EV uses a simulated
-              Yahoo field, expected duplication and tie-split prizes. Leave this
-              blank to use projection/portfolio modes without pretending a contest is known.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Rules and strategy</h2>
-        <div class="body">
-          <div class="field">
-            <label for="objective">Select entries using</label>
-            <select id="objective">
-              <option value="auto">Automatic — contest EV when configured; otherwise projection / coverage</option>
-              <option value="field_ev">Tournament EV — simulated Yahoo field + joint portfolio evaluation</option>
-              <option value="portfolio">Scenario coverage — improve best score across outcomes</option>
-              <option value="expected">Analytic expectation</option>
-              <option value="mean">Simulated mean</option>
-              <option value="ceiling">Ceiling (P90)</option>
-              <option value="floor">Floor (P25)</option>
-              <option value="tournament">Experimental upside — research only</option>
-            </select>
-          </div>
-          <div class="hint">
-            Automatic uses Tournament EV when the contest card is complete. Without
-            contest inputs it keeps the existing one-entry expectation / multi-entry
-            scenario-coverage behavior. Tournament EV selects candidates using
-            standalone price-taking EV, then inserts the completed portfolio into one
-            shared contest to report joint payouts, ranks and portfolio risk.
-            Experimental upside is retained only as a research diagnostic.
-          </div>
-          <div class="field">
-            <label for="construction">Roster-shape quotas</label>
-            <select id="construction">
-              <option value="off">Off — select by objective and exposure limits</option>
-              <option value="on">On — enforce the preset construction mix</option>
-            </select>
-            <div class="hint">Quotas can exclude higher-ranked lineups. They do not apply to one entry.</div>
-          </div>
-          <div class="field">
-            <label for="floor">Minimum salary used <span id="floor-value" class="mono"></span></label>
-            <div class="range-row">
-              <input type="range" id="floor" min="0" max="100" step="1">
-            </div>
-            <div class="hint">
-              A strategy filter, not a Yahoo rule. Lower it to allow lineups that
-              leave salary on the table.
-            </div>
-          </div>
-          <div class="grid-2">
-            <div class="field">
-              <label for="entries">Entries</label>
-              <input type="number" id="entries" min="1" max="150" step="1">
-            </div>
-            <div class="field">
-              <label for="shared">Max shared players</label>
-              <input type="number" id="shared" min="1" max="4" step="1">
-            </div>
-            <div class="field">
-              <label for="player-exposure">Max player exposure</label>
-              <input type="number" id="player-exposure" min="0.05" max="1" step="0.05">
-            </div>
-            <div class="field">
-              <label for="superstar-exposure">Max Superstar exposure</label>
-              <input type="number" id="superstar-exposure" min="0.05" max="1" step="0.05">
-            </div>
-          </div>
-          <div class="field">
-            <label for="h2h-entries">Head-to-head entries</label>
-            <input type="number" id="h2h-entries" min="1" max="50" step="1" value="3">
-            <div class="hint">
-              Separate one-on-one contests, priced beside the portfolio (1&ndash;50).
-            </div>
-          </div>
-          <div class="grid-2">
-            <div class="field">
-              <label for="h2h-player-exposure">H2H max player exposure</label>
-              <input type="number" id="h2h-player-exposure" min="0.05" max="1" step="0.05" value="1">
-            </div>
-            <div class="field">
-              <label for="h2h-superstar-exposure">H2H max Superstar exposure</label>
-              <input type="number" id="h2h-superstar-exposure" min="0.05" max="1" step="0.05" value="0.25">
-            </div>
-          </div>
-          <div class="field">
-            <div class="hint" style="margin-top:-8px">
-              Share of the head-to-head entries one player, or one Superstar, may appear in,
-              rounded down. 1 means no limit. Separate from the tournament limits above.
-            </div>
-          </div>
-          <div class="hint" id="exposure-hint"></div>
-          <div class="field">
-            <label>Position limits per lineup</label>
-            <div id="limits" class="grid-2"></div>
-            <div class="hint">
-              Yahoo imposes none. Leave a maximum at 5 to leave the position
-              unrestricted.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Player pool</h2>
+        <h2>Players <span class="count" id="pool-count"></span></h2>
         <div class="pool-actions">
-          <button class="btn" id="all" type="button">All in</button>
-          <button class="btn" id="none" type="button">Clear</button>
+          <button class="btn small" id="all" type="button">Include all</button>
+          <button class="btn small" id="none" type="button">Clear</button>
         </div>
-        <div class="depth-edits" id="depth-edits" role="status" hidden>
-          <span id="depth-edits-text"></span>
-          <button class="btn" id="depth-reset" type="button">Reset depth</button>
+        <div class="notice" id="depth-notice" hidden>
+          <span id="depth-notice-text"></span>
+          <button class="btn small" id="depth-reset" type="button">Reset depth</button>
         </div>
         <div class="pool" id="pool"></div>
       </section>
     </div>
 
-    <div>
-      <section class="card">
-        <h2>Portfolio</h2>
-        <div class="note">
-          Entry numbers follow portfolio construction order. They are not performance ranks.
-          Expected FP is the model total; sim mean is the sampled average. When a contest
-          is configured, joint metrics include all selected entries in the same contest;
-          standalone metrics evaluate one entry at a time as a price-taking diagnostic.
-        </div>
-        <div id="result-note" class="note" hidden></div>
-        <div id="portfolio"></div>
-        <div class="empty" id="portfolio-empty">
-          <h3>Nothing solved yet</h3>
-          <p>Pick a game and press Optimize. Everything runs on this device.</p>
-        </div>
-      </section>
-
-      <section class="card" id="field-strength-card" hidden>
-        <h2>Field strength / calibration</h2>
-        <div class="body"><div id="field-strength"></div></div>
-      </section>
-
-      <section class="card" id="h2h-card" hidden>
-        <h2>Head-to-head</h2>
-        <div class="note" id="h2h-how"></div>
-        <div class="scroll"><table id="h2h-summary"></table></div>
-        <div class="note" id="h2h-multi-note"></div>
-        <div id="h2h-multi"></div>
-      </section>
-
-      <section class="card" id="diversity-card" hidden>
-        <h2>How different the entries are</h2>
-        <div class="body"><div id="diversity"></div></div>
-      </section>
-
-      <section class="card" id="reference-card" hidden>
-        <h2>Published reference run</h2>
-        <div class="note" id="reference-note"></div>
-        <div id="reference"></div>
-      </section>
-    </div>
+    <section class="card" aria-live="polite">
+      <h2 id="results-title">Lineups</h2>
+      <div class="stats" id="stats" hidden></div>
+      <div class="notice" id="result-notice" hidden></div>
+      <div class="explain" id="explain" hidden></div>
+      <div id="entries-list"></div>
+      <div class="empty" id="empty">
+        <h3>No lineups yet</h3>
+        <p>Pick a game and press <b>Build lineups</b>.</p>
+      </div>
+    </section>
   </div>
 
-  <details class="panel" id="detail-panel">
-    <summary>How this works, and what the numbers mean</summary>
+  <details class="panel">
+    <summary>How this works</summary>
     <div class="panel-body">
-      <h4>Where the split falls</h4>
-      <p>
-        A GitHub Actions run fetches Yahoo plus nflverse depth, roster and injury
-        data, applies the frozen salary-position-depth regression and the fitted
-        coefficients of variation, and publishes the PSD-repaired latent
-        correlation matrix for each game. That payload is about 7 KB. This page
-        downloads it and does the rest: it draws the scenarios, enumerates every
-        Yahoo-valid roster, screens them for the selected objective, scores the
-        survivors against shared scenarios, and applies the exposure caps.
-      </p>
-      <p>
-        The feeds never need to be touched again after the model is published.
-      </p>
-      <h4>Contest EV and portfolio selection</h4>
-      <p>When field size, entry fee and payouts are supplied, Automatic switches to
-        Tournament EV. The page estimates Yahoo roster ownership from an archived
-        completed-contest prior, normalizes marginal ownership to five roster slots,
-        samples an opponent field, compresses duplicated field lineups into weighted
-        counts, and splits prizes across ties. Candidate selection uses standalone
-        price-taking EV subject to the player, Superstar and overlap caps. After the
-        portfolio is built, all selected entries are inserted into the same simulated
-        contest at once, so they compete with one another for ranks and payouts. The
-        page reports that joint portfolio EV separately from the sum of standalone
-        entry EVs. A field-strength diagnostic compares the sampled opponent field's
-        analytic expected-FP distribution with the selected portfolio and the top lineup.
-        The field prior is sparse and selection-biased, so all contest-EV outputs are
-        experimental and are not calibrated return estimates until prospectively
-        evaluated across substantially more contests.</p>
-      <p>Without a configured contest, Automatic keeps the original shared-scenario
-        coverage mode. Its first half selects complementary entries and its second
-        half evaluates the completed portfolio against the single-lineup anchor.</p>
-      <h4>Screening and selection</h4>
-      <p>Expected-points objectives screen by analytic mean. Floor and ceiling
-        objectives screen by approximate P25 and P90, using a lognormal matched
-        to each lineup's mean and variance. The retained candidates are ranked
-        by their simulated percentiles. The experimental upside objective keeps
-        the mean-plus-volatility screen. All modes also reserve high-mean candidates.
-        Screening and greedy portfolio selection are approximations, not a guarantee
-        of the globally best lineup or portfolio. Increase detail to check stability.</p>
-      <h4>Why excluding a player is cheap</h4>
-      <p>
-        Removing a player is a principal submatrix of a positive semi-definite
-        matrix, which is still positive semi-definite. So there is no
-        eigendecomposition and no PSD repair here, and the scenarios are not even
-        redrawn — an exclusion only changes which lineups are legal.
-      </p>
-      <h4>Why your numbers differ from the published run</h4>
-      <p>
-        This page draws its own scenarios from its own generator, so simulated
-        means and percentiles land within Monte Carlo error of the published ones
-        rather than on top of them. The analytic quantities — salary, expected
-        points, the analytic standard deviation, the count of valid rosters —
-        are computed from the same model and match exactly.
-      </p>
-      <p>
-        Entries marked <span class="badge match">also published</span> were
-        selected by both runs. On a portfolio this deep that overlap is itself
-        information: an entry that survives two independent scenario sets is one
-        the ranking actually prefers, rather than one that won a near-tie on
-        sampling noise.
-      </p>
-      <h4>Candidate comparison rates</h4>
-      <p>
-        Candidate-best rate is the share of simulations in which an entry ties
-        for the highest score among the screened candidates. Near-best rate is
-        the share within the model's threshold of that best score. These rates
-        depend on the candidate pool and detail setting; they are not estimates
-        of contest-winning probability. Candidate-best rate is especially noisy
-        when there are few matching simulations.
-      </p>
-      <h4>Model</h4>
-      <p>The current correlated zero-hurdle lognormal model preserves projected means
-        and can generate exact zero scores from fitted played-but-scoreless rates.
-        Negative fantasy scores and discrete scoring components are still not represented.</p>
-      <div id="model-info"></div>
-      <h4>Reliability of the published run</h4>
-      <div id="reliability"></div>
-      <h4>Feeds</h4>
-      <p id="feeds"></p>
-      <h4>Export log</h4>
-      <pre class="log" id="log"></pre>
-      <h4>Caveats</h4>
-      <p>
-        These are historical regression estimates, not predictions with a guarantee.
-        Check late injury news; the reports are only as current as their
-        last publish.
-      </p>
+      <h4>Head-to-head</h4>
+      <p>The game's five highest-projected players take turns as Superstar, in
+        projection order, each in at most a quarter of your entries by default.
+        The first round gives each its best lineup; later rounds keep rotating the
+        same five but change the supporting players, preferring players ranked
+        6&ndash;10. Win chances are against an opponent playing one of the 100
+        highest-projected lineups, in thousands of simulated games. Expected wins
+        is the sum of those chances; entries share one game, so they tend to win
+        and lose together.</p>
+      <h4>Tournament</h4>
+      <p>Entries are picked one at a time so that each adds the most to your best
+        score across the simulated games, with at most three players shared between
+        any two entries and a cap on how often any player appears. When the limits
+        cannot fill every entry, the page shows the ones that fit.</p>
+      <h4>Player pool and depth</h4>
+      <p>Untick a player to leave them out. Changing a player's depth re-reads their
+        projection and volatility from the published model; teammates between the
+        old and new spot shift by one. Depth edits stay in this browser.</p>
+      <h4>Where the numbers come from</h4>
+      <p>A daily GitHub Actions run projects every player with the frozen Yahoo
+        salary-position-depth model and publishes each game's correlation model.
+        This page simulates the game and searches every valid lineup on your
+        device, so results vary slightly from run to run. Projections are
+        estimates; check late injury news before lock.</p>
     </div>
   </details>
 </div>
@@ -553,388 +328,255 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
   "use strict";
 
   var DATA = "./data/showdown/";
-  var LINEUP_SIZE = 5;
-  var WORKER_PROTOCOL = 4;
+  var WORKER_PROTOCOL = 5;
+  var SUPPORTED_SCHEMA = 3;     // bump with pipeline/showdown.py's SCHEMA
   var POSITIONS = ["QB", "RB", "WR", "TE", "DEF"];
-  // Bump with pipeline/showdown.py's SCHEMA whenever the page learns to read a
-  // new payload field.
-  var SUPPORTED_SCHEMA = 3;
-
-  var PRESETS = {
-    fast: { simulations: 5000, candidates: 4000 },
-    balanced: { simulations: 10000, candidates: 10000 },
-    full: null   // taken from the payload's own settings
-  };
-
-  var DEPTH_KEY = "nfl-showdown-depth-v1";
   var DEPTH_POSITIONS = ["QB", "RB", "WR", "TE"];
+  var DEPTH_KEY = "nfl-showdown-depth-v1";
+  var THEME_KEY = "nfl-top25-theme";
+  var CONTESTS = {
+    h2h: {
+      entries: 3, max: 50, title: "Head-to-head",
+      hint: "Separate one-on-one contests. The top five projected players take turns as Superstar."
+    },
+    tournament: {
+      entries: 20, max: 150, title: "Tournament",
+      hint: "One large contest. Entries are picked to cover different ways the game can go."
+    }
+  };
 
   var state = {
     index: null,
-    payload: null,
-    // The payload exactly as published; `payload` is it with depth edits applied.
-    published: null,
+    published: null,     // the game's payload exactly as published
+    payload: null,       // the same with this browser's depth edits applied
+    contest: "h2h",
+    entries: { h2h: CONTESTS.h2h.entries, tournament: CONTESTS.tournament.entries },
+    caps: {},            // per game, for games Yahoo has not priced yet
+    excluded: new Set(),
     depthModel: null,
     depths: {},
     depthStore: null,
-    // Yahoo does not price every single-game slate. Where it did not, the model
-    // is published without a cap and the visitor supplies one; it is kept per
-    // game so switching games does not silently carry a cap across.
-    caps: {},
-    contests: {},
-    excluded: new Set(),
-    result: null,
     running: false,
-    loading: true,
     loadId: 0
   };
   var worker = null;
 
+  /* ---------- helpers ---------- */
   function el(id) { return document.getElementById(id); }
   function text(value) {
     return String(value === null || value === undefined ? "" : value)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
+  // Number.isFinite, not isFinite: a missing value must not print as zero.
   function num(value, places) {
-    if (value === null || value === undefined || !isFinite(value)) return "—";
-    return Number(value).toFixed(places === undefined ? 2 : places);
+    return Number.isFinite(value) ? value.toFixed(places === undefined ? 1 : places) : "—";
   }
-  function money(value) {
-    return value === null || value === undefined ? "—" : "$" + Number(value).toFixed(0);
-  }
-  function money2(value) {
-    if (value === null || value === undefined || !isFinite(value)) return "—";
-    var number = Number(value);
-    return (number >= 0 ? "+$" : "-$") + Math.abs(number).toFixed(2);
-  }
+  function pct(value) { return Number.isFinite(value) ? (value * 100).toFixed(1) + "%" : "—"; }
+  function money(value) { return Number.isFinite(Number(value)) && value !== null ? "$" + Number(value).toFixed(0) : "—"; }
   function setStatus(message, kind) {
     el("status-text").innerHTML = message;
     el("dot").className = "dot" + (kind ? " " + kind : "");
   }
-
-  /* ---------- theme ---------- */
-  var THEME_KEY = "showdown-theme";
-  try {
-    var saved = localStorage.getItem(THEME_KEY);
-    if (saved) document.documentElement.dataset.theme = saved;
-  } catch (error) { /* private mode */ }
-  el("theme").addEventListener("click", function () {
-    var root = document.documentElement;
-    var isDark = root.dataset.theme === "dark" ||
-      (root.dataset.theme !== "light" &&
-       window.matchMedia("(prefers-color-scheme: dark)").matches);
-    root.dataset.theme = isDark ? "light" : "dark";
-    try { localStorage.setItem(THEME_KEY, root.dataset.theme); } catch (error) {}
-  });
-
-  /* ---------- loading ---------- */
   function load(url) {
     return fetch(url, { cache: "no-store" }).then(function (response) {
       if (!response.ok) throw new Error(url + " returned " + response.status);
       return response.json();
     });
   }
-
-  el("depth-reset").addEventListener("click", function () {
-    state.depths = {};
-    if (state.published) depthsChanged();
-  });
-
-  // Optional: without the model the pool simply shows no depth controls.
-  if (typeof DepthModel !== "undefined") {
-    DepthModel.load("data/depth_model.json").then(function (model) {
-      state.depthModel = model;
-      if (state.published && !state.loading) {
-        state.depths = state.depthStore ? state.depthStore.read() : {};
-        if (depthCount()) depthsChanged(); else renderPool();
-      }
-    }).catch(function () { /* published depths stand */ });
+  function localTime(value) {
+    var when = new Date(value);
+    return isNaN(when) ? "—" : when.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
   }
 
+  /* ---------- theme ---------- */
+  var root = document.documentElement;
+  try {
+    var saved = localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "dark") root.dataset.theme = saved;
+  } catch (error) { /* private mode: keep the system theme */ }
+  el("theme").addEventListener("click", function () {
+    var dark = root.dataset.theme === "dark" || (root.dataset.theme !== "light" &&
+      window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem(THEME_KEY, root.dataset.theme); } catch (error) {}
+  });
+
+  /* ---------- games ---------- */
   load(DATA + "index.json").then(function (index) {
     state.index = index;
-    var picker = el("game");
-    picker.innerHTML = index.games.map(function (game) {
-      // A game Yahoo priced no cap for is modelled but not solved, so say so in
-      // the picker rather than letting it look like an ordinary entry.
-      var suffix = game.needs_salary_cap ? " — needs a salary cap" : "";
+    el("game").innerHTML = index.games.map(function (game) {
       return '<option value="' + text(game.file) + '">' + text(game.matchup) +
-        text(suffix) + "</option>";
+        (game.needs_salary_cap ? " — needs a salary cap" : "") + "</option>";
     }).join("");
-    renderDetails(index);
     if (!index.games.length) {
-      state.loading = false;
-      setStatus("The last export published no usable games.", "bad");
-      el("portfolio-empty").innerHTML =
-        "<h3>No usable games in this snapshot</h3><p>See Feeds below for " +
-        "the reasons games were skipped.</p>";
+      setStatus("No games are published for today's slate.", "bad");
       return;
     }
     return selectGame(index.games[0]);
   }).catch(function (error) {
-    // A 404 here is almost always "the export workflow has not run yet on this
-    // deployment", which is a different problem from a broken payload.
-    var missing = /404/.test(error.message);
-    setStatus(missing
-      ? "No showdown models are published yet. They appear after the " +
-        "<strong>Showdown models</strong> workflow runs."
-      : "Could not load the published models: " + text(error.message), "bad");
-    el("portfolio-empty").innerHTML = missing
-      ? "<h3>Nothing published yet</h3><p>Run a projection refresh workflow " +
-        "and reload. Scheduled refreshes run daily.</p>"
-      : "<h3>Could not load the models</h3><p>" + text(error.message) + "</p>";
+    setStatus("Could not load today's games: " + text(error.message), "bad");
+  });
+
+  el("game").addEventListener("change", function () {
+    var entry = state.index.games.filter(function (game) { return game.file === el("game").value; })[0];
+    if (entry) selectGame(entry);
   });
 
   function selectGame(entry) {
     var requestId = ++state.loadId;
-    state.loading = true;
-    state.payload = null;
-    state.result = null;
     stopWorker();
+    state.published = state.payload = null;
+    clearResults("Loading " + text(entry.matchup) + "…");
     el("pool").innerHTML = "";
-    el("portfolio").innerHTML = "";
-    el("portfolio-empty").hidden = false;
-    el("portfolio-empty").innerHTML = "<h3>Loading game…</h3>";
-    el("reference-card").hidden = true;
-    el("model-info").innerHTML = "";
-    el("reliability").innerHTML = "";
-    el("diversity-card").hidden = true;
-    el("field-strength-card").hidden = true;
-    el("h2h-card").hidden = true;
-    el("result-note").hidden = true;
-    el("game-hint").textContent = "";
+    syncControls();
     setStatus("Loading " + text(entry.matchup) + "…", "busy");
     return load(DATA + entry.file).then(function (payload) {
-      // A slower response from an earlier selection must not replace this game.
-      if (requestId !== state.loadId) return;
+      if (requestId !== state.loadId) return;   // a later selection won
       if (state.index.snapshot_id && payload.snapshot_id !== state.index.snapshot_id) {
-        throw new Error("The game and index belong to different snapshots. Reload the page.");
+        throw new Error("this game belongs to a different snapshot. Reload the page.");
       }
-      // A cached copy of an older worker would ignore fields a newer payload
-      // depends on -- the fitted zero rate above all -- and would silently
-      // simulate different floors rather than fail. Refuse instead.
       if (Number(payload.schema) > SUPPORTED_SCHEMA) {
-        throw new Error(
-          "This game was published for a newer version of the page (schema " +
-          text(payload.schema) + "; this page understands " + SUPPORTED_SCHEMA +
-          "). Reload to pick up the current page.");
+        throw new Error("this game needs a newer version of the page. Reload the page.");
       }
       state.published = payload;
-      state.depthStore = typeof DepthModel === "undefined" ? null
-        : DepthModel.store(DEPTH_KEY + ":" + payload.game_id,
-                           payload.snapshot_id || payload.generated_utc);
-      state.depths = state.depthModel && state.depthStore ? state.depthStore.read() : {};
-      payload = withDepthEdits(payload);
-      state.payload = payload;
-      state.loading = false;
       state.excluded = new Set();
-      state.result = null;
-      applyDefaults(payload);
+      state.depthStore = typeof DepthModel === "undefined" ? null
+        : DepthModel.store(DEPTH_KEY + ":" + payload.game_id, payload.snapshot_id || payload.generated_utc);
+      state.depths = state.depthModel && state.depthStore ? state.depthStore.read() : {};
+      state.payload = withDepthEdits(payload);
+      el("game-hint").textContent = payload.players.length + " players · kickoff " +
+        localTime(payload.kickoff_utc) +
+        (payload.salary_cap ? " · cap " + money(payload.salary_cap) : "");
+      el("cap").value = state.caps[payload.game_id] || "";
+      applyContestDefaults();
       renderPool();
-      renderReference();
-      el("portfolio").innerHTML = "";
-      el("portfolio-empty").hidden = false;
-      el("portfolio-empty").innerHTML =
-        "<h3>Nothing solved yet</h3><p>Press Optimize to calculate entries.</p>";
-      el("diversity-card").hidden = true;
-      el("result-note").hidden = true;
-      el("game-hint").textContent =
-        payload.players.length + " players · cap " +
-        (payload.salary_cap === null || payload.salary_cap === undefined
-          ? "not published by Yahoo" : money(payload.salary_cap)) +
-        " · kickoff " + localTime(payload.kickoff_utc);
-      refreshCapField();
-      startWorker(payload);
-      syncRunButton();
-      setStatus(
-        "Projection snapshot <strong>" + text((payload.generated_utc || "").replace("T", " ")) +
-        "</strong> <span class='sep'>·</span> " + text(payload.matchup) +
-        " <span class='sep'>·</span> ready");
+      startWorker();
+      clearResults();
+      syncControls();
+      setStatus("<strong>" + text(payload.matchup) + "</strong> ready · projections from " +
+        text(localTime(payload.generated_utc)));
     }).catch(function (error) {
       if (requestId !== state.loadId) return;
-      state.loading = false;
-      state.payload = null;
-      stopWorker();
-      el("pool").innerHTML = "";
-      el("reference-card").hidden = true;
+      state.published = state.payload = null;
+      syncControls();
       setStatus("Could not load this game: " + text(error.message), "bad");
-      el("portfolio-empty").innerHTML =
-        "<h3>Could not load this game</h3><p>" + text(error.message) + "</p>";
     });
   }
 
-  function localTime(value) {
-    if (!value) return "—";
-    var when = new Date(value);
-    if (isNaN(when)) return String(value);
-    return when.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
+  /* ---------- setup controls ---------- */
+  function applyContestDefaults() {
+    var settings = state.published ? state.published.settings : {};
+    var tournament = state.contest === "tournament";
+    el("entries").value = state.entries[state.contest];
+    el("entries").max = CONTESTS[state.contest].max;
+    el("player-exposure").value = tournament ? settings.max_player_exposure : 1;
+    el("superstar-exposure").value = tournament ? settings.max_superstar_exposure : 0.25;
+    el("contest-hint").textContent = CONTESTS[state.contest].hint;
   }
 
-  function applyDefaults(payload) {
-    var settings = payload.settings;
-    el("entries").value = settings.tournament_lineups;
-    el("objective").value = settings.showdown_objective || "auto";
-    el("construction").value = settings.use_construction_quotas === true ? "on" : "off";
-    el("shared").value = settings.max_shared_players;
-    el("player-exposure").value = settings.max_player_exposure;
-    el("superstar-exposure").value = settings.max_superstar_exposure;
-    updateExposureHint();
-    var floor = el("floor");
-    floor.value = Math.round(settings.min_salary_used_pct * 100);
-    el("floor-value").textContent = floor.value + "%";
-    el("limits").innerHTML = POSITIONS.map(function (position) {
-      var limit = settings.position_limits && settings.position_limits[position];
-      var low = limit ? limit[0] : 0;
-      var high = limit ? limit[1] : LINEUP_SIZE;
-      return '<div class="field" style="margin:0">' +
-        "<label>" + position + "</label>" +
-        '<div class="range-row">' +
-        '<input type="number" class="limit-low" data-position="' + position +
-        '" min="0" max="5" step="1" value="' + low + '" title="Minimum ' + position +
-        ' per lineup" aria-label="' + position + ' minimum">' +
-        '<span class="sep">to</span>' +
-        '<input type="number" class="limit-high" data-position="' + position +
-        '" min="0" max="5" step="1" value="' + high + '" title="Maximum ' + position +
-        ' per lineup" aria-label="' + position + ' maximum">' +
-        "</div></div>";
+  function capValue() {
+    if (!state.published) return null;
+    if (state.published.salary_cap) return state.published.salary_cap;
+    var cap = Number(el("cap").value);
+    return cap > 0 ? cap : null;
+  }
+
+  function syncControls() {
+    var ready = !!state.payload;
+    el("cap-field").hidden = !ready || !!state.published.salary_cap;
+    el("run").disabled = !ready || state.running || !worker || capValue() === null ||
+      state.payload.players.length - state.excluded.size < 5;
+    el("run").textContent = state.running ? "Building…" : "Build lineups";
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="contest"]'), function (radio) {
+    radio.addEventListener("change", function () {
+      state.contest = radio.value;
+      applyContestDefaults();
+      settingsChanged();
+    });
+  });
+  el("entries").addEventListener("change", function () {
+    var value = Math.floor(Number(el("entries").value));
+    if (value >= 1) state.entries[state.contest] = Math.min(value, CONTESTS[state.contest].max);
+    el("entries").value = state.entries[state.contest];
+    settingsChanged();
+  });
+  el("cap").addEventListener("input", function () {
+    if (state.published) state.caps[state.published.game_id] = el("cap").value;
+    settingsChanged();
+  });
+  ["player-exposure", "superstar-exposure", "detail"].forEach(function (id) {
+    el(id).addEventListener("change", settingsChanged);
+  });
+
+  function settingsChanged() {
+    if (state.running) { stopWorker(); startWorker(); }
+    if (state.payload) clearResults();
+    syncControls();
+  }
+
+  /* ---------- player pool ---------- */
+  function renderPool() {
+    var players = state.payload.players;
+    var order = players.map(function (_, i) { return i; }).sort(function (a, b) {
+      return players[a].team.localeCompare(players[b].team) ||
+        POSITIONS.indexOf(players[a].pos) - POSITIONS.indexOf(players[b].pos) ||
+        players[b].fp - players[a].fp;
+    });
+    el("pool").innerHTML = order.map(function (i) {
+      var player = players[i], out = state.excluded.has(i);
+      return '<label class="player' + (out ? " out" : "") + '">' +
+        '<input type="checkbox" data-index="' + i + '"' + (out ? "" : " checked") + ">" +
+        "<span><b>" + text(player.name) + "</b><small>" + text(player.team) + " " +
+        text(player.pos) + (player.role ? " · " + text(player.role) : "") + "</small></span>" +
+        '<span class="num">' + money(player.salary) + "<br>" + num(player.fp) + " FP</span>" +
+        "<span>" + depthControl(player, i) + "</span></label>";
     }).join("");
-    applyContestDefaults(payload);
-    updateDetailHint();
+    el("pool-count").textContent = (players.length - state.excluded.size) + " of " + players.length + " in";
+    var edits = Object.keys(state.depths).length;
+    el("depth-notice").hidden = !edits;
+    el("depth-notice-text").textContent = edits + (edits === 1 ? " depth change" : " depth changes") +
+      " in this browser";
   }
 
-  function applyContestDefaults(payload) {
-    var saved = state.contests[payload.game_id] || {};
-    el("contest-preset").value = saved.preset || "";
-    el("field-size").value = saved.fieldSize === undefined ? "" : saved.fieldSize;
-    el("entry-fee").value = saved.entryFee === undefined ? "" : saved.entryFee;
-    el("payouts").value = saved.payoutText || "";
-    updateContestHint();
-  }
-
-  var CONTEST_PRESETS = {
-    yahoo_025_1k: {
-      fieldSize: 4704,
-      entryFee: 0.25,
-      payouts: [
-        "1=100", "2=40", "3=20", "4=15", "5=10", "6-10=5",
-        "11-20=4", "21-30=3", "31-50=2.50", "51-100=2",
-        "101-150=1.50", "151-250=1", "251-500=0.75", "501-915=0.50"
-      ].join("\n")
-    }
-  };
-
-  function applyContestPreset(name) {
-    var preset = CONTEST_PRESETS[name];
-    if (!preset) return;
-    el("field-size").value = preset.fieldSize;
-    el("entry-fee").value = preset.entryFee;
-    el("payouts").value = preset.payouts;
-    if (state.payload) {
-      state.contests[state.payload.game_id] = {
-        fieldSize: preset.fieldSize,
-        entryFee: preset.entryFee,
-        payoutText: preset.payouts,
-        preset: name
-      };
-    }
-    updateContestHint();
-  }
-
-  function parsePayouts(value) {
-    var rows = [];
-    String(value || "").split(/\n+/).forEach(function (line) {
-      line = line.trim();
-      if (!line) return;
-      var match = line.match(/^(\d+)(?:\s*-\s*(\d+))?\s*=\s*\$?([0-9]+(?:\.[0-9]+)?)$/);
-      if (!match) throw new Error("Use payout rows like 1=200 or 3-5=50.");
-      rows.push({ from: Number(match[1]), to: Number(match[2] || match[1]), amount: Number(match[3]) });
-    });
-    return rows;
-  }
-
-  function contestConfig() {
-    var fieldSize = Number(el("field-size").value);
-    var entryFee = Number(el("entry-fee").value);
-    var payouts = [];
-    var error = null;
-    try { payouts = parsePayouts(el("payouts").value); } catch (exc) { error = exc.message; }
-    return { fieldSize: fieldSize, entryFee: entryFee, payouts: payouts, error: error };
-  }
-
-  function contestReadyClient() {
-    var config = contestConfig();
-    var entries = Number(el("entries").value);
-    return !config.error && Number.isInteger(config.fieldSize)
-      && config.fieldSize > entries && Number.isFinite(config.entryFee)
-      && config.entryFee >= 0 && config.payouts.length > 0;
-  }
-
-  function updateContestHint() {
-    var config = contestConfig();
-    var hint = el("contest-hint");
-    if (config.error) {
-      hint.textContent = config.error;
+  el("pool").addEventListener("change", function (event) {
+    var target = event.target, index = Number(target.dataset.index);
+    if (target.classList.contains("depth")) {
+      setDepth(index, Number(target.value));
       return;
     }
-    if (contestReadyClient()) {
-      hint.textContent = "Contest EV ready: " + config.fieldSize.toLocaleString() +
-        " total entries, " + money(config.entryFee) + " entry fee, " +
-        config.payouts.length + " payout row(s).";
-    } else {
-      hint.textContent = "Complete field size, fee and payouts to enable Tournament EV. " +
-        "Automatic will otherwise use projection / scenario coverage.";
-    }
-  }
+    if (target.checked) state.excluded.delete(index); else state.excluded.add(index);
+    renderPool();
+    settingsChanged();
+  });
+  el("all").addEventListener("click", function () {
+    if (!state.payload) return;
+    state.excluded = new Set();
+    renderPool();
+    settingsChanged();
+  });
+  el("none").addEventListener("click", function () {
+    if (!state.payload) return;
+    state.excluded = new Set(state.payload.players.map(function (_, i) { return i; }));
+    renderPool();
+    settingsChanged();
+  });
 
-  function updateExposureHint() {
-    var entries = Number(el("entries").value);
-    if (!Number.isInteger(entries) || entries < 1) {
-      el("exposure-hint").textContent = "Choose a whole number of entries.";
-      return;
-    }
-    if (entries === 1) {
-      el("exposure-hint").textContent = "One entry: exposure limits and roster-shape quotas do not apply.";
-      return;
-    }
-    var player = Math.floor(entries * Number(el("player-exposure").value) + 1e-9);
-    var superstar = Math.floor(entries * Number(el("superstar-exposure").value) + 1e-9);
-    el("exposure-hint").textContent = "Each player: at most " + player + " of " + entries +
-      " entries; each Superstar: at most " + superstar + ". Counts round down. " +
-      ((player < 1 || superstar < 1) ? "These limits allow zero appearances; increase a limit or the entry count." : "");
-  }
-
-  function updateDetailHint() {
-    var payload = state.payload;
-    if (!payload) return;
-    var preset = PRESETS[el("detail").value];
-    var simulations = preset ? preset.simulations : payload.settings.simulations;
-    var candidates = preset ? preset.candidates : payload.settings.max_candidate_lineups;
-    el("detail-hint").textContent =
-      simulations.toLocaleString() + " scenarios × " + candidates.toLocaleString() +
-      " candidates. More of either is steadier and slower.";
-  }
-
-  /* ---------- pool ---------- */
   /* ---------- depth edits ---------- */
-  // The worker re-runs nothing about depth itself; it is handed a payload whose
-  // means, CVs and scoreless rates were re-read from the published model at the
-  // edited depth. The latent correlation matrix stays as published: rebuilding
-  // it needs the Python hurdle inversion, and a depth edit moves it little.
+  // The worker is handed a payload whose means, CVs and scoreless rates were
+  // re-read from the published model at the edited depth. The correlation
+  // matrix stays as published.
   function depthId(player) { return player.team + "|" + player.pos + "|" + player.name; }
-  function hasDepth(id) { return Object.prototype.hasOwnProperty.call(state.depths, id); }
-  function depthCount() { return Object.keys(state.depths).length; }
 
   function withDepthEdits(payload) {
-    if (!state.depthModel || !depthCount()) return payload;
+    if (!state.depthModel || !Object.keys(state.depths).length) return payload;
     var model = state.depthModel;
     return Object.assign({}, payload, {
       players: payload.players.map(function (player) {
         var id = depthId(player);
-        if (!hasDepth(id)) return player;
-        var out = Object.assign({}, player, {
-          depth: state.depths[id], published_depth: player.depth, published_fp: player.fp
-        });
+        if (!Object.prototype.hasOwnProperty.call(state.depths, id)) return player;
+        var out = Object.assign({}, player, { depth: state.depths[id], published_depth: player.depth });
         if (DepthModel.isModelled(player.source)) {
           var fp = DepthModel.predict(model, player.pos, player.salary, out.depth);
           if (fp !== null) out.fp = Math.round(fp * 10000) / 10000;
@@ -948,17 +590,32 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     });
   }
 
-  function setDepth(id, depth) {
+  function depthControl(player, index) {
+    if (!state.depthModel || DEPTH_POSITIONS.indexOf(player.pos) < 0 || typeof player.depth !== "number") return "";
+    var original = typeof player.published_depth === "number" ? player.published_depth : player.depth;
+    var options = [];
+    for (var d = 1; d <= Math.max(6, player.depth, original); d++) {
+      options.push('<option value="' + d + '"' + (d === player.depth ? " selected" : "") + ">D" + d +
+        (d === original && player.depth !== original ? "*" : "") + "</option>");
+    }
+    return '<select class="depth' + (player.depth !== original ? " changed" : "") + '" data-index="' +
+      index + '" title="Depth chart position (published: ' + original + ')" aria-label="Depth for ' +
+      text(player.name) + '">' + options.join("") + "</select>";
+  }
+
+  function setDepth(index, depth) {
     var players = state.published.players;
+    var current = function (p) {
+      var id = depthId(p);
+      return Object.prototype.hasOwnProperty.call(state.depths, id) ? state.depths[id] : p.depth;
+    };
     var changes = DepthModel.move(players.map(function (p) {
-      var key = depthId(p);
-      return { id: key, group: p.team + "|" + p.pos, depth: hasDepth(key) ? state.depths[key] : p.depth };
-    }), id, depth);
-    var published = {};
-    players.forEach(function (p) { published[depthId(p)] = p.depth; });
-    Object.keys(changes).forEach(function (key) {
-      if (changes[key] === published[key]) delete state.depths[key];
-      else state.depths[key] = changes[key];
+      return { id: depthId(p), group: p.team + "|" + p.pos, depth: current(p) };
+    }), depthId(players[index]), depth);
+    players.forEach(function (p) {
+      var id = depthId(p);
+      if (!Object.prototype.hasOwnProperty.call(changes, id)) return;
+      if (changes[id] === p.depth) delete state.depths[id]; else state.depths[id] = changes[id];
     });
     depthsChanged();
   }
@@ -968,660 +625,200 @@ pre.log{background:var(--panel-2); border:1px solid var(--line-soft); border-rad
     state.payload = withDepthEdits(state.published);
     renderPool();
     stopWorker();
-    startWorker(state.payload);
+    startWorker();
     settingsChanged();
   }
 
-  function depthControl(player, index) {
-    if (!state.depthModel || DEPTH_POSITIONS.indexOf(player.pos) < 0 ||
-        typeof player.depth !== "number") return "";
-    var original = typeof player.published_depth === "number" ? player.published_depth : player.depth;
-    var options = [];
-    for (var d = 1; d <= Math.max(6, player.depth, original); d++) {
-      options.push('<option value="' + d + '"' + (d === player.depth ? " selected" : "") + ">" +
-        "D" + d + (d === original && player.depth !== original ? "*" : "") + "</option>");
-    }
-    return '<select class="depth-pick' + (player.depth !== original ? " changed" : "") +
-      '" data-index="' + index + '" title="Published depth ' + original +
-      ' (marked *)" aria-label="Depth for ' + text(player.name) + '">' +
-      options.join("") + "</select>";
-  }
-
-  function renderDepthEdits() {
-    var n = depthCount();
-    el("depth-edits").hidden = !n;
-    if (n) {
-      el("depth-edits-text").textContent = n + (n === 1 ? " depth edit" : " depth edits") +
-        ": projections and volatility re-read from the model; correlations as published.";
-    }
-  }
-
-  function renderPool() {
-    var payload = state.payload;
-    if (!payload) return;
-    renderDepthEdits();
-    var order = payload.players.map(function (player, index) { return index; });
-    order.sort(function (a, b) {
-      var players = payload.players;
-      return players[a].team.localeCompare(players[b].team) ||
-             POSITIONS.indexOf(players[a].pos) - POSITIONS.indexOf(players[b].pos) ||
-             players[b].fp - players[a].fp;
-    });
-    el("pool").innerHTML = order.map(function (index) {
-      var player = payload.players[index];
-      var out = state.excluded.has(index);
-      return '<label class="pool-row' + (out ? " out" : "") + '" data-index="' + index + '">' +
-        '<input type="checkbox" ' + (out ? "" : "checked") + ' data-index="' + index + '">' +
-        '<span class="who"><b>' + text(player.name) + "</b>" +
-        "<span>" + text(player.team) + " " + text(player.pos) + " · " +
-        text(player.role) + "</span></span>" +
-        '<span class="num">' + money(player.salary) + "<br>" + num(player.fp, 1) + "</span>" +
-        "<span>" + depthControl(player, index) + "</span>" +
-        "</label>";
-    }).join("");
-  }
-
-  el("pool").addEventListener("change", function (event) {
-    var box = event.target;
-    if (box.classList && box.classList.contains("depth-pick")) {
-      setDepth(depthId(state.published.players[Number(box.dataset.index)]), Number(box.value));
-      return;
-    }
-    if (!box.matches('input[type="checkbox"]')) return;
-    var index = Number(box.dataset.index);
-    if (box.checked) state.excluded.delete(index); else state.excluded.add(index);
-    box.closest(".pool-row").classList.toggle("out", !box.checked);
-    settingsChanged();
-  });
-  el("all").addEventListener("click", function () {
-    state.excluded = new Set();
-    renderPool();
-    settingsChanged();
-  });
-  el("none").addEventListener("click", function () {
-    if (!state.payload) return;
-    state.excluded = new Set(state.payload.players.map(function (_, i) { return i; }));
-    renderPool();
-    settingsChanged();
-  });
-  el("game").addEventListener("change", function () {
-    var entry = state.index.games.filter(function (game) {
-      return game.file === el("game").value;
-    })[0];
-    if (entry) selectGame(entry);
-  });
-  el("floor").addEventListener("input", function () {
-    el("floor-value").textContent = el("floor").value + "%";
-    settingsChanged();
-  });
-  el("detail").addEventListener("change", function () {
-    updateDetailHint();
-    settingsChanged();
-  });
-  ["objective", "construction", "entries", "shared", "player-exposure", "superstar-exposure", "limits",
-   "h2h-entries", "h2h-player-exposure", "h2h-superstar-exposure"]
-    .forEach(function (id) { el(id).addEventListener("change", settingsChanged); });
-  el("contest-preset").addEventListener("change", function () {
-    if (el("contest-preset").value) applyContestPreset(el("contest-preset").value);
-    settingsChanged();
-    syncRunButton();
-  });
-  ["field-size", "entry-fee", "payouts"].forEach(function (id) {
-    el(id).addEventListener(id === "payouts" ? "input" : "change", function () {
-      if (state.payload) {
-        state.contests[state.payload.game_id] = {
-          fieldSize: el("field-size").value === "" ? undefined : Number(el("field-size").value),
-          entryFee: el("entry-fee").value === "" ? undefined : Number(el("entry-fee").value),
-          payoutText: el("payouts").value,
-          preset: ""
-        };
-        el("contest-preset").value = "";
-      }
-      updateContestHint();
-      settingsChanged();
-      syncRunButton();
-    });
+  el("depth-reset").addEventListener("click", function () {
+    state.depths = {};
+    if (state.published) depthsChanged();
   });
 
-  function settingsChanged() {
-    updateExposureHint();
-    updateContestHint();
-    if (!state.payload || state.loading) return;
-    if (state.running) {
-      stopWorker();
-      startWorker(state.payload);
-    }
-    state.result = null;
-    el("portfolio").innerHTML = "";
-    el("portfolio-empty").hidden = false;
-    el("portfolio-empty").innerHTML =
-      "<h3>Settings changed</h3><p>Press Optimize to calculate entries with these settings.</p>";
-    el("diversity-card").hidden = true;
-    el("field-strength-card").hidden = true;
-    el("h2h-card").hidden = true;
-    el("result-note").hidden = true;
-    setStatus("Settings changed · press Optimize to recalculate");
-    syncRunButton();
+  // Optional: without the depth model the pool simply shows no depth controls.
+  if (typeof DepthModel !== "undefined") {
+    DepthModel.load("data/depth_model.json").then(function (model) {
+      state.depthModel = model;
+      if (!state.published) return;
+      state.depths = state.depthStore ? state.depthStore.read() : {};
+      if (Object.keys(state.depths).length) depthsChanged(); else renderPool();
+    }).catch(function () { /* published depths stand */ });
   }
 
   /* ---------- worker ---------- */
+  function startWorker() {
+    if (!state.payload) return;
+    var snapshot = encodeURIComponent(String(state.payload.snapshot_id || state.payload.generated_utc || ""));
+    var active = new Worker("./showdown-worker.js?protocol=" + WORKER_PROTOCOL + "&snapshot=" + snapshot);
+    worker = active;
+    active.onmessage = function (event) {
+      if (worker !== active) return;
+      var message = event.data;
+      if (message.type === "loaded" && message.protocol !== WORKER_PROTOCOL) {
+        stopWorker();
+        setStatus("The optimizer is out of date. Reload the page.", "bad");
+      } else if (message.type === "progress") {
+        setStatus(text(message.stage) + "…", "busy");
+        if (Number.isFinite(message.fraction)) el("progress-bar").style.width = (message.fraction * 100).toFixed(0) + "%";
+      } else if (message.type === "result") {
+        finish(message.result);
+      } else if (message.type === "error") {
+        finish(null, message.message);
+      }
+    };
+    active.onerror = function (error) {
+      if (worker !== active) return;
+      finish(null, "The optimizer failed: " + (error.message || "unknown error"));
+    };
+    active.postMessage({ type: "load", payload: state.payload });
+    syncControls();
+  }
+
   function stopWorker() {
     if (worker) worker.terminate();
     worker = null;
     state.running = false;
-    syncRunButton();
     el("progress").hidden = true;
-    el("progress-bar").style.width = "0%";
-  }
-
-  function startWorker(payload) {
-    if (worker) worker.terminate();
-    var snapshot = encodeURIComponent(String(
-      payload.snapshot_id || payload.generated_utc || "unknown"
-    ));
-    worker = new Worker(
-      "./showdown-worker.js?protocol=" + WORKER_PROTOCOL + "&snapshot=" + snapshot
-    );
-    var activeWorker = worker;
-    worker.onmessage = function (event) {
-      if (worker !== activeWorker) return;
-      var message = event.data;
-      if (message.type === "loaded") {
-        if (message.protocol !== WORKER_PROTOCOL) {
-          activeWorker.terminate();
-          worker = null;
-          state.running = false;
-          syncRunButton();
-          setStatus(
-            "Optimizer assets are out of sync. Reload this page to fetch the current worker.",
-            "bad"
-          );
-          return;
-        }
-      } else if (message.type === "stage") {
-        setStatus(text(message.stage) + "…", "busy");
-      } else if (message.type === "progress") {
-        el("progress-bar").style.width = (message.fraction * 100).toFixed(1) + "%";
-      } else if (message.type === "result") {
-        finish(message);
-      } else if (message.type === "error") {
-        state.running = false;
-        state.running = false;
-        syncRunButton();
-        el("progress").hidden = true;
-        setStatus(text(message.message), "bad");
-        var note = el("result-note");
-        note.hidden = false;
-        note.className = "note bad";
-        note.textContent = message.message;
-        // The head-to-head section is priced before the tournament portfolio,
-        // so a portfolio that cannot be filled still leaves it to show.
-        if (message.h2h_multi) {
-          state.result = { h2h_multi: message.h2h_multi };
-          renderH2H();
-        }
-      }
-    };
-    worker.onerror = function (error) {
-      if (worker !== activeWorker) return;
-      setStatus("The optimizer worker failed: " + text(error.message), "bad");
-      state.running = false;
-      state.running = false;
-      syncRunButton();
-      el("progress").hidden = true;
-    };
-    worker.postMessage({ type: "load", payload: payload });
-  }
-
-  // The published cap where Yahoo priced one, otherwise whatever the visitor
-  // typed. Returns null while a capless game has no usable number yet.
-  function effectiveCap() {
-    var payload = state.payload;
-    if (!payload) return null;
-    if (payload.salary_cap !== null && payload.salary_cap !== undefined) {
-      return Number(payload.salary_cap);
-    }
-    var entered = Number(state.caps[payload.game_id]);
-    return Number.isFinite(entered) && entered > 0 ? entered : null;
-  }
-
-  function publishedCapExamples() {
-    var priced = (state.index && state.index.games || []).filter(function (game) {
-      return game.salary_cap !== null && game.salary_cap !== undefined;
-    });
-    if (!priced.length) return "";
-    return " Yahoo priced " + priced.slice(0, 3).map(function (game) {
-      return money(game.salary_cap) + " for " + game.matchup;
-    }).join(", ") + " on this slate.";
-  }
-
-  function refreshCapField() {
-    var payload = state.payload;
-    var field = el("cap-field");
-    if (!payload) { field.hidden = true; return; }
-    var needs = payload.salary_cap === null || payload.salary_cap === undefined;
-    field.hidden = !needs;
-    if (!needs) return;
-    var entered = state.caps[payload.game_id];
-    el("cap").value = entered === undefined ? "" : entered;
-    el("cap-hint").textContent = effectiveCap() === null
-      ? "Yahoo published no cap for this game, so the lineups it would allow are"
-        + " unknown. Enter the cap from your contest to optimize." + publishedCapExamples()
-      : "Using a cap you entered, not one Yahoo published. Every roster below"
-        + " depends on it.";
-  }
-
-  function syncRunButton() {
-    var needsContest = el("objective").value === "field_ev";
-    el("run").disabled = !state.payload || state.loading || state.running || !worker
-      || effectiveCap() === null || (needsContest && !contestReadyClient());
-  }
-
-  el("cap").addEventListener("input", function () {
-    if (!state.payload) return;
-    var value = Number(el("cap").value);
-    if (Number.isFinite(value) && value > 0) state.caps[state.payload.game_id] = value;
-    else delete state.caps[state.payload.game_id];
-    refreshCapField();
-    syncRunButton();
-    settingsChanged();
-  });
-
-  // A blank or out-of-range H2H exposure falls back to its default rather than
-  // failing the solve.
-  function exposureShare(value, fallback) {
-    var share = Number(value);
-    return value !== "" && isFinite(share) && share > 0 && share <= 1 ? share : fallback;
-  }
-
-  function options() {
-    var payload = state.payload;
-    var preset = PRESETS[el("detail").value];
-    var limits = {};
-    Array.prototype.forEach.call(document.querySelectorAll(".limit-low"), function (low) {
-      var position = low.dataset.position;
-      var high = document.querySelector('.limit-high[data-position="' + position + '"]');
-      var lowValue = Math.max(0, Number(low.value) || 0);
-      var highValue = Math.min(LINEUP_SIZE, Number(high.value));
-      if (lowValue > 0 || highValue < LINEUP_SIZE) limits[position] = [lowValue, highValue];
-    });
-    var contest = contestConfig();
-    var detail = el("detail").value;
-    return {
-      salaryCap: effectiveCap(),
-      fieldSize: Number.isInteger(contest.fieldSize) ? contest.fieldSize : null,
-      entryFee: Number.isFinite(contest.entryFee) ? contest.entryFee : null,
-      payouts: contest.error ? [] : contest.payouts,
-      fieldSampleSize: detail === "fast" ? 300 : (detail === "full" ? 1200 : 700),
-      fieldSimulations: detail === "fast" ? 500 : (detail === "full" ? 2500 : 1200),
-      fieldTemperature: 1.25,
-      minSalaryPct: Number(el("floor").value) / 100,
-      ceilingWeight: payload.settings.candidate_ceiling_weight,
-      maxCandidates: preset ? preset.candidates : payload.settings.max_candidate_lineups,
-      meanReserve: payload.settings.mean_candidate_reserve,
-      nearOptimalRatio: payload.settings.near_optimal_ratio,
-      entries: Number(el("entries").value),
-      h2hEntries: Math.max(1, Math.min(50, Math.floor(Number(el("h2h-entries").value) || 3))),
-      h2hPlayerExposure: exposureShare(el("h2h-player-exposure").value, 1),
-      h2hSuperstarExposure: exposureShare(el("h2h-superstar-exposure").value, 0.25),
-      constructionRules: el("construction").value === "on"
-        ? payload.settings.portfolio_construction_rules || [] : [],
-      maxPlayerExposure: Number(el("player-exposure").value),
-      maxSuperstarExposure: Number(el("superstar-exposure").value),
-      maxShared: Math.max(1, Number(el("shared").value) || 1),
-      simulations: preset ? preset.simulations : payload.settings.simulations,
-      seed: payload.settings.random_seed,
-      objective: el("objective").value,
-      positionLimits: limits
-    };
+    syncControls();
   }
 
   el("run").addEventListener("click", function () {
-    if (!state.payload || state.loading || state.running || !worker) return;
-    if (effectiveCap() === null) {
-      setStatus("Enter the salary cap for this game before optimizing.", "bad");
-      return;
-    }
-    if (el("objective").value === "field_ev" && !contestReadyClient()) {
-      setStatus("Complete the contest field size, entry fee and payout schedule before using Tournament EV.", "bad");
-      return;
-    }
-    var included = [];
-    state.payload.players.forEach(function (_, index) {
-      if (!state.excluded.has(index)) included.push(index);
-    });
+    if (el("run").disabled) return;
+    var included = state.payload.players.map(function (_, i) { return i; })
+      .filter(function (i) { return !state.excluded.has(i); });
     state.running = true;
-    el("run").disabled = true;
+    clearResults();
     el("progress").hidden = false;
     el("progress-bar").style.width = "0%";
-    el("result-note").hidden = true;
-    worker.postMessage({ type: "solve", included: included, options: options() });
+    syncControls();
+    setStatus("Building lineups…", "busy");
+    worker.postMessage({ type: "solve", request: {
+      contest: state.contest,
+      entries: state.entries[state.contest],
+      included: included,
+      salaryCap: capValue(),
+      detail: el("detail").value,
+      maxPlayerExposure: Number(el("player-exposure").value),
+      maxSuperstarExposure: Number(el("superstar-exposure").value)
+    } });
   });
 
   /* ---------- results ---------- */
-  function lineupKey(lineup) {
-    return lineup.ids.slice().sort(function (a, b) { return a - b; }).join(",") +
-      "|" + lineup.superstar;
+  function clearResults(message) {
+    el("stats").hidden = true;
+    el("result-notice").hidden = true;
+    el("explain").hidden = true;
+    el("entries-list").innerHTML = "";
+    el("empty").hidden = false;
+    el("empty").innerHTML = message ? "<h3>" + message + "</h3>"
+      : "<h3>No lineups yet</h3><p>Press <b>Build lineups</b>.</p>";
+    el("results-title").textContent = CONTESTS[state.contest].title + " lineups";
   }
 
-  function publishedKeys() {
-    var reference = state.payload && state.payload.reference;
-    if (!reference) return new Set();
-    if (reference.portfolio.length < state.payload.settings.tournament_lineups) return new Set();
-    return new Set(reference.portfolio.map(lineupKey));
-  }
-
-  function renderLineups(target, lineups, published) {
-    var players = state.payload.players;
-    target.innerHTML = lineups.map(function (lineup, position) {
-      var chips = lineup.ids.map(function (id) {
-        var player = players[id];
-        var star = id === lineup.superstar;
-        return '<span class="chip' + (star ? " star" : "") + '">' +
-          (star ? "★ " : "") + text(player.name) +
-          " <small>" + text(player.pos) + " " + money(player.salary) + "</small></span>";
-      }).join("");
-      var match = published.has(lineupKey(lineup))
-        ? ' <span class="badge match">also published</span>' : "";
-      return '<div class="lineup">' +
-        '<div class="lineup-head"><span class="rank">Entry ' + (position + 1) + "</span>" +
-        '<span class="score">' + num(lineup.expected_fp, 2) + " expected FP</span>" +
-        '<span class="mono" style="color:var(--ink-3)">' + money(lineup.salary) + "</span>" +
-        match + "</div>" +
-        '<div class="chips">' + chips + "</div>" +
-        '<div class="metrics">' +
-        (lineup.joint_expected_profit === undefined ? "" :
-          "<span><strong>joint EV " + money2(lineup.joint_expected_profit) + "</strong></span>" +
-          "<span>joint ROI " + num(lineup.joint_roi * 100, 1) + "%</span>" +
-          "<span>joint cash " + num(lineup.joint_cash_rate * 100, 1) + "%</span>" +
-          "<span>joint top 1% " + num(lineup.joint_top_one_rate * 100, 2) + "%</span>" +
-          "<span>joint 1st " + num(lineup.joint_first_rate * 100, 2) + "%</span>" +
-          "<span>joint solo 1st " + num(lineup.joint_solo_first_rate * 100, 2) + "%</span>" +
-          "<span>joint opp duplicates " + num(lineup.joint_expected_duplicates, 1) + "</span>") +
-        (lineup.expected_profit === undefined ? "" :
-          "<span>standalone EV " + money2(lineup.expected_profit) + "</span>" +
-          "<span>standalone ROI " + num(lineup.roi * 100, 1) + "%</span>" +
-          "<span>standalone cash " + num(lineup.cash_rate * 100, 1) + "%</span>" +
-          "<span>standalone top 1% " + num(lineup.top_one_rate * 100, 2) + "%</span>" +
-          "<span>standalone 1st " + num(lineup.first_rate * 100, 2) + "%</span>" +
-          "<span>standalone solo 1st " + num(lineup.solo_first_rate * 100, 2) + "%</span>" +
-          "<span>standalone opp duplicates " + num(lineup.expected_duplicates, 1) + "</span>") +
-        "<span>sim mean " + num(lineup.sim_mean, 2) + "</span>" +
-        "<span>floor " + num(lineup.floor_p25, 1) + "</span>" +
-        "<span>ceiling " + num(lineup.ceiling_p90, 1) + "</span>" +
-        "<span>p95 " + num(lineup.ceiling_p95, 1) + "</span>" +
-        "<span>near-best " + num(lineup.near_optimal_rate * 100, 2) + "%</span>" +
-        "<span>candidate-best " + num(lineup.win_rate * 100, 2) + "%</span>" +
-        "<span>experimental score " + num(lineup.tournament_score, 2) + "</span>" +
-        "</div></div>";
-    }).join("");
-  }
-
-  /* ---------- multi-entry head-to-head ---------- */
-  function pct(value, places) {
-    return Number.isFinite(value) ? num(value * 100, places === undefined ? 1 : places) + "%" : "—";
-  }
-
-  function renderH2H() {
-    var h2h = state.result && state.result.h2h_multi;
-    el("h2h-card").hidden = !(h2h && h2h.entries && h2h.entries.length);
-    if (el("h2h-card").hidden) return;
-    var players = state.payload.players;
-    var names = function (ids) {
-      return ids.map(function (id) { return players[id].name; }).join(", ");
-    };
-    var limits = h2h.limits || {};
-
-    el("h2h-how").textContent =
-      "Superstars: " + names(h2h.pools.superstars) + ", in turn, each in at most " +
-      limits.superstar + " of " + h2h.requested + " entries. Round 1 gives each its best " +
-      "lineup; later rounds change the supporting players, preferring the top ten " +
-      "(fillers ranked 6–10: " + names(h2h.pools.fillers) + ") and, when the salary cap " +
-      "allows none, the fewest from outside it." +
-      (limits.player < h2h.requested
-        ? " No player is in more than " + limits.player + " entries." : "");
-
-    var sharp = h2h.sharp || {}, pub = h2h.public || {};
-    el("h2h-summary").innerHTML =
-      "<thead><tr><th>Entries</th><th class='num'>Expected wins</th>" +
-      "<th class='num'>Per entry</th><th class='num'>0 wins</th>" +
-      "<th class='num'>Winning record</th><th class='num'>Exp. wins vs public</th>" +
-      "</tr></thead><tbody><tr>" +
-      "<td>" + h2h.filled + (h2h.filled < h2h.requested ? " of " + h2h.requested : "") + "</td>" +
-      "<td class='num'>" + num(sharp.expected_wins, 2) + "</td>" +
-      "<td class='num'>" + pct(sharp.win_rate) + "</td>" +
-      "<td class='num'>" + pct(sharp.zero_wins) + "</td>" +
-      "<td class='num'>" + pct(sharp.winning_record) + "</td>" +
-      "<td class='num'>" + num(pub.expected_wins, 2) + "</td></tr></tbody>";
-
-    el("h2h-multi-note").textContent =
-      (h2h.filled < h2h.requested
-        ? "Only " + h2h.filled + " of " + h2h.requested + " entries fit the exposure limits: " +
-          "raise the Superstar limit or change the entry count. "
-        : "") +
-      "Each entry is its own contest against its own opponent, so expected wins is the " +
-      "sum of the entries' win chances. Entries share one game, so lineups that share " +
-      "players win and lose together: that is what \"0 wins\" measures. Figures are " +
-      "against a sharp opponent (one of the " + h2h.opponents.sharp + " highest-projected " +
-      "lineups) except the last, which is against the public ownership prior. Neither " +
-      "opponent model is calibrated to real H2H contests.";
-
-    el("h2h-multi").innerHTML = h2h.entries.map(function (entry, i) {
-      var chips = entry.ids.map(function (id) {
-        var player = players[id];
-        var star = id === entry.superstar;
-        return '<span class="chip' + (star ? " star" : "") + '">' + (star ? "★ " : "") +
-          text(player.name) + " <small>" + text(player.pos) + " " + money(player.salary) +
-          "</small></span>";
-      }).join("");
-      var how = "round " + entry.round + (entry.round > 1 && entry.fillers && entry.fillers.length
-        ? " · fillers " + names(entry.fillers) : "");
-      var win = sharp.per_entry ? sharp.per_entry[i] : NaN;
-      var winPublic = pub.per_entry ? pub.per_entry[i] : NaN;
-      return '<div class="lineup"><div class="lineup-head">' +
-        '<span class="rank">H2H ' + (i + 1) + "</span>" +
-        '<span class="score">' + num(entry.expected_fp, 2) + " expected FP</span>" +
-        '<span class="mono" style="color:var(--ink-3)">' + money(entry.salary) + "</span>" +
-        '<span class="badge">' + text(how) + "</span></div>" +
-        '<div class="chips">' + chips + "</div>" +
-        '<div class="metrics"><span><strong>win vs sharp ' + pct(win) + "</strong></span>" +
-        "<span>win vs public " + pct(winPublic) + "</span></div></div>";
-    }).join("");
-  }
-
-  function finish(message) {
+  function finish(result, error) {
     state.running = false;
-    state.result = message;
-    syncRunButton();
     el("progress").hidden = true;
-    el("portfolio-empty").hidden = true;
-
-    var published = publishedKeys();
-    renderLineups(el("portfolio"), message.portfolio, published);
-    renderH2H();
-
-    var shared = message.portfolio.filter(function (lineup) {
-      return published.has(lineupKey(lineup));
-    }).length;
-    var note = el("result-note");
-    note.hidden = false;
-    note.className = "note";
-    note.innerHTML =
-      message.valid_rosters.toLocaleString() + " valid rosters · " +
-      message.candidates_scored.toLocaleString() + " scored · " +
-      (message.timing.total / 1000).toFixed(1) + "s" +
-      (published.size ? " · " + shared + " of " + message.portfolio.length +
-        " also in the published run" : "") +
-      ((state.payload.salary_cap === null || state.payload.salary_cap === undefined)
-        ? " · built against a salary cap you entered (" + money(effectiveCap()) +
-          "), not one Yahoo published" : "");
-
-    var evaluation = message.scenario_evaluation;
-    if (evaluation && evaluation.objective === "joint_portfolio_contest_ev") {
-      note.innerHTML += "<br><strong>Joint portfolio EV under experimental field prior: " +
-        money2(evaluation.expected_profit) + "</strong> profit on " + evaluation.entries +
-        " entries · ROI " + num(evaluation.roi * 100, 1) + "%. All selected entries are " +
-        "ranked together against " + evaluation.opponent_entries.toLocaleString() +
-        " modeled opponents.";
-      note.innerHTML += "<br>Portfolio outcomes: profitable " +
-        num(evaluation.profitable_rate * 100, 1) + "% · any cash " +
-        num(evaluation.any_cash_rate * 100, 1) + "% · any top 1% " +
-        num(evaluation.any_top_one_rate * 100, 1) + "% · any 1st " +
-        num(evaluation.any_first_rate * 100, 2) + "% · expected cashes " +
-        num(evaluation.expected_cashes, 2) + " · expected top-1% finishes " +
-        num(evaluation.expected_top_one_finishes, 2) + ".";
-      note.innerHTML += "<br>Portfolio profit distribution: P10 " +
-        money2(evaluation.profit_p10) + " · median " + money2(evaluation.profit_median) +
-        " · P90 " + money2(evaluation.profit_p90) + " · range " +
-        money2(evaluation.worst_profit) + " to " + money2(evaluation.best_profit) + ".";
-      note.innerHTML += "<br>Sum of standalone entry EVs: " +
-        money2(evaluation.standalone_expected_profit) + " · ROI " +
-        num(evaluation.standalone_roi * 100, 1) +
-        "%. Standalone EV is a price-taking diagnostic: each entry is evaluated alone " +
-        "against a field of field size minus one, so it is not portfolio EV.";
-      note.innerHTML += "<br><strong>Not a calibrated return estimate.</strong> " +
-        "Contest EV is highly sensitive to the opponent-field prior; use it as a " +
-        "relative portfolio diagnostic until prospective field calibration is deeper.";
-    } else if (evaluation && evaluation.objective === "total_modeled_contest_ev") {
-      // Backward-compatible rendering for an older cached worker.
-      note.innerHTML += "<br>Sum of standalone entry EVs: " + money2(evaluation.expected_profit) +
-        " · ROI " + num(evaluation.roi * 100, 1) +
-        "%. This older result did not insert your entries into one another's ranks.";
-    } else if (evaluation && Number.isFinite(evaluation.evaluation_best_mean)) {
-      note.innerHTML += "<br>Independent simulation check: best entry averages " +
-        num(evaluation.evaluation_best_mean, 2) + " FP; gain over the single-lineup anchor " +
-        num(evaluation.evaluation_gain_over_single, 2) + " FP across " +
-        evaluation.evaluation_scenarios.toLocaleString() + " evaluation scenarios. " +
-        "This measures performance inside the model, not historical accuracy.";
+    syncControls();
+    if (error) {
+      clearResults();
+      notice(error, "bad");
+      setStatus(text(error), "bad");
+      return;
     }
-    if (message.field_summary) {
-      var jointOpponents = message.field_summary.joint_opponent_entries;
-      var standaloneOpponents = message.field_summary.standalone_opponent_entries ||
-        message.field_summary.opponent_entries;
-      note.innerHTML += "<br>Opponent field: " +
-        message.field_summary.sampled_opponents.toLocaleString() + " sampled entries represent " +
-        (Number.isFinite(jointOpponents)
-          ? jointOpponents.toLocaleString() + " opponents in the joint portfolio evaluation"
-          : standaloneOpponents.toLocaleString() + " opponents") +
-        " across " + message.field_summary.evaluation_scenarios.toLocaleString() +
-        " football scenarios." +
-        (Number.isFinite(jointOpponents)
-          ? " Standalone entry diagnostics use " + standaloneOpponents.toLocaleString() +
-            " opponents." : "") +
-        " Ownership prior archive: " + (message.field_summary.ownership_observations || "—") +
-        " observations / " + (message.field_summary.ownership_contests || "—") +
-        " contests. Field-based EV is experimental; this archive is a sparse prior, " +
-        "not a full-field census.";
+    el("empty").hidden = true;
+    renderStats(result);
+    if (result.filled < result.requested) {
+      notice("Only " + result.filled + " of " + result.requested + " entries fit the exposure" +
+        (result.contest === "tournament" ? " and overlap" : "") + " limits. Raise a limit in " +
+        "Advanced, include more players, or ask for fewer entries.", "warn");
+    }
+    renderExplain(result);
+    renderEntries(result);
+    setStatus("Built " + result.filled + (result.filled === 1 ? " lineup" : " lineups") +
+      " in " + (result.elapsed_ms / 1000).toFixed(1) + "s", "");
+  }
 
-      var opponentFP = message.field_summary.opponent_expected_fp;
-      var portfolioFP = message.field_summary.portfolio_expected_fp;
-      var h2hFP = message.field_summary.h2h_expected_fp;
-      var strengthCard = el("field-strength-card");
-      if (opponentFP && portfolioFP) {
-        strengthCard.hidden = false;
-        el("field-strength").innerHTML =
-          "<p><strong>Opponent expected FP — sampled field:</strong> mean " +
-          num(opponentFP.mean, 2) + " · median " + num(opponentFP.median, 2) +
-          " · P90 " + num(opponentFP.p90, 2) + " · P99 " + num(opponentFP.p99, 2) +
-          ".</p>" +
-          "<p><strong>Selected portfolio expected FP:</strong> mean " +
-          num(portfolioFP.mean, 2) + " · min " + num(portfolioFP.min, 2) +
-          " · max " + num(portfolioFP.max, 2) +
-          (Number.isFinite(h2hFP) ? ". Top lineup: " + num(h2hFP, 2) + "." : ".") +
-          "</p>" +
-          "<p><strong>Ownership calibration:</strong> " +
-          (message.field_summary.ownership_observations || "—") + " observations / " +
-          (message.field_summary.ownership_contests || "—") +
-          " contests · selection-biased sparse prior.</p>" +
-          "<p><strong>Not a calibrated return estimate.</strong> The field-strength " +
-          "diagnostic shows whether modeled opponents are systematically weaker or " +
-          "stronger on projected points; it does not validate the ownership, duplication, " +
-          "or tail-rank model.</p>";
+  function notice(message, kind) {
+    el("result-notice").hidden = false;
+    el("result-notice").className = "notice " + kind;
+    el("result-notice").textContent = message;
+  }
+
+  function renderStats(result) {
+    var tiles = result.contest === "h2h" ? [
+      ["Expected wins", num(result.expected_wins) + " of " + result.filled],
+      ["Win rate", pct(result.win_rate)],
+      ["All lose", pct(result.zero_wins)],
+      ["Winning record", pct(result.winning_record)]
+    ] : [
+      ["Entries", String(result.filled)],
+      ["Avg projection", num(result.expected_fp)],
+      ["Best score, avg", num(result.best_score)],
+      ["Most shared", result.diversity ? result.diversity.max_shared + " players" : "—"]
+    ];
+    el("stats").innerHTML = tiles.map(function (tile) {
+      return '<div class="stat"><div class="k">' + text(tile[0]) + '</div><div class="v">' +
+        text(tile[1]) + "</div></div>";
+    }).join("");
+    el("stats").hidden = false;
+  }
+
+  function names(ids) {
+    return ids.map(function (id) { return state.payload.players[id].name; }).join(", ");
+  }
+
+  function renderExplain(result) {
+    var message;
+    if (result.contest === "h2h") {
+      message = "Superstars: " + names(result.pools.superstars) + ", each in at most " +
+        result.limits.superstar + " of " + result.requested + " entries. Win rates are against " +
+        "an opponent playing one of the " + result.opponents + " highest-projected lineups.";
+    } else {
+      message = "Each entry adds the most to your best score across the simulated games" +
+        (Number.isFinite(result.gain_over_single)
+          ? " (+" + num(result.gain_over_single) + " points over entering the top lineup alone)" : "") +
+        ". Any two entries share at most " + result.limits.shared + " players; no player is in more than " +
+        result.limits.player + " entries.";
+    }
+    el("explain").textContent = message;
+    el("explain").hidden = false;
+  }
+
+  function lineupKey(entry) {
+    return entry.ids.slice().sort(function (a, b) { return a - b; }).join(",") + "*" + entry.superstar;
+  }
+
+  function renderEntries(result) {
+    var players = state.payload.players;
+    var reference = result.contest === "tournament" && state.published.reference
+      ? new Set(state.published.reference.portfolio.map(lineupKey)) : new Set();
+    el("entries-list").innerHTML = result.entries.map(function (entry, i) {
+      var ids = entry.ids.slice().sort(function (a, b) {
+        return (b === entry.superstar) - (a === entry.superstar) || players[b].fp - players[a].fp;
+      });
+      var chips = ids.map(function (id) {
+        var player = players[id], star = id === entry.superstar;
+        return '<span class="chip' + (star ? " star" : "") + '">' + (star ? "★ " : "") +
+          text(player.name) + " <small>" + text(player.pos) + " " + money(player.salary) + "</small></span>";
+      }).join(" ");
+      var meta, right = "";
+      if (result.contest === "h2h") {
+        meta = "round " + entry.round + (entry.round > 1 && entry.fillers.length
+          ? " · fillers " + text(names(entry.fillers)) : "");
+        right = '<span class="win">' + pct(entry.win_chance) + " win</span>";
       } else {
-        strengthCard.hidden = true;
-        el("field-strength").innerHTML = "";
+        meta = "range " + num(entry.floor_p25, 0) + "–" + num(entry.ceiling_p90, 0) +
+          (reference.has(lineupKey(entry)) ? ' <span class="badge good">also published</span>' : "");
       }
-    } else {
-      el("field-strength-card").hidden = true;
-      el("field-strength").innerHTML = "";
-    }
-    var diversity = message.diversity;
-    el("diversity-card").hidden = !diversity;
-    if (diversity) {
-      el("diversity").innerHTML =
-        "<p>" + diversity.lineups + " entries drawn from " +
-        diversity.distinct_players + " distinct players. Any two share " +
-        num(diversity.mean_shared, 2) + " players on average and " +
-        diversity.max_shared + " at most, against a cap of " + diversity.cap + ".</p>" +
-        (diversity.near_duplicates
-          ? "<p style='color:var(--warn)'>" + diversity.near_duplicates +
-            " pair(s) differ by a single player. Lower the shared-player cap.</p>"
-          : "<p>Every pair of entries differs by at least " +
-            (LINEUP_SIZE - diversity.max_shared) + " player(s).</p>");
-    }
-    setStatus(
-      "Solved in <strong>" + (message.timing.total / 1000).toFixed(1) + "s</strong> " +
-      "<span class='sep'>·</span> " + text(state.payload.matchup) +
-      " <span class='sep'>·</span> " + message.candidates_scored.toLocaleString() +
-      " candidates scored");
+      return '<div class="entry"><div class="entry-head"><span class="n">' + (i + 1) + "</span>" +
+        '<span class="fp">' + num(entry.expected_fp) + " FP</span>" +
+        '<span class="meta">' + money(entry.salary) + " · " + meta + "</span>" + right + "</div>" +
+        '<div class="chips">' + chips + "</div></div>";
+    }).join("");
   }
 
-  function renderReference() {
-    var payload = state.payload;
-    var card = el("reference-card");
-    if (!payload.reference) { card.hidden = true; return; }
-    card.hidden = false;
-    el("reference-note").textContent =
-      "Built by the pipeline itself at " + payload.settings.simulations.toLocaleString() +
-      " scenarios over " + payload.reference.valid_rosters.toLocaleString() +
-      " valid rosters. Showing the first five reference entries in construction order; " +
-      "the browser uses the selected detail setting.";
-    if (payload.reference.portfolio.length < payload.settings.tournament_lineups) {
-      el("reference-note").textContent = "The published run could not fill the requested entry count. " +
-        "Its partial portfolio is hidden because exposure limits use the requested count. " +
-        "Adjust the settings and run Optimize.";
-      el("reference").innerHTML = "";
-    } else {
-      renderLineups(el("reference"), payload.reference.portfolio.slice(0, 5), new Set());
-    }
-    var reliability = payload.reference.reliability || [];
-    el("reliability").innerHTML = reliability.length
-      ? "<table><thead><tr><th>Metric</th><th class='num'>Reliability</th>" +
-        "<th>Verdict</th></tr></thead><tbody>" +
-        reliability.map(function (row) {
-          return "<tr><td>" + text(row.metric) + "</td><td class='num'>" +
-            num(row.full_run_reliability, 3) + "</td><td>" + text(row.verdict) +
-            "</td></tr>";
-        }).join("") + "</tbody></table>"
-      : "<p>The published run did not report reliability.</p>";
-    var fieldArchive = payload.field_model && payload.field_model.archive;
-    el("model-info").innerHTML =
-      (fieldArchive ? "<p>Yahoo field prior: <span class='mono'>" +
-        fieldArchive.observations + "</span> archived roster observations across <span class='mono'>" +
-        fieldArchive.contests + "</span> completed contests. It is a sparse ownership prior, not a full-field census.</p>" : "") +
-      "<p>Largest PSD repair to a requested correlation: <span class='mono'>" +
-      num(payload.model.psd_max_score_adjustment, 4) + "</span>. Correlation targets " +
-      "outside the range two lognormals with these coefficients of variation can " +
-      "reach: <span class='mono'>" + payload.model.infeasible_pairs + "</span>." +
-      (payload.dropped_from_pool.length
-        ? " Trimmed from the pool before enumeration: " +
-          text(payload.dropped_from_pool.join(", ")) + "."
-        : "") + "</p>";
-  }
-
-  function renderDetails(index) {
-    var projection = index.projection || {};
-    el("feeds").textContent =
-      "Yahoo salary-position-depth model trained through " +
-      (projection.trained_through_season || "unknown") +
-      " · " + (index.availability_removed || 0) + " player(s) removed by the " +
-      "availability filter" +
-      (index.skipped && index.skipped.length
-        ? " · skipped: " + index.skipped.join("; ") : "");
-    el("log").textContent = (index.log || []).join("\n") || "No log was published.";
-  }
+  applyContestDefaults();
+  clearResults();
 })();
 </script>
 </body>
 </html>
-

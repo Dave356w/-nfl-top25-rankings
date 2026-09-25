@@ -1,4 +1,11 @@
-/* Exercise the shipped page's event handlers with controlled fetches/workers. */
+/* Exercise the shipped Showdown page's handlers with controlled fetches and workers.
+ *
+ * The page script runs in a VM against a minimal fake DOM: every element is a
+ * plain object keyed by id, fetches resolve from an in-memory route table, and
+ * workers record the messages the page posts to them. The worker's own maths
+ * is covered by showdown_strategy.test.js; this file covers what the page asks
+ * for and what it shows.
+ */
 "use strict";
 
 const assert = require("node:assert/strict");
@@ -6,387 +13,319 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const { test } = require("node:test");
-const html = fs.readFileSync(path.join(__dirname, "../site/showdown.html"), "utf8");
-const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-const flush = () => new Promise(setImmediate);
 
-function payload(id) {
+const SITE = path.join(__dirname, "..", "site");
+const html = fs.readFileSync(path.join(SITE, "showdown.html"), "utf8");
+const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const depthModelJs = fs.readFileSync(path.join(SITE, "depth-model.js"), "utf8");
+const depthModelJson = JSON.parse(fs.readFileSync(path.join(SITE, "data", "depth_model.json"), "utf8"));
+const flush = () => new Promise(setImmediate);
+const REGRESSION = "Yahoo salary-position-depth regression (trained through 2025)";
+
+function payload(id, extra = {}) {
   return {
-    game_id: id, matchup: id, generated_utc: "2026-09-09T21:00:00Z",
-    snapshot_id: "same-snapshot", salary_cap: 100, kickoff_utc: "2026-09-10T00:00:00Z",
-    players: Array.from({ length: 5 }, (_, i) => ({
-      name: `Player ${i}`, pos: "WR", team: i < 3 ? "A" : "B", salary: 10, fp: 5,
-    })),
-    settings: { tournament_lineups: 20, max_shared_players: 3,
-      max_player_exposure: 0.5, max_superstar_exposure: 0.35,
-      min_salary_used_pct: 0, simulations: 20000, max_candidate_lineups: 25000,
-      position_limits: { QB: [0, 2], RB: [0, 2], WR: [0, 3], TE: [0, 2], DEF: [0, 1] } },
-    reference: null,
+    schema: 3, game_id: id, matchup: `${id} game`, generated_utc: "2026-09-09T21:00:00Z",
+    snapshot_id: "snap", salary_cap: 100, kickoff_utc: "2026-09-10T00:00:00Z",
+    players: [
+      { name: "QB A", pos: "QB", team: "A", salary: 30, fp: 20, depth: 1, source: REGRESSION },
+      { name: "WR A1", pos: "WR", team: "A", salary: 20, fp: 12, depth: 1, source: REGRESSION },
+      { name: "WR A2", pos: "WR", team: "A", salary: 12, fp: 6, depth: 2, source: REGRESSION },
+      { name: "QB B", pos: "QB", team: "B", salary: 28, fp: 18, depth: 1, source: REGRESSION },
+      { name: "RB B", pos: "RB", team: "B", salary: 22, fp: 13, depth: 1, source: REGRESSION },
+      { name: "DEF B", pos: "DEF", team: "B", salary: 10, fp: 6, depth: 1, source: REGRESSION },
+    ],
+    settings: { max_player_exposure: 0.5, max_superstar_exposure: 0.35, tournament_lineups: 20 },
+    reference: { portfolio: [{ ids: [0, 1, 3, 4, 5], superstar: 0 }] },
+    ...extra,
   };
 }
 
-async function page() {
-  const nodes = {}, workers = [], routes = new Map();
-  function node(id) {
-    return nodes[id] ||= {
-      value: "", innerHTML: "", textContent: "", hidden: false,
-      disabled: id === "run", style: {}, dataset: {}, handlers: {},
-      addEventListener(event, fn) { this.handlers[event] = fn; },
-    };
-  }
-  node("detail").value = "balanced";
-  node("objective").value = "tournament";
-  const index = { snapshot_id: "same-snapshot", games: ["A", "B", "C"].map(id => ({
-    matchup: id, game_id: id, file: `${id}.json`,
-  })) };
-  const routesData = { "index.json": index, "A.json": payload("A"),
-    "B.json": payload("B"), "C.json": payload("C") };
+function makeNode(id) {
+  const classes = new Set();
+  return {
+    id, value: "", innerHTML: "", textContent: "", hidden: false, disabled: false, max: "",
+    checked: false, className: "", style: {}, dataset: {}, handlers: {},
+    classList: { contains: (c) => classes.has(c), add: (c) => classes.add(c) },
+    addEventListener(event, fn) { this.handlers[event] = fn; },
+  };
+}
+
+async function page({ routes: extraRoutes = {}, depthModel = false } = {}) {
+  const nodes = {}, workers = [];
+  const node = (id) => (nodes[id] ||= makeNode(id));
+  node("detail").value = "standard";
+  const radios = ["h2h", "tournament"].map((value) => {
+    const radio = node("contest-" + value);
+    radio.value = value;
+    radio.checked = value === "h2h";
+    return radio;
+  });
+  const index = { snapshot_id: "snap", games: ["A", "B", "C"].map((id) => ({ matchup: id, file: `${id}.json` })) };
+  const routes = new Map(Object.entries({
+    "index.json": () => index,
+    "A.json": () => payload("A"), "B.json": () => payload("B"), "C.json": () => payload("C"),
+    "depth_model.json": () => (depthModel ? depthModelJson : Promise.reject(new Error("absent"))),
+    ...extraRoutes,
+  }));
   class Worker {
-    constructor(url) {
-      this.url = url;
-      this.messages = [];
-      this.terminated = false;
-      workers.push(this);
-    }
+    constructor(url) { this.url = url; this.messages = []; this.terminated = false; workers.push(this); }
     postMessage(message) { this.messages.push(message); }
     terminate() { this.terminated = true; }
     emit(data) { this.onmessage({ data }); }
   }
+  const store = {};
   const context = {
-    Set, Worker, localStorage: { getItem: () => null },
-    document: { getElementById: node, documentElement: { dataset: {} }, querySelectorAll: () => [] },
-    fetch: async url => {
+    Set, Worker, Object, Array, Number, String, Math, Date, isNaN, isFinite, encodeURIComponent, JSON,
+    localStorage: { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = v; }, removeItem: (k) => { delete store[k]; } },
+    window: { matchMedia: () => ({ matches: false }) },
+    document: {
+      getElementById: node,
+      documentElement: { dataset: {} },
+      querySelectorAll: (selector) => (selector === 'input[name="contest"]' ? radios : []),
+    },
+    fetch: async (url) => {
       const name = url.split("/").pop();
-      const result = routes.has(name) ? await routes.get(name)() : routesData[name];
+      if (!routes.has(name)) return { ok: false, status: 404, json: async () => ({}) };
+      const result = await routes.get(name)();
       return { ok: true, json: async () => result };
     },
   };
-  vm.runInNewContext(script, context);
-  await flush();
-  return { node, workers, routes, routesData,
-    choose(id) { node("game").value = `${id}.json`; node("game").handlers.change(); } };
+  vm.createContext(context);
+  vm.runInContext(depthModelJs, context);
+  vm.runInContext(script, context);
+  await flush(); await flush();
+  return {
+    node, workers, routes, store,
+    worker: () => workers.at(-1),
+    choose(id) { node("game").value = `${id}.json`; node("game").handlers.change(); },
+    contest(value) {
+      radios.forEach((r) => { r.checked = r.value === value; });
+      node("contest-" + value).handlers.change();
+    },
+    run() { node("run").handlers.click(); return workers.at(-1).messages.at(-1); },
+    toggle(index, checked) {
+      node("pool").handlers.change({ target: { checked, dataset: { index: String(index) }, classList: { contains: () => false } } });
+    },
+  };
 }
 
-test("worker URL is snapshot-versioned and protocol mismatches fail visibly", async () => {
-  const p = await page();
-  assert.match(
-    p.workers[0].url,
-    /showdown-worker\.js\?protocol=4&snapshot=same-snapshot$/
-  );
-  p.workers[0].emit({ type: "loaded", players: 5, protocol: 3 });
-  assert.equal(p.workers[0].terminated, true);
-  assert.equal(p.node("run").disabled, true);
-  assert.match(p.node("status-text").innerHTML, /out of sync/);
+const h2hResult = (extra = {}) => ({
+  contest: "h2h", requested: 3, filled: 3, opponents: 100, valid_rosters: 10, elapsed_ms: 1200,
+  expected_wins: 1.6, win_rate: 0.533, zero_wins: 0.09, winning_record: 0.58,
+  limits: { player: 3, superstar: 1 },
+  pools: { superstars: [0, 3, 4], fillers: [1, 2] },
+  entries: [
+    { ids: [0, 1, 3, 4, 5], superstar: 0, expected_fp: 79, salary: 100, round: 1, fillers: [], win_chance: 0.62 },
+    { ids: [0, 1, 3, 4, 5], superstar: 3, expected_fp: 78, salary: 100, round: 1, fillers: [], win_chance: 0.55 },
+    { ids: [0, 2, 3, 4, 5], superstar: 4, expected_fp: 70, salary: 92, round: 2, fillers: [2], win_chance: 0.43 },
+  ],
+  ...extra,
 });
 
-test("switching game during a solve cancels work and restores Optimize", async () => {
+const tournamentResult = (extra = {}) => ({
+  contest: "tournament", requested: 20, filled: 2, valid_rosters: 10, elapsed_ms: 2500,
+  expected_fp: 75.5, best_score: 88.1, gain_over_single: 9.4,
+  diversity: { max_shared: 3 }, limits: { player: 10, superstar: 7, shared: 3 },
+  entries: [
+    { ids: [0, 1, 3, 4, 5], superstar: 0, expected_fp: 79, salary: 100, floor_p25: 60, ceiling_p90: 104 },
+    { ids: [0, 2, 3, 4, 5], superstar: 3, expected_fp: 72, salary: 92, floor_p25: 55, ceiling_p90: 97 },
+  ],
+  ...extra,
+});
+
+test("the worker URL is versioned and an out-of-date worker is refused", async () => {
   const p = await page();
-  p.node("run").handlers.click();
-  const old = p.workers[0];
+  assert.match(p.worker().url, /showdown-worker\.js\?protocol=5&snapshot=snap$/);
+  assert.equal(p.worker().messages[0].type, "load");
+  p.worker().emit({ type: "loaded", players: 6, protocol: 4 });
+  assert.equal(p.workers[0].terminated, true);
   assert.equal(p.node("run").disabled, true);
+  assert.match(p.node("status-text").innerHTML, /out of date/);
+});
+
+test("head-to-head is the default and sends only what the visitor chose", async () => {
+  const p = await page();
+  assert.equal(p.node("entries").value, 3);
+  assert.equal(p.node("player-exposure").value, 1);
+  assert.equal(p.node("superstar-exposure").value, 0.25);
+  assert.equal(p.node("run").disabled, false);
+  const message = p.run();
+  assert.equal(message.type, "solve");
+  assert.deepEqual(JSON.parse(JSON.stringify(message.request)), {
+    contest: "h2h", entries: 3, included: [0, 1, 2, 3, 4, 5], salaryCap: 100,
+    detail: "standard", maxPlayerExposure: 1, maxSuperstarExposure: 0.25,
+  });
+  assert.equal(p.node("run").disabled, true);
+});
+
+test("each contest keeps its own entry count and exposure defaults", async () => {
+  const p = await page();
+  p.node("entries").value = "7";
+  p.node("entries").handlers.change();
+  p.contest("tournament");
+  assert.equal(p.node("entries").value, 20);
+  assert.equal(p.node("player-exposure").value, 0.5);
+  assert.equal(p.node("superstar-exposure").value, 0.35);
+  assert.match(p.node("results-title").textContent, /Tournament/);
+  assert.equal(p.run().request.contest, "tournament");
+  p.contest("h2h");
+  assert.equal(p.node("entries").value, 7);
+  p.node("entries").value = "99";
+  p.node("entries").handlers.change();
+  assert.equal(p.node("entries").value, 50);        // head-to-head tops out at 50
+});
+
+test("switching game during a solve cancels it and ignores the old worker", async () => {
+  const p = await page();
+  p.run();
+  const old = p.worker();
   p.choose("B");
   assert.equal(old.terminated, true);
   await flush();
   assert.equal(p.node("run").disabled, false);
-  assert.equal(p.node("progress").hidden, true);
   old.emit({ type: "error", message: "obsolete worker" });
   assert.doesNotMatch(p.node("status-text").innerHTML, /obsolete/);
-  p.node("run").handlers.click();
-  assert.equal(p.workers.at(-1).messages.at(-1).type, "solve");
+  assert.equal(p.worker().messages[0].payload.game_id, "B");
 });
 
-test("out-of-order game responses keep the latest selection", async () => {
-  const p = await page();
+test("the latest game selection wins when responses arrive out of order", async () => {
   let releaseB, releaseC;
-  const b = new Promise(resolve => { releaseB = resolve; });
-  const c = new Promise(resolve => { releaseC = resolve; });
-  p.routes.set("B.json", () => b); p.routes.set("C.json", () => c);
+  const p = await page({ routes: {
+    "B.json": () => new Promise((resolve) => { releaseB = resolve; }),
+    "C.json": () => new Promise((resolve) => { releaseC = resolve; }),
+  } });
   p.choose("B"); p.choose("C");
   releaseC(payload("C")); await flush();
   releaseB(payload("B")); await flush();
-  assert.equal(p.workers.at(-1).messages[0].payload.game_id, "C");
-  assert.equal(p.node("run").disabled, false);
+  assert.equal(p.worker().messages[0].payload.game_id, "C");
 });
 
-test("failed loads disable solving and a later selection recovers", async () => {
-  const p = await page();
-  p.routes.set("B.json", () => Promise.reject(new Error("unavailable")));
+test("a failed or mismatched game cannot be solved, and a later one recovers", async () => {
+  const p = await page({ routes: {
+    "B.json": () => Promise.reject(new Error("unavailable")),
+    "C.json": () => payload("C", { snapshot_id: "older" }),
+  } });
   p.choose("B"); await flush();
   assert.equal(p.node("run").disabled, true);
   assert.match(p.node("status-text").innerHTML, /unavailable/);
-  p.node("none").handlers.click(); // No payload while loading/failed.
   p.choose("C"); await flush();
-  assert.equal(p.node("run").disabled, false);
-});
-
-test("a game from another snapshot cannot be solved", async () => {
-  const p = await page();
-  p.routes.set("B.json", async () => ({ ...payload("B"), snapshot_id: "older" }));
-  p.choose("B"); await flush();
   assert.equal(p.node("run").disabled, true);
-  assert.match(p.node("status-text").innerHTML, /different snapshots/);
-});
-
-test("changing settings invalidates both running and displayed results", async () => {
-  const p = await page();
-  p.node("run").handlers.click();
-  const old = p.workers[0];
-  p.node("portfolio").innerHTML = "Previous calculation";
-  p.node("entries").handlers.change();
-  assert.equal(old.terminated, true);
+  assert.match(p.node("status-text").innerHTML, /different snapshot/);
+  p.choose("A"); await flush();
   assert.equal(p.node("run").disabled, false);
-  assert.equal(p.node("portfolio").innerHTML, "");
-  assert.match(p.node("portfolio-empty").innerHTML, /Settings changed/);
 });
 
-test("results distinguish expectation, sample mean and candidate rates", async () => {
-  const p = await page();
-  p.workers[0].emit({ type: "result", valid_rosters: 1, candidates_scored: 1,
-    timing: { total: 10 }, diversity: null, portfolio: [{
-      ids: [0, 1, 2, 3, 4], superstar: 0, salary: 50, expected_fp: 27.5,
-      sim_mean: 27.3, floor_p25: 20, ceiling_p90: 40, ceiling_p95: 45,
-      near_optimal_rate: 0.1, win_rate: 0.01, tournament_score: 1,
-    }] });
-  const rendered = p.node("portfolio").innerHTML;
-  assert.match(rendered, /Entry 1/);
-  assert.match(rendered, /27.50 expected FP/);
-  assert.match(rendered, /sim mean 27.30/);
-  assert.match(rendered, /candidate-best 1.00%/);
-  assert.doesNotMatch(rendered, /<span>win /);
-});
-
-
-test("quota switch and integer exposure counts reach the worker", async () => {
-  const p = await page();
-  p.node("entries").value = 5;
-  p.node("entries").handlers.change();
-  assert.match(p.node("exposure-hint").textContent, /at most 2 of 5/);
-  assert.equal(p.node("construction").value, "off");
-  p.node("run").handlers.click();
-  assert.equal(p.workers.at(-1).messages.at(-1).options.constructionRules.length, 0);
-  const rules = [{ name: "QB", count: 1, positions: { QB: 1 } }];
-  p.routesData["A.json"].settings.portfolio_construction_rules = rules;
-  p.node("construction").value = "on";
-  p.node("construction").handlers.change();
-  p.node("run").handlers.click();
-  assert.equal(p.workers.at(-1).messages.at(-1).options.constructionRules, rules);
-  p.node("entries").value = 1;
-  p.node("entries").handlers.change();
-  assert.match(p.node("exposure-hint").textContent, /do not apply/);
-});
-
-test("incomplete published portfolios are not displayed as valid entries", async () => {
-  const p = await page();
-  p.routesData["B.json"].reference = {
-    valid_rosters: 10, portfolio: [{ids:[0,1,2,3,4],superstar:0}], reliability:[]
-  };
-  p.choose("B");
-  await flush();
-  assert.equal(p.node("reference").innerHTML, "");
-  assert.match(p.node("reference-note").textContent, /partial portfolio is hidden/);
-});
-
-/* Yahoo does not price every single-game slate. Those games publish a full model
- * with no cap, and the page has to collect one before it will solve -- a guessed
- * cap silently changes which lineups are legal. */
-
-test("a game with no published cap cannot be solved until one is entered", async () => {
-  const p = await page();
-  p.routesData["B.json"] = { ...payload("B"), salary_cap: null };
+test("a game without a published cap is labelled and waits for one, per game", async () => {
+  const p = await page({ routes: {
+    "B.json": () => payload("B", { salary_cap: null }),
+    "index.json": () => ({ snapshot_id: "snap", games: [
+      { matchup: "A", file: "A.json" }, { matchup: "B", file: "B.json", needs_salary_cap: true },
+    ] }),
+  } });
+  assert.match(p.node("game").innerHTML, /B — needs a salary cap/);
+  assert.doesNotMatch(p.node("game").innerHTML, /A — needs/);
   p.choose("B"); await flush();
   assert.equal(p.node("cap-field").hidden, false);
   assert.equal(p.node("run").disabled, true);
-  assert.match(p.node("cap-hint").textContent, /Yahoo published no cap/);
-  assert.match(p.node("game-hint").textContent, /not published by Yahoo/);
-
-  p.node("cap").value = "130";
+  p.node("cap").value = "0";
   p.node("cap").handlers.input();
-  assert.equal(p.node("run").disabled, false);
-  assert.match(p.node("cap-hint").textContent, /a cap you entered/);
-
-  p.node("run").handlers.click();
-  assert.equal(p.workers.at(-1).messages.at(-1).options.salaryCap, 130);
-});
-
-test("a non-positive cap does not unlock solving", async () => {
-  const p = await page();
-  p.routesData["B.json"] = { ...payload("B"), salary_cap: null };
-  p.choose("B"); await flush();
-  for (const bad of ["0", "-5", "", "abc"]) {
-    p.node("cap").value = bad;
-    p.node("cap").handlers.input();
-    assert.equal(p.node("run").disabled, true, `cap ${bad} should not unlock Optimize`);
-  }
-});
-
-test("an entered cap does not leak across games", async () => {
-  const p = await page();
-  p.routesData["B.json"] = { ...payload("B"), salary_cap: null };
-  p.routesData["C.json"] = { ...payload("C"), salary_cap: null };
-  p.choose("B"); await flush();
-  p.node("cap").value = "130";
-  p.node("cap").handlers.input();
-  assert.equal(p.node("run").disabled, false);
-
-  p.choose("C"); await flush();
-  assert.equal(p.node("run").disabled, true, "C must ask for its own cap");
-  assert.equal(p.node("cap").value, "");
-
-  p.choose("B"); await flush();
-  assert.equal(p.node("run").disabled, false, "B keeps the cap already entered for it");
-  assert.equal(p.node("cap").value, 130);
-});
-
-test("a priced game hides the cap field entirely", async () => {
-  const p = await page();
-  assert.equal(p.node("cap-field").hidden, true);
-  assert.equal(p.node("run").disabled, false);
-  p.node("run").handlers.click();
-  assert.equal(p.workers.at(-1).messages.at(-1).options.salaryCap, 100);
-});
-
-
-test("Tournament EV requires contest inputs and sends the payout curve", async () => {
-  const p = await page();
-  p.node("objective").value = "field_ev";
-  p.node("objective").handlers.change();
   assert.equal(p.node("run").disabled, true);
-
-  p.node("field-size").value = "4700";
-  p.node("field-size").handlers.change();
-  p.node("entry-fee").value = "0.25";
-  p.node("entry-fee").handlers.change();
-  p.node("payouts").value = "1=100\n2=50\n3-10=10";
-  p.node("payouts").handlers.input();
-
+  p.node("cap").value = "120";
+  p.node("cap").handlers.input();
   assert.equal(p.node("run").disabled, false);
-  p.node("run").handlers.click();
-  const options = p.workers.at(-1).messages.at(-1).options;
-  assert.equal(options.fieldSize, 4700);
-  assert.equal(options.entryFee, 0.25);
-  assert.equal(
-    JSON.stringify(options.payouts.map(row => [row.from, row.to, row.amount])),
-    JSON.stringify([[1,1,100],[2,2,50],[3,10,10]])
-  );
+  assert.equal(p.run().request.salaryCap, 120);
+  p.choose("A"); await flush();
+  assert.equal(p.node("cap-field").hidden, true);
+  p.choose("B"); await flush();
+  assert.equal(p.node("cap").value, "120");          // remembered for B only
 });
 
-test("GPP results distinguish joint portfolio EV from standalone entry EV", async () => {
+test("left-out players are not sent, and fewer than five cannot be solved", async () => {
   const p = await page();
-  p.workers[0].emit({ type: "result", valid_rosters: 1, candidates_scored: 1,
-    timing: { total: 10 }, diversity: null,
-    field_summary: {sampled_opponents:500,opponent_entries:4699,
-      standalone_opponent_entries:4699,joint_opponent_entries:4680,
-      evaluation_scenarios:1000,ownership_observations:25,ownership_contests:5,
-      opponent_expected_fp:{mean:61.2,median:62.1,p90:72.5,p99:80.4,min:40,max:85,
-        sample_size:500},
-      portfolio_expected_fp:{mean:75.4,min:70.1,max:82.2},h2h_expected_fp:83.0},
-    scenario_evaluation: {objective:"joint_portfolio_contest_ev",expected_profit:1.10,
-      expected_payout:6.10,roi:.22,entries:20,profitable_rate:.61,any_cash_rate:.88,
-      any_top_one_rate:.42,any_first_rate:.07,expected_cashes:4.2,
-      expected_top_one_finishes:.6,profit_p10:-3.5,profit_median:.75,profit_p90:8.5,
-      worst_profit:-5,best_profit:95,opponent_entries:4680,evaluation_scenarios:1000,
-      standalone_expected_profit:1.25,standalone_expected_payout:6.25,
-      standalone_roi:.25,standalone_price_taking:true,experimental_field_model:true},
-    portfolio: [{
-      ids:[0,1,2,3,4],superstar:0,salary:50,expected_fp:27.5,sim_mean:27.3,
-      floor_p25:20,ceiling_p90:40,ceiling_p95:45,near_optimal_rate:.1,win_rate:.01,
-      tournament_score:1,expected_payout:.40,expected_profit:.15,roi:.6,cash_rate:.2,
-      top_one_rate:.03,first_rate:.001,solo_first_rate:.001,expected_duplicates:2.5,
-      joint_expected_payout:.37,joint_expected_profit:.12,joint_roi:.48,
-      joint_cash_rate:.18,joint_top_one_rate:.025,joint_first_rate:.0008,
-      joint_solo_first_rate:.0008,joint_expected_duplicates:2.4,
-    }],
-  });
-  assert.match(p.node("portfolio").innerHTML, /joint EV \+\$0\.12/);
-  assert.match(p.node("portfolio").innerHTML, /standalone EV \+\$0\.15/);
-  assert.match(p.node("portfolio").innerHTML, /joint opp duplicates 2\.4/);
-  assert.match(p.node("result-note").innerHTML, /Joint portfolio EV under experimental field prior/);
-  assert.match(p.node("result-note").innerHTML, /Sum of standalone entry EVs/);
-  assert.match(p.node("result-note").innerHTML, /Not a calibrated return estimate/);
-  assert.match(p.node("result-note").innerHTML, /Field-based EV is experimental/);
-  assert.equal(p.node("field-strength-card").hidden, false);
-  assert.match(p.node("field-strength").innerHTML, /Opponent expected FP/);
-  assert.match(p.node("field-strength").innerHTML, /mean 61\.20/);
-  assert.match(p.node("field-strength").innerHTML, /P90 72\.50/);
-  assert.match(p.node("field-strength").innerHTML, /Selected portfolio expected FP/);
-  assert.match(p.node("field-strength").innerHTML, /Top lineup: 83\.00/);
-  assert.match(p.node("field-strength").innerHTML, /selection-biased sparse prior/);
-  // No head-to-head section without head-to-head entries.
-  assert.equal(p.node("h2h-card").hidden, true);
+  p.toggle(2, false);
+  assert.match(p.node("pool-count").textContent, /5 of 6/);
+  assert.deepEqual(Array.from(p.run().request.included), [0, 1, 3, 4, 5]);
+  p.toggle(5, false);
+  assert.equal(p.node("run").disabled, true);
+  p.node("all").handlers.click();
+  assert.equal(p.node("run").disabled, false);
+  p.node("none").handlers.click();
+  assert.equal(p.node("run").disabled, true);
 });
 
-
-test("Yahoo quarter-dollar preset fills the 4704-entry payout ladder", async () => {
+test("a head-to-head result shows the summary, Superstars and each entry", async () => {
   const p = await page();
-  p.node("contest-preset").value = "yahoo_025_1k";
-  p.node("contest-preset").handlers.change();
-  assert.equal(p.node("field-size").value, 4704);
-  assert.equal(p.node("entry-fee").value, 0.25);
-  assert.match(p.node("payouts").value, /1=100/);
-  assert.match(p.node("payouts").value, /501-915=0\.50/);
-  p.node("objective").value = "field_ev";
-  p.node("objective").handlers.change();
+  p.run();
+  p.worker().emit({ type: "result", result: h2hResult() });
+  assert.equal(p.node("empty").hidden, true);
+  assert.match(p.node("stats").innerHTML, /1\.6 of 3/);
+  assert.match(p.node("stats").innerHTML, /53\.3%/);
+  assert.match(p.node("stats").innerHTML, /9\.0%/);
+  assert.match(p.node("explain").textContent, /Superstars: QB A, QB B, RB B, each in at most 1 of 3/);
+  assert.match(p.node("entries-list").innerHTML, /★ QB A/);
+  assert.match(p.node("entries-list").innerHTML, /62\.0% win/);
+  assert.match(p.node("entries-list").innerHTML, /round 2 · fillers WR A2/);
+  assert.equal(p.node("result-notice").hidden, true);
+  assert.match(p.node("status-text").innerHTML, /Built 3 lineups in 1\.2s/);
   assert.equal(p.node("run").disabled, false);
 });
 
-function h2hMessage(extra) {
-  const stats = (wins, perEntry) => ({ expected_wins: wins, win_rate: wins / perEntry.length,
-    sd_wins: .7, zero_wins: .12, all_wins: .3, winning_record: .4, per_entry: perEntry });
-  return { entries: [
-      { ids: [0, 1, 2, 3, 4], superstar: 0, expected_fp: 30, salary: 50, round: 1, fillers: [] },
-      { ids: [0, 1, 2, 3, 4], superstar: 1, expected_fp: 29, salary: 50, round: 2, fillers: [3, 4] },
-    ], requested: 2, filled: 2, opponents: { sharp: 100, public: 400 },
-    limits: { player: 2, superstar: 1 },
-    pools: { superstars: [0, 1, 2], fillers: [3, 4] },
-    sharp: stats(1.1, [.6, .5]), public: stats(1.8, [.9, .9]), ...extra };
-}
-
-test("head-to-head shows its summary, rounds and fillers", async () => {
+test("a short list says how many entries fitted", async () => {
   const p = await page();
-  p.workers[0].emit({ type: "result", valid_rosters: 1, candidates_scored: 1,
-    timing: { total: 10 }, diversity: null, field_summary: null, portfolio: [],
-    h2h_multi: h2hMessage() });
-  assert.equal(p.node("h2h-card").hidden, false);
-  assert.match(p.node("h2h-how").textContent, /Superstars: Player 0, Player 1, Player 2, in turn, each in at most 1 of 2 entries/);
-  assert.match(p.node("h2h-how").textContent, /fillers ranked 6–10: Player 3, Player 4/);
-  assert.match(p.node("h2h-summary").innerHTML, /1\.10/);
-  assert.match(p.node("h2h-summary").innerHTML, /12\.0%/);
-  assert.match(p.node("h2h-summary").innerHTML, /1\.80/);
-  assert.match(p.node("h2h-multi").innerHTML, /round 1</);
-  assert.match(p.node("h2h-multi").innerHTML, /round 2 · fillers Player 3, Player 4/);
-  assert.match(p.node("h2h-multi").innerHTML, /★ Player 1/);
-  assert.match(p.node("h2h-multi").innerHTML, /win vs sharp 50\.0%/);
-  assert.doesNotMatch(p.node("h2h-multi-note").textContent, /Only/);
+  p.contest("tournament");
+  p.run();
+  p.worker().emit({ type: "result", result: tournamentResult() });
+  assert.equal(p.node("result-notice").hidden, false);
+  assert.match(p.node("result-notice").textContent, /Only 2 of 20 entries fit the exposure and overlap limits/);
+  assert.match(p.node("stats").innerHTML, /88\.1/);
+  assert.match(p.node("explain").textContent, /\+9\.4 points/);
+  assert.match(p.node("entries-list").innerHTML, /range 60–104/);
+  // The first entry is also in the published reference portfolio; the second is not.
+  assert.equal((p.node("entries-list").innerHTML.match(/also published/g) || []).length, 1);
 });
 
-test("head-to-head says when the limits could not fill every entry", async () => {
+test("errors are shown, and changing a setting clears old results", async () => {
   const p = await page();
-  p.workers[0].emit({ type: "result", valid_rosters: 1, candidates_scored: 1,
-    timing: { total: 10 }, diversity: null, field_summary: null, portfolio: [],
-    h2h_multi: h2hMessage({ requested: 6, filled: 2 }) });
-  assert.match(p.node("h2h-summary").innerHTML, /2 of 6/);
-  assert.match(p.node("h2h-multi-note").textContent, /Only 2 of 6 entries fit the exposure limits/);
+  p.run();
+  p.worker().emit({ type: "error", message: "No valid roster fits the salary cap." });
+  assert.equal(p.node("result-notice").hidden, false);
+  assert.match(p.node("result-notice").textContent, /No valid roster/);
+  assert.equal(p.node("run").disabled, false);
+  p.run();
+  p.worker().emit({ type: "result", result: h2hResult() });
+  p.node("detail").value = "quick";
+  p.node("detail").handlers.change();
+  assert.equal(p.node("entries-list").innerHTML, "");
+  assert.equal(p.node("empty").hidden, false);
 });
 
-test("head-to-head still shows when the tournament portfolio cannot be filled", async () => {
+test("changing a setting mid-solve restarts the worker", async () => {
   const p = await page();
-  p.workers[0].emit({ type: "error", message: "Built 14 of 20 entries under the construction rules.",
-    h2h_multi: h2hMessage() });
-  assert.match(p.node("result-note").textContent, /Built 14 of 20/);
-  assert.equal(p.node("h2h-card").hidden, false);
-  assert.match(p.node("h2h-multi").innerHTML, /win vs sharp 60\.0%/);
+  p.run();
+  const running = p.worker();
+  p.node("superstar-exposure").value = "0.5";
+  p.node("superstar-exposure").handlers.change();
+  assert.equal(running.terminated, true);
+  assert.notEqual(p.worker(), running);
+  assert.equal(p.node("run").disabled, false);
+  assert.equal(p.run().request.maxSuperstarExposure, 0.5);
 });
 
-test("the H2H options reach the worker with their defaults", async () => {
-  const p = await page();
-  p.node("h2h-entries").value = "12";
-  p.node("h2h-superstar-exposure").value = "";
-  p.node("h2h-player-exposure").value = "";
-  p.node("cap").value = "100";
-  p.node("run").handlers.click();
-  const solve = p.workers[0].messages.filter((m) => m.type === "solve").pop();
-  assert.ok(solve, "a solve was sent");
-  assert.equal(solve.options.h2hEntries, 12);
-  assert.equal(solve.options.h2hSuperstarExposure, 0.25);
-  assert.equal(solve.options.h2hPlayerExposure, 1);
+test("a depth edit re-prices the player and reloads the worker", async () => {
+  const p = await page({ depthModel: true });
+  await flush(); await flush();
+  assert.match(p.node("pool").innerHTML, /class="depth"/);
+  const before = p.worker();
+  p.node("pool").handlers.change({ target: {
+    value: "1", dataset: { index: "2" }, classList: { contains: (c) => c === "depth" },
+  } });
+  assert.equal(before.terminated, true);
+  const edited = p.worker().messages[0].payload.players;
+  assert.equal(edited[2].depth, 1);
+  assert.equal(edited[1].depth, 2);                 // the teammate moves down
+  assert.ok(edited[2].fp > 6, "a promoted receiver projects higher");
+  assert.equal(p.node("depth-notice").hidden, false);
+  p.node("depth-reset").handlers.click();
+  assert.equal(p.worker().messages[0].payload.players[2].depth, 2);
+  assert.equal(p.node("depth-notice").hidden, true);
 });
