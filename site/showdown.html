@@ -304,8 +304,10 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
         same Superstar. When the limits cannot fill every entry, the page shows
         the ones that fit.</p>
       <h4>Head-to-head</h4>
-      <p>Entries are taken in order of projected points from every legal lineup,
-        skipping any that would break the rules above or leave too few players
+      <p>An exact solver picks the set of entries with the highest total projected
+        points that meets the rules above, from the best 5,000 legal lineups. If
+        the solver cannot load, entries are taken in order of projected points
+        instead, skipping any that would break the rules or leave too few players
         for the entries still to come. Win chances are against an opponent playing one of
         the 100 highest-projected lineups, in thousands of simulated games.
         Expected wins is the sum of those chances; entries share one game, so they
@@ -313,7 +315,9 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
       <h4>Tournament</h4>
       <p>Entries are picked one at a time so that each adds the most to your best
         score across the simulated games, under the same rules and with the same
-        care to leave room for the entries still to come.</p>
+        care to leave room for the entries still to come. A final pass then swaps
+        entries out for unused lineups while that raises the average best score
+        (for at most a second and a half).</p>
       <h4>Player pool and depth</h4>
       <p>Untick a player to leave them out. Changing a player's depth re-reads their
         projection and volatility from the published model; teammates between the
@@ -334,7 +338,7 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
   "use strict";
 
   var DATA = "./data/showdown/";
-  var WORKER_PROTOCOL = 6;
+  var WORKER_PROTOCOL = 7;
   var SUPPORTED_SCHEMA = 3;     // bump with pipeline/showdown.py's SCHEMA
   var POSITIONS = ["QB", "RB", "WR", "TE", "DEF"];
   var DEPTH_POSITIONS = ["QB", "RB", "WR", "TE"];
@@ -771,12 +775,19 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
   function renderExplain(result) {
     var message;
     if (result.contest === "h2h") {
-      message = "Entries in order of projected points. Win rates are against an opponent " +
-        "playing one of the " + result.opponents + " highest-projected lineups.";
+      message = (result.method === "optimal"
+        ? "The highest total projection any set of entries can reach under these limits (+" +
+          num(result.expected_fp_total - result.greedy_expected) + " points over picking in order)."
+        : result.method === "best-found"
+          ? "The best set the solver found in its time limit."
+          : "Entries in order of projected points (the exact solver was unavailable).") +
+        " Win rates are against an opponent playing one of the " + result.opponents +
+        " highest-projected lineups.";
     } else {
       message = "Each entry adds the most to your best score across the simulated games" +
         (Number.isFinite(result.gain_over_single)
-          ? " (+" + num(result.gain_over_single) + " points over entering the top lineup alone)" : "") + ".";
+          ? " (+" + num(result.gain_over_single) + " points over entering the top lineup alone)" : "") + "." +
+        (result.swaps ? " A final pass made " + result.swaps + (result.swaps === 1 ? " swap." : " swaps.") : "");
     }
     message += " No player is in more than " + result.limits.player + " of " + result.requested +
       " entries and no Superstar in more than " + result.limits.superstar +
