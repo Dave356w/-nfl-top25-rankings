@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-25T17:24:36Z",
-  "snapshot_id": "2026-09-25T17:24:36Z",
+  "generated_utc": "2026-09-25T17:45:44Z",
+  "snapshot_id": "2026-09-25T17:45:44Z",
   "run_date": "2026-09-25",
   "top_n": 25,
   "positions": [
@@ -7811,7 +7811,7 @@
     "Sleeper half-PPR projection (2026 week 3)": 421
   },
   "log": [
-    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-25T17:24:36Z)",
+    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-25T17:45:44Z)",
     "  Sleeper: 2026 regular week 3 projections; player dump fetched 2026-09-25T15:29:16.594902+00:00.",
     "  Removed 111 player(s): no Sleeper projection.",
     "  Removed 8 player(s): no Sleeper match.",
