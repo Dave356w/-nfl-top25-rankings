@@ -1,11 +1,16 @@
 "use strict";
 const assert = require('node:assert/strict');
-const { test } = require('node:test');
+const { test, before } = require('node:test');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const workerPath = path.join(__dirname, '../site/showdown-worker.js');
 const w = require(workerPath);
+const loadHighs = require(path.join(__dirname, '../site/vendor/highs/highs.js'));
+
+// The page's worker loads the vendored HiGHS solver; so do these tests.
+let highs = null;
+before(async () => { highs = await loadHighs(); w.setSolver(highs); });
 
 function scoringFixture() {
   const players = [100,50,30,30,30,30].map((fp,i) => ({
@@ -162,18 +167,62 @@ function assertLabRules(result, included = game.players.map((_, i) => i), shares
   }
 }
 
-test('H2H: entries follow projected points under the lab rules', () => {
+test('H2H: the exact solver meets the lab rules and never trails greedy', () => {
   const result = solve({contest: 'h2h', entries: 12});
   assert.equal(result.contest, 'h2h');
   assert.equal(result.filled, 12);
+  assert.equal(result.method, 'optimal');
+  const total = result.entries.reduce((sum, e) => sum + e.expected_fp, 0);
+  assert.ok(Math.abs(total - result.expected_fp_total) < 1e-9);
+  assert.ok(total >= result.greedy_expected - 1e-9);
   assert.deepEqual(result.limits, {player: 9, superstar: 3});
   assertLabRules(result);
   const fps = result.entries.map((e) => e.expected_fp);
   assert.deepEqual(fps, fps.slice().sort((a, b) => b - a));
-  // The best pair is always the first entry.
-  w.setModel(game);
-  const rosters = w.enumerate(game.players.map((_, i) => i), {salaryCap: 120, minSalaryPct: 0});
-  assert.equal(pairKey(result.entries[0]), pairKey(w.topPairs(rosters, 1)[0]));
+  // Without the solver the greedy set stands, best pair first.
+  w.setSolver(null);
+  try {
+    const greedy = solve({contest: 'h2h', entries: 12});
+    assert.equal(greedy.method, 'greedy');
+    assertLabRules(greedy);
+    w.setModel(game);
+    const rosters = w.enumerate(game.players.map((_, i) => i), {salaryCap: 120, minSalaryPct: 0});
+    assert.equal(pairKey(greedy.entries[0]), pairKey(w.topPairs(rosters, 1)[0]));
+    assert.ok(Math.abs(greedy.expected_fp_total - result.greedy_expected) < 1e-9);
+  } finally {
+    w.setSolver(highs);
+  }
+});
+
+test('exact selection matches brute force on a small pool', () => {
+  // Eight pairs over ten players; every 3-entry set is checked by hand.
+  w.setModel({players: Array.from({length: 10}, () => ({fp: 1})), settings: {}});
+  const lineups = [[0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 5, 6, 7], [2, 3, 5, 8, 9],
+    [0, 4, 6, 8, 9], [1, 2, 7, 8, 9], [3, 4, 5, 6, 9], [0, 2, 4, 6, 8]];
+  const pairs = {total: 8, ids: Int32Array.from(lineups.flat()),
+    superstars: Int32Array.from([0, 1, 5, 8, 9, 7, 3, 6]),
+    expected: Float64Array.from([40, 39, 33, 31, 30, 29.5, 29, 28])};
+  const limits = {player: 2, superstar: 1};
+  let best = -Infinity;
+  for (let a = 0; a < 8; a++) for (let b = a + 1; b < 8; b++) for (let c = b + 1; c < 8; c++) {
+    const used = new Map(), stars = new Map();
+    for (const k of [a, b, c]) {
+      for (const id of lineups[k]) used.set(id, (used.get(id) || 0) + 1);
+      stars.set(pairs.superstars[k], (stars.get(pairs.superstars[k]) || 0) + 1);
+    }
+    if (Math.max(...used.values()) > 2 || Math.max(...stars.values()) > 1) continue;
+    best = Math.max(best, pairs.expected[a] + pairs.expected[b] + pairs.expected[c]);
+  }
+  const exact = w.exactSelect(pairs, [0, 1, 2, 3, 4, 5, 6, 7], limits, 3);
+  assert.equal(exact.optimal, true);
+  assert.equal(exact.picked.length, 3);
+  assert.equal(exact.picked.reduce((sum, c) => sum + pairs.expected[c], 0), best);
+  // Filling every entry comes before a higher total from fewer: one 100-point
+  // pair blocks both others, which together make only 60.
+  const fill = {total: 3, ids: Int32Array.from([0, 1, 2, 3, 4, 0, 5, 6, 7, 8, 1, 2, 3, 4, 9]),
+    superstars: Int32Array.from([0, 5, 9]), expected: Float64Array.from([100, 30, 30])};
+  const two = w.exactSelect(fill, [0, 1, 2], {player: 1, superstar: 1}, 2).picked;
+  assert.deepEqual(two.slice().sort(), [1, 2]);
 });
 
 test('H2H: entries may share players, and the same five may return under a new Superstar', () => {
@@ -281,6 +330,47 @@ test('tournament: entries follow the lab rules with no overlap limit', () => {
   assert.ok(result.diversity.max_shared > 3, `max shared ${result.diversity.max_shared}`);
 });
 
+test('tournament: the swap pass raises the selection score and keeps the rules', () => {
+  w.setModel(game);
+  const options = {...w.engineOptions({contest: 'tournament', entries: 6, salaryCap: 120, detail: 'full'})};
+  options.limits = w.labLimits(6, options);
+  w.simulate(options.simulations, options.seed);
+  const rosters = w.enumerate(game.players.map((_, i) => i), options);
+  const scored = w.score(rosters, w.screen(rosters, options), options);
+  // Our own draws, so the selection half can be scored here.
+  const count = 400, n = game.players.length, data = new Float32Array(n * count);
+  let seed = 1;
+  const random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+  for (let i = 0; i < n; i++) for (let s = 0; s < count; s++) data[i * count + s] = game.players[i].fp * (0.2 + 1.6 * random());
+  const bestMean = (chosen) => {
+    let total = 0;
+    for (let s = 0; s < count / 2; s++) {
+      let best = -Infinity;
+      for (const c of chosen) {
+        let v = 0.5 * data[scored.superstars[c] * count + s];
+        for (let i = 0; i < 5; i++) v += data[scored.ids[c * 5 + i] * count + s];
+        best = Math.max(best, v);
+      }
+      total += best;
+    }
+    return total / (count / 2);
+  };
+  const off = w.scenarioPortfolio(scored, {...options, swap: false}, data, count);
+  const on = w.scenarioPortfolio(scored, options, data, count);
+  assert.equal(on.chosen.length, off.chosen.length);
+  assert.ok(on.evaluation.swaps > 0);
+  assert.ok(bestMean(on.chosen) > bestMean(off.chosen), `${bestMean(on.chosen)} vs ${bestMean(off.chosen)}`);
+  assert.equal(new Set(on.chosen).size, on.chosen.length);
+  const used = new Map(), stars = new Map();
+  for (const c of on.chosen) {
+    for (let i = 0; i < 5; i++) used.set(scored.ids[c * 5 + i], (used.get(scored.ids[c * 5 + i]) || 0) + 1);
+    stars.set(scored.superstars[c], (stars.get(scored.superstars[c]) || 0) + 1);
+  }
+  assert.ok(Math.max(...used.values()) <= options.limits.player);
+  assert.ok(Math.max(...stars.values()) <= options.limits.superstar);
+  assert.equal(on.sets.length, on.chosen.length);
+});
+
 test('tournament: a short list comes back when the limits run out', () => {
   const result = solve({contest: 'tournament', entries: 20, maxPlayerExposure: .1});
   assert.ok(result.filled >= 1 && result.filled < 20);
@@ -295,18 +385,22 @@ test('tournament: one entry is the highest-expected lineup', () => {
   assert.equal(pairKey(one.entries[0]), pairKey(best));
 });
 
-test('the worker wraps solve in load / solve / result messages', () => {
+test('the worker wraps solve in load / solve / result messages, greedy without a solver', async () => {
   const messages = [];
   const self = {postMessage: (m) => messages.push(m)};
   vm.runInNewContext(fs.readFileSync(workerPath, 'utf8'), {self, Date, Math});
   self.onmessage({data: {type: 'load', payload: game}});
   assert.equal(messages[0].type, 'loaded');
   assert.equal(messages[0].protocol, w.WORKER_PROTOCOL);
+  // No importScripts here, so the solver fails to load and greedy stands.
   self.onmessage({data: {type: 'solve', request: {contest: 'h2h', entries: 3, salaryCap: 120, detail: 'full'}}});
+  await new Promise(setImmediate);
+  assert.equal(messages.at(-1).result.method, 'greedy');
   assert.ok(messages.some((m) => m.type === 'progress' && m.stage === 'Pricing head-to-head'));
   assert.equal(messages.at(-1).type, 'result');
   assert.equal(messages.at(-1).result.filled, 3);
   self.onmessage({data: {type: 'solve', request: {contest: 'h2h', entries: 3, detail: 'full'}}});
+  await new Promise(setImmediate);
   assert.equal(messages.at(-1).type, 'error');
   assert.match(messages.at(-1).message, /no salary cap/);
 });

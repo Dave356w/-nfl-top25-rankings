@@ -305,9 +305,19 @@ allowed appearance is taken only if the remaining entries can still be built
 without them. Without that check, the best five players under each of their
 own Superstar turns would use up their 75% and strand the later entries.
 
-**Head-to-head** (default 3 entries, up to 50) takes entries in order of
-expected points from every legal (lineup, Superstar) pair, not a screened
-subset, and simulates only the entries it takes.
+**Head-to-head** (default 3 entries, up to 50) values each entry by its own
+expected points, so the best set is a small integer program: choose the
+entries with the highest total expected points under the exposure limits,
+filling as many as the limits allow. The page solves it exactly with
+[HiGHS](https://highs.dev/) compiled to WebAssembly, vendored unmodified in
+`site/vendor/highs/` (highs-js 1.15.3, MIT). The program covers the 5,000
+best-projected pairs plus the one-at-a-time picks below, so it is never worse
+than those. On the September 2026 slates a pool of 5,000 reached the same
+proven optimum as 20,000 for 3, 7, 20 and 50 entries on all 16 games, each in
+under a second, and beat one-at-a-time picking by up to 6% of total projection
+at 3 entries (ATL vs GB: 203.9 against 192.4) and about 1% at 50. When the
+solver cannot load, the page falls back to one-at-a-time picks from every
+legal pair and says so. Only the entries taken are simulated.
 
 Each contest's opponent plays one of the 100 highest-projected lineups from the
 **whole** pool — a player you leave out is still available to them. The summary
@@ -320,7 +330,13 @@ opponent model is not calibrated to real Yahoo head-to-heads.
 coverage selection the daily run publishes — each entry is the one that adds
 the most to your best score across the simulated games — under the rules above
 rather than the daily run's overlap and exposure caps. Entries the daily run
-also chose are marked *also published*.
+also chose are marked *also published*. A final pass then swaps an entry out
+for an unused lineup whenever that raises the average best score over the
+selection draws, for at most 1.5 seconds. On the same slates it raised the
+held-out best score by 0 to 0.16 points: one-at-a-time selection is already
+close for this objective. An exact solve of the tournament objective needs a
+variable per candidate per simulated game (about 50 million) and is not
+attempted.
 
 **What runs where.** `run_synced.py` fetches Yahoo and the nflverse depth,
 roster and injury data once for all three pages; `pipeline/showdown.py` reuses

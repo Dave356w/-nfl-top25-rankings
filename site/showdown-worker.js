@@ -8,13 +8,14 @@
 "use strict";
 
 const LINEUP_SIZE = 5;
-const WORKER_PROTOCOL = 6;
+const WORKER_PROTOCOL = 7;
 
 let model = null;
 let scenarios = null; // Float32Array, player-major
 let simCount = 0;
 let simSeed = 0;
 let covariance = null;
+let solver = null;    // HiGHS (vendor/highs), when it loaded; see exactSelect
 
 /* ---------- random numbers ---------------------------------------------- */
 
@@ -937,11 +938,84 @@ function scenarioPortfolio(scored, options, data = scenarios, count = simCount) 
     if (pick !== item.id) push({id:item.id, bound:item.bound, epoch:-1});
     while (deferred.length) push({...deferred.pop(), epoch:-1});
   }
+  const swaps = track && options.swap !== false && target > 1 && chosen.length > 1 ? swapPass() : 0;
+
+  /* Greedy picks never revisit an entry. Afterwards, repeatedly make the one
+   * swap (a chosen entry out, an unchosen candidate in, the lab rules still
+   * met) that most raises the average best score over the selection draws,
+   * until none helps or the time budget runs out. Candidates are the
+   * SWAP_POOL of the SWAP_SCAN best-projected that would add most to the
+   * greedy set, plus every entry swapped out. On the September 2026 slates
+   * this raised the held-out best score by about 0.1%: greedy is already close.
+   * Returns the number of swaps made. */
+  function swapPass() {
+    const started = Date.now();
+    const values = chosen.map((c) => scores(c, 0, split));
+    const top1 = new Float64Array(split), top2 = new Float64Array(split);
+    const owner = new Int32Array(split);
+    const tops = () => {
+      top1.fill(-Infinity); top2.fill(-Infinity);
+      values.forEach((row, j) => {
+        for (let s = 0; s < split; s++) {
+          const v = row[s];
+          if (v > top1[s]) { top2[s] = top1[s]; top1[s] = v; owner[s] = j; }
+          else if (v > top2[s]) top2[s] = v;
+        }
+      });
+    };
+    tops();
+    const inSet = new Set(chosen);
+    const ranked = [];
+    for (const c of order.slice(0, SWAP_SCAN)) {
+      if (inSet.has(c)) continue;
+      const row = scores(c, 0, split);
+      let gain = 0;
+      for (let s = 0; s < split; s++) if (row[s] > top1[s]) gain += row[s] - top1[s];
+      ranked.push({c, gain, row});
+      if (ranked.length > 4 * SWAP_POOL) {
+        ranked.sort((a, b) => (b.gain - a.gain) || (a.c - b.c));
+        ranked.length = SWAP_POOL;
+      }
+    }
+    ranked.sort((a, b) => (b.gain - a.gain) || (a.c - b.c));
+    const pool = ranked.slice(0, SWAP_POOL);
+    const without = new Float64Array(split);
+    let made = 0;
+    const late = () => Date.now() - started > SWAP_BUDGET_MS;
+    while (made < 4 * chosen.length && !late()) {
+      let bestDelta = 1e-6 * split, bestJ = -1, bestK = -1;
+      for (let j = 0; j < chosen.length && !late(); j++) {
+        for (let s = 0; s < split; s++) without[s] = owner[s] === j ? top2[s] : top1[s];
+        for (let k = 0; k < pool.length; k++) {
+          const {c, row} = pool[k];
+          if (!track.swapFits(chosen[j], c)) continue;
+          let delta = 0;
+          for (let s = 0; s < split; s++) delta += Math.max(without[s], row[s]) - top1[s];
+          if (delta > bestDelta) { bestDelta = delta; bestJ = j; bestK = k; }
+        }
+      }
+      if (bestJ < 0) break;
+      const out = chosen[bestJ], incoming = pool[bestK];
+      track.remove(out); track.take(incoming.c);
+      pool[bestK] = {c: out, gain: 0, row: values[bestJ]};
+      chosen[bestJ] = incoming.c; values[bestJ] = incoming.row;
+      tops();
+      made++;
+    }
+    if (made) {
+      sets.length = 0;
+      for (const c of chosen) sets.push(new Set(candidateMembers(scored, c)));
+    }
+    return made;
+  }
+
   const evaluation = {objective: target === 1 ? "expected_points" : "expected_best",
     selection_scenarios: target === 1 ? 0 : split, evaluation_scenarios: count - split};
+  if (swaps) evaluation.swaps = swaps;
   if (chosen.length && count > split) {
-    const baseline = scores(order[0], split, count), held = new Float64Array(baseline);
-    for (const id of chosen.slice(1)) {
+    // Against the top lineup alone; the chosen set need not contain it after swaps.
+    const baseline = scores(order[0], split, count), held = new Float64Array(count - split).fill(-Infinity);
+    for (const id of chosen) {
       const values = scores(id, split, count);
       for (let s = 0; s < held.length; s++) held[s] = Math.max(held[s], values[s]);
     }
@@ -1009,6 +1083,9 @@ function labLimits(entries, options) {
  * passes without the check. */
 const LOOKAHEAD_TRIES = 8;
 const LOOKAHEAD_SKIPS = 400;   // tournament: candidates set aside unchecked per pick
+const SWAP_SCAN = 2000;        // tournament swap pass: best-projected candidates ranked,
+const SWAP_POOL = 150;         // of which these, adding most to the set, are tried;
+const SWAP_BUDGET_MS = 1500;   // all within this budget
 
 function labTracker(scored, limits) {
   const players = model.players.length;
@@ -1024,6 +1101,10 @@ function labTracker(scored, limits) {
   function apply(c, u, st, t) {
     t[c] = 1; st[stars[c]]++;
     for (let i = 0; i < LINEUP_SIZE; i++) u[ids[c * LINEUP_SIZE + i]]++;
+  }
+  function remove(c) {
+    taken[c] = 0; starred[stars[c]]--;
+    for (let i = 0; i < LINEUP_SIZE; i++) used[ids[c * LINEUP_SIZE + i]]--;
   }
   function binds(c) {
     if (starred[stars[c]] + 1 >= limits.superstar) return true;
@@ -1074,6 +1155,14 @@ function labTracker(scored, limits) {
   return {
     fits: (c) => fits(c, used, starred, taken),
     take: (c) => apply(c, used, starred, taken),
+    remove,
+    // Would `incoming` fit in place of `outgoing`?
+    swapFits: (outgoing, incoming) => {
+      remove(outgoing);
+      const ok = fits(incoming, used, starred, taken);
+      apply(outgoing, used, starred, taken);
+      return ok;
+    },
     completes,
     spent,
     // The pick that the completion check itself would make next.
@@ -1101,6 +1190,72 @@ function lookaheadPick(track, order, need) {
   }
   if (track.completes(order, need + 1, -1)) return track.leastUsed(order);
   return fallback;
+}
+
+/* ---------- exact selection ---------------------------------------------- */
+
+/* Head-to-head values each entry by its own expected points, so the best set
+ * under the lab rules is a small integer program: choose at most `count`
+ * pairs to maximise total expected points, with every player in at most
+ * `limits.player` of them and every Superstar in at most `limits.superstar`.
+ * Each pick also earns a bonus larger than any lineup, so filling more
+ * entries always beats a higher total from fewer.
+ *
+ * The program covers the EXACT_POOL best pairs plus `seed` (the greedy picks,
+ * which keeps it feasible and never worse than greedy). On the September 2026
+ * slates a pool of 5,000 found the same optimum as 20,000 for 3, 7, 20 and 50
+ * entries on all 16 games, each in under a second.
+ *
+ * Returns candidate indices, or null when the solver is missing, fails or runs
+ * out of time without a solution. */
+const EXACT_POOL = 5000;
+const EXACT_TIME_LIMIT = 10;   // seconds
+
+function setSolver(instance) { solver = instance || null; }
+
+function exactSelect(scored, order, limits, count, seed = []) {
+  if (!solver) return null;
+  const pool = Array.from(new Set(order.slice(0, EXACT_POOL).concat(seed)));
+  let top = 0;
+  for (const c of pool) top = Math.max(top, scored.expected[c]);
+  const bonus = Math.ceil(top) + 1;
+  const players = new Map(), stars = new Map();
+  const terms = [], names = [];
+  pool.forEach((c, k) => {
+    const name = "x" + k;
+    names.push(name);
+    terms.push(`${(scored.expected[c] + bonus).toFixed(6)} ${name}`);
+    for (let i = 0; i < LINEUP_SIZE; i++) {
+      const id = scored.ids[c * LINEUP_SIZE + i];
+      if (!players.has(id)) players.set(id, []);
+      players.get(id).push(name);
+    }
+    const star = scored.superstars[c];
+    if (!stars.has(star)) stars.set(star, []);
+    stars.get(star).push(name);
+  });
+  const lines = ["Maximize", " total: " + terms.join(" + "), "Subject To",
+    ` entries: ${names.join(" + ")} <= ${count}`];
+  for (const [id, used] of players) {
+    if (used.length > limits.player) lines.push(` p${id}: ${used.join(" + ")} <= ${limits.player}`);
+  }
+  for (const [id, used] of stars) {
+    if (used.length > limits.superstar) lines.push(` s${id}: ${used.join(" + ")} <= ${limits.superstar}`);
+  }
+  lines.push("Binary", " " + names.join(" "), "End");
+  let answer;
+  try {
+    answer = solver.solve(lines.join("\n"), {
+      output_flag: false, time_limit: EXACT_TIME_LIMIT, mip_rel_gap: 1e-6,
+    });
+  } catch (error) {
+    return null;
+  }
+  if (!answer || !answer.Columns || !/Optimal|Time limit|Time reached/i.test(String(answer.Status))) {
+    return null;
+  }
+  const picked = pool.filter((_, k) => answer.Columns["x" + k] && answer.Columns["x" + k].Primal > 0.5);
+  return { picked, optimal: answer.Status === "Optimal" };
 }
 
 /* ---------- multi-entry H2H ---------------------------------------------- */
@@ -1213,14 +1368,22 @@ function h2hMultiEntry(scored, options, opponentRosters) {
   });
 
   // Each candidate is one (roster, Superstar) pair, so no candidate taken
-  // twice means no exact entry repeats.
-  const entries = [], track = labTracker(scored, limits);
-  while (entries.length < count) {
-    const pick = lookaheadPick(track, order, count - entries.length - 1);
+  // twice means no exact entry repeats. The greedy set seeds the exact
+  // program and stands in when the solver is unavailable.
+  const greedy = [], track = labTracker(scored, limits);
+  while (greedy.length < count) {
+    const pick = lookaheadPick(track, order, count - greedy.length - 1);
     if (pick < 0) break;
     track.take(pick);
-    entries.push(fromCandidate(pick));
+    greedy.push(pick);
   }
+  const total = (set) => set.reduce((sum, c) => sum + scored.expected[c], 0);
+  const exact = options.exact === false ? null : exactSelect(scored, order, limits, count, greedy);
+  const better = exact && (exact.picked.length > greedy.length ||
+    (exact.picked.length === greedy.length && total(exact.picked) > total(greedy) + 1e-9));
+  const chosen = better ? exact.picked : greedy;
+  const method = !exact ? "greedy" : exact.optimal ? "optimal" : better ? "best-found" : "greedy";
+  const entries = chosen.map(fromCandidate);
   entries.sort((a, b) => b.expected_fp - a.expected_fp);
 
   const opponents = opponentRosters && opponentRosters.ids
@@ -1235,6 +1398,7 @@ function h2hMultiEntry(scored, options, opponentRosters) {
   const result = {
     requested: count, filled: entries.length, entries, opponents: opponents.length,
     limits: { player: limits.player, superstar: limits.superstar },
+    method, greedy_expected: total(greedy), expected_fp_total: total(chosen),
   };
   if (!entries.length || !opponents.length) return result;
 
@@ -1381,6 +1545,7 @@ function engineOptions(request, settings = model.settings || {}) {
  * shares. `report(stage, fraction)` receives progress. */
 function solve(request, report = () => {}) {
   const options = engineOptions(request);
+  if (request.swap === false) options.swap = false;     // for comparisons
   const maxEntries = options.contest === "h2h" ? H2H_MAX_ENTRIES : TOURNAMENT_MAX_ENTRIES;
   if (!Number.isFinite(options.salaryCap) || options.salaryCap <= 0) {
     // Yahoo does not price every single-game slate; those games publish a model
@@ -1446,6 +1611,7 @@ function solve(request, report = () => {}) {
     expected_fp: entries.reduce((sum, entry) => sum + entry.expected_fp, 0) / entries.length,
     best_score: built.evaluation ? built.evaluation.evaluation_best_mean : null,
     gain_over_single: built.evaluation ? built.evaluation.evaluation_gain_over_single : null,
+    swaps: built.evaluation && built.evaluation.swaps || 0,
     diversity: diversity(built.sets, options.maxShared),
     limits: options.limits,
     elapsed_ms: Date.now() - started,
@@ -1455,7 +1621,7 @@ function solve(request, report = () => {}) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     LINEUP_SIZE, WORKER_PROTOCOL, LAB_DEFAULTS, exposureLimit, labLimits, labTracker, lookaheadPick,
-    allPairs, scenarioPortfolio, setModel, simulate,
+    allPairs, exactSelect, setSolver, scenarioPortfolio, setModel, simulate,
     enumerate, screen, score, orderBy, portfolio, describe, diversity, latentMatrix,
     cholesky, scoreCorrelation, normalCdf, normalPpf, conditionalCv, hurdleCoefficients,
     hurdleScoreCorrelation, constructionSchedule, apportionedRuleCounts,
@@ -1465,6 +1631,15 @@ if (typeof module !== "undefined" && module.exports) {
 }
 
 if (typeof self !== "undefined" && typeof module === "undefined") {
+  // The exact head-to-head solver is optional: without it the greedy set stands.
+  const solverReady = (async () => {
+    try {
+      importScripts("vendor/highs/highs.js");
+      setSolver(await Module({ locateFile: (file) => "vendor/highs/" + file }));
+    } catch (error) {
+      setSolver(null);
+    }
+  })();
   self.onmessage = (event) => {
     const message = event.data;
     try {
@@ -1472,9 +1647,16 @@ if (typeof self !== "undefined" && typeof module === "undefined") {
         setModel(message.payload);
         self.postMessage({ type: "loaded", players: model.players.length, protocol: WORKER_PROTOCOL });
       } else if (message.type === "solve") {
-        const result = solve(message.request, (stage, fraction) =>
-          self.postMessage({ type: "progress", stage, fraction }));
-        self.postMessage({ type: "result", result });
+        // Wait for the solver to load (or fail to) before a head-to-head solve.
+        solverReady.then(() => {
+          try {
+            const result = solve(message.request, (stage, fraction) =>
+              self.postMessage({ type: "progress", stage, fraction }));
+            self.postMessage({ type: "result", result });
+          } catch (error) {
+            self.postMessage({ type: "error", message: String(error && error.message || error) });
+          }
+        });
       }
     } catch (error) {
       self.postMessage({ type: "error", message: String(error && error.message || error) });
