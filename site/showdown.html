@@ -247,7 +247,8 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
             </div>
             <div class="hint" style="margin:-8px 0 12px">
               The share of your entries one player, or one Superstar, may appear in,
-              rounded down. 1 means no limit.
+              rounded down, at least one. 1 means no limit. Entries may share any
+              players; only an exact repeat (same five, same Superstar) is skipped.
             </div>
             <div class="field">
               <label for="detail">Accuracy</label>
@@ -294,20 +295,25 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
   <details class="panel">
     <summary>How this works</summary>
     <div class="panel-body">
+      <h4>Rules for every entry</h4>
+      <p>Every lineup fits the salary cap and Yahoo's roster rules, uses only the
+        players you left in, and uses your depth edits. By default no player is in
+        more than 75% of your entries and no Superstar in more than 25% (rounded
+        down, at least one). There is no limit on how many players two entries
+        share; the only repeat that is skipped is the same five players with the
+        same Superstar. When the limits cannot fill every entry, the page shows
+        the ones that fit.</p>
       <h4>Head-to-head</h4>
-      <p>The game's five highest-projected players take turns as Superstar, in
-        projection order, each in at most a quarter of your entries by default.
-        The first round gives each its best lineup; later rounds keep rotating the
-        same five but change the supporting players, preferring players ranked
-        6&ndash;10. Win chances are against an opponent playing one of the 100
-        highest-projected lineups, in thousands of simulated games. Expected wins
-        is the sum of those chances; entries share one game, so they tend to win
-        and lose together.</p>
+      <p>Entries are taken in order of projected points from every legal lineup,
+        skipping any that would break the rules above or leave too few players
+        for the entries still to come. Win chances are against an opponent playing one of
+        the 100 highest-projected lineups, in thousands of simulated games.
+        Expected wins is the sum of those chances; entries share one game, so they
+        tend to win and lose together.</p>
       <h4>Tournament</h4>
       <p>Entries are picked one at a time so that each adds the most to your best
-        score across the simulated games, with at most three players shared between
-        any two entries and a cap on how often any player appears. When the limits
-        cannot fill every entry, the page shows the ones that fit.</p>
+        score across the simulated games, under the same rules and with the same
+        care to leave room for the entries still to come.</p>
       <h4>Player pool and depth</h4>
       <p>Untick a player to leave them out. Changing a player's depth re-reads their
         projection and volatility from the published model; teammates between the
@@ -328,16 +334,18 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
   "use strict";
 
   var DATA = "./data/showdown/";
-  var WORKER_PROTOCOL = 5;
+  var WORKER_PROTOCOL = 6;
   var SUPPORTED_SCHEMA = 3;     // bump with pipeline/showdown.py's SCHEMA
   var POSITIONS = ["QB", "RB", "WR", "TE", "DEF"];
   var DEPTH_POSITIONS = ["QB", "RB", "WR", "TE"];
   var DEPTH_KEY = "nfl-showdown-depth-v1";
   var THEME_KEY = "nfl-top25-theme";
+  // Both contests share these; keep in step with showdown-worker.js LAB_DEFAULTS.
+  var EXPOSURE = { player: 0.75, superstar: 0.25 };
   var CONTESTS = {
     h2h: {
       entries: 3, max: 50, title: "Head-to-head",
-      hint: "Separate one-on-one contests. The top five projected players take turns as Superstar."
+      hint: "Separate one-on-one contests. Entries are taken in order of projected points."
     },
     tournament: {
       entries: 20, max: 150, title: "Tournament",
@@ -465,12 +473,10 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
 
   /* ---------- setup controls ---------- */
   function applyContestDefaults() {
-    var settings = state.published ? state.published.settings : {};
-    var tournament = state.contest === "tournament";
     el("entries").value = state.entries[state.contest];
     el("entries").max = CONTESTS[state.contest].max;
-    el("player-exposure").value = tournament ? settings.max_player_exposure : 1;
-    el("superstar-exposure").value = tournament ? settings.max_superstar_exposure : 0.25;
+    el("player-exposure").value = EXPOSURE.player;
+    el("superstar-exposure").value = EXPOSURE.superstar;
     el("contest-hint").textContent = CONTESTS[state.contest].hint;
   }
 
@@ -728,7 +734,7 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
     renderStats(result);
     if (result.filled < result.requested) {
       notice("Only " + result.filled + " of " + result.requested + " entries fit the exposure" +
-        (result.contest === "tournament" ? " and overlap" : "") + " limits. Raise a limit in " +
+        " limits. Raise a limit in " +
         "Advanced, include more players, or ask for fewer entries.", "warn");
     }
     renderExplain(result);
@@ -762,23 +768,19 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
     el("stats").hidden = false;
   }
 
-  function names(ids) {
-    return ids.map(function (id) { return state.payload.players[id].name; }).join(", ");
-  }
-
   function renderExplain(result) {
     var message;
     if (result.contest === "h2h") {
-      message = "Superstars: " + names(result.pools.superstars) + ", each in at most " +
-        result.limits.superstar + " of " + result.requested + " entries. Win rates are against " +
-        "an opponent playing one of the " + result.opponents + " highest-projected lineups.";
+      message = "Entries in order of projected points. Win rates are against an opponent " +
+        "playing one of the " + result.opponents + " highest-projected lineups.";
     } else {
       message = "Each entry adds the most to your best score across the simulated games" +
         (Number.isFinite(result.gain_over_single)
-          ? " (+" + num(result.gain_over_single) + " points over entering the top lineup alone)" : "") +
-        ". Any two entries share at most " + result.limits.shared + " players; no player is in more than " +
-        result.limits.player + " entries.";
+          ? " (+" + num(result.gain_over_single) + " points over entering the top lineup alone)" : "") + ".";
     }
+    message += " No player is in more than " + result.limits.player + " of " + result.requested +
+      " entries and no Superstar in more than " + result.limits.superstar +
+      "; entries may share players but never repeat the same lineup and Superstar.";
     el("explain").textContent = message;
     el("explain").hidden = false;
   }
@@ -800,18 +802,16 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
         return '<span class="chip' + (star ? " star" : "") + '">' + (star ? "★ " : "") +
           text(player.name) + " <small>" + text(player.pos) + " " + money(player.salary) + "</small></span>";
       }).join(" ");
-      var meta, right = "";
+      var meta = "", right = "";
       if (result.contest === "h2h") {
-        meta = "round " + entry.round + (entry.round > 1 && entry.fillers.length
-          ? " · fillers " + text(names(entry.fillers)) : "");
         right = '<span class="win">' + pct(entry.win_chance) + " win</span>";
       } else {
-        meta = "range " + num(entry.floor_p25, 0) + "–" + num(entry.ceiling_p90, 0) +
+        meta = " · range " + num(entry.floor_p25, 0) + "–" + num(entry.ceiling_p90, 0) +
           (reference.has(lineupKey(entry)) ? ' <span class="badge good">also published</span>' : "");
       }
       return '<div class="entry"><div class="entry-head"><span class="n">' + (i + 1) + "</span>" +
         '<span class="fp">' + num(entry.expected_fp) + " FP</span>" +
-        '<span class="meta">' + money(entry.salary) + " · " + meta + "</span>" + right + "</div>" +
+        '<span class="meta">' + money(entry.salary) + meta + "</span>" + right + "</div>" +
         '<div class="chips">' + chips + "</div></div>";
     }).join("");
   }

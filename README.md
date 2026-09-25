@@ -283,21 +283,31 @@ candidate counts). The player list lets you leave players out and edit depth
 four-number summary, one sentence on how the entries were chosen, and the
 entries themselves.
 
-**Head-to-head** (default 3 entries, up to 50):
+**Rules for every entry, both contests:**
 
-1. The game's five highest-projected players (after exclusions) are the
-   Superstars and take turns, in projection order.
-2. Each Superstar is in at most *Max Superstar exposure* of the entries
-   (default 0.25), rounded down with a minimum of one. With five Superstars at
-   0.25, 6, 7 and 11 entries cannot all be filled (they fill 5, 5 and 10); the
-   page says so. *Max player exposure* defaults to 1, no limit.
-3. Round one gives each Superstar its highest-expected lineup.
-4. Later rounds keep rotating the same five but change the supporting players:
-   a Superstar's next lineup is its unused one with the fewest supporting
-   players from outside the top ten (ranks 6–10 are the fillers), then the
-   highest expected points. Other top-five players can support.
-5. No two entries repeat, and the salary cap, position rules and exclusions
-   always hold.
+1. Every lineup comes from the run's own enumeration, so the salary cap,
+   Yahoo's roster rules, the position limits, your exclusions and your depth
+   edits always hold.
+2. No player is in more than *Max player exposure* of the entries (default
+   0.75) and no Superstar in more than *Max Superstar exposure* (default 0.25),
+   each rounded down with a minimum of one. The published run's 50% / 35%
+   portfolio settings do not apply to the page.
+3. There is no limit on how many players two entries share. The only repeat
+   that is refused is an exact one: the same five players with the same
+   Superstar. The same five with a different Superstar is a different entry.
+
+When the limits cannot fill every entry, the page shows the entries that fit
+and says how many that was, instead of refusing.
+
+Entries are picked one at a time, best first, but a pick must leave room to
+fill the rest: a lineup that would use up a player's or Superstar's last
+allowed appearance is taken only if the remaining entries can still be built
+without them. Without that check, the best five players under each of their
+own Superstar turns would use up their 75% and strand the later entries.
+
+**Head-to-head** (default 3 entries, up to 50) takes entries in order of
+expected points from every legal (lineup, Superstar) pair, not a screened
+subset, and simulates only the entries it takes.
 
 Each contest's opponent plays one of the 100 highest-projected lineups from the
 **whole** pool — a player you leave out is still available to them. The summary
@@ -307,12 +317,10 @@ share one game, so the last two carry how often they win and lose together. The
 opponent model is not calibrated to real Yahoo head-to-heads.
 
 **Tournament** (default 20 entries, up to 150) uses the same shared-scenario
-coverage portfolio the daily run publishes: each entry is the one that adds the
-most to your best score across the simulated games, with at most three players
-shared between any two entries and the published exposure limits (50% per
-player, 35% per Superstar). Small pools often cannot fit 20 entries under those
-limits; the page shows the entries that fit and says how many that was, instead
-of refusing. Entries the daily run also chose are marked *also published*.
+coverage selection the daily run publishes — each entry is the one that adds
+the most to your best score across the simulated games — under the rules above
+rather than the daily run's overlap and exposure caps. Entries the daily run
+also chose are marked *also published*.
 
 **What runs where.** `run_synced.py` fetches Yahoo and the nflverse depth,
 roster and injury data once for all three pages; `pipeline/showdown.py` reuses
@@ -339,8 +347,8 @@ Two properties of the model make the browser half cheap:
   drawn once per pool; a control change only re-decides which lineups are legal.
 
 **Speed.** Scoring a lineup against a scenario is five multiply-adds. A
-Standard solve (10,000 scenarios) takes about 4 seconds for head-to-head and 7
-for a 20-entry tournament on a 27-player pool; *Full* at 20,000 scenarios on a
+Standard solve (10,000 scenarios) takes about 1 to 3 seconds for head-to-head
+(3 to 50 entries) and 6 for a 20-entry tournament on a 27-player pool; *Full* at 20,000 scenarios on a
 36-player pool takes about 14 seconds.
 
 **Why your numbers differ from the published run.** The page seeds its own
@@ -597,9 +605,10 @@ cheap weak rosters on their merits; raise the slider only deliberately.
 ### Showdown selection controls
 
 Exposure shares round down to whole appearances among the requested entries.
-The tournament's 50% player cap permits 10 of 20 entries and the 35% Superstar
-cap 7 of 20; a single entry bypasses both. The page shows the entries that fit
-the limits and says so when that is fewer than requested.
+In the daily run, the tournament's 50% player cap permits 10 of 20 entries and
+the 35% Superstar cap 7 of 20; a single entry bypasses both. The lineup lab
+uses 75% and 25% instead (15 and 5 of 20), with a minimum of one appearance and
+no cap on shared players.
 
 The daily run's position limits (QB 0-2, RB 0-2, WR 0-3, TE 0-2, DEF 0-1) and
 salary floor apply on the page too; Yahoo itself imposes no position limits.

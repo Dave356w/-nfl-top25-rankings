@@ -112,12 +112,11 @@ async function page({ routes: extraRoutes = {}, depthModel = false } = {}) {
 const h2hResult = (extra = {}) => ({
   contest: "h2h", requested: 3, filled: 3, opponents: 100, valid_rosters: 10, elapsed_ms: 1200,
   expected_wins: 1.6, win_rate: 0.533, zero_wins: 0.09, winning_record: 0.58,
-  limits: { player: 3, superstar: 1 },
-  pools: { superstars: [0, 3, 4], fillers: [1, 2] },
+  limits: { player: 2, superstar: 1 },
   entries: [
-    { ids: [0, 1, 3, 4, 5], superstar: 0, expected_fp: 79, salary: 100, round: 1, fillers: [], win_chance: 0.62 },
-    { ids: [0, 1, 3, 4, 5], superstar: 3, expected_fp: 78, salary: 100, round: 1, fillers: [], win_chance: 0.55 },
-    { ids: [0, 2, 3, 4, 5], superstar: 4, expected_fp: 70, salary: 92, round: 2, fillers: [2], win_chance: 0.43 },
+    { ids: [0, 1, 3, 4, 5], superstar: 0, expected_fp: 79, salary: 100, win_chance: 0.62 },
+    { ids: [0, 1, 3, 4, 5], superstar: 3, expected_fp: 78, salary: 100, win_chance: 0.55 },
+    { ids: [0, 2, 3, 4, 5], superstar: 4, expected_fp: 70, salary: 92, win_chance: 0.43 },
   ],
   ...extra,
 });
@@ -125,7 +124,7 @@ const h2hResult = (extra = {}) => ({
 const tournamentResult = (extra = {}) => ({
   contest: "tournament", requested: 20, filled: 2, valid_rosters: 10, elapsed_ms: 2500,
   expected_fp: 75.5, best_score: 88.1, gain_over_single: 9.4,
-  diversity: { max_shared: 3 }, limits: { player: 10, superstar: 7, shared: 3 },
+  diversity: { max_shared: 4 }, limits: { player: 15, superstar: 5 },
   entries: [
     { ids: [0, 1, 3, 4, 5], superstar: 0, expected_fp: 79, salary: 100, floor_p25: 60, ceiling_p90: 104 },
     { ids: [0, 2, 3, 4, 5], superstar: 3, expected_fp: 72, salary: 92, floor_p25: 55, ceiling_p90: 97 },
@@ -135,7 +134,7 @@ const tournamentResult = (extra = {}) => ({
 
 test("the worker URL is versioned and an out-of-date worker is refused", async () => {
   const p = await page();
-  assert.match(p.worker().url, /showdown-worker\.js\?protocol=5&snapshot=snap$/);
+  assert.match(p.worker().url, /showdown-worker\.js\?protocol=6&snapshot=snap$/);
   assert.equal(p.worker().messages[0].type, "load");
   p.worker().emit({ type: "loaded", players: 6, protocol: 4 });
   assert.equal(p.workers[0].terminated, true);
@@ -146,26 +145,27 @@ test("the worker URL is versioned and an out-of-date worker is refused", async (
 test("head-to-head is the default and sends only what the visitor chose", async () => {
   const p = await page();
   assert.equal(p.node("entries").value, 3);
-  assert.equal(p.node("player-exposure").value, 1);
+  assert.equal(p.node("player-exposure").value, 0.75);
   assert.equal(p.node("superstar-exposure").value, 0.25);
   assert.equal(p.node("run").disabled, false);
   const message = p.run();
   assert.equal(message.type, "solve");
   assert.deepEqual(JSON.parse(JSON.stringify(message.request)), {
     contest: "h2h", entries: 3, included: [0, 1, 2, 3, 4, 5], salaryCap: 100,
-    detail: "standard", maxPlayerExposure: 1, maxSuperstarExposure: 0.25,
+    detail: "standard", maxPlayerExposure: 0.75, maxSuperstarExposure: 0.25,
   });
   assert.equal(p.node("run").disabled, true);
 });
 
-test("each contest keeps its own entry count and exposure defaults", async () => {
+test("each contest keeps its own entry count; both share the exposure defaults", async () => {
   const p = await page();
   p.node("entries").value = "7";
   p.node("entries").handlers.change();
   p.contest("tournament");
   assert.equal(p.node("entries").value, 20);
-  assert.equal(p.node("player-exposure").value, 0.5);
-  assert.equal(p.node("superstar-exposure").value, 0.35);
+  // The published run's own .5 / .35 settings do not apply to the lab.
+  assert.equal(p.node("player-exposure").value, 0.75);
+  assert.equal(p.node("superstar-exposure").value, 0.25);
   assert.match(p.node("results-title").textContent, /Tournament/);
   assert.equal(p.run().request.contest, "tournament");
   p.contest("h2h");
@@ -253,7 +253,7 @@ test("left-out players are not sent, and fewer than five cannot be solved", asyn
   assert.equal(p.node("run").disabled, true);
 });
 
-test("a head-to-head result shows the summary, Superstars and each entry", async () => {
+test("a head-to-head result shows the summary, the limits and each entry", async () => {
   const p = await page();
   p.run();
   p.worker().emit({ type: "result", result: h2hResult() });
@@ -261,10 +261,11 @@ test("a head-to-head result shows the summary, Superstars and each entry", async
   assert.match(p.node("stats").innerHTML, /1\.6 of 3/);
   assert.match(p.node("stats").innerHTML, /53\.3%/);
   assert.match(p.node("stats").innerHTML, /9\.0%/);
-  assert.match(p.node("explain").textContent, /Superstars: QB A, QB B, RB B, each in at most 1 of 3/);
+  assert.match(p.node("explain").textContent, /No player is in more than 2 of 3 entries and no Superstar in more than 1/);
+  assert.match(p.node("explain").textContent, /never repeat the same lineup and Superstar/);
   assert.match(p.node("entries-list").innerHTML, /★ QB A/);
   assert.match(p.node("entries-list").innerHTML, /62\.0% win/);
-  assert.match(p.node("entries-list").innerHTML, /round 2 · fillers WR A2/);
+  assert.doesNotMatch(p.node("entries-list").innerHTML, /round|fillers/);
   assert.equal(p.node("result-notice").hidden, true);
   assert.match(p.node("status-text").innerHTML, /Built 3 lineups in 1\.2s/);
   assert.equal(p.node("run").disabled, false);
@@ -276,9 +277,10 @@ test("a short list says how many entries fitted", async () => {
   p.run();
   p.worker().emit({ type: "result", result: tournamentResult() });
   assert.equal(p.node("result-notice").hidden, false);
-  assert.match(p.node("result-notice").textContent, /Only 2 of 20 entries fit the exposure and overlap limits/);
+  assert.match(p.node("result-notice").textContent, /Only 2 of 20 entries fit the exposure limits\./);
   assert.match(p.node("stats").innerHTML, /88\.1/);
   assert.match(p.node("explain").textContent, /\+9\.4 points/);
+  assert.match(p.node("explain").textContent, /No player is in more than 15 of 20 entries and no Superstar in more than 5/);
   assert.match(p.node("entries-list").innerHTML, /range 60–104/);
   // The first entry is also in the published reference portfolio; the second is not.
   assert.equal((p.node("entries-list").innerHTML.match(/also published/g) || []).length, 1);
