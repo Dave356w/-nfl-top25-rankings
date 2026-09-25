@@ -1,17 +1,17 @@
 slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,injury,unavailable,review
 QB,Dak Prescott,QB,DAL,BAL,2026-09-27 20:25,18.99,12.5,30.86,35.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
-RB,James Cook III,RB,BUF,LAC,2026-09-27 17:00,15.69,8.59,28.53,33.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
-RB,Jaylen Warren,RB,PIT,CIN,2026-09-27 17:00,14.9,8.16,27.1,23.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),Questionable,,injury Questionable
+RB,James Cook III,RB,BUF,LAC,2026-09-27 17:00,15.44,8.46,28.08,33.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
+RB,Jaylen Warren,RB,PIT,CIN,2026-09-27 17:00,14.46,7.92,26.3,23.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),Questionable,,injury Questionable
 WR,Tee Higgins,WR,CIN,PIT,2026-09-27 17:00,11.51,5.52,22.26,29.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
-WR,Jaylen Waddle,WR,DEN,LA,2026-09-28 00:20,10.75,5.78,19.73,23.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
+WR,Jaylen Waddle,WR,DEN,LA,2026-09-28 00:20,10.79,5.8,19.81,23.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
 TE,Harold Fannin Jr,TE,CLE,CAR,2026-09-27 17:00,7.59,3.4,15.06,17.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
-K,Brandon Aubrey,K,DAL,BAL,,9.08,5.36,15.85,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
+K,Brandon Aubrey,K,DAL,BAL,,8.72,5.14,15.22,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
 DEF,Los Angeles Rams,DEF,LA,DEN,2026-09-28 00:20,7.56,3.19,15.32,11.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 3),,,ok
-FLEX,Breece Hall,RB,NYJ,DET,2026-09-27 17:00,13.45,7.37,24.46,32.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
-BENCH,Geno Smith,QB,NYJ,DET,2026-09-27 17:00,15.61,10.27,25.37,22.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
+FLEX,Breece Hall,RB,NYJ,DET,2026-09-27 17:00,14.14,7.74,25.71,32.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
+BENCH,Geno Smith,QB,NYJ,DET,2026-09-27 17:00,15.6,10.26,25.35,22.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
 BENCH,Jameson Williams,WR,DET,NYJ,2026-09-27 17:00,10.7,5.13,20.69,19.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
-BENCH,Oronde Gadsden,TE,LAC,BUF,2026-09-27 17:00,7.14,3.2,14.17,11.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
+BENCH,Oronde Gadsden,TE,LAC,BUF,2026-09-27 17:00,7.35,3.3,14.59,11.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
 BENCH,Denver Broncos,DEF,DEN,LA,2026-09-28 00:20,6.33,2.67,12.83,17.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 3),,,ok
-BENCH,Malachi Fields,WR,NYG,TEN,2026-09-27 17:00,5.14,2.46,9.94,11.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
-BENCH,Terrance Ferguson,TE,LA,DEN,2026-09-28 00:20,4.75,2.13,9.43,10.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
+BENCH,Terrance Ferguson,TE,LA,DEN,2026-09-28 00:20,6.33,2.84,12.56,10.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
+BENCH,Malachi Fields,WR,NYG,TEN,2026-09-27 17:00,5.11,2.45,9.88,11.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
 BENCH,Emmett Johnson,RB,KC,MIA,2026-09-27 17:00,4.47,1.94,8.98,13.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 3),,,ok
