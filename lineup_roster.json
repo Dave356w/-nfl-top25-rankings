@@ -30,7 +30,7 @@
       "Position": "K"
     },
     {
-      "Name": "Denver Broncos",
+      "Name": "Los Angeles Rams",
       "Position": "DEF"
     },
     {
@@ -38,23 +38,11 @@
       "Position": "RB"
     },
     {
+      "Name": "Geno Smith",
+      "Position": "QB"
+    },
+    {
       "Name": "Jameson Williams",
-      "Position": "WR"
-    },
-    {
-      "Name": "Brenton Strange",
-      "Position": "TE"
-    },
-    {
-      "Name": "Los Angeles Rams",
-      "Position": "DEF"
-    },
-    {
-      "Name": "Emmett Johnson",
-      "Position": "RB"
-    },
-    {
-      "Name": "Malachi Fields",
       "Position": "WR"
     },
     {
@@ -62,8 +50,20 @@
       "Position": "TE"
     },
     {
-      "Name": "Geno Smith",
-      "Position": "QB"
+      "Name": "Denver Broncos",
+      "Position": "DEF"
+    },
+    {
+      "Name": "Malachi Fields",
+      "Position": "WR"
+    },
+    {
+      "Name": "Emmett Johnson",
+      "Position": "RB"
+    },
+    {
+      "Name": "Terrance Ferguson",
+      "Position": "TE"
     }
   ]
 }
