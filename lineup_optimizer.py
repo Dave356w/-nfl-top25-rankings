@@ -180,7 +180,7 @@ def yahoo_from_prepared_slate(players: pd.DataFrame) -> pd.DataFrame:
 
 def load_sleeper_context(yahoo: pd.DataFrame, cache_dir: str = SLEEPER_CACHE_DIR) -> dict:
     """Load Sleeper's week, depth, availability and projections for the slate."""
-    reference, _, context = sleeper.load(yahoo["Team"].unique(), cache_dir=cache_dir)
+    reference, context = sleeper.load(yahoo["Team"].unique(), cache_dir=cache_dir)
     return sleeper_context(reference, context, yahoo)
 
 

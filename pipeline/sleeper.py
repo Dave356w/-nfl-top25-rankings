@@ -304,13 +304,14 @@ def match_players(pool: pd.DataFrame, reference: pd.DataFrame) -> pd.Series:
     return ids
 
 
-def resolve_week(state: dict, slate_teams, fetch=fetch_projections, players=None):
+def resolve_week(state: dict, slate_teams, fetch=None, players=None):
     """Pick the projection week that matches the Yahoo slate.
 
     Sleeper's ``week`` can still name the finished week for a day or two after
     Yahoo has opened the next slate. Both candidates are fetched and the one
     that projects more of the slate's teams wins.
     """
+    fetch = fetch or fetch_projections  # looked up at call time, so tests can patch it
     season = int(state.get("season") or state.get("league_season"))
     season_type = str(state.get("season_type") or "regular")
     if season_type not in {"regular", "pre", "post"}:

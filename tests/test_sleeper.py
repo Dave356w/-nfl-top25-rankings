@@ -263,5 +263,45 @@ class ApplyReferenceTests(unittest.TestCase):
             self.apply(pool)
 
 
+class LoaderWiringTests(unittest.TestCase):
+    """The real loaders, end to end, with only the three network calls stubbed.
+
+    Every other test hands its caller a prepared reference, which is how a
+    caller once kept unpacking a value `sleeper.load` no longer returned and
+    the first live run failed. These drive `sleeper.load` through both callers.
+    """
+
+    def setUp(self):
+        self.patches = [
+            patch.object(sleeper, "fetch_state",
+                         return_value={"season": "2026", "week": 3, "season_type": "regular"}),
+            patch.object(sleeper, "fetch_players",
+                         return_value=(chart(), "2026-09-25T12:00:00+00:00")),
+            patch.object(sleeper, "fetch_projections",
+                         side_effect=lambda season, week, kind="regular", timeout=30:
+                         sf.projections(POINTS) if week == 3 else {}),
+        ]
+        for item in self.patches:
+            item.start()
+            self.addCleanup(item.stop)
+
+    def test_the_pipeline_loader_returns_a_reference_and_its_week(self):
+        pool = yahoo_pool([("Rashee Rice", "KC", "WR", 30, 503)])
+        reference, context = nb.load_sleeper_reference(pool)
+        self.assertEqual(context["week"], 3)
+        self.assertEqual(context["players_fetched_utc"], "2026-09-25T12:00:00+00:00")
+        kept, _ = nb.apply_sleeper_reference(pool, reference, context)
+        self.assertEqual(kept.iloc[0]["Projected_FP"], 14.0)
+
+    def test_the_lineup_loader_builds_its_context(self):
+        import lineup_optimizer as lo
+        yahoo = pd.DataFrame({"Team": ["KC", "JAC"], "Opponent": ["JAC", "KC"]})
+        ctx = lo.load_sleeper_context(yahoo, cache_dir=None)
+        self.assertEqual((ctx["season"], ctx["week"]), (2026, 3))
+        self.assertIn("rashee rice", set(ctx["reference"]["Key"]))
+        # The lineup builder keeps this module's Yahoo-style team codes.
+        self.assertIn("JAC", set(ctx["reference"]["Team"]))
+
+
 if __name__ == "__main__":
     unittest.main()
