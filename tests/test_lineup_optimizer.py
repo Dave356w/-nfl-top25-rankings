@@ -1,12 +1,10 @@
 """Offline tests for the weekly lineup optimizer.
 
-`lineup_optimizer.run` needs the live Yahoo DFS feed, the sportsbooks and the
-nflverse releases, so the fetch path cannot be exercised here. What can be
-pinned without a network is everything downstream of the feeds: the name and
-team keys the providers are joined on, the market means applied on top of the
-Yahoo blend, the kicker and half-PPR arithmetic, the roster assembly
-`build_roster` performs on already-fetched frames, and the slot rules
-`optimize` applies.
+`lineup_optimizer.run` needs the live Yahoo DFS feed and Sleeper's API, so the
+fetch path cannot be exercised here. What can be pinned without a network is
+everything downstream of the feeds: the name and team keys the providers are
+joined on, the roster assembly `build_roster` performs on a Sleeper reference
+built from fixture JSON, and the slot rules `optimize` applies.
 
 The market tests drive the real pipeline matcher with hand-built `Projection`
 objects, so the acceptance and game-time rules are the shipped ones rather than
@@ -27,8 +25,10 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import lineup_optimizer as lo
+import sleeper_fixtures as sf
 from pipeline import notebook as nb
 
 KICKOFF = "2026-09-13T17:00:00Z"
@@ -80,75 +80,43 @@ def _yahoo_frame():
     return frame
 
 
-def _stats_frame():
-    kicks = [
-        # season, week, 0-19, 20-29, 30-39, 40-49, 50-59, 60+, PAT
-        (2025, 1, 0, 1, 0, 1, 0, 0, 3),
-        (2025, 2, 0, 0, 1, 0, 1, 0, 2),
-    ]
-    kicker = pd.DataFrame(kicks, columns=[
-        "season", "week", "fg_made_0_19", "fg_made_20_29", "fg_made_30_39",
-        "fg_made_40_49", "fg_made_50_59", "fg_made_60_", "pat_made",
-    ])
-    kicker["player_display_name"] = "Brandon Aubrey"
-    kicker["position"] = "K"
-    kicker["team"] = "DAL"
-    kicker["season_type"] = "REG"
-    kicker["fg_missed"] = 0
-    kicker["fantasy_points"] = 0.0
-    kicker["fantasy_points_ppr"] = 0.0
+def _sleeper():
+    """Sleeper's view of the fixture week.
 
-    offense = pd.DataFrame({
-        "player_display_name": ["Monday Guy"] * 2,
-        "position": ["WR"] * 2,
-        "team": ["BUF"] * 2,
-        "season": [2025, 2025],
-        "week": [1, 2],
-        "season_type": ["REG", "REG"],
-        "fantasy_points": [8.0, 12.0],
-        "fantasy_points_ppr": [12.0, 16.0],
-    })
-    return pd.concat([kicker, offense], ignore_index=True)
+    Tee Higgins is ruled Out, so Sleeper does not project him; Monday Guy plays
+    in a game Yahoo does not price,
+    Bye Week Guy has no projection, and Dallas carries a second kicker who must
+    not reach the add pool.
+    """
+    rows = [
+        sf.player("1", "Jaylen Waddle", "MIA", "WR", "LWR", 1),
+        sf.player("2", "Tee Higgins", "CIN", "WR", "LWR", 1, injury="Out",
+                  practice="DNP"),
+        sf.player("3", "Dak Prescott", "DAL", "QB", "QB", 1),
+        sf.player("4", "Breece Hall", "NYJ", "RB", "RB", 1),
+        sf.player("5", "Harold Fannin", "CLE", "TE", "TE", 3),
+        sf.player("6", "Monday Guy", "BUF", "WR", "SWR", 2),
+        sf.player("7", "Brandon Aubrey", "DAL", "K", "K", 1),
+        sf.player("8", "Backup Kicker", "DAL", "K", "K", 2),
+        sf.player("9", "Bye Kicker", "SEA", "K", "K", 1),
+        sf.player("10", "Bye Week Guy", "SEA", "RB", "RB", 1),
+    ]
+    points = {"1": 13.2, "3": 19.4, "4": 14.1, "5": 7.3, "6": 12.0,
+              "7": 9.5, "8": 3.0}
+    return sf.dump(rows), sf.projections(points)
 
 
 def _context():
-    # `player_name` is what `pool_entries` reads kickers off, and the second DAL
-    # kicker is the camp body that must not reach the add pool.
-    names = ["Jaylen Waddle", "Tee Higgins", "Dak Prescott", "Breece Hall",
-             "Harold Fannin Jr.", "Monday Guy", "Brandon Aubrey", "Backup Kicker",
-             "Bye Kicker"]
-    depth = pd.DataFrame({
-        "player_name": names,
-        "Key": [lo.normalize_name(n) for n in names],
-        "Team": ["MIA", "CIN", "DAL", "NYJ", "CLE", "BUF", "DAL", "DAL", "SEA"],
-        "Official_Depth": [1, 1, 1, 1, 3, 2, 1, 2, 1],
-        "pos_abb": ["WR", "WR", "QB", "RB", "TE", "WR", "PK", "PK", "PK"],
-    })
-    teams = ["MIA", "CIN", "DAL", "NYJ", "CLE", "BUF", "PHI", "NE"]
-    schedule = pd.DataFrame({
-        "Team": teams,
-        "Opponent": ["BUF", "CLE", "PHI", "NE", "CIN", "MIA", "DAL", "NYJ"],
-        "NFL_Week": [2] * len(teams),
-        "Home_Away": ["Home"] * len(teams),
-        "Vegas_Total": [45.0] * len(teams),
-        "Implied_Team_Total": [22.5] * len(teams),
-    })
-    injuries = pd.DataFrame({
-        "Key": [lo.normalize_name("Tee Higgins")],
-        "Team": ["CIN"],
-        "report_primary_injury": ["Hamstring"],
-        "report_status": ["Out"],
-        "practice_status": ["Did Not Participate In Practice"],
-    })
-    return {"season": 2026, "week": 2, "schedule": schedule, "depth": depth,
-            "depth_stamp": "2026-09-10 12:00:00", "injuries": injuries,
-            "stats": _stats_frame()}
+    reference = sf.reference(*_sleeper())
+    context = {"season": 2026, "week": 2, "season_type": "regular",
+               "players_fetched_utc": "2026-09-10T12:00:00+00:00"}
+    return lo.sleeper_context(reference, context, _yahoo_frame())
 
 
 class NameAndTeamKeyTests(unittest.TestCase):
     def test_suffixes_and_punctuation_join_across_providers(self):
         # Yahoo prints "Harold Fannin Jr.", the roster holds "Harold Fannin Jr",
-        # nflverse holds "Harold Fannin". All three have to land on one key.
+        # Sleeper holds "Harold Fannin". All three have to land on one key.
         self.assertEqual(lo.normalize_name("Harold Fannin Jr."),
                          lo.normalize_name("Harold Fannin"))
         self.assertEqual(lo.normalize_name("James Cook III"),
@@ -166,40 +134,12 @@ class NameAndTeamKeyTests(unittest.TestCase):
         self.assertEqual(lo.normalize_name(None), "")
         self.assertEqual(lo.normalize_name(float("nan")), "")
 
-    def test_team_aliases_collapse_to_the_nflverse_code(self):
+    def test_team_aliases_collapse_to_the_yahoo_code(self):
         self.assertEqual(lo.normalize_team("JAX"), "JAC")
         self.assertEqual(lo.normalize_team(" wsh "), "WAS")
         self.assertEqual(lo.normalize_team("OAK"), "LV")
         self.assertEqual(lo.normalize_team("KC"), "KC")
         self.assertEqual(lo.normalize_team(np.nan), "")
-
-
-class KickerEstimateTests(unittest.TestCase):
-    def test_it_scores_by_distance_band(self):
-        # Week 1: 20-29 (3) + 40-49 (4) + 3 PAT = 10. Week 2: 30-39 (3) +
-        # 50-59 (5) + 2 PAT = 10.
-        mean, cv, games = lo.kicker_estimate("Brandon Aubrey", _stats_frame())
-        self.assertEqual(games, 2)
-        self.assertAlmostEqual(mean, 10.0)
-        self.assertGreaterEqual(cv, 0.20)
-        self.assertLessEqual(cv, 1.50)
-
-    def test_an_unknown_kicker_falls_back_to_the_league_mean(self):
-        mean, cv, games = lo.kicker_estimate("Nobody At All", _stats_frame())
-        self.assertEqual(games, 0)
-        self.assertAlmostEqual(mean, 10.0)   # the only kicker in the fixture
-        self.assertGreater(cv, 0)
-
-
-class OffenseFallbackTests(unittest.TestCase):
-    def test_it_averages_half_ppr_over_recent_games(self):
-        mean, games = lo.offense_fallback("Monday Guy", "WR", _stats_frame())
-        self.assertEqual(games, 2)
-        self.assertAlmostEqual(mean, 12.0)   # (10 + 14) / 2
-
-    def test_an_unmatched_player_scores_nothing(self):
-        self.assertEqual(lo.offense_fallback("Nobody At All", "WR", _stats_frame()),
-                         (0.0, 0))
 
 
 class BuildRosterTests(unittest.TestCase):
@@ -231,20 +171,32 @@ class BuildRosterTests(unittest.TestCase):
         self.assertIn("position corrected WR->RB", lo.review(row))
         self.assertEqual(self.roster.loc["Jaylen Waddle", "Team"], "MIA")
         self.assertGreater(self.roster.loc["Jaylen Waddle", "FP"], 0)
-        self.assertIn("salary-position-depth regression", self.roster.loc["Jaylen Waddle", "Projection_Source"])
+        self.assertIn("Sleeper half-PPR projection", self.roster.loc["Jaylen Waddle", "Projection_Source"])
 
-    def test_kickers_come_from_the_nflverse_logs(self):
+    def test_the_mean_is_sleepers_projection_not_yahoos(self):
+        # The Yahoo fixture carries 13.5 for Waddle; Sleeper says 13.2.
+        self.assertAlmostEqual(self.roster.loc["Jaylen Waddle", "FP"], 13.2)
+        self.assertAlmostEqual(self.roster.loc["Dak Prescott", "FP"], 19.4)
+
+    def test_a_frozen_mean_from_the_rankings_run_is_kept(self):
+        yahoo = _yahoo_frame()
+        yahoo["Projection_Frozen"] = True
+        roster = lo.build_roster(self.configured, yahoo, _context()).set_index("Name")
+        self.assertAlmostEqual(roster.loc["Jaylen Waddle", "FP"], 13.5)
+
+    def test_kickers_come_from_sleeper(self):
         row = self.roster.loc["Brandon Aubrey"]
-        self.assertAlmostEqual(row["FP"], 10.0)
+        self.assertAlmostEqual(row["FP"], 9.5)
         self.assertEqual(row["Depth_Rank"], 1)
-        self.assertIn("kicker", row["Projection_Source"])
+        self.assertAlmostEqual(row["Projection_CV"], lo.KICKER_CV)
+        self.assertIn("Sleeper", row["Projection_Source"])
 
-    def test_a_yahoo_gap_falls_back_to_recent_half_ppr(self):
-        # Yahoo omits some games (a Monday-only slate, say). A rostered player
-        # whose team is on the schedule must not read as a zero.
+    def test_a_game_yahoo_omits_is_still_projected(self):
+        # Yahoo omits some games (a Monday-only slate, say). Sleeper projects
+        # every game, so a rostered player there is not a zero.
         row = self.roster.loc["Monday Guy"]
         self.assertAlmostEqual(row["FP"], 12.0)
-        self.assertIn("fallback", row["Projection_Source"])
+        self.assertIn("Sleeper", row["Projection_Source"])
         self.assertTrue(row["Projection_Available"])
 
     def test_a_player_on_no_schedule_stays_at_zero_and_is_flagged(self):
@@ -255,7 +207,7 @@ class BuildRosterTests(unittest.TestCase):
 
     def test_depth_drives_the_calibrated_range(self):
         waddle = self.roster.loc["Jaylen Waddle"]
-        self.assertEqual(waddle["Depth_Source"], "nflverse latest depth")
+        self.assertEqual(waddle["Depth_Source"], "Sleeper depth chart")
         self.assertAlmostEqual(waddle["Projection_CV"], lo.CALIBRATED_CV["WR"][1])
         self.assertLess(waddle["Floor_P25"], waddle["FP"])
         self.assertGreater(waddle["Ceiling_P90"], waddle["FP"])
@@ -263,10 +215,15 @@ class BuildRosterTests(unittest.TestCase):
         wide = lo.CALIBRATED_CV["WR"][3]
         self.assertGreater(wide, waddle["Projection_CV"])
 
-    def test_the_injury_report_reaches_the_review_column(self):
+    def test_the_injury_status_reaches_the_review_column(self):
         row = self.roster.loc["Tee Higgins"]
         self.assertEqual(row["report_status"], "Out")
+        self.assertEqual(row["practice_status"], "DNP")
         self.assertIn("injury Out", lo.review(row))
+
+    def test_everyone_sleeper_does_not_project_is_benched(self):
+        self.assertEqual(lo.reported_out(self.roster.reset_index(drop=True)),
+                         ["Tee Higgins", "Bye Week Guy"])
 
     def test_manual_depth_overrides_win(self):
         original = dict(lo.MANUAL_DEPTH_OVERRIDES)
@@ -282,12 +239,10 @@ class BuildRosterTests(unittest.TestCase):
 
     def test_a_roster_with_no_fitted_range_still_builds(self):
         # Regression: the P25/P90 pass reads Projection_CV unconditionally, so
-        # a roster where nothing reaches the depth chart or the kicker branch
-        # must still leave the column defined.
+        # a roster where nothing matches Sleeper must still leave it defined.
         ctx = _context()
-        ctx["depth"] = ctx["depth"].iloc[0:0]
-        ctx["injuries"] = pd.DataFrame()
-        roster = lo.build_roster([{"Name": "Bye Week Guy", "Position": "RB"}],
+        ctx["reference"] = ctx["reference"].iloc[0:0]
+        roster = lo.build_roster([{"Name": "Nobody Known", "Position": "RB"}],
                                  _yahoo_frame(), ctx)
         self.assertIn("Projection_CV", roster)
         self.assertTrue(roster["Floor_P25"].isna().all())
@@ -369,14 +324,14 @@ class AddPoolTests(unittest.TestCase):
         self.assertEqual(entries, [{"Name": "Dak Prescott", "Position": "QB"},
                                    {"Name": "Jaylen Waddle", "Position": "WR"}])
 
-    def test_kickers_come_off_the_depth_chart_the_dfs_feed_omits(self):
+    def test_kickers_come_from_sleeper_one_per_team(self):
         # Yahoo prices no kickers at all, so a K the page can add exists only if
-        # the depth chart supplies the name.
+        # Sleeper supplies him. The backup and the bye-week kicker stay out.
         entries = lo.pool_entries(self.yahoo, self.context, {"K": 32})
         self.assertEqual(entries, [{"Name": "Brandon Aubrey", "Position": "K"}])
 
-    def test_a_depth_chart_without_names_costs_the_kickers_not_the_pool(self):
-        context = dict(self.context, depth=self.context["depth"].drop(columns=["player_name"]))
+    def test_no_sleeper_reference_costs_the_kickers_not_the_pool(self):
+        context = dict(self.context, reference=self.context["reference"].iloc[:0])
         entries = lo.pool_entries(self.yahoo, context, {"QB": 1, "K": 32})
         self.assertEqual(entries, [{"Name": "Dak Prescott", "Position": "QB"}])
 
@@ -384,11 +339,11 @@ class AddPoolTests(unittest.TestCase):
         pool = lo.build_pool(self.yahoo, self.context,
                              {"QB": 5, "RB": 5, "WR": 5, "TE": 5, "K": 5})
         aubrey = pool[pool.Name.eq("Brandon Aubrey")].iloc[0]
-        self.assertAlmostEqual(aubrey["FP"], 10.0)          # rolling kicker logs
-        self.assertIn("kicker", aubrey["Projection_Source"])
+        self.assertAlmostEqual(aubrey["FP"], 9.5)
+        self.assertIn("Sleeper", aubrey["Projection_Source"])
         waddle = pool[pool.Name.eq("Jaylen Waddle")].iloc[0]
-        self.assertGreater(waddle["FP"], 0)
-        self.assertIn("salary-position-depth regression", waddle["Projection_Source"])
+        self.assertAlmostEqual(waddle["FP"], 13.2)
+        self.assertIn("Sleeper half-PPR projection", waddle["Projection_Source"])
         self.assertLess(waddle["Floor_P25"], waddle["FP"])
         self.assertGreater(waddle["Ceiling_P90"], waddle["FP"])
         self.assertEqual(waddle["Team"], "MIA")
@@ -405,7 +360,7 @@ class AddPoolTests(unittest.TestCase):
 
     def test_an_empty_feed_gives_an_empty_pool_rather_than_raising(self):
         empty = self.yahoo.iloc[:0]
-        context = dict(self.context, depth=self.context["depth"].iloc[:0])
+        context = dict(self.context, reference=self.context["reference"].iloc[:0])
         self.assertTrue(lo.build_pool(empty, context).empty)
 
 
@@ -538,10 +493,12 @@ class RosterFileTests(unittest.TestCase):
 
 
 class ReportedOutTests(unittest.TestCase):
-    def test_it_reads_the_injury_report_case_insensitively(self):
+    def test_it_benches_whoever_sleeper_does_not_project(self):
+        # The designation alone benches nobody; the projection decides.
         roster = pd.DataFrame({
             "Name": ["A", "B", "C"],
-            "report_status": ["OUT", "Questionable", None],
+            "report_status": ["IR", "Out", None],
+            "Unavailable_Reason": ["not projected this week", None, None],
         })
         self.assertEqual(lo.reported_out(roster), ["A"])
 

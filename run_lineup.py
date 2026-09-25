@@ -53,17 +53,19 @@ def _player_row(player: pd.Series, slot: str | None = None) -> dict:
         "floor": _clean(player.get("Floor_P25")),
         "ceiling": _clean(player.get("Ceiling_P90")),
         "salary": _clean(player.get("Salary")),
-        "fppg": _clean(player.get("FPPG")),
         "depth": _clean(player.get("Depth_Rank")),
         "depth_source": _clean(player.get("Depth_Source")),
         "source": _clean(player.get("Projection_Source")),
         "injury": _clean(player.get("report_status")),
+        # Set when Sleeper does not project him this week (ruled out, bye), or
+        # null. The page benches on this; `injury` is display only.
+        "unavailable": _clean(player.get("Unavailable_Reason")),
         "review": lo.review(player),
     }
     kickoff = player.get("Game_Time")
     if isinstance(kickoff, pd.Timestamp) and pd.notna(kickoff):
         row["kickoff_utc"] = kickoff.strftime("%Y-%m-%d %H:%M")
-    for key in ("floor", "ceiling", "fppg"):
+    for key in ("floor", "ceiling"):
         if isinstance(row[key], float):
             row[key] = round(row[key], 2)
     if slot is None:
@@ -74,8 +76,8 @@ def _player_row(player: pd.Series, slot: str | None = None) -> dict:
 def _total(frame: pd.DataFrame, column: str) -> float | None:
     """Sum a range column, standing a player's mean in where he has no band.
 
-    A starter with no fitted CV -- a bye-week player at 0, or one nflverse has
-    no depth row for -- would otherwise void the whole total. His point estimate
+    A starter with no fitted CV -- a bye-week player at 0, or one Sleeper has
+    no depth for -- would otherwise void the whole total. His point estimate
     is the honest contribution to both ends of the band.
     """
     if column not in frame or not len(frame):
@@ -140,8 +142,9 @@ def build_payload(
                   bench.sort_values("FP", ascending=False).iterrows()],
         "benched_by_request": list(results.get("excluded") or []),
         "projection": {
-            "method": "Yahoo salary-position-depth regression",
-            "trained_through_season": results.get("projection_trained_through"),
+            "method": "Sleeper half-PPR projection",
+            "season": _clean(context.get("season")),
+            "week": _clean(context.get("week")),
         },
         "log": log_lines,
     }
@@ -225,10 +228,11 @@ def _finish_lineup(
     no_pool: bool = False,
 ) -> tuple[dict, pd.DataFrame, str | None]:
     """Resolve, optimize and optionally build the editor pool from one projection frame."""
-    context = lo.load_nfl_context(yahoo)
+    context = lo.load_sleeper_context(yahoo)
+    yahoo = lo.with_sleeper_projections(yahoo, context)
     roster = lo.build_roster(configured, yahoo, context)
     print(f"Season {context['season']} week {context['week']}; "
-          f"depth snapshot {context['depth_stamp']}.")
+          f"Sleeper players fetched {context['depth_stamp']}.")
     for note in context.get("notes", []):
         print(note)
 
@@ -242,7 +246,6 @@ def _finish_lineup(
         "starters": starters,
         "bench": bench,
         "context": context,
-        "projection_trained_through": lo.salary_projection.load()["trained_through_season"],
         "excluded": excluded,
     }
 

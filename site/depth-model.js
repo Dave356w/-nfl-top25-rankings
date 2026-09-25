@@ -1,9 +1,10 @@
-/* The pages' half of `pipeline.salary_projection.predict`.
+/* Depth edits on the pages: the fitted volatility and scoreless-rate tables.
  *
- * Every page publishes a player's depth rank next to a mean that the frozen
- * Yahoo salary-position-depth regression computed from it. This lets a visitor
- * say "he is the starter now" and see what the same model says about that,
- * without waiting for the next workflow run. Nothing in here is a second model:
+ * The published mean is Sleeper's projection and does not depend on depth, so
+ * a depth edit changes a player's volatility (CV) and scoreless rate and leaves
+ * his mean alone. `predict` remains for a mean the frozen Yahoo
+ * salary-position-depth regression produced (`isModelled`), which the live
+ * pages no longer publish. Nothing in here is a second model:
  * it reads the exact coefficients the Python run used, from
  * `data/depth_model.json`, and `tests/test_depth_model_js.py` drives it from
  * Node against `salary_projection.predict` so the two cannot drift.

@@ -1,6 +1,6 @@
 """Shape tests for the published JSON.
 
-The pipeline itself needs the live Yahoo and nflverse feeds, so it
+The pipeline itself needs the live Yahoo and Sleeper feeds, so it
 cannot be exercised here. What can be pinned without a network is the contract
 between `run_daily.build_payload` and `site/index.html`: every key the page
 reads, the NaN handling that would otherwise emit invalid JSON, and the archive
@@ -28,14 +28,14 @@ def _view(rows):
 
 def _results():
     qb = _view([
-        [1, "Josh Allen", "BUF", "@MIA", 22.41, 21.0, 40, 0.56, "starter",
-         "QB slot 9", 1, "2026-09-07 17:00", "regression"],
-        [2, "Lamar Jackson", "BAL", "vs KC", 21.02, np.nan, 38, 0.553, "starter",
-         "", 1, "2026-09-07 20:25", "yahoo-prior"],
+        [1, "Josh Allen", "BUF", "@MIA", 22.41, 40, 0.56, "starter",
+         "QB QB", 1, "2026-09-07 17:00", "sleeper"],
+        [2, "Lamar Jackson", "BAL", "vs KC", 21.02, 38, np.nan, "starter",
+         "", 1, "2026-09-07 20:25", "manual override"],
     ])
     rb = _view([
-        [1, "Bijan Robinson", "ATL", "vs TB", 18.9, 17.4, 35, 0.54, "starter",
-         "RB slot 11", 1, "2026-09-07 17:00", "regression"],
+        [1, "Bijan Robinson", "ATL", "vs TB", 18.9, 35, 0.54, "starter",
+         "RB RB", 1, "2026-09-07 17:00", "sleeper"],
     ])
     games = pd.DataFrame([
         {"Game ID": "g1", "Game Time": "2026-09-07 17:00", "Away Team": "BUF",
@@ -43,7 +43,7 @@ def _results():
     ])
     players = pd.DataFrame({
         "Name": ["Josh Allen", "Lamar Jackson", "Bijan Robinson"],
-        "Projection_Source": ["salary regression"] * 3,
+        "Projection_Source": ["Sleeper half-PPR projection"] * 3,
     })
     return {
         "rankings": {"QB": qb, "RB": rb, "WR": _view([]), "TE": _view([]),
@@ -53,8 +53,10 @@ def _results():
         ),
         "players": players,
         "games": games,
-        "projection_model": {"trained_through_season": 2025, "holdout_metrics": {"mae": 3.7}},
-        "nflverse_removed": pd.DataFrame({"Name": ["Someone"]}),
+        "projection_model": {"source": "sleeper", "season": 2026, "week": 2,
+                             "season_type": "regular",
+                             "players_fetched_utc": "2026-09-07T12:00:00+00:00"},
+        "availability_removed": pd.DataFrame({"Player": ["Someone"], "Reason": ["injury status Out"]}),
     }
 
 
@@ -64,10 +66,10 @@ class PayloadTests(unittest.TestCase):
 
     def test_it_serializes_without_nan(self):
         # json.dumps emits a bare NaN token, which JSON.parse rejects in the
-        # browser. A missing Yahoo FPPG must land as null, not NaN.
+        # browser. A missing value must land as null, not NaN.
         text = json.dumps(self.payload)
         self.assertNotIn("NaN", text)
-        self.assertIsNone(self.payload["rankings"]["QB"][1]["fppg"])
+        self.assertIsNone(self.payload["rankings"]["QB"][1]["fp_per_salary"])
 
     def test_it_carries_every_key_the_page_reads(self):
         for key in ("status", "generated_utc", "snapshot_id", "run_date", "top_n", "positions",
@@ -83,7 +85,8 @@ class PayloadTests(unittest.TestCase):
         self.assertEqual(self.payload["positions"], ["QB", "RB"])
 
     def test_projection_metadata_comes_from_the_model(self):
-        self.assertEqual(self.payload["projection"]["trained_through_season"], 2025)
+        self.assertEqual(self.payload["projection"]["method"], "Sleeper half-PPR projection")
+        self.assertEqual(self.payload["projection"]["week"], 2)
         self.assertEqual(self.payload["availability_removed"], 1)
 
     def test_write_outputs_archives_and_indexes(self):

@@ -2,15 +2,13 @@
 """Standalone, keyless season-long NFL weekly lineup optimizer.
 
 Yahoo's public DFS feed supplies current-week salary, opponents and game times.
-The frozen historical regression turns salary, position and depth into the
-shared fantasy mean. nflverse
-supplies schedules, its newest depth snapshot, injury reports when published,
-and historical kicking logs. No merged CSV is required.
+Sleeper's public API supplies everything about the player: the weekly half-PPR
+projection that is the mean, the depth chart, and roster and injury status.
+No merged CSV is required.
 
 The roster stays in ``MY_TEAM_ROSTER`` because Yahoo's private season-long
-roster API requires OAuth. Expected points are the default objective. Historical
-depth CVs add P25/P90 diagnostics but do not apply a second role haircut to a
-Yahoo projection whose weekly salary already reflects current information.
+roster API requires OAuth. Expected points are the default objective. Fitted
+depth CVs add P25/P90 diagnostics around Sleeper's mean.
 
 Run it with no arguments to fetch the feeds and print a lineup; run it with
 ``--self-test`` for the offline checks in ``self_test``. ``run_lineup.py`` is
@@ -19,10 +17,8 @@ the non-interactive entry point that publishes the same lineup to the site.
 
 from __future__ import annotations
 
-import importlib
 import json
 import re
-import subprocess
 import sys
 import time
 import unicodedata
@@ -33,7 +29,7 @@ from urllib.request import Request, urlopen
 
 import numpy as np
 import pandas as pd
-from pipeline import salary_projection
+from pipeline import sleeper
 
 
 # --------------------------- USER SETTINGS -------------------------------
@@ -60,16 +56,16 @@ FLEX_ELIGIBLE = ["RB", "WR", "TE"]
 LINEUP_OBJECTIVE = "FP"  # FP, Floor_P25, or Ceiling_P90
 EXCLUDED_PLAYERS: list[str] | None = None  # None prompts; [] skips prompt.
 MANUAL_DEPTH_OVERRIDES: dict[str, int] = {}
-AUTO_EXCLUDE_REPORTED_OUT = True
-AUTO_INSTALL_NFLREADPY = True
+AUTO_EXCLUDE_REPORTED_OUT = True  # bench anyone Sleeper does not project this week
 # How deep the page's add pool goes per position. Deep enough to cover a real
 # waiver claim, shallow enough that `pool.json` stays a small download.
 POOL_LIMITS = {"QB": 40, "RB": 70, "WR": 90, "TE": 45, "K": 32, "DEF": 32}
 
 YAHOO_URL = "https://dfyql-ro.sports.yahoo.com/v2/external/playersFeed/nfl"
-KICKER_SCORING = {"FG_0_39": 3.0, "FG_40_49": 4.0, "FG_50_PLUS": 5.0, "PAT": 1.0}
-KICKER_ROLLING_GAMES = 8
-OFFENSE_FALLBACK_GAMES = 8
+# Sleeper projects a kicker's mean but there is no fitted kicker CV. This is the
+# spread of Yahoo kicker scores across recent seasons, used for the P25/P90 band.
+KICKER_CV = 0.60
+SLEEPER_CACHE_DIR = "sleeper_cache"
 
 CALIBRATED_CV = {
     "QB": {1: .488, 2: .922, 3: .922, 4: .922},
@@ -97,25 +93,8 @@ def normalize_team(value: object) -> str:
     return TEAM_MAP.get(team, team)
 
 
-def ensure_nflreadpy():
-    """Import nflreadpy, installing its released package in Colab if needed."""
-    try:
-        return importlib.import_module("nflreadpy")
-    except ImportError as exc:
-        if not AUTO_INSTALL_NFLREADPY:
-            raise RuntimeError("Install nflreadpy with: pip install nflreadpy") from exc
-        print("Installing nflreadpy ...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "nflreadpy"])
-        return importlib.import_module("nflreadpy")
-
-
-def to_pandas(polars_frame) -> pd.DataFrame:
-    """Convert filtered Polars data without adding a pyarrow dependency."""
-    return pd.DataFrame(polars_frame.to_dicts())
-
-
 def fetch_yahoo(attempts: int = 3, timeout: int = 20) -> pd.DataFrame:
-    """Fetch and normalize Yahoo's public current-week NFL player feed."""
+    """Fetch Yahoo's current-week salaries, opponents and kickoffs; nothing else is used."""
     last_error = None
     for attempt in range(1, attempts + 1):
         try:
@@ -134,10 +113,10 @@ def fetch_yahoo(attempts: int = 3, timeout: int = 20) -> pd.DataFrame:
 
     out = pd.DataFrame(rows).rename(columns={
         "name": "Feed_Name", "position": "Feed_Position", "team": "Team",
-        "salary": "Salary", "fppg": "FPPG", "gameStartTime": "Game_Time",
+        "salary": "Salary", "gameStartTime": "Game_Time",
         "homeTeam": "Home_Team", "awayTeam": "Away_Team",
     })
-    needed = {"Feed_Name", "Feed_Position", "Team", "Salary", "FPPG", "Game_Time", "Home_Team", "Away_Team"}
+    needed = {"Feed_Name", "Feed_Position", "Team", "Salary", "Game_Time", "Home_Team", "Away_Team"}
     missing = sorted(needed - set(out))
     if missing:
         raise ValueError(f"Yahoo schema changed; missing {missing}")
@@ -145,7 +124,6 @@ def fetch_yahoo(attempts: int = 3, timeout: int = 20) -> pd.DataFrame:
     for col in ["Team", "Home_Team", "Away_Team"]:
         out[col] = out[col].map(normalize_team)
     out["Salary"] = pd.to_numeric(out["Salary"], errors="coerce")
-    out["FPPG"] = pd.to_numeric(out["FPPG"], errors="coerce").fillna(0)
     out["Game_Time"] = pd.to_datetime(out["Game_Time"], errors="coerce", utc=True)
     out["Game_Date"] = out["Game_Time"].dt.strftime("%Y-%m-%d")
     out["Opponent"] = np.where(out["Team"].eq(out["Away_Team"]), out["Home_Team"], out["Away_Team"])
@@ -153,27 +131,25 @@ def fetch_yahoo(attempts: int = 3, timeout: int = 20) -> pd.DataFrame:
     out = out[out["Feed_Position"].isin(["QB", "RB", "WR", "TE", "DEF"]) & out["Salary"].gt(0)].copy()
 
     out["Fallback_Depth"] = out.groupby(["Team", "Feed_Position"])["Salary"].rank(method="first", ascending=False)
-    modeled = out.rename(columns={"Feed_Name": "Name", "Feed_Position": "Position"})
-    modeled["Depth_Rank"] = modeled["Fallback_Depth"]
-    modeled = salary_projection.apply(modeled)
-    out["Projected_FP"] = modeled["Projected_FP"]
-    out["Projection_Source"] = modeled["Projection_Source"]
+    # The mean comes from Sleeper once its context is loaded (`with_sleeper_projections`).
+    out["Projected_FP"] = np.nan
+    out["Projection_Source"] = pd.NA
     out["Projection_Frozen"] = False
-    return out.sort_values("Projected_FP", ascending=False).drop_duplicates("Key").reset_index(drop=True)
+    return out.sort_values("Salary", ascending=False).drop_duplicates("Key").reset_index(drop=True)
 
 
 def yahoo_from_prepared_slate(players: pd.DataFrame) -> pd.DataFrame:
     """Adapt the rankings pipeline's final player pool for the lineup builder.
 
-    `pipeline.notebook.prepare_slate_pool` has already fetched Yahoo, resolved
-    nflverse roles and applied the frozen regression. Re-fetching those inputs here is
+    `pipeline.notebook.prepare_slate_pool` has already fetched Yahoo and applied
+    Sleeper's depth, availability and projection. Re-fetching those inputs here is
     what allowed two pages from one site publish to disagree.  This adapter
     preserves that final `Projected_FP` verbatim and only adds the legacy column
     aliases the season-long roster resolver expects.
     """
     required = {
         "Name", "Position", "Team", "Opponent", "Game Time", "Home Team",
-        "Away Team", "Salary", "FPPG", "Projected_FP", "Projection_Source",
+        "Away Team", "Salary", "Projected_FP", "Projection_Source",
     }
     missing = sorted(required - set(players.columns))
     if missing:
@@ -202,118 +178,62 @@ def yahoo_from_prepared_slate(players: pd.DataFrame) -> pd.DataFrame:
     return out.sort_values("Projected_FP", ascending=False).drop_duplicates("Key").reset_index(drop=True)
 
 
-def load_nfl_context(yahoo: pd.DataFrame) -> dict:
-    """Load the matching nflverse schedule, newest depth, injuries, and kicker logs."""
-    import polars as pl
-    nfl = ensure_nflreadpy()
-    season = int(yahoo["Game_Time"].dt.year.mode().iloc[0])
-    schedule = to_pandas(nfl.load_schedules(season))
-    for col in ["away_team", "home_team"]:
-        schedule[col] = schedule[col].map(normalize_team)
-    schedule["gameday"] = schedule["gameday"].astype(str)
-    yg = yahoo[["Game_Date", "Away_Team", "Home_Team"]].drop_duplicates()
-    matched = schedule.merge(yg, left_on=["gameday", "away_team", "home_team"], right_on=["Game_Date", "Away_Team", "Home_Team"])
-    week = int(matched["week"].mode().iloc[0]) if len(matched) else None
-    games = schedule[schedule["week"].eq(week)].copy() if week else matched.copy()
-
-    team_rows = []
-    for g in games.itertuples():
-        total = float(g.total_line) if pd.notna(g.total_line) else np.nan
-        spread = float(g.spread_line) if pd.notna(g.spread_line) else np.nan
-        for team, opp, side, sign in [(g.away_team, g.home_team, "Away", -1), (g.home_team, g.away_team, "Home", 1)]:
-            implied = total/2 + sign*spread/2 if np.isfinite(total) and np.isfinite(spread) else np.nan
-            team_rows.append({"Team": team, "Opponent": opp, "NFL_Week": int(g.week), "Home_Away": side,
-                              "Vegas_Total": total, "Implied_Team_Total": implied})
-    team_schedule = pd.DataFrame(team_rows)
-
-    raw_depth = nfl.load_depth_charts(season)
-    stamp = raw_depth.select(pl.col("dt").max()).item()
-    depth = to_pandas(raw_depth.filter(pl.col("dt") == stamp).select(
-        [c for c in ["team", "player_name", "pos_abb", "pos_rank"] if c in raw_depth.columns]))
-    depth["Team"] = depth["team"].map(normalize_team)
-    depth["Key"] = depth["player_name"].map(normalize_name)
-    depth["Official_Depth"] = pd.to_numeric(depth["pos_rank"], errors="coerce")
-    depth = depth.sort_values("Official_Depth").drop_duplicates(["Key", "Team"])
-
-    notes = []
-    try:
-        injuries = to_pandas(nfl.load_injuries(season))
-        if week is not None:
-            injuries = injuries[injuries["week"].eq(week)].copy()
-        injuries["Team"] = injuries["team"].map(normalize_team)
-        injuries["Key"] = injuries["full_name"].map(normalize_name)
-        injuries = injuries.drop_duplicates(["Key", "Team"], keep="last")
-    except Exception as exc:
-        # A warning goes to stderr, which the published run log never sees. A
-        # lineup built with no injury data can start a player who is already
-        # ruled out, so this has to reach the page, not just the console.
-        notes.append(
-            f"Injury report unavailable ({exc}); nobody was auto-benched -- "
-            "check the injury news yourself."
-        )
-        warnings.warn(f"Current injury report unavailable; verify manually: {exc}")
-        injuries = pd.DataFrame()
-
-    stat_seasons = [season-2, season-1]
-    if season <= int(nfl.get_current_season()) and week and week > 1:
-        stat_seasons.append(season)
-    raw_stats = nfl.load_player_stats(sorted(set(stat_seasons)))
-    cols = ["player_display_name", "position", "team", "season", "week", "season_type",
-            "fantasy_points", "fantasy_points_ppr",
-            "fg_missed", "fg_made_0_19", "fg_made_20_29", "fg_made_30_39",
-            "fg_made_40_49", "fg_made_50_59", "fg_made_60_", "pat_made"]
-    stats = to_pandas(raw_stats.select([c for c in cols if c in raw_stats.columns]))
-    return {"season": season, "week": week, "schedule": team_schedule, "depth": depth,
-            "depth_stamp": str(stamp), "injuries": injuries, "stats": stats,
-            "notes": notes}
+def load_sleeper_context(yahoo: pd.DataFrame, cache_dir: str = SLEEPER_CACHE_DIR) -> dict:
+    """Load Sleeper's week, depth, availability and projections for the slate."""
+    reference, _, context = sleeper.load(yahoo["Team"].unique(), cache_dir=cache_dir)
+    return sleeper_context(reference, context, yahoo)
 
 
-def kicker_estimate(name: str, logs: pd.DataFrame) -> tuple[float, float, int]:
-    """Fit kicker mean and shrunk CV from recent nflverse game logs."""
-    x = logs.copy()
-    x = x[(x["position"] == "K") & (x["season_type"] == "REG")]
-    numeric = ["fg_missed", "fg_made_0_19", "fg_made_20_29", "fg_made_30_39",
-               "fg_made_40_49", "fg_made_50_59", "fg_made_60_", "pat_made"]
-    for col in numeric:
-        x[col] = pd.to_numeric(x.get(col, 0), errors="coerce").fillna(0)
-    x["KFP"] = (KICKER_SCORING["FG_0_39"]*(x.fg_made_0_19+x.fg_made_20_29+x.fg_made_30_39)
-                + KICKER_SCORING["FG_40_49"]*x.fg_made_40_49
-                + KICKER_SCORING["FG_50_PLUS"]*(x.fg_made_50_59+x.fg_made_60_)
-                + KICKER_SCORING["PAT"]*x.pat_made)
-    x["Key"] = x["player_display_name"].map(normalize_name)
-    recent = x[x["Key"].eq(normalize_name(name))].sort_values(["season", "week"]).tail(KICKER_ROLLING_GAMES)
-    global_mean = float(x.KFP.mean()) if len(x) else 7.0
-    global_cv = float(x.KFP.std()/global_mean) if len(x) and global_mean > 0 else .60
-    mean = float(recent.KFP.mean()) if len(recent) else global_mean
-    player_cv = float(recent.KFP.std()/mean) if len(recent) > 1 and mean > 0 else global_cv
-    weight = len(recent)/(len(recent)+8)
-    return max(mean, .05), float(np.clip(weight*player_cv+(1-weight)*global_cv, .20, 1.50)), len(recent)
+def sleeper_context(reference: pd.DataFrame, context: dict, yahoo: pd.DataFrame) -> dict:
+    """The lineup builder's view of a Sleeper reference: this module's team codes."""
+    reference = reference.copy()
+    reference["Team"] = reference["Team"].map(normalize_team)
+    reference["Key"] = reference["Sleeper_Name"].map(normalize_name)
+    schedule = pd.concat([
+        yahoo[["Team", "Opponent"]],
+        yahoo[["Opponent", "Team"]].set_axis(["Team", "Opponent"], axis=1),
+    ]).dropna().drop_duplicates("Team")
+    return {"season": context["season"], "week": context["week"],
+            "season_type": context["season_type"],
+            "depth_stamp": context["players_fetched_utc"],
+            "reference": reference, "schedule": schedule, "notes": []}
 
 
-def offense_fallback(name: str, position: str, logs: pd.DataFrame) -> tuple[float, int]:
-    """Use recent nflverse half-PPR results when Yahoo omits a scheduled game.
+def _projection_source(ctx: dict) -> str:
+    return f"Sleeper half-PPR projection ({ctx.get('season')} week {ctx.get('week')})"
 
-    This is intentionally a fallback, not a preferred projection. It prevents
-    Monday-only or otherwise omitted Yahoo DFS games from becoming false zeroes.
-    """
-    x = logs.copy()
-    if "fantasy_points" not in x or "fantasy_points_ppr" not in x:
-        return 0.0, 0
-    x = x[(x["position"].astype(str).str.upper() == position) &
-          (x["season_type"].astype(str).str.upper() == "REG")].copy()
-    x["Key"] = x["player_display_name"].map(normalize_name)
-    x["Half_PPR"] = .5 * (
-        pd.to_numeric(x["fantasy_points"], errors="coerce").fillna(0)
-        + pd.to_numeric(x["fantasy_points_ppr"], errors="coerce").fillna(0)
-    )
-    recent = x[x["Key"].eq(normalize_name(name))].sort_values(["season", "week"]).tail(
-        OFFENSE_FALLBACK_GAMES
-    )
-    return (float(recent["Half_PPR"].mean()), len(recent)) if len(recent) else (0.0, 0)
+
+def _sleeper_match(ctx: dict, key: str, team, position: str):
+    """The one Sleeper row for a name, narrowed by team then position, or None."""
+    ref = ctx["reference"]
+    rows = ref[ref["Key"].eq(key)]
+    if len(rows) > 1 and isinstance(team, str) and team:
+        narrowed = rows[rows["Team"].eq(team)]
+        rows = narrowed if len(narrowed) else rows
+    if len(rows) > 1:
+        rows = rows[rows["Position"].eq(position)]
+    if len(rows) > 1:
+        # Two same-named players at one position: the one with a projection
+        # this week is the one who is playing.
+        rows = rows.sort_values("Sleeper_FP", ascending=False, na_position="last").head(1)
+    return rows.iloc[0] if len(rows) == 1 else None
+
+
+def with_sleeper_projections(yahoo: pd.DataFrame, ctx: dict) -> pd.DataFrame:
+    """Give every unfrozen Yahoo row Sleeper's mean, so the add pool ranks on it."""
+    out = yahoo.copy()
+    frozen = out.get("Projection_Frozen", pd.Series(False, index=out.index)).fillna(False).astype(bool)
+    for i in out.index[~frozen]:
+        row = _sleeper_match(ctx, out.at[i, "Key"], out.at[i, "Team"], out.at[i, "Feed_Position"])
+        value = None if row is None else row.get("Sleeper_FP")
+        if value is not None and pd.notna(value):
+            out.at[i, "Projected_FP"] = float(value)
+            out.at[i, "Projection_Source"] = _projection_source(ctx)
+    return out
 
 
 def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.DataFrame:
-    """Resolve the configured roster across Yahoo and nflverse, then add ranges."""
+    """Resolve the configured roster across Yahoo and Sleeper, then add ranges."""
     roster = pd.DataFrame(configured)
     roster["Name"] = roster["Name"].astype(str).str.strip()
     roster["Position"] = roster["Position"].astype(str).str.upper()
@@ -321,7 +241,7 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
     yahoo = yahoo.copy()
     if "Projection_Frozen" not in yahoo:
         yahoo["Projection_Frozen"] = False
-    ycols = ["Key", "Feed_Name", "Feed_Position", "Team", "Opponent", "Game_Time", "Salary", "FPPG",
+    ycols = ["Key", "Feed_Name", "Feed_Position", "Team", "Opponent", "Game_Time", "Salary",
              "Projected_FP", "Projection_Source", "Fallback_Depth", "Projection_Frozen"]
     roster = roster.merge(yahoo[ycols], on="Key", how="left")
     roster["Configured_Position"] = roster["Position"]
@@ -332,63 +252,67 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
     # Yahoo owns eligibility when the player matched. This prevents a typo in
     # the editable roster from seating an RB in a WR slot.
     roster.loc[feed_position.notna(), "Position"] = feed_position[feed_position.notna()]
+    roster["Projection_Frozen"] = roster["Projection_Frozen"].fillna(False).astype(bool)
 
-    d = ctx["depth"][["Key", "Team", "Official_Depth", "pos_abb"]].rename(columns={"Team": "Depth_Team"})
-    d = d.drop_duplicates("Key")
-    roster = roster.merge(d, on="Key", how="left")
-    roster["Team"] = roster["Team"].fillna(roster["Depth_Team"]).map(normalize_team)
-    roster["Depth_Rank"] = pd.to_numeric(roster["Official_Depth"], errors="coerce").fillna(roster["Fallback_Depth"])
-    roster["Depth_Source"] = np.where(roster["Official_Depth"].notna(), "nflverse latest depth", "Yahoo salary-order fallback")
-    # Created up front: a roster whose every player misses both the depth chart
-    # and the kicker branch would otherwise never define the column at all.
-    roster["Projection_CV"] = np.nan
+    for column in ["Depth_Rank", "Projection_CV"]:
+        roster[column] = np.nan
+    for column in ["Depth_Source", "report_status", "practice_status",
+                   "report_primary_injury"]:
+        roster[column] = pd.Series(pd.NA, index=roster.index, dtype="object")
 
-    playing_teams = set(ctx["schedule"]["Team"])
+    source = _projection_source(ctx)
+    # An unfrozen mean is Sleeper's or nothing: a player Sleeper does not project
+    # this week must not keep whatever number the Yahoo frame carried.
+    roster.loc[~roster["Projection_Frozen"], ["Projected_FP", "Projection_Source"]] = [np.nan, None]
     for i, p in roster.iterrows():
-        if p.Position == "K":
-            mean, cv, n = kicker_estimate(p.Name, ctx["stats"])
-            roster.at[i, "Projected_FP"] = mean
-            roster.at[i, "Projection_CV"] = cv
-            roster.at[i, "Projection_Source"] = f"nflverse rolling kicker games (n={n})"
-            roster.at[i, "Depth_Rank"] = 1
-            roster.at[i, "Depth_Source"] = "nflverse PK depth"
-        elif pd.isna(p.Projected_FP) and p.Team in playing_teams:
-            mean, n = offense_fallback(p.Name, p.Position, ctx["stats"])
-            if n:
-                roster.at[i, "Projected_FP"] = mean
-                roster.at[i, "Projection_Source"] = (
-                    f"nflverse rolling half-PPR fallback (n={n}); Yahoo game absent"
-                )
-        if p.Position != "K" and p.Position in CALIBRATED_CV and pd.notna(roster.at[i, "Depth_Rank"]):
-            bucket = min(max(int(roster.at[i, "Depth_Rank"]), 1), 4)
-            roster.at[i, "Projection_CV"] = CALIBRATED_CV[p.Position][bucket]
+        row = _sleeper_match(ctx, p.Key, p.Team, p.Position)
+        if row is None:
+            continue
+        if not isinstance(p.Team, str) or not p.Team:
+            roster.at[i, "Team"] = row["Team"]
+        depth = row.get("Depth_Rank")
+        if pd.isna(depth):
+            depth = row.get("Chart_Tier")
+        if pd.notna(depth):
+            roster.at[i, "Depth_Rank"] = int(depth)
+            roster.at[i, "Depth_Source"] = (
+                "Sleeper depth chart" if pd.notna(row.get("Chart_Tier")) else "Sleeper projection order")
+        for column, value in (("report_status", row.get("Injury_Status")),
+                              ("practice_status", row.get("Practice_Status")),
+                              ("report_primary_injury", row.get("Injury_Body_Part"))):
+            if value is not None and pd.notna(value):
+                roster.at[i, column] = value
+        if not p.Projection_Frozen and pd.notna(row.get("Sleeper_FP")):
+            roster.at[i, "Projected_FP"] = float(row["Sleeper_FP"])
+            roster.at[i, "Projection_Source"] = source
 
+    roster["Team"] = roster["Team"].map(normalize_team)
+    roster["Depth_Rank"] = roster["Depth_Rank"].fillna(roster["Fallback_Depth"])
+    roster["Depth_Source"] = roster["Depth_Source"].fillna("Yahoo salary-order fallback")
     for name, depth in MANUAL_DEPTH_OVERRIDES.items():
         mask = roster.Key.eq(normalize_name(name))
         roster.loc[mask, "Depth_Rank"] = max(1, int(depth))
         roster.loc[mask, "Depth_Source"] = "manual override"
 
-    # The official chart is now attached, so recompute skill-player means with
-    # the final depth rather than the preliminary salary-order depth.
-    frozen = roster["Projection_Frozen"].fillna(False).astype(bool)
-    if (~frozen).any():
-        modeled = salary_projection.apply(roster.loc[~frozen])
-        roster.loc[~frozen, "Projected_FP"] = modeled["Projected_FP"]
-        roster.loc[~frozen, "Projection_Source"] = modeled["Projection_Source"]
+    kicker = roster["Position"].eq("K")
+    roster.loc[kicker, "Projection_CV"] = KICKER_CV
+    for i, p in roster[~kicker].iterrows():
+        if p.Position in CALIBRATED_CV and pd.notna(p.Depth_Rank):
+            bucket = min(max(int(p.Depth_Rank), 1), 4)
+            roster.at[i, "Projection_CV"] = CALIBRATED_CV[p.Position][bucket]
 
     roster["Projected_FP"] = pd.to_numeric(roster["Projected_FP"], errors="coerce").fillna(0)
+    # No projection (a bye, or no match) means no distribution to band.
+    roster.loc[roster["Projected_FP"].le(0), "Projection_CV"] = np.nan
     roster["Projection_Source"] = roster["Projection_Source"].fillna(
         "No weekly projection; bye or unmatched player"
     )
     roster["FP"] = roster["Projected_FP"]
+    # Sleeper decides who plays: an injured or bye-week player projects at zero.
+    roster["Unavailable_Reason"] = np.where(
+        roster["FP"].gt(0), None, "not projected this week")
     roster = roster.merge(ctx["schedule"].drop_duplicates("Team"), on="Team", how="left", suffixes=("", "_NFL"))
     roster["Opponent"] = roster["Opponent"].fillna(roster.get("Opponent_NFL"))
-    if len(ctx["injuries"]):
-        keep = [c for c in ["Key", "Team", "report_primary_injury", "report_status", "practice_status"] if c in ctx["injuries"]]
-        roster = roster.merge(ctx["injuries"][keep], on=["Key", "Team"], how="left")
-    else:
-        roster["report_status"] = pd.NA
-        roster["practice_status"] = pd.NA
 
     roster["Floor_P25"], roster["Ceiling_P90"] = np.nan, np.nan
     fitted = roster["Projection_CV"].notna()
@@ -405,31 +329,29 @@ def pool_entries(yahoo: pd.DataFrame, ctx: dict, limits: dict[str, int] | None =
 
     The lineup page's roster editor needs a player who is *not* on the roster to
     carry the same resolved projection a rostered player carries, and only
-    `build_roster` produces that. Ranking on the salary-model mean before
-    resolving is safe, because `build_roster` leaves a skill player's mean
-    alone -- the top of this list is the top of the built pool. Kickers are the
-    exception: the DFS feed does not price them at all, so they come off the
-    depth chart and are ranked only once their rolling-log means exist.
+    `build_roster` produces that. Ranking on Sleeper's mean before resolving is
+    safe, because `build_roster` assigns the same mean -- the top of this list is
+    the top of the built pool. Kickers are the
+    exception: the DFS feed does not price them at all, so they come from
+    Sleeper, one available kicker per team with a projection this week.
     """
     limits = dict(limits or POOL_LIMITS)
     entries: list[dict] = []
     for position, limit in limits.items():
         if position == "K" or not limit:
             continue
-        rows = yahoo[yahoo["Feed_Position"].eq(position)].nlargest(int(limit), "Projected_FP")
+        rows = yahoo[yahoo["Feed_Position"].eq(position)].dropna(subset=["Projected_FP"])
+        rows = rows.nlargest(int(limit), "Projected_FP")
         entries += [{"Name": str(name), "Position": position} for name in rows["Feed_Name"]]
 
-    depth = ctx.get("depth")
-    if not limits.get("K") or depth is None or "player_name" not in depth:
+    ref = ctx.get("reference")
+    if not limits.get("K") or ref is None or ref.empty:
         return entries
-    kickers = depth[depth["pos_abb"].astype(str).str.upper().isin(["K", "PK"])]
-    playing = set(ctx["schedule"]["Team"]) if len(ctx.get("schedule", [])) else set()
-    if playing:
-        kickers = kickers[kickers["Team"].isin(playing)]
-    # One kicker per team: a depth chart's second placekicker is a camp body,
-    # and his rolling logs would price him like the starter he is not.
-    kickers = kickers.sort_values("Official_Depth").drop_duplicates("Team").drop_duplicates("Key")
-    entries += [{"Name": str(name), "Position": "K"} for name in kickers["player_name"]]
+    kickers = ref[ref["Position"].eq("K") & ref["Sleeper_FP"].gt(0)]
+    # One kicker per team: the second placekicker on a chart is a camp body.
+    kickers = kickers.sort_values(["Depth_Rank", "Sleeper_FP"], ascending=[True, False])
+    kickers = kickers.drop_duplicates("Team").drop_duplicates("Key")
+    entries += [{"Name": str(name), "Position": "K"} for name in kickers["Sleeper_Name"]]
     return entries
 
 
@@ -471,11 +393,14 @@ def load_roster(path: str | None = None) -> list[dict]:
 
 
 def reported_out(roster: pd.DataFrame) -> list[str]:
-    """Names this week's injury report lists as Out."""
-    if "report_status" not in roster:
+    """Names Sleeper does not project this week: ruled out, on a bye, or unknown.
+
+    Sleeper folds injuries into its projection, so a zero is the signal; its
+    injury designation alone (Questionable, even Out) does not bench anyone.
+    """
+    if "Unavailable_Reason" not in roster:
         return []
-    flag = roster["report_status"].fillna("").astype(str).str.casefold().eq("out")
-    return roster.loc[flag, "Name"].tolist()
+    return roster.loc[roster["Unavailable_Reason"].notna(), "Name"].tolist()
 
 
 def optimize(roster: pd.DataFrame, excluded: list[str], objective: str = LINEUP_OBJECTIVE):
@@ -524,16 +449,17 @@ def output_table(frame: pd.DataFrame, starters: bool) -> pd.DataFrame:
 
 
 def run(roster_path: str | None = None) -> dict:
-    """Fetch Yahoo and nflverse, optimize the configured roster, and print results."""
-    print("Loading Yahoo weekly projections ...")
+    """Fetch Yahoo and Sleeper, optimize the configured roster, and print results."""
+    print("Loading Yahoo weekly slate ...")
     yahoo = fetch_yahoo()
-    print("Loading nflverse schedule, depth, injuries, and kicking logs ...")
-    ctx = load_nfl_context(yahoo)
+    print("Loading Sleeper projections, depth and injuries ...")
+    ctx = load_sleeper_context(yahoo)
+    yahoo = with_sleeper_projections(yahoo, ctx)
     roster = build_roster(load_roster(roster_path), yahoo, ctx)
-    print(f"\nSeason {ctx['season']} week {ctx['week']}; depth snapshot {ctx['depth_stamp']}")
+    print(f"\nSeason {ctx['season']} week {ctx['week']}; Sleeper players fetched {ctx['depth_stamp']}")
     for note in ctx.get("notes", []):
         print(f"  {note}")
-    print("Yahoo projections use DFS half-PPR scoring; verify your league scoring and injury news.")
+    print("Sleeper projections use half-PPR scoring; verify your league scoring and injury news.")
 
     if EXCLUDED_PLAYERS is None:
         view = roster.sort_values(["Position", "FP"], ascending=[True, False]).reset_index(drop=True)
@@ -559,7 +485,7 @@ def run(roster_path: str | None = None) -> dict:
 
 
 def self_test() -> None:
-    """Run small offline checks for joins, kicker scoring, and lineup slots."""
+    """Run small offline checks for joins and lineup slots."""
     assert normalize_name("James Cook III") == normalize_name("James Cook")
     roster = pd.DataFrame([
         ("QB1","qb1","QB",20),("QB2","qb2","QB",15),("RB1","rb1","RB",16),

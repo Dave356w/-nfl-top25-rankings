@@ -39,7 +39,7 @@ class PreparedSlateAdapterTests(unittest.TestCase):
                 "Salary": 33,
                 "FPPG": 12.14,
                 "Projected_FP": 13.03,
-                "Projection_Source": "Yahoo salary-position-depth regression",
+                "Projection_Source": "Sleeper half-PPR projection (2026 week 2)",
                 "Depth_Rank": 2,
             }
         ])
@@ -329,7 +329,7 @@ class SharedShowdownTests(unittest.TestCase):
         configured = [{"Name": "Drake Maye", "Position": "QB"}]
         with tempfile.TemporaryDirectory() as directory:
             with patch.object(nb, "prepare_slate_pool", wraps=nb.prepare_slate_pool) as prepare:
-                with patch.object(lo, "load_nfl_context", return_value=_context()):
+                with patch.object(lo, "load_sleeper_context", return_value=_context()):
                     with patch.object(lo, "load_roster", return_value=configured):
                         with contextlib.redirect_stdout(io.StringIO()):
                             code = run_synced.main([

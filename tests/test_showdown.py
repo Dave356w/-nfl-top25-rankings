@@ -28,10 +28,12 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "tests"))
 
 from pipeline import notebook as nb
 from pipeline import showdown
 import run_showdown
+import sleeper_fixtures as sf
 
 NODE = shutil.which("node")
 
@@ -48,16 +50,17 @@ POOL = [
     ("New England", "DEF", "NE", 12, 7.0), ("Seattle", "DEF", "SEA", 12, 7.0),
 ]
 
+# (team, name, position, Sleeper depth_chart_position, depth_chart_order)
 CHART = [
-    ("NE", "Drake Maye", "QB", 9, 1), ("NE", "Josh Dobbs", "QB", 9, 2),
-    ("NE", "A.J. Brown", "WR", 1, 1), ("NE", "Romeo Doubs", "WR", 2, 2),
-    ("NE", "DeMario Douglas", "WR", 8, 3), ("NE", "Mack Hollins", "WR", 1, 4),
-    ("NE", "Hunter Henry", "TE", 10, 1),
-    ("NE", "Rhamondre Stevenson", "RB", 11, 1), ("NE", "Antonio Gibson", "RB", 11, 2),
-    ("SEA", "Sam Darnold", "QB", 9, 1), ("SEA", "Jaxon Smith-Njigba", "WR", 1, 1),
-    ("SEA", "Rashid Shaheed", "WR", 2, 2), ("SEA", "Cooper Kupp", "WR", 8, 3),
-    ("SEA", "AJ Barner", "TE", 10, 1), ("SEA", "Kenneth Walker", "RB", 11, 1),
-    ("SEA", "Zach Charbonnet", "RB", 11, 2),
+    ("NE", "Drake Maye", "QB", "QB", 1), ("NE", "Josh Dobbs", "QB", "QB", 2),
+    ("NE", "A.J. Brown", "WR", "LWR", 1), ("NE", "Romeo Doubs", "WR", "RWR", 1),
+    ("NE", "DeMario Douglas", "WR", "SWR", 1), ("NE", "Mack Hollins", "WR", "LWR", 2),
+    ("NE", "Hunter Henry", "TE", "TE", 1),
+    ("NE", "Rhamondre Stevenson", "RB", "RB", 1), ("NE", "Antonio Gibson", "RB", "RB", 2),
+    ("SEA", "Sam Darnold", "QB", "QB", 1), ("SEA", "Jaxon Smith-Njigba", "WR", "LWR", 1),
+    ("SEA", "Rashid Shaheed", "WR", "RWR", 1), ("SEA", "Cooper Kupp", "WR", "SWR", 1),
+    ("SEA", "AJ Barner", "TE", "TE", 1), ("SEA", "Kenneth Walker", "RB", "RB", 1),
+    ("SEA", "Zach Charbonnet", "RB", "RB", 2),
 ]
 
 
@@ -74,36 +77,27 @@ def yahoo_payload():
     }
 
 
-def depth_chart():
-    frame = nb.add_slot_role_tiers(pd.DataFrame(
-        CHART, columns=["team", "player_name", "pos_abb", "pos_slot", "pos_rank"]
-    ))
-    frame["Position"] = frame["pos_abb"].replace(nb.NFLVERSE_POSITION_ALIASES)
-    return frame
-
-
-def roster_status():
-    return pd.DataFrame(
-        [(name, team, "ACT") for name, position, team, _, _ in POOL if position != "DEF"],
-        columns=["player_name", "team", "status"],
-    )
+def sleeper_loader():
+    """Sleeper's view of the same game: every player active, FPPG as the projection."""
+    yahoo_ids = {name: index for index, (name, *_rest) in enumerate(POOL, start=1)}
+    fppg = {name: points for name, _, _, _, points in POOL}
+    rows = [sf.player(f"s{i}", name, team, pos, slot, order, yahoo_id=yahoo_ids[name])
+            for i, (team, name, pos, slot, order) in enumerate(CHART)]
+    points = {f"s{i}": fppg[name] for i, (_, name, *_rest) in enumerate(CHART)}
+    points.update({"NE": 7.0, "SEA": 7.0})
+    return sf.stub_loader(sf.dump(rows, teams=("NE", "SEA")), sf.projections(points))
 
 
 class _StubbedFeeds:
-    """Patch the three network entry points for the duration of a test."""
+    """Patch the network entry points for the duration of a test."""
 
     PATCHES = {
         "fetch_yahoo_data": lambda *a, **k: yahoo_payload(),
-        "fetch_nflverse_injury_report": lambda season, cfg=None: (pd.DataFrame(), None),
         "display": lambda *a, **k: None,
     }
 
     def install(self, case):
-        chart, roster = depth_chart(), roster_status()
-        patches = dict(self.PATCHES)
-        patches["load_nflverse_reference"] = (
-            lambda players, season, cfg=None: (chart, roster, None, ["stubbed"])
-        )
+        patches = dict(self.PATCHES, load_sleeper_reference=sleeper_loader())
         for name, value in patches.items():
             case.addCleanup(setattr, nb, name, getattr(nb, name))
             setattr(nb, name, value)
@@ -279,14 +273,10 @@ class BrowserAgreementTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        chart, roster = depth_chart(), roster_status()
         originals = {name: getattr(nb, name) for name in
-                     ("fetch_yahoo_data", "fetch_nflverse_injury_report",
-                      "load_nflverse_reference", "display")}
+                     ("fetch_yahoo_data", "load_sleeper_reference", "display")}
         nb.fetch_yahoo_data = lambda *a, **k: yahoo_payload()
-        nb.fetch_nflverse_injury_report = lambda season, cfg=None: (pd.DataFrame(), None)
-        nb.load_nflverse_reference = lambda players, season, cfg=None: (
-            chart, roster, None, [])
+        nb.load_sleeper_reference = sleeper_loader()
         nb.display = lambda *a, **k: None
         try:
             payloads, _ = build_payload(simulations=6_000)

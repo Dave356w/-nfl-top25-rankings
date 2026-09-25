@@ -36,7 +36,7 @@ import numpy as np
 import pandas as pd
 
 from pipeline.portfolio_construction import exposure_limit
-from pipeline import salary_projection
+from pipeline import salary_projection, sleeper
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -93,49 +93,23 @@ class Settings:
     # Print the split-half Monte Carlo reliability table with the run.
     report_reliability: bool = True
 
-    # --- nflverse role and availability feed (v3.3) ---------------------------------
-    # Salary order is a weak proxy for a depth chart and says nothing at all about
-    # who is on injured reserve. These pull the published depth chart and weekly
-    # roster status from the nflverse data releases. Any failure degrades to the
-    # salary heuristic with a warning; the run never dies on a network problem.
-    use_nflverse: bool = True
-    nflverse_apply_depth: bool = True
-    nflverse_availability_filter: bool = True
+    # --- Sleeper depth, availability and projections --------------------------------
+    # Every page takes who starts, who is hurt and what each player is expected to
+    # score from Sleeper's public API (pipeline/sleeper.py). Yahoo supplies only
+    # salaries and the slate. A Sleeper failure fails the run, so the previously
+    # published pages stay live rather than being rebuilt without projections.
+    sleeper_cache_dir: str = "sleeper_cache"
+    sleeper_timeout: int = 30
 
-    # Statuses treated as available. ACT is the active roster; DEV is the practice
-    # squad, INA declared inactive for the game, RES injured reserve, CUT released.
-    # Add "DEV" if you deliberately want practice-squad elevation candidates in the
-    # pool, or name the individual in AVAILABILITY_OVERRIDES once his game-day
-    # elevation is confirmed.
-    nflverse_available_status: tuple = ("ACT",)
+    # A priced player Sleeper has no confident match for has no availability or
+    # projection, so he is dropped. Name anyone you know is playing in
+    # AVAILABILITY_OVERRIDES and give him a PROJECTION_OVERRIDES value.
+    sleeper_drop_unmatched: bool = True
 
-    # v3.5: a player the weekly roster has no row for is now dropped. Keeping him
-    # was internally inconsistent - the run would print "allowed status: ACT" and
-    # then rate an unknown-status player as available - and it is the failure mode
-    # that eventually puts an ineligible player in a submitted lineup. Name anyone
-    # you know is playing in AVAILABILITY_OVERRIDES.
-    nflverse_drop_unmatched: bool = True
-
-    # Refuse to run the availability filter at all if the roster feed matched less
-    # of the pool than this. Below it the far likelier explanation is a join or
-    # schema problem, and dropping most of a slate on that basis is worse than
-    # keeping it.
-    nflverse_min_match_rate: float = 0.75
-
-    # Weight on Yahoo salary order when blending the published chart with a
-    # workload proxy. Salary is available for every slate and is the only live
-    # expectation input to the fitted projection model.
-    role_salary_rank_weight: float = 0.5
-
-    # Promote same-team teammates past a player who is ruled Out or off the active
-    # roster, before roles, opportunity ranks and projections are computed. With
-    # this off, an injured starter's backup is projected (or, at QB, filtered)
-    # as a backup until the published chart catches up.
-    promote_past_unavailable: bool = True
-
-    nflverse_season: int | None = None  # None infers the season from the slate
-    nflverse_timeout: int = 30
-    nflverse_cache_dir: str = "nflverse_cache"
+    # Refuse to publish if Sleeper matched less of the priced pool than this.
+    # Below it the likelier explanation is a join or schema problem, and ranking
+    # the slate on a fraction of its players is worse than keeping the last run.
+    sleeper_min_match_rate: float = 0.75
 
 
 CFG = Settings()
@@ -168,7 +142,7 @@ EXCLUDE_PLAYERS = set()
 
 # Availability the roster feed cannot know about, e.g. {"Player Name": True} for a
 # confirmed game-day practice-squad elevation, or False for a late scratch the
-# weekly roster still lists as active. These win over the nflverse status.
+# Sleeper still lists as active. These win over Sleeper's status.
 AVAILABILITY_OVERRIDES = {}
 
 # Exact backup-QB names to retain despite the default role filter.
@@ -274,7 +248,6 @@ def normalize_yahoo_data(payload):
         "position": "Position",
         "team": "Team",
         "salary": "Salary",
-        "fppg": "FPPG",
         "gameCode": "Game ID",
         "gameStartTime": "Game Time",
         "homeTeam": "Home Team",
@@ -282,7 +255,7 @@ def normalize_yahoo_data(payload):
     }
     df = df.rename(columns=rename)
     required = [
-        "Name", "Position", "Team", "Salary", "FPPG", "Game ID",
+        "Name", "Position", "Team", "Salary", "Game ID",
         "Game Time", "Home Team", "Away Team",
     ]
     missing = [column for column in required if column not in df]
@@ -293,7 +266,6 @@ def normalize_yahoo_data(payload):
         df["Position"].astype(str).str.upper().replace({"D/ST": "DEF", "DST": "DEF"})
     )
     df["Salary"] = pd.to_numeric(df["Salary"], errors="coerce")
-    df["FPPG"] = pd.to_numeric(df["FPPG"], errors="coerce").fillna(0.0)
     df["Game ID"] = df["Game ID"].astype(str)
     # v3.2 keeps Yahoo's own player id ("nfl.p.26753" -> 26753). Name matching against
     # any external depth-chart or injury feed is lossy; this is the stable key. Team
@@ -357,7 +329,11 @@ def _warn_unmatched(names, label, available):
 
 
 def add_projection_priors(df, projection_overrides=None):
-    """Apply the season-frozen Yahoo salary, position and depth regression."""
+    """Apply the season-frozen Yahoo salary, position and depth regression.
+
+    Historical backtests only (`pipeline.showdown_backtest`), where Sleeper has no
+    archived pregame projection. The live pages use Sleeper's projection.
+    """
     out = df.copy()
     if "Depth_Rank" not in out:
         order = out.sort_values(
@@ -507,72 +483,9 @@ def salary_cap_for_game(cap_map, game_id):
         print("Enter a positive number.")
 
 
-def assign_depth_assumptions(players, depth_overrides=None, style_overrides=None):
-    """Assign relative team-position ranks without claiming active status.
-
-    The Yahoo feed does not provide a dependable live depth chart. Ranking by the
-    unadjusted projection gives a reproducible fallback and avoids circularly
-    re-ranking players after their depth haircut. A manual override should be used
-    for injury replacements, newly promoted starters, and specialty packages.
-
-    v3.2 breaks projection ties on salary then name instead of on feed row order, so
-    two equally projected bench players always receive the same depth ranks.
-    """
-    depth_overrides = depth_overrides or {}
-    style_overrides = style_overrides or {}
-    out = players.copy()
-    order = out.sort_values(
-        ["Team", "Position", "Projected_FP", "Salary", "Name"],
-        ascending=[True, True, False, False, True],
-    )
-    ranks = (order.groupby(["Team", "Position"]).cumcount() + 1).reindex(out.index)
-    out["Depth_Rank"] = ranks.astype(int)
-    out["Depth_Source"] = "projection heuristic"
-    out["Player_Style"] = "standard"
-
-    _warn_unmatched(depth_overrides, "Depth override", set(out["Name"]))
-    for name, depth in depth_overrides.items():
-        mask = out["Name"].eq(name)
-        if mask.any():
-            out.loc[mask, "Depth_Rank"] = max(1, int(depth))
-            out.loc[mask, "Depth_Source"] = "manual override"
-
-    allowed_styles = {"standard", "rushing_qb", "pass_catching_rb", "committee_rb"}
-    _warn_unmatched(style_overrides, "Style override", set(out["Name"]))
-    for name, style in style_overrides.items():
-        if style not in allowed_styles:
-            raise ValueError(f"Unsupported style '{style}' for {name}")
-        mask = out["Name"].eq(name)
-        if mask.any():
-            out.loc[mask, "Player_Style"] = style
-    return out
-
-
-# Actual / rolling-pregame expectation by position and lagged-snap depth.
-# Rank-one values are held at 1.0 because the small observed differences were not
-# practically important. QB3 had only 23 games and is not promoted as a parameter.
-DEPTH_MEAN_MULTIPLIER = {
-    "QB": {1: 1.00, 2: 0.37, 3: 0.37, 4: 0.37},
-    "RB": {1: 1.00, 2: 0.94, 3: 0.75, 4: 0.70},
-    "WR": {1: 1.00, 2: 0.98, 3: 0.98, 4: 0.77},
-    "TE": {1: 1.00, 2: 0.94, 3: 0.75, 4: 0.61},
-    "DEF": {1: 1.00, 2: 1.00, 3: 1.00, 4: 1.00},
-}
-
-
 def _depth_bucket(depth):
     """Map all fourth-or-deeper roles to the calibrated 4+ bucket."""
     return min(max(int(depth), 1), 4)
-
-
-def apply_depth_mean_adjustments(players):
-    """Compatibility shim: depth is already fitted inside the regression."""
-    out = players.copy()
-    out["Pre_Depth_Projected_FP"] = out["Projected_FP"].astype(float)
-    out["Depth_Mean_Multiplier"] = 1.0
-    out["Role_Adjusted_Baseline_FP"] = out["Projected_FP"].astype(float)
-    out["Projection_Adjustment"] = "depth included in salary regression"
-    return out
 
 
 def effective_role_tier(players):
@@ -592,18 +505,17 @@ def apply_default_role_filters(players, include_backup_qbs=None, cfg=None):
     Default exclusion prevents a low-salary backup from entering a lineup solely
     because a high fitted CV produces a long simulated tail.
 
-    The test is the role tier, not the opportunity rank: quarterback has a single
-    alignment slot, so tier 1 is the starter and nothing else is. A DEPTH_OVERRIDES
-    entry sets both, which is how a confirmed replacement starter gets through.
+    The test is the role tier. Quarterbacks are tiered by Sleeper's projection
+    (see `sleeper.build_reference`), so the QB Sleeper expects to start is tier 1
+    even before its chart moves. A DEPTH_OVERRIDES entry of 1 also gets through.
     """
     cfg = _cfg(cfg)
     include_backup_qbs = set(include_backup_qbs or set())
     out = players.copy()
     tier = effective_role_tier(out)
 
-    # v3.2: keeping a backup QB without also promoting its role leaves the 0.37x
-    # historical multiplier in place, silently deleting ~63% of its projection. That
-    # made INCLUDE_BACKUP_QBS look broken rather than misconfigured.
+    # Keeping a backup QB without promoting his role leaves him keyed to the
+    # backup volatility and scoreless-rate buckets, which is rarely what was meant.
     demoted = out[
         out["Name"].isin(include_backup_qbs)
         & out["Position"].eq("QB")
@@ -613,9 +525,9 @@ def apply_default_role_filters(players, include_backup_qbs=None, cfg=None):
     if demoted:
         warnings.warn(
             "INCLUDE_BACKUP_QBS retained " + ", ".join(demoted)
-            + " but the depth chart still lists them behind QB1, so the 0.37x "
-            "historical QB2 mean multiplier is still applied. Add a DEPTH_OVERRIDES "
-            "entry of 1, or a PROJECTION_OVERRIDES value, if you expect them to start."
+            + " but Sleeper's depth chart still lists them behind QB1, so they keep "
+            "the backup volatility and scoreless rate. Add a DEPTH_OVERRIDES entry "
+            "of 1 if you expect them to start."
         )
 
     if not cfg.exclude_backup_qbs:
@@ -639,11 +551,6 @@ def depth_sanity_report(players):
             flags.append("no chart entry; role inferred from the projection")
         elif source != "manual override":
             flags.append("chart role")
-        if (
-            player["FPPG"] <= 0.25
-            and player["Projection_Source"] != "manual override"
-        ):
-            flags.append("zero/low FPPG prior")
         if player["Position"] == "QB" and player["Depth_Rank"] > 1:
             flags.append("verify expected snaps")
         rows.append({
@@ -672,7 +579,7 @@ def apply_exclusions_interactive(players, preexcluded=None):
     view = view.reset_index(drop=True)
     view.insert(0, "Row", np.arange(len(view)))
     display(view[[
-        "Row", "Name", "Position", "Team", "Salary", "FPPG",
+        "Row", "Name", "Position", "Team", "Salary",
         "Pre_Depth_Projected_FP", "Depth_Mean_Multiplier", "Projected_FP",
         "Role_Label", "Depth_Rank", "Projection_Source",
     ]].rename(columns={
@@ -785,60 +692,8 @@ def trim_player_pool(players, cfg=None):
 
 
 # ============================================================================
-# NOTEBOOK CELL 9 - nflverse depth chart and roster-availability cross-check
+# NOTEBOOK CELL 9 - Sleeper depth chart, availability and projections
 # ============================================================================
-NFLVERSE_RELEASE_BASE = "https://github.com/nflverse/nflverse-data/releases/download"
-
-# Yahoo and nflverse disagree on exactly one abbreviation on a normal slate. Without
-# this alias every Jacksonville player fails to match and the availability filter
-# silently switches itself off for that team.
-YAHOO_TO_NFLVERSE_TEAM = {"JAC": "JAX"}
-
-# nflverse lists fullbacks separately; Yahoo prices them as running backs.
-NFLVERSE_POSITION_ALIASES = {"FB": "RB", "HB": "RB"}
-
-
-def rerank_aliased_positions(offense):
-    """Place fullbacks behind their team's running backs before the ranks are used.
-
-    nflverse ranks fullbacks within fullbacks, so a blocking FB1 naively becomes RB1
-    and inherits RB1's 1.00 mean multiplier and low 0.676 CV - strictly worse than the
-    salary heuristic it replaced. Offsetting by the deepest running back keeps the
-    alias useful without promoting a fullback over the actual starter.
-    """
-    out = offense.copy()
-    is_fullback = out["pos_abb"].eq("FB")
-    if not is_fullback.any():
-        return out
-    deepest = out[out["pos_abb"].eq("RB")].groupby("team")["pos_rank"].max()
-    out.loc[is_fullback, "pos_rank"] = (
-        out.loc[is_fullback, "team"].map(deepest).fillna(0).astype(int)
-        + out.loc[is_fullback, "pos_rank"].astype(int)
-    )
-    return out
-
-# Roster status codes seen in nflverse weekly rosters. These are the codes the
-# 2024 and 2025 weekly assets actually carry; anything else is reported by its
-# raw code and treated as unavailable, because an unrecognized status is exactly
-# the case where guessing "probably fine" is most expensive. A practice-squad
-# player elevated for a game keeps his DEV row, so a confirmed elevation is an
-# AVAILABILITY_OVERRIDES entry rather than a status.
-NFLVERSE_STATUS_MEANING = {
-    "ACT": "active",
-    "DEV": "practice squad",
-    "INA": "inactive for this game",
-    "RES": "reserve / injured reserve",
-    "CUT": "released",
-    "RET": "retired",
-    "EXE": "exempt list",
-    "E01": "exempt / commissioner permission",
-    "TRC": "reserve / did not report",
-    "TRD": "traded",
-    "W04": "waived",
-}
-
-NO_ROSTER_ROW = "no roster row"
-
 _NAME_SUFFIXES = re.compile(r"\b(jr|sr|ii|iii|iv|v)\b")
 _NAME_NON_ALNUM = re.compile(r"[^a-z0-9]+")
 
@@ -868,69 +723,9 @@ def infer_season(game_time, fallback=None):
     return int(stamp.year) if stamp.month >= 3 else int(stamp.year) - 1
 
 
-def _read_nflverse_csv(dataset, filename, cfg):
-    """Download one nflverse release asset, caching it for the current UTC day.
-
-    The .csv.gz assets are used rather than .parquet so the notebook keeps working
-    without pyarrow. Files are refreshed daily because nflverse republishes the
-    depth chart every morning.
-    """
-    cache = Path(cfg.nflverse_cache_dir)
-    stamp = time.strftime("%Y%m%d", time.gmtime())
-    target = cache / f"{stamp}_{filename}"
-    if not target.exists():
-        cache.mkdir(parents=True, exist_ok=True)
-        url = f"{NFLVERSE_RELEASE_BASE}/{dataset}/{filename}"
-        request = Request(url, headers={"User-Agent": "Mozilla/5.0 Yahoo-Showdown-Lineup-Lab/3.3"})
-        with urlopen(request, timeout=cfg.nflverse_timeout) as response:
-            target.write_bytes(response.read())
-        for stale in cache.glob(f"*_{filename}"):
-            if stale != target:
-                stale.unlink(missing_ok=True)
-    return pd.read_csv(target, low_memory=False)
-
-
 ROLE_TIER_LABELS = {1: "starter", 2: "rotation", 3: "backup"}
 DEEP_ROLE_LABEL = "reserve"
 SPECIALIST_LABEL = "specialist"
-
-
-def add_slot_role_tiers(offense):
-    """Derive a role tier per alignment slot instead of one flat position ladder.
-
-    An NFL depth chart is not a single ordered list per position. A team that
-    lines up in three-receiver personnel publishes three parallel starting
-    receiver spots, and nflverse encodes that in `pos_slot`: on a 2025 Washington
-    snapshot the WR rows carry slots 1, 2 and 8, and `pos_rank` walks across the
-    slots - McLaurin (slot 1) rank 1, Samuel (slot 2) rank 2, Brown (slot 8) rank
-    3, then McCaffrey (slot 1) rank 4 as the *second* man at the first slot.
-
-    Flattening that to WR1 > WR2 > WR3 > WR4 turns three starters into a starter
-    and two deep reserves, which then collects a mean haircut meant for players
-    who barely take the field. The tier below is the player's rank *within his
-    own slot*, so all three of those receivers are tier 1 and McCaffrey is the
-    tier-2 man behind McLaurin.
-    """
-    out = offense.copy()
-    if "pos_slot" not in out:
-        # Older season schemas have no slot column; the flat rank is all there is.
-        out["pos_slot"] = pd.NA
-        out["Role_Tier"] = pd.to_numeric(out["pos_rank"], errors="coerce")
-        out["Role_Slot"] = None
-        return out
-    out["pos_slot"] = pd.to_numeric(out["pos_slot"], errors="coerce")
-    out["pos_rank"] = pd.to_numeric(out["pos_rank"], errors="coerce")
-    ordered = out.sort_values(["team", "pos_abb", "pos_slot", "pos_rank"])
-    tiers = (ordered.groupby(["team", "pos_abb", "pos_slot"], dropna=False).cumcount() + 1)
-    out["Role_Tier"] = tiers.reindex(out.index)
-    # Fall back to the flat rank wherever the slot was missing or unparseable.
-    out["Role_Tier"] = out["Role_Tier"].fillna(out["pos_rank"])
-    out["Role_Slot"] = np.where(
-        out["pos_slot"].notna(),
-        out["pos_abb"].astype(str) + " slot " + out["pos_slot"].astype("Int64").astype(str),
-        None,
-    )
-    return out
 
 
 def role_label(position, tier, chart_position=None):
@@ -945,489 +740,108 @@ def role_label(position, tier, chart_position=None):
     return ROLE_TIER_LABELS.get(tier, DEEP_ROLE_LABEL)
 
 
-def fetch_nflverse_depth_chart(season, cfg=None):
-    """Return the most recent depth-chart snapshot for one season, plus its timestamp.
+def load_sleeper_reference(players, cfg=None):
+    """Fetch Sleeper state, players and projections for the slate's teams."""
+    cfg = _cfg(cfg)
+    return sleeper.load(
+        players["Team"].unique(), cache_dir=cfg.sleeper_cache_dir,
+        timeout=cfg.sleeper_timeout,
+    )
 
-    The 2026 asset is a running log of snapshots rather than one row per week, so the
-    latest `dt` is taken. Only the offensive personnel group is kept. `pos_rank` is
-    the flat rank within the team's position group; `add_slot_role_tiers` adds the
-    per-slot tier that says whether the player is actually a starter.
+
+def apply_sleeper_reference(players, reference, context=None, cfg=None):
+    """Replace depth and the mean with Sleeper's, row by row.
+
+    Returns ``(kept, removed)``. `removed` lists every priced player that left the
+    pool and why: no confident Sleeper match, or no Sleeper projection for the
+    week -- which is how Sleeper says a player is not expected to play. Sleeper's
+    injury designation is carried for display only. Manual overrides win:
+    AVAILABILITY_OVERRIDES keeps or drops a player outright, DEPTH_OVERRIDES sets
+    his depth, and PROJECTION_OVERRIDES sets his mean.
     """
     cfg = _cfg(cfg)
-    frame = _read_nflverse_csv("depth_charts", f"depth_charts_{season}.csv.gz", cfg)
-    if "dt" in frame:
-        frame = frame.copy()
-        frame["dt"] = pd.to_datetime(frame["dt"], errors="coerce", utc=True)
-        as_of = frame["dt"].max()
-        frame = frame[frame["dt"].eq(as_of)]
-    else:  # older seasons use a season/week schema
-        as_of = None
-        if "week" in frame:
-            frame = frame[frame["week"].eq(frame["week"].max())]
-    offense = frame[frame["pos_abb"].isin(["QB", "RB", "FB", "WR", "TE"])].copy()
-    offense = rerank_aliased_positions(offense)
-    offense = add_slot_role_tiers(offense)
-    offense["Position"] = offense["pos_abb"].replace(NFLVERSE_POSITION_ALIASES)
-    return offense, as_of
+    context = context or {}
+    out = players.copy().reset_index(drop=True)
+    out["Sleeper_ID"] = sleeper.match_players(out, reference).to_numpy()
 
-
-def fetch_nflverse_roster_status(season, cfg=None):
-    """Return the latest weekly roster snapshot: who is active, cut, IR, or practice squad."""
-    cfg = _cfg(cfg)
-    frame = _read_nflverse_csv("weekly_rosters", f"roster_weekly_{season}.csv.gz", cfg)
-    if "week" in frame and frame["week"].notna().any():
-        frame = frame[frame["week"].eq(frame["week"].max())]
-    name_column = next(
-        (c for c in ("full_name", "player_name", "football_name") if c in frame), None
-    )
-    if name_column is None:
-        raise ValueError("nflverse roster asset has no recognizable name column.")
-    out = frame[[name_column, "team", "status"]].copy()
-    out.columns = ["player_name", "team", "status"]
-    return out
-
-
-def _keyed(frame, team_column, name_column):
-    """Index a reference frame by team + normalized name, dropping ambiguous keys.
-
-    Two different players on one team who normalize to the same key cannot be told
-    apart, so both are removed rather than guessed at.
-    """
-    out = frame.copy()
-    out["_key"] = (
-        out[team_column].astype(str).str.upper()
-        + "|"
-        + out[name_column].map(normalize_person_name)
-    )
-    counts = out["_key"].value_counts()
-    return out[out["_key"].isin(counts[counts.eq(1)].index)].set_index("_key")
-
-
-def build_nflverse_role_report(players, depth_chart, roster_status, cfg=None):
-    """Join a Yahoo player pool to nflverse depth and roster status.
-
-    Pure function: it performs no network access, so the smoke test can exercise the
-    matching and disagreement logic offline. Returns one row per Yahoo player with
-    the heuristic depth, the nflverse depth, the roster status, and whether each
-    lookup actually matched.
-    """
-    cfg = _cfg(cfg)
-    allowed = set(cfg.nflverse_available_status)
-    overrides = {str(name): bool(value) for name, value in (AVAILABILITY_OVERRIDES or {}).items()}
-    _warn_unmatched(overrides, "Availability override", set(players["Name"]))
-    pool = players.copy()
-    pool["_team"] = pool["Team"].astype(str).str.upper().replace(YAHOO_TO_NFLVERSE_TEAM)
-    pool["_key"] = pool["_team"] + "|" + pool["Name"].map(normalize_person_name)
-
-    depth_key, status_key = None, None
-    if depth_chart is not None and len(depth_chart):
-        depth_key = _keyed(depth_chart, "team", "player_name")
-    if roster_status is not None and len(roster_status):
-        status_key = _keyed(roster_status, "team", "player_name")
-
-    rows = []
-    columns = zip(
-        pool["Name"], pool["Team"], pool["Position"], pool["Salary"],
-        pool["Depth_Rank"], pool["_key"],
-    )
-    for name, team, position, salary, yahoo_depth, key in columns:
-        is_defense = position == "DEF"
-        nfl_depth, nfl_position, status = None, None, None
-        role_slot, role_tier = None, None
-        if depth_key is not None and not is_defense and key in depth_key.index:
-            match = depth_key.loc[key]
-            # Only accept the depth entry if the position agrees with Yahoo's.
-            if str(match["Position"]) == str(position):
-                nfl_depth = int(match["pos_rank"])
-                nfl_position = str(match["pos_abb"])
-                role_slot = match.get("Role_Slot")
-                role_slot = None if pd.isna(role_slot) else str(role_slot)
-                tier = match.get("Role_Tier")
-                role_tier = None if pd.isna(tier) else int(tier)
-        if status_key is not None and not is_defense and key in status_key.index:
-            status = str(status_key.loc[key]["status"])
-
-        if is_defense:
-            available, reason = True, "team defense"
-        elif name in overrides:
-            available = bool(overrides[name])
-            reason = (
-                "manual availability override: "
-                + ("available" if available else "unavailable")
-            )
-        elif status is None:
-            # An unknown roster status is not evidence of availability. A player
-            # the weekly roster has no row for may be a match failure, but he may
-            # equally be a cut, a practice-squad body or someone who was never on
-            # the 53. Treating that as "active" is how an invalid lineup gets
-            # built; AVAILABILITY_OVERRIDES is the way to say otherwise.
-            available = not cfg.nflverse_drop_unmatched
-            reason = NO_ROSTER_ROW if available else f"{NO_ROSTER_ROW} (dropped)"
-        else:
-            available = status in allowed
-            reason = NFLVERSE_STATUS_MEANING.get(status, f"unrecognized status {status}")
-
-        rows.append({
-            "Player": name,
-            "Team": team,
-            "Position": position,
-            "Salary": float(salary),
-            "Yahoo depth": int(yahoo_depth),
-            "nflverse depth": nfl_depth,
-            "nflverse position": nfl_position,
-            "Role slot": role_slot,
-            "Role tier": role_tier,
-            "Role": (
-                role_label(position, role_tier, nfl_position)
-                if role_tier is not None else None
-            ),
-            "Depth matched": nfl_depth is not None,
-            "Depth agrees": (nfl_depth is not None and int(nfl_depth) == int(yahoo_depth)),
-            "Roster status": status,
-            "Status meaning": reason,
-            "Available": available,
-        })
-    report = pd.DataFrame(rows)
-    report["Role tier"] = report["Role tier"].astype("Int64")
-    report["Depth change"] = np.where(
-        report["Depth matched"] & ~report["Depth agrees"],
-        report["Yahoo depth"].astype(str) + " -> " + report["nflverse depth"].astype("Int64").astype(str),
-        "",
-    )
-    return report
-
-
-def roster_match_rate(report):
-    """Share of non-defense players the weekly roster feed actually matched."""
-    if report is None or report.empty:
-        return 1.0
-    skill = report[report["Position"].ne("DEF")]
-    if skill.empty:
-        return 1.0
-    return float(skill["Roster status"].notna().mean())
-
-
-def load_nflverse_reference(players, season, cfg=None):
-    """Fetch depth chart and roster status, degrading to None on any failure.
-
-    A network problem must never take down a lineup build, so every failure is
-    reported and the run continues on the salary-based heuristic alone.
-    """
-    cfg = _cfg(cfg)
-    depth_chart, as_of, roster_status, notes = None, None, None, []
-    try:
-        depth_chart, as_of = fetch_nflverse_depth_chart(season, cfg)
-        notes.append(
-            f"depth chart {season}: {len(depth_chart):,} offensive rows"
-            + (f", snapshot {as_of:%Y-%m-%d %H:%M} UTC" if as_of is not None else "")
+    skill = out["Position"].ne("DEF")
+    rate = float(out.loc[skill, "Sleeper_ID"].notna().mean()) if skill.any() else 1.0
+    if rate < cfg.sleeper_min_match_rate:
+        raise RuntimeError(
+            f"Sleeper matched only {rate:.0%} of the priced skill players, below the "
+            f"{cfg.sleeper_min_match_rate:.0%} floor; refusing to publish on a broken join."
         )
-    except Exception as exc:  # network, 404 for an unstarted season, schema drift
-        notes.append(f"depth chart unavailable ({type(exc).__name__}: {exc}); keeping heuristic depth")
-    try:
-        roster_status = fetch_nflverse_roster_status(season, cfg)
-        notes.append(f"roster status {season}: {len(roster_status):,} rows")
-    except Exception as exc:
-        notes.append(f"roster status unavailable ({type(exc).__name__}: {exc}); no availability filter")
-    return depth_chart, roster_status, as_of, notes
 
+    columns = ["player_id", "Injury_Status",
+               "Injury_Body_Part", "Practice_Status", "Depth_Slot", "Chart_Tier",
+               "Role_Tier", "Depth_Rank", "Sleeper_FP"]
+    joined = reference[columns].rename(columns={"player_id": "Sleeper_ID"})
+    out = out.drop(columns=[c for c in columns[1:] if c in out], errors="ignore")
+    out = out.merge(joined, on="Sleeper_ID", how="left")
 
-def fetch_nflverse_injury_report(season, cfg=None):
-    """Load the newest published weekly injury report for a season."""
-    cfg = _cfg(cfg)
-    frame = _read_nflverse_csv("injuries", f"injuries_{season}.csv", cfg)
-    if frame.empty:
-        return frame, None
-    week = int(pd.to_numeric(frame["week"], errors="coerce").max())
-    frame = frame[pd.to_numeric(frame["week"], errors="coerce").eq(week)].copy()
-    name_column = "full_name" if "full_name" in frame else "player_name"
-    frame["_key"] = (
-        frame["team"].astype(str).str.upper().replace(YAHOO_TO_NFLVERSE_TEAM)
-        + "|" + frame[name_column].map(normalize_person_name)
-    )
-    return frame.drop_duplicates("_key", keep="last"), week
+    _warn_unmatched(AVAILABILITY_OVERRIDES, "Availability override", set(out["Name"]))
+    forced = out["Name"].map(AVAILABILITY_OVERRIDES)
+    reason = pd.Series(pd.NA, index=out.index, dtype="object")
+    unmatched = out["Sleeper_ID"].isna()
+    if cfg.sleeper_drop_unmatched:
+        reason[unmatched] = "no Sleeper match"
+    reason[forced.eq(True)] = pd.NA
+    reason[forced.eq(False)] = "availability override"
 
-
-def apply_nflverse_injuries(players, injuries):
-    """Attach report fields and remove players officially listed Out."""
-    out = players.copy()
-    for column in ("report_primary_injury", "report_status", "practice_status"):
-        out[column] = None
-    if injuries is None or injuries.empty:
-        return out, out.iloc[:0].copy()
-    lookup = injuries.set_index("_key")
-    keys = (
-        out["Team"].astype(str).str.upper().replace(YAHOO_TO_NFLVERSE_TEAM)
-        + "|" + out["Name"].map(normalize_person_name)
-    )
-    for index, key in zip(out.index, keys):
-        if key not in lookup.index:
-            continue
-        row = lookup.loc[key]
-        for column in ("report_primary_injury", "report_status", "practice_status"):
-            if column in row:
-                out.at[index, column] = row[column]
-    is_out = out["report_status"].fillna("").astype(str).str.casefold().eq("out")
-    return out.loc[~is_out].reset_index(drop=True), out.loc[is_out].reset_index(drop=True)
-
-
-def unavailable_chart_keys(roster_status, injuries, cfg=None):
-    """Team|name keys the chart should no longer count toward anyone's depth.
-
-    Only explicit evidence counts: a weekly roster status outside the allowed set
-    (IR, practice squad, cut...) or an official Out designation. A player the
-    roster feed simply has no row for is a possible join failure, not a vacancy,
-    so nobody is promoted past him. An AVAILABILITY_OVERRIDES entry saying a
-    player is available keeps him on the chart.
-    """
-    cfg = _cfg(cfg)
-    allowed = set(cfg.nflverse_available_status)
-    forced_available = {
-        normalize_person_name(name)
-        for name, value in (AVAILABILITY_OVERRIDES or {}).items() if bool(value)
-    }
-    reasons = {}
-    if roster_status is not None and len(roster_status):
-        status = roster_status["status"].astype(str)
-        blocked = roster_status[~status.isin(allowed)]
-        for team, name, code in zip(blocked["team"], blocked["player_name"], blocked["status"]):
-            key = str(team).upper() + "|" + normalize_person_name(name)
-            reasons[key] = NFLVERSE_STATUS_MEANING.get(str(code), f"status {code}")
-    if injuries is not None and len(injuries) and "report_status" in injuries:
-        out = injuries[
-            injuries["report_status"].fillna("").astype(str).str.casefold().eq("out")
-        ]
-        for key in out["_key"]:
-            reasons[str(key)] = "ruled Out"
-    return {
-        key: reason for key, reason in reasons.items()
-        if key.split("|", 1)[1] not in forced_available
-    }
-
-
-def promote_past_unavailable(depth_chart, unavailable):
-    """Move teammates up the chart past players who will not play.
-
-    The nflverse chart often still lists an injured starter at the top of his
-    slot for days after he is ruled out, which leaves his replacement projected
-    as a backup and, at quarterback, filtered out entirely as one. Removing the
-    unavailable rows and recomputing the flat rank and the per-slot tier promotes
-    exactly the players behind them. A chart that already reflects the injury is
-    unchanged, so the step is safe to run every day.
-
-    Pure function. Returns the promoted chart and one row per promoted player.
-    """
-    columns = ["Team", "Position", "Player", "Role slot", "Old rank", "New rank",
-               "Old tier", "New tier", "Replacing"]
-    if depth_chart is None or depth_chart.empty or not unavailable:
-        return depth_chart, pd.DataFrame(columns=columns)
-    chart = depth_chart.copy()
-    keys = chart["team"].astype(str).str.upper() + "|" + chart["player_name"].map(normalize_person_name)
-    gone = keys.isin(set(unavailable))
-    if not gone.any():
-        return depth_chart, pd.DataFrame(columns=columns)
-
-    position = chart["pos_abb"].replace(NFLVERSE_POSITION_ALIASES)
-    affected = set(zip(chart.loc[gone, "team"], position[gone]))
-    vacated = {}
-    for team, pos, name, key in zip(chart.loc[gone, "team"], position[gone],
-                                    chart.loc[gone, "player_name"], keys[gone]):
-        vacated.setdefault((team, pos), []).append(f"{name} ({unavailable[key]})")
-
-    before = chart.loc[~gone].copy()
-    kept = before.copy()
-    kept["_pos"] = position[~gone]
-    kept["pos_rank"] = pd.to_numeric(kept["pos_rank"], errors="coerce")
-    in_affected = [(t, p) in affected for t, p in zip(kept["team"], kept["_pos"])]
-    subset = kept[in_affected].sort_values(["team", "_pos", "pos_rank"], na_position="last")
-    compact = (subset.groupby(["team", "_pos"]).cumcount() + 1).astype(float)
-    compact[subset["pos_rank"].isna()] = np.nan
-    kept.loc[subset.index, "pos_rank"] = compact
-    kept = add_slot_role_tiers(kept.drop(columns=["_pos"]))
-
-    rows = []
-    old_rank = pd.to_numeric(before["pos_rank"], errors="coerce")
-    old_tier = pd.to_numeric(before.get("Role_Tier"), errors="coerce") if "Role_Tier" in before else old_rank
-    for index in subset.index:
-        new_rank, new_tier = kept.at[index, "pos_rank"], kept.at[index, "Role_Tier"]
-        if old_rank[index] == new_rank and old_tier[index] == new_tier:
-            continue
-        team, pos = kept.at[index, "team"], position[index]
-        rows.append({
-            "Team": team,
-            "Position": pos,
-            "Player": kept.at[index, "player_name"],
-            "Role slot": kept.at[index, "Role_Slot"],
-            "Old rank": old_rank[index],
-            "New rank": new_rank,
-            "Old tier": old_tier[index],
-            "New tier": new_tier,
-            "Replacing": ", ".join(vacated[(team, pos)]),
-        })
-    return kept, pd.DataFrame(rows, columns=columns)
-
-
-def apply_nflverse_roles(players, report, cfg=None):
-    """Attach the published chart's role structure and the ordinal it implies.
-
-    Three different things used to share one integer, and collapsing them is what
-    made a starting slot receiver read as a deep reserve:
-
-    ``Chart_Rank``
-        Where the published chart puts the player in his team's position group.
-    ``Role_Tier`` / ``Role_Label``
-        His rank *within his own alignment slot*, and the word for it. Every
-        parallel starter is tier 1 no matter where he falls in the flat ranking.
-    ``Depth_Rank``
-        Expected opportunity, set later by `apply_opportunity_ranks`. This is the
-        quantity `CALIBRATED_CV` was fitted against, so it stays an ordinal.
-
-    A manual DEPTH_OVERRIDES entry still wins outright: the point of that dict is
-    to encode information the user has and the feed does not.
-    """
-    cfg = _cfg(cfg)
-    out = players.copy()
-    out["Chart_Rank"] = pd.array([pd.NA] * len(out), dtype="Int64")
-    out["Role_Tier"] = pd.array([pd.NA] * len(out), dtype="Int64")
-    out["Role_Slot"] = None
-    out["Role_Label"] = "unknown"
-    if not cfg.nflverse_apply_depth or report is None or report.empty:
-        return out, pd.DataFrame()
-
-    manual = set(out.loc[out["Depth_Source"].eq("manual override"), "Name"])
-    matched = report[report["Depth matched"] & ~report["Player"].isin(manual)]
-    # Team plus name, not name alone: two players on a slate can share a name,
-    # and the report already carries one row per pool entry.
-    by_identity = {
-        (row["Team"], row["Player"]): row for row in matched.to_dict("records")
-    }
-    for index, team, name in zip(out.index, out["Team"], out["Name"]):
-        row = by_identity.get((team, name))
-        if row is None:
-            continue
-        out.at[index, "Chart_Rank"] = int(row["nflverse depth"])
-        if pd.notna(row["Role tier"]):
-            out.at[index, "Role_Tier"] = int(row["Role tier"])
-            out.at[index, "Role_Label"] = str(row["Role"])
-        if row["Role slot"] is not None and pd.notna(row["Role slot"]):
-            out.at[index, "Role_Slot"] = str(row["Role slot"])
-
-    skipped = report[
-        report["Depth matched"] & ~report["Depth agrees"] & report["Player"].isin(manual)
-    ]
-    if len(skipped):
-        warnings.warn(
-            "Kept your manual DEPTH_OVERRIDES over the nflverse depth chart for: "
-            + ", ".join(skipped["Player"])
-        )
-    return out, matched
-
-
-def apply_opportunity_ranks(players, cfg=None):
-    """Rank expected opportunity by blending the published chart with Yahoo salary.
-
-    The ordinal that keys the fitted mean, CV and correlation tables blends the
-    published chart ordering with Yahoo salary ordering. The chart retains sole
-    ownership of the alignment-slot role tier.
-
-    Manual DEPTH_OVERRIDES are left exactly where the user put them.
-    """
-    cfg = _cfg(cfg)
-    weight = float(np.clip(cfg.role_salary_rank_weight, 0.0, 1.0))
-    out = players.copy()
-    if "Chart_Rank" not in out:
-        out["Chart_Rank"] = pd.array([pd.NA] * len(out), dtype="Int64")
-    if "Role_Tier" not in out:
-        out["Role_Tier"] = pd.array([pd.NA] * len(out), dtype="Int64")
-        out["Role_Slot"] = None
-        out["Role_Label"] = "unknown"
-
-    manual = out["Depth_Source"].eq("manual override")
+    # Ranks for a player Sleeper could not place (unmatched but overridden back
+    # in) come from salary order among his priced teammates.
     salary_rank = out.groupby(["Team", "Position"])["Salary"].rank(
-        method="first", ascending=False
-    )
-    chart = pd.to_numeric(out["Chart_Rank"], errors="coerce")
-    # An unmatched player has no chart opinion, so his own projection ordering
-    # stands in for it and the blend leaves him where salary put him.
-    chart_rank = out.assign(_c=chart.fillna(salary_rank)).groupby(
-        ["Team", "Position"]
-    )["_c"].rank(method="first", ascending=True)
-    blended = (1.0 - weight) * chart_rank + weight * salary_rank
-    # A tie goes to salary ordering first, then the chart, then
-    # name, so the ordering is total and a rerun on identical inputs is identical.
-    order = out.assign(
-        _blend=blended, _salary=salary_rank, _chart=chart_rank
-    ).sort_values(
-        ["Team", "Position", "_blend", "_salary", "_chart", "Salary", "Name"],
-        ascending=[True, True, True, True, True, False, True],
-    )
-    opportunity = (
-        order.groupby(["Team", "Position"]).cumcount() + 1
-    ).reindex(out.index).astype(int)
-
-    out.loc[~manual, "Depth_Rank"] = opportunity[~manual]
+        method="first", ascending=False)
+    out["Depth_Rank"] = pd.to_numeric(out["Depth_Rank"], errors="coerce").fillna(salary_rank)
+    out["Role_Tier"] = pd.to_numeric(out["Role_Tier"], errors="coerce").fillna(out["Depth_Rank"])
+    out["Depth_Source"] = np.where(
+        out["Chart_Tier"].notna(), "Sleeper depth chart",
+        np.where(out["Sleeper_ID"].notna(), "Sleeper projection order", "Yahoo salary order"))
+    _warn_unmatched(DEPTH_OVERRIDES, "Depth override", set(out["Name"]))
+    for name, depth in DEPTH_OVERRIDES.items():
+        mask = out["Name"].eq(name)
+        out.loc[mask, ["Depth_Rank", "Role_Tier"]] = max(1, int(depth))
+        out.loc[mask, "Depth_Source"] = "manual override"
+    out.loc[out["Position"].eq("DEF"), ["Depth_Rank", "Role_Tier"]] = 1
     out["Depth_Rank"] = out["Depth_Rank"].astype(int)
-    out.loc[~manual & chart.notna(), "Depth_Source"] = "nflverse chart + Yahoo salary"
-    out.loc[~manual & chart.isna(), "Depth_Source"] = "Yahoo salary heuristic"
-
-    # A player the chart never matched still needs a role word. His opportunity
-    # rank is the only evidence available, so it names the role, and the source
-    # column above already says the chart did not confirm it.
-    unknown = out["Role_Tier"].isna()
-    out.loc[unknown, "Role_Tier"] = out.loc[unknown, "Depth_Rank"].astype("Int64")
-    out.loc[unknown, "Role_Label"] = [
-        role_label(position, tier)
-        for position, tier in zip(
-            out.loc[unknown, "Position"], out.loc[unknown, "Depth_Rank"]
-        )
+    out["Role_Tier"] = out["Role_Tier"].astype(int)
+    out["Role_Slot"] = [
+        f"{position} {slot}" if isinstance(slot, str) and slot else None
+        for position, slot in zip(out["Position"], out["Depth_Slot"])
     ]
-    return out
-
-
-def apply_nflverse_availability(players, report, cfg=None):
-    """Hard-drop players the published roster says are not available.
-
-    This is deliberately a removal rather than a projection haircut. A player on
-    injured reserve has no distribution to simulate, and leaving him in the pool with
-    a reduced mean would still let a long lognormal tail put him in a lineup.
-    """
-    cfg = _cfg(cfg)
-    if not cfg.nflverse_availability_filter or report is None or report.empty:
-        return players.reset_index(drop=True), pd.DataFrame()
-
-    # Treating an unknown status as unavailable is only safe while the join is
-    # working. If most of the pool failed to match, the roster feed is telling us
-    # about our own name normalization, not about who is playing.
-    match_rate = roster_match_rate(report)
-    if match_rate < cfg.nflverse_min_match_rate:
-        warnings.warn(
-            f"nflverse weekly roster matched only {match_rate:.0%} of the skill-player "
-            f"pool, below the {cfg.nflverse_min_match_rate:.0%} floor. Skipping the "
-            "availability filter rather than dropping players on a broken join."
-        )
-        return players.reset_index(drop=True), pd.DataFrame()
-
-    blocked = report[~report["Available"]]
-    if blocked.empty:
-        return players.reset_index(drop=True), blocked
-    kept = players[~players["Name"].isin(set(blocked["Player"]))].reset_index(drop=True)
-    return kept, blocked[["Player", "Team", "Position", "Salary", "Yahoo depth", "Roster status", "Status meaning"]]
-
-
-def nflverse_disagreement_view(report):
-    """The rows a human should actually look at before trusting the run."""
-    interesting = report[
-        (~report["Available"])
-        | (report["Depth matched"] & ~report["Depth agrees"])
-        | (~report["Depth matched"] & report["Position"].ne("DEF"))
+    out["Role_Label"] = [
+        role_label(position, tier, slot)
+        for position, tier, slot in zip(out["Position"], out["Role_Tier"], out["Depth_Slot"])
     ]
-    columns = [
-        "Player", "Team", "Position", "Salary", "Yahoo depth", "nflverse depth",
-        "Role slot", "Role tier", "Role", "Depth change", "Roster status",
-        "Status meaning", "Available",
-    ]
-    return interesting[columns].sort_values(
-        ["Available", "Salary"], ascending=[True, False]
-    ).reset_index(drop=True)
+    out["Player_Style"] = "standard"
+    allowed_styles = {"standard", "rushing_qb", "pass_catching_rb", "committee_rb"}
+    _warn_unmatched(PLAYER_STYLE_OVERRIDES, "Style override", set(out["Name"]))
+    for name, style in PLAYER_STYLE_OVERRIDES.items():
+        if style not in allowed_styles:
+            raise ValueError(f"Unsupported style '{style}' for {name}")
+        out.loc[out["Name"].eq(name), "Player_Style"] = style
+
+    week = context.get("week")
+    source = "Sleeper half-PPR projection" + (
+        f" ({context.get('season')} week {week})" if week is not None else "")
+    out["Projected_FP"] = pd.to_numeric(out["Sleeper_FP"], errors="coerce")
+    out["Projection_Source"] = source
+    _warn_unmatched(PROJECTION_OVERRIDES, "Projection override", set(out["Name"]))
+    for name, value in PROJECTION_OVERRIDES.items():
+        mask = out["Name"].eq(name)
+        out.loc[mask, "Projected_FP"] = float(value)
+        out.loc[mask, "Projection_Source"] = "manual override"
+    unprojected = reason.isna() & ~out["Projected_FP"].gt(0)
+    reason[unprojected] = "no Sleeper projection"
+
+    removed = out.loc[reason.notna(), ["Name", "Team", "Position", "Salary", "Sleeper_ID",
+                                       "Injury_Status"]].rename(columns={"Name": "Player"})
+    removed["Reason"] = reason[reason.notna()].to_numpy()
+    kept = out[reason.isna()].copy()
+    kept["Projected_FP"] = kept["Projected_FP"].astype(float)
+    kept["Baseline_Projected_FP"] = kept["Projected_FP"]
+    kept["Role_Adjusted_Baseline_FP"] = kept["Projected_FP"]
+    return kept.reset_index(drop=True), removed.reset_index(drop=True)
 
 
 # ============================================================================
@@ -1451,7 +865,7 @@ CALIBRATED_CV = {
 #
 # Scope is deliberate. A game with no carry, target or pass attempt is *excluded*
 # from both numerator and denominator, because that is usually a player who was
-# inactive, which is handled separately by nflverse roster and injury filters.
+# inactive, which is handled separately by the Sleeper roster and injury filter.
 # Counting those games here would mix availability into the conditional scoring
 # distribution. What is left is the pure
 # shape effect: a WR4 who plays, runs his routes and is never thrown to.
@@ -2607,11 +2021,6 @@ def _lineup_risk_notes(players, ids, salary_left, salary_cap):
     ]
     if len(deep):
         notes.append("deep role: " + ", ".join(deep["Name"].tolist()))
-    zero_history = selected[
-        selected["Projection_Source"].astype(str).str.contains("zero/low FPPG")
-    ]
-    if len(zero_history):
-        notes.append("no FPPG history: " + ", ".join(zero_history["Name"].tolist()))
     backups = selected[
         selected["Position"].eq("QB") & selected["Depth_Rank"].gt(1)
     ]
@@ -2827,80 +2236,30 @@ def export_results(
 def run_interactive(cfg=None):
     """Fetch one Yahoo slate, audit assumptions, simulate, rank, and export.
 
-    The order is deliberate: depth is assigned from the unadjusted projection,
-    then its historical mean bias is corrected, then unconfirmed backup QBs and
-    user exclusions are removed. This prevents adjusted means from redefining the
-    very depth role used to choose the adjustment.
+    Sleeper supplies depth, availability and the mean; unconfirmed backup QBs
+    and user exclusions are removed after that.
     """
     cfg = _cfg(cfg)
     started = time.perf_counter()
     payload = fetch_yahoo_data()
     all_players, cap_map = normalize_yahoo_data(payload)
-    all_players = add_projection_priors(all_players, PROJECTION_OVERRIDES)
     games = list_games(all_players)
     selected = select_game_interactive(games)
     salary_cap = salary_cap_for_game(cap_map, selected["Game ID"])
 
     players = all_players[all_players["Game ID"].eq(str(selected["Game ID"]))].copy()
-
-    players = assign_depth_assumptions(players, DEPTH_OVERRIDES, PLAYER_STYLE_OVERRIDES)
-
     print(f"\n{selected['Matchup']} - cap ${salary_cap:g}")
 
-    # nflverse role and availability, applied before the depth mean adjustment so the
-    # corrected rank drives both the mean multiplier and the volatility prior.
-    nflverse_report = pd.DataFrame()
-    nflverse_applied = pd.DataFrame()
-    nflverse_blocked = pd.DataFrame()
-    if cfg.use_nflverse:
-        season = cfg.nflverse_season or infer_season(selected["Game Time"])
-        depth_chart, roster_status, as_of, notes = load_nflverse_reference(players, season, cfg)
-        print("\nnflverse reference feed:")
-        for note in notes:
-            print(f"  - {note}")
-        if depth_chart is not None or roster_status is not None:
-            nflverse_report = build_nflverse_role_report(
-                players, depth_chart, roster_status, cfg
-            )
-            players, nflverse_applied = apply_nflverse_roles(players, nflverse_report, cfg)
-            matched = int(nflverse_report["Depth matched"].sum())
-            skill = int(nflverse_report["Position"].ne("DEF").sum())
-            statused = int(nflverse_report["Roster status"].notna().sum())
-            print(
-                f"  - matched {matched}/{skill} skill players to a depth-chart entry, "
-                f"{statused}/{skill} to a roster status ({roster_match_rate(nflverse_report):.0%})"
-            )
-            print(f"  - role tiers taken from the published chart: {len(nflverse_applied)}")
-            starters = int(nflverse_report["Role"].eq("starter").sum())
-            print(f"  - players the chart lists in a starting slot: {starters}")
-            review = nflverse_disagreement_view(nflverse_report)
-            if len(review):
-                print(
-                    "\nnflverse disagreements and unmatched players - review before "
-                    "trusting the run:"
-                )
-                display(review)
-    else:
-        print("\nnflverse cross-check disabled (Settings.use_nflverse = False).")
-
-    players = apply_opportunity_ranks(players, cfg)
-    players = add_projection_priors(players, PROJECTION_OVERRIDES)
+    reference, context = load_sleeper_reference(players, cfg)
     print(
-        "\nRole tier drives the fitted mean correction and expected-opportunity "
-        "rank drives the volatility prior; verify injuries, actives, and snaps."
+        f"\nSleeper: {context['season']} week {context['week']} projections; "
+        f"player dump fetched {context['players_fetched_utc']}."
     )
+    players, removed = apply_sleeper_reference(players, reference, context, cfg)
+    if len(removed):
+        print(f"\nRemoved {len(removed)} player(s) before modelling:")
+        display(removed)
     display(depth_sanity_report(players))
-
-    if cfg.use_nflverse and len(nflverse_report):
-        players, nflverse_blocked = apply_nflverse_availability(players, nflverse_report, cfg)
-        if len(nflverse_blocked):
-            print(
-                f"\nAVAILABILITY FILTER removed {len(nflverse_blocked)} player(s) "
-                f"(allowed status: {', '.join(cfg.nflverse_available_status)}):"
-            )
-            display(nflverse_blocked)
-        else:
-            print("\nAvailability filter: every priced player is on an allowed roster status.")
     players, auto_removed_qbs = apply_default_role_filters(
         players, INCLUDE_BACKUP_QBS, cfg
     )
@@ -3013,8 +2372,7 @@ def run_interactive(cfg=None):
             "analytic_vs_simulated.csv": screen_check,
             "player_marginals.csv": marginals,
             "portfolio_diversity.csv": diversity,
-            **({"nflverse_role_report.csv": nflverse_report} if len(nflverse_report) else {}),
-            **({"nflverse_removed.csv": nflverse_blocked} if len(nflverse_blocked) else {}),
+            **({"availability_removed.csv": removed} if len(removed) else {}),
         },
     )
     print(f"\nSaved results bundle: {files['zip']}")
@@ -3030,9 +2388,7 @@ def run_interactive(cfg=None):
         "correlation_summary": corr_summary,
         "correlation_detail": corr_detail,
         "marginals": marginals,
-        "nflverse_report": nflverse_report,
-        "nflverse_depth_applied": nflverse_applied,
-        "nflverse_removed": nflverse_blocked,
+        "availability_removed": removed,
         "reliability": reliability,
         "screen_check": screen_check,
         "diversity": diversity,
@@ -3048,11 +2404,11 @@ def run_interactive(cfg=None):
 # NOTEBOOK CELL 19 - Weekly top-N rankings by position
 # ============================================================================
 def prepare_slate_pool(cfg=None, purpose=""):
-    """Build the priced, role-adjusted, availability-filtered pool for a slate.
+    """Build the priced, availability-filtered pool for a slate.
 
-    Yahoo supplies prices, the frozen historical model supplies means, and
-    nflverse supplies depth, roster status and injury reports. Every consumer
-    receives this exact final frame.
+    Yahoo supplies prices and the slate; Sleeper supplies depth, roster and
+    injury status, and the projected mean. Every consumer receives this exact
+    final frame.
 
     The position rankings and the showdown export both need exactly this and had
     started to drift apart as two copies of it.
@@ -3060,11 +2416,6 @@ def prepare_slate_pool(cfg=None, purpose=""):
     cfg = _cfg(cfg)
     payload = fetch_yahoo_data()
     players, cap_map = normalize_yahoo_data(payload)
-    raw_inputs = {"yahoo": payload}
-    # normalize_yahoo_data has already reduced a multi-week Yahoo response to one
-    # active NFL week, before repair/depth/projection logic can mix duplicate players.
-    # Preliminary salary depth makes the model usable if nflverse is unavailable.
-    players = add_projection_priors(players, PROJECTION_OVERRIDES)
     games = list_games(players)
     if games.empty:
         raise ValueError("Yahoo returned no usable NFL games")
@@ -3074,80 +2425,14 @@ def prepare_slate_pool(cfg=None, purpose=""):
         + (f"; {purpose}" if purpose else "")
     )
 
-    players = assign_depth_assumptions(
-        players, DEPTH_OVERRIDES, PLAYER_STYLE_OVERRIDES
+    reference, context = load_sleeper_reference(players, cfg)
+    print(
+        f"  Sleeper: {context['season']} {context['season_type']} week {context['week']} "
+        f"projections; player dump fetched {context['players_fetched_utc']}."
     )
-
-    nflverse_report = pd.DataFrame()
-    nflverse_applied = pd.DataFrame()
-    nflverse_blocked = pd.DataFrame()
-    injury_report = pd.DataFrame()
-    injury_removed = pd.DataFrame()
-    depth_promotions = pd.DataFrame()
-    if cfg.use_nflverse:
-        first_kickoff = games.iloc[0]["Game Time"]
-        season = cfg.nflverse_season or infer_season(first_kickoff)
-        depth_chart, roster_status, as_of, notes = load_nflverse_reference(
-            players, season, cfg
-        )
-        for note in notes:
-            print(f"  nflverse: {note}")
-        # The injury report is read before roles are assigned so a teammate
-        # behind an Out player is promoted before his projection is computed.
-        try:
-            injury_report, injury_week = fetch_nflverse_injury_report(season, cfg)
-            print(
-                f"  nflverse: injury report week {injury_week}, "
-                f"{len(injury_report)} rows."
-            )
-        except Exception as exc:
-            injury_report = pd.DataFrame()
-            warnings.warn(f"nflverse injury report unavailable: {exc}")
-        if cfg.promote_past_unavailable and depth_chart is not None:
-            depth_chart, depth_promotions = promote_past_unavailable(
-                depth_chart,
-                unavailable_chart_keys(roster_status, injury_report, cfg),
-            )
-            for row in depth_promotions.to_dict("records"):
-                print(
-                    f"  Depth promotion: {row['Player']} ({row['Team']} "
-                    f"{row['Position']}) "
-                    f"{role_label(row['Position'], row['Old tier'])} -> "
-                    f"{role_label(row['Position'], row['New tier'])}, "
-                    f"replacing {row['Replacing']}"
-                )
-        if depth_chart is not None or roster_status is not None:
-            nflverse_report = build_nflverse_role_report(
-                players, depth_chart, roster_status, cfg
-            )
-            players, nflverse_applied = apply_nflverse_roles(
-                players, nflverse_report, cfg
-            )
-            print(
-                f"  nflverse: role tiers for {len(nflverse_applied)} player(s); "
-                f"roster status matched {roster_match_rate(nflverse_report):.0%} "
-                "of the skill pool."
-            )
-
-    # Unavailable players leave the pool before opportunity is ranked, so the
-    # salary side of the blend promotes the teammates behind them as well.
-    if cfg.use_nflverse and not nflverse_report.empty:
-        players, nflverse_blocked = apply_nflverse_availability(
-            players, nflverse_report, cfg
-        )
-        if len(nflverse_blocked):
-            print(
-                f"  Availability filter removed {len(nflverse_blocked)} player(s)."
-            )
-    if cfg.use_nflverse:
-        players, injury_removed = apply_nflverse_injuries(players, injury_report)
-        print(f"  Injury report removed {len(injury_removed)} player(s) listed Out.")
-
-    players = apply_opportunity_ranks(players, cfg)
-    # Recompute after the chart establishes the final role tier. The fitted model
-    # already contains the depth effect, so there is no second depth haircut.
-    players = add_projection_priors(players, PROJECTION_OVERRIDES)
-    players["Baseline_Projected_FP"] = players["Projected_FP"]
+    players, removed = apply_sleeper_reference(players, reference, context, cfg)
+    for why, count in removed["Reason"].value_counts().items():
+        print(f"  Removed {count} player(s): {why}.")
 
     players, backup_qbs_removed = apply_default_role_filters(
         players, INCLUDE_BACKUP_QBS, cfg
@@ -3160,17 +2445,14 @@ def prepare_slate_pool(cfg=None, purpose=""):
     players = players[~players["Name"].isin(excluded)].copy()
     return {
         "players": players.reset_index(drop=True),
-        "raw_inputs": raw_inputs,
-        "projection_model": salary_projection.load(),
+        "raw_inputs": {"yahoo": payload},
+        "projection_model": {"source": "sleeper", **{
+            k: context[k] for k in ("season", "week", "season_type", "players_fetched_utc")}},
+        "sleeper_context": context,
         "inputs_captured_utc": datetime.now(timezone.utc).isoformat(),
         "games": games,
         "cap_map": cap_map,
-        "nflverse_report": nflverse_report,
-        "nflverse_applied": nflverse_applied,
-        "nflverse_removed": nflverse_blocked,
-        "injury_report": injury_report,
-        "injury_removed": injury_removed,
-        "depth_promotions": depth_promotions,
+        "availability_removed": removed,
         "backup_qbs_removed": backup_qbs_removed,
         "excluded": sorted(excluded),
     }
@@ -3185,8 +2467,8 @@ def run_position_rankings(
 ):
     """Build full-slate Yahoo rankings from the notebook's final estimated FP.
 
-    Projection priority is manual override, then the season-frozen Yahoo
-    salary-position-depth regression shared by every product.
+    Projection priority is manual override, then Sleeper's half-PPR projection,
+    shared by every product.
     """
     cfg = _cfg(cfg)
     top_n = int(top_n)
@@ -3216,15 +2498,12 @@ def run_position_rankings(
     )
     players = slate["players"]
     games = slate["games"]
-    nflverse_report = slate["nflverse_report"]
-    nflverse_applied = slate["nflverse_applied"]
-    nflverse_blocked = slate["nflverse_removed"]
     players["FP_per_Salary"] = players["Projected_FP"] / players["Salary"]
 
     # Stable tie-breaks make repeated runs deterministic when estimates are equal.
     ordered = players.sort_values(
-        ["Position", "Projected_FP", "FPPG", "Salary", "Name"],
-        ascending=[True, False, False, False, True],
+        ["Position", "Projected_FP", "Salary", "Name"],
+        ascending=[True, False, False, True],
     ).copy()
 
     tables = {}
@@ -3237,7 +2516,6 @@ def run_position_rankings(
         group.insert(0, "Rank", np.arange(1, len(group) + 1))
         group["Estimated FP"] = group["Projected_FP"].round(2)
         group["FP / salary"] = group["FP_per_Salary"].round(3)
-        group["Yahoo FPPG"] = group["FPPG"].round(2)
         group["Kickoff UTC"] = pd.to_datetime(
             group["Game Time"], errors="coerce", utc=True
         ).dt.strftime("%Y-%m-%d %H:%M")
@@ -3247,7 +2525,7 @@ def run_position_rankings(
         group["Role slot"] = group["Role_Slot"].astype("string").fillna("")
 
         columns = [
-            "Rank", "Name", "Team", "Opponent", "Estimated FP", "Yahoo FPPG",
+            "Rank", "Name", "Team", "Opponent", "Estimated FP",
             "Salary", "FP / salary", "Role", "Role slot", "Depth_Rank",
             "Kickoff UTC", "Projection method",
         ]
@@ -3286,11 +2564,7 @@ def run_position_rankings(
         "players": players.reset_index(drop=True),
         "games": games,
         "projection_model": slate["projection_model"],
-        "nflverse_report": nflverse_report,
-        "nflverse_depth_applied": nflverse_applied,
-        "nflverse_removed": nflverse_blocked,
-        "injury_removed": slate["injury_removed"],
-        "depth_promotions": slate.get("depth_promotions", pd.DataFrame()),
+        "availability_removed": slate["availability_removed"],
         "csv": csv_path,
     }
 

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Weekly Lineup</title>
-<meta name="description" content="This week's recommended fantasy football lineup, built from a historical Yahoo salary-position-depth model and nflverse availability data.">
+<meta name="description" content="This week's recommended fantasy football lineup, built from Sleeper projections and depth charts.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <style>
 :root{
@@ -428,8 +428,7 @@ footer{
       <h4>How the lineup is picked</h4>
       <p id="how"></p>
       <div class="legend">
-        <div><span class="badge model">model</span> Yahoo salary-position-depth regression</div>
-        <div><span class="badge">nflverse</span> rolling game logs (kickers, missing games)</div>
+        <div><span class="badge model">sleeper</span> Sleeper half-PPR weekly projection</div>
       </div>
       <h4>Projection sources in this lineup</h4>
       <div class="chips" id="methods"></div>
@@ -442,9 +441,9 @@ footer{
       <h4>Run log</h4>
       <pre class="log" id="log"></pre>
       <h4>Caveats</h4>
-      <p>Yahoo prices its feed for DFS half-PPR, so check a close call against
-         your own league's scoring. The injury report is only as current as its
-         last nflverse publish, and P25/P90 are a lognormal band around the mean
+      <p>Sleeper projects half-PPR scoring, so check a close call against
+         your own league's scoring. Projections are only as current as the
+         last run's Sleeper pull, and P25/P90 are a lognormal band around the mean
          rather than a simulated outcome. Kickoffs show in your local timezone.</p>
     </div>
   </details>
@@ -532,9 +531,8 @@ footer{
   // produced the number and keep the full text in the tooltip.
   function source(text) {
     var s = String(text || "").toLowerCase();
-    if (s.indexOf("regression") >= 0) return { cls: "model", label: "model" };
+    if (s.indexOf("sleeper") >= 0) return { cls: "model", label: "sleeper" };
     if (s.indexOf("override") >= 0) return { cls: "override", label: "override" };
-    if (s.indexOf("nflverse") >= 0) return { cls: "", label: "nflverse" };
     if (s.indexOf("no weekly projection") >= 0) return { cls: "bad", label: "none" };
     return { cls: "fallback", label: "fallback" };
   }
@@ -618,8 +616,7 @@ footer{
   // benchings rather than quietly starting someone the workflow benched.
   function benchedByRun(row) {
     if ((published.benched_by_request || []).indexOf(row.player) >= 0) return true;
-    return !!published.auto_exclude_out &&
-      String(row.injury || "").toLowerCase() === "out";
+    return !!published.auto_exclude_out && !!row.unavailable;
   }
 
   function isBenched(row) {
@@ -637,9 +634,9 @@ footer{
     return !!depthModel && canEdit && DEPTH_POSITIONS.indexOf(r.pos) >= 0 && num(r.depth);
   }
 
-  // The row as the run would have priced it at the edited depth. The mean is
-  // re-run only where the regression produced it; the band's width follows the
-  // depth either way, as it does in lineup_optimizer.build_roster.
+  // The row as the run would have priced it at the edited depth. Sleeper's mean
+  // stays as published; the band's width follows the depth, as it does in
+  // lineup_optimizer.build_roster. A manual-override mean is kept too.
   function adjust(row) {
     if (!depthModel || !row || !hasDepth(row.key)) return row;
     var out = Object.assign({}, row, { depth: depths[row.key], published_depth: row.depth });
@@ -962,7 +959,7 @@ footer{
       r.review && r.review !== "ok" ? "<span>" + escapeHtml(r.review) + "</span>" : ""
     ].join("");
 
-    return '<tr class="' + (r.review && r.review.indexOf("injury Out") >= 0 ? "out" : "") + '">' +
+    return '<tr class="' + (r.unavailable ? "out" : "") + '">' +
       '<td data-cell="slot"><span class="slot' + (isFlex ? " flex" : "") + '">' +
         escapeHtml(slot) + "</span></td>" +
       '<td data-cell="player"><span class="who"><b>' + escapeHtml(r.player) + "</b><span>" +
@@ -1005,8 +1002,8 @@ footer{
       { k: "Week", v: num(d.week) ? "Week " + d.week : "—",
         n: d.season ? d.season + " season" : "" },
       { k: "Objective", v: objectiveLabel(d.objective), n: slots },
-      { k: "Projection model", v: m.trained_through_season || "—",
-        n: "Yahoo salary + position + depth" }
+      { k: "Projections", v: "Sleeper",
+        n: num(m.week) ? "half-PPR, week " + m.week : "half-PPR" }
     ].map(function (s) {
       return '<div class="stat"><div class="k">' + escapeHtml(s.k) + '</div><div class="v">' +
         escapeHtml(s.v) + '</div><div class="n">' + escapeHtml(s.n) + "</div></div>";
@@ -1039,10 +1036,10 @@ footer{
     );
 
     el("how").textContent =
-      "Each skill player's mean comes from the frozen Yahoo salary-position-depth regression. Kickers, and anyone " +
-      "whose game Yahoo omits, come from rolling nflverse game logs. P25 and P90 are a " +
-      "lognormal band whose width comes from the player's depth-chart role; depth widens " +
-      "the band but never haircuts the mean a second time.";
+      "Every player's mean is Sleeper's half-PPR projection for the week, kickers included. " +
+      "Sleeper folds injuries into that projection, so anyone it does not project this week " +
+      "is benched; injury tags are shown for reference. P25 and P90 are a lognormal band whose width comes " +
+      "from the player's depth-chart role; depth widens the band but never moves the mean.";
 
     var methods = {};
     rows.forEach(function (r) {
@@ -1064,8 +1061,8 @@ footer{
       : "Nobody was forced to the bench; every player was eligible.";
 
     el("feeds").textContent =
-      "Yahoo salary-position-depth model trained through " +
-      (m.trained_through_season || "an unknown season") + ".";
+      "Sleeper half-PPR projections" +
+      (num(m.week) ? " for " + (m.season || "") + " week " + m.week : "") + ".";
 
     // A feed that degraded (an unpublished injury report, say) changes what
     // this lineup can promise, so it is stated rather than left in the log.

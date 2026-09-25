@@ -320,11 +320,13 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
         (for at most a second and a half).</p>
       <h4>Player pool and depth</h4>
       <p>Untick a player to leave them out. Changing a player's depth re-reads their
-        projection and volatility from the published model; teammates between the
-        old and new spot shift by one. Depth edits stay in this browser.</p>
+        volatility and scoreless rate from the published tables; Sleeper's
+        projection stays as published. Teammates between the old and new spot
+        shift by one. Depth edits stay in this browser.</p>
       <h4>Where the numbers come from</h4>
-      <p>A daily GitHub Actions run projects every player with the frozen Yahoo
-        salary-position-depth model and publishes each game's correlation model.
+      <p>A daily GitHub Actions run takes every player's projection and depth
+        from Sleeper, salaries and caps from Yahoo, and publishes each game's
+        correlation model.
         This page simulates the game and searches every valid lineup on your
         device, so results vary slightly from run to run. Projections are
         estimates; check late injury news before lock.</p>
