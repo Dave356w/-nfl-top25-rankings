@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-25T15:29:16Z",
-  "snapshot_id": "2026-09-25T15:29:16Z",
+  "generated_utc": "2026-09-25T17:24:36Z",
+  "snapshot_id": "2026-09-25T17:24:36Z",
   "run_date": "2026-09-25",
   "season": 2026,
   "week": 3,
@@ -24,11 +24,11 @@
     "WR",
     "TE"
   ],
-  "roster_fingerprint": "dak prescott:QB|james cook:RB|breece hall:RB|tee higgins:WR|jaylen waddle:WR|harold fannin:TE|brandon aubrey:K|denver broncos:DEF|jaylen warren:RB|jameson williams:WR|brenton strange:TE|los angeles rams:DEF|emmett johnson:RB|malachi fields:WR|oronde gadsden:TE|geno smith:QB",
+  "roster_fingerprint": "dak prescott:QB|james cook:RB|breece hall:RB|tee higgins:WR|jaylen waddle:WR|harold fannin:TE|brandon aubrey:K|los angeles rams:DEF|jaylen warren:RB|geno smith:QB|jameson williams:WR|oronde gadsden:TE|denver broncos:DEF|malachi fields:WR|emmett johnson:RB|terrance ferguson:TE",
   "totals": {
-    "mean": 106.53,
-    "floor": 58.23,
-    "ceiling": 193.73
+    "mean": 109.52,
+    "floor": 59.87,
+    "ceiling": 199.17
   },
   "counts": {
     "roster": 16,
@@ -76,22 +76,22 @@
     },
     {
       "slot": "RB",
-      "player": "Breece Hall",
-      "key": "breece hall",
+      "player": "Jaylen Warren",
+      "key": "jaylen warren",
       "pos": "RB",
-      "team": "NYJ",
-      "opponent": "DET",
+      "team": "PIT",
+      "opponent": "CIN",
       "kickoff_utc": "2026-09-27 17:00",
-      "mean": 13.45,
-      "floor": 7.37,
-      "ceiling": 24.46,
-      "salary": 32.0,
+      "mean": 14.9,
+      "floor": 8.16,
+      "ceiling": 27.1,
+      "salary": 23.0,
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper half-PPR projection (2026 week 3)",
-      "injury": null,
+      "injury": "Questionable",
       "unavailable": null,
-      "review": "ok"
+      "review": "injury Questionable"
     },
     {
       "slot": "WR",
@@ -190,22 +190,22 @@
     },
     {
       "slot": "FLEX",
-      "player": "Jaylen Warren",
-      "key": "jaylen warren",
+      "player": "Breece Hall",
+      "key": "breece hall",
       "pos": "RB",
-      "team": "PIT",
-      "opponent": "CIN",
+      "team": "NYJ",
+      "opponent": "DET",
       "kickoff_utc": "2026-09-27 17:00",
-      "mean": 11.91,
-      "floor": 6.52,
-      "ceiling": 21.66,
-      "salary": 23.0,
+      "mean": 13.45,
+      "floor": 7.37,
+      "ceiling": 24.46,
+      "salary": 32.0,
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper half-PPR projection (2026 week 3)",
-      "injury": "Questionable",
+      "injury": null,
       "unavailable": null,
-      "review": "injury Questionable"
+      "review": "ok"
     }
   ],
   "bench": [
@@ -239,24 +239,6 @@
       "ceiling": 20.69,
       "salary": 19.0,
       "depth": 2.0,
-      "depth_source": "Sleeper depth chart",
-      "source": "Sleeper half-PPR projection (2026 week 3)",
-      "injury": null,
-      "unavailable": null,
-      "review": "ok"
-    },
-    {
-      "player": "Brenton Strange",
-      "key": "brenton strange",
-      "pos": "TE",
-      "team": "JAC",
-      "opponent": "NE",
-      "kickoff_utc": "2026-09-27 17:00",
-      "mean": 7.26,
-      "floor": 3.25,
-      "ceiling": 14.41,
-      "salary": 15.0,
-      "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper half-PPR projection (2026 week 3)",
       "injury": null,
@@ -318,6 +300,24 @@
       "review": "ok"
     },
     {
+      "player": "Terrance Ferguson",
+      "key": "terrance ferguson",
+      "pos": "TE",
+      "team": "LA",
+      "opponent": "DEN",
+      "kickoff_utc": "2026-09-28 00:20",
+      "mean": 4.75,
+      "floor": 2.13,
+      "ceiling": 9.43,
+      "salary": 10.0,
+      "depth": 1.0,
+      "depth_source": "Sleeper depth chart",
+      "source": "Sleeper half-PPR projection (2026 week 3)",
+      "injury": null,
+      "unavailable": null,
+      "review": "ok"
+    },
+    {
       "player": "Emmett Johnson",
       "key": "emmett johnson",
       "pos": "RB",
@@ -343,9 +343,9 @@
     "week": 3
   },
   "log": [
-    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-25T15:29:16Z)",
+    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-25T17:24:36Z)",
     "  Sleeper: 2026 regular week 3 projections; player dump fetched 2026-09-25T15:29:16.594902+00:00.",
-    "  Removed 109 player(s): no Sleeper projection.",
+    "  Removed 111 player(s): no Sleeper projection.",
     "  Removed 8 player(s): no Sleeper match.",
     "TOP 25 QB",
     "    Rank  ...                          Projection method",
@@ -487,9 +487,9 @@
     "23    24  ...  Sleeper half-PPR projection (2026 week 3)",
     "24    25  ...  Sleeper half-PPR projection (2026 week 3)",
     "[25 rows x 12 columns]",
-    "Ranking run time: 0.0s",
+    "Ranking run time: 0.1s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-09-25T15:29:16Z (shared with position rankings).",
+    "Projection snapshot: 2026-09-25T17:24:36Z (shared with position rankings).",
     "Season 2026 week 3; Sleeper players fetched 2026-09-25T15:29:16.594902+00:00.",
     "Add pool: 301 player(s) resolved for the page's roster editor."
   ]
