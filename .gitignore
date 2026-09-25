@@ -5,6 +5,7 @@ __pycache__/
 # Feed caches written by the pipeline at run time.
 market_projection_cache/
 nflverse_cache/
+sleeper_cache/
 backtest_cache/
 backtest_output/
 

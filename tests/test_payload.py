@@ -43,7 +43,7 @@ def _results():
     ])
     players = pd.DataFrame({
         "Name": ["Josh Allen", "Lamar Jackson", "Bijan Robinson"],
-        "Projection_Source": ["salary regression"] * 3,
+        "Projection_Source": ["Sleeper half-PPR projection"] * 3,
     })
     return {
         "rankings": {"QB": qb, "RB": rb, "WR": _view([]), "TE": _view([]),
@@ -53,8 +53,10 @@ def _results():
         ),
         "players": players,
         "games": games,
-        "projection_model": {"trained_through_season": 2025, "holdout_metrics": {"mae": 3.7}},
-        "nflverse_removed": pd.DataFrame({"Name": ["Someone"]}),
+        "projection_model": {"source": "sleeper", "season": 2026, "week": 2,
+                             "season_type": "regular",
+                             "players_fetched_utc": "2026-09-07T12:00:00+00:00"},
+        "availability_removed": pd.DataFrame({"Player": ["Someone"], "Reason": ["injury status Out"]}),
     }
 
 
@@ -83,7 +85,8 @@ class PayloadTests(unittest.TestCase):
         self.assertEqual(self.payload["positions"], ["QB", "RB"])
 
     def test_projection_metadata_comes_from_the_model(self):
-        self.assertEqual(self.payload["projection"]["trained_through_season"], 2025)
+        self.assertEqual(self.payload["projection"]["method"], "Sleeper half-PPR projection")
+        self.assertEqual(self.payload["projection"]["week"], 2)
         self.assertEqual(self.payload["availability_removed"], 1)
 
     def test_write_outputs_archives_and_indexes(self):

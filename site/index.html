@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NFL Top 25 by Position</title>
-<meta name="description" content="Daily Yahoo NFL fantasy top-25 rankings from a historical Yahoo salary-position-depth model and nflverse availability data.">
+<meta name="description" content="Daily Yahoo NFL fantasy top-25 rankings from Sleeper projections, depth charts and injury status.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
 <style>
 :root{
@@ -408,28 +408,19 @@ footer{
     <summary>Run details, data sources and caveats</summary>
     <div class="panel-body">
       <h4>What the numbers mean</h4>
-      <p><b>Proj FP</b> is the projection this pipeline settled on for the player, in
-         Yahoo half-PPR scoring. It comes from a season-frozen regression fitted to
-         historical Yahoo salaries, positions, depth tiers and settled results.</p>
+      <p><b>Proj FP</b> is Sleeper's weekly projection for the player in half-PPR
+         scoring, the same scoring Yahoo DFS uses. Players Sleeper lists Out, on
+         injured reserve, suspended or off the active roster are not ranked.</p>
       <p><b>Role</b> is the player's rank within his own alignment slot on the
-         published depth chart, so all three receivers in a three-wide set read as
+         Sleeper depth chart, so all three receivers in a three-wide set read as
          starters rather than as a starter and two reserves. <b>Depth</b> is the
-         separate expected-opportunity rank, which blends that chart ordering with
-         Yahoo salary and is what the volatility model is keyed on.</p>
-      <p><b>Editing depth.</b> Change a player's <b>Depth</b> to re-run the same
-         frozen regression in your browser: teammates between his old and new spot
-         shift by one, every affected mean is recomputed, and the position is
-         re-ranked from the whole priced pool. Edits stay in this browser, apply
-         only to this run, and never change the published data. The fitted model
-         has no depth effect on the <em>mean</em> for quarterbacks or defenses,
-         so there a depth edit reorders teammates without moving the projection.
-         Manual overrides
-         are not recomputed, and players the run already removed (Out, injured
-         reserve, unconfirmed backup QBs) cannot be brought back here.</p>
+         flat opportunity rank within team and position, ordered by that role and
+         then by projection, and is what the volatility model is keyed on. A
+         teammate behind an unavailable player moves up.</p>
+
       <div class="legend">
-        <div><span class="badge model">model</span> Yahoo salary-position-depth regression</div>
+        <div><span class="badge model">sleeper</span> Sleeper half-PPR projection</div>
         <div><span class="badge override">override</span> manual value</div>
-        <div><span class="badge fallback">nflverse</span> depth, roster and injury status</div>
       </div>
       <h4>Projection sources used on this slate</h4>
       <div class="chips" id="methods"></div>
@@ -438,8 +429,9 @@ footer{
       <h4>Run log</h4>
       <pre class="log" id="log"></pre>
       <h4>Caveats</h4>
-      <p>These are historical regression estimates, not predictions with a guarantee.
-         Yahoo's feed is undocumented and NFLVerse reports can lag late team news.
+      <p>These are projections, not predictions with a guarantee. Yahoo's feed and
+         Sleeper's projection endpoint are undocumented, and a run's injury status
+         can lag late team news.
          Kickoff times are shown in
          your local timezone.</p>
     </div>
@@ -535,7 +527,7 @@ footer{
   function methodClass(method) {
     var m = String(method || "").toLowerCase();
     if (m.indexOf("override") >= 0) return "override";
-    if (m.indexOf("regression") >= 0) return "model";
+    if (m.indexOf("sleeper") >= 0) return "model";
     return "fallback";
   }
 
@@ -560,9 +552,11 @@ footer{
   // and position are part of it.
   function idOf(position, r) { return position + "|" + r.team + "|" + r.player; }
 
+  // Sleeper's projection does not depend on the depth rank, so an edit here
+  // would re-rank nothing. Depth stays editable on the lineup and Showdown
+  // pages, where it moves the volatility band and simulation.
   function canEditDepth() {
-    return !!(state.model && state.data && state.data.pool &&
-              typeof DepthModel !== "undefined");
+    return false;
   }
 
   function editCount() { return Object.keys(state.depths).length; }
@@ -796,12 +790,12 @@ footer{
        "</div>"],
       ['<div class="k">Players priced</div><div class="v">' + d.slate.player_count +
        '</div><div class="n">' + escapeHtml((d.positions || []).join(" · ")) + "</div>"],
-      ['<div class="k">Model through</div><div class="v">' +
-       escapeHtml(projection.trained_through_season || "—") +
-       '</div><div class="n">season-frozen historical fit</div>'],
-      ['<div class="k">Holdout MAE</div><div class="v">' +
-       escapeHtml(projection.holdout_metrics ? fmt(projection.holdout_metrics.mae, 2) : "—") +
-       '</div><div class="n">Yahoo settled half-PPR points</div>']
+      ['<div class="k">Projections</div><div class="v">Sleeper</div><div class="n">' +
+       escapeHtml(projection.week ? projection.season + " week " + projection.week : "—") +
+       ", half-PPR</div>"],
+      ['<div class="k">Removed</div><div class="v">' +
+       escapeHtml(String(d.availability_removed || 0)) +
+       '</div><div class="n">unavailable or unprojected</div>']
     ].map(function (h) { return '<div class="stat">' + h + "</div>"; }).join("");
     el("stats").hidden = false;
 
@@ -814,7 +808,7 @@ footer{
     }).join("") || '<span class="badge">no breakdown recorded</span>';
 
     el("feeds").textContent =
-      "Yahoo salary model + NFLVerse depth, roster and injury reports" +
+      "Yahoo salaries + Sleeper projections, depth, roster and injury status" +
       (d.availability_removed
         ? ". Availability filter removed " + d.availability_removed + " player(s)."
         : "") +

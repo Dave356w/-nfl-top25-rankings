@@ -28,6 +28,7 @@ from pathlib import Path
 import pandas as pd
 
 from pipeline import notebook as nb
+from pipeline import showdown
 
 SITE = Path(__file__).resolve().parent / "site"
 DATA = SITE / "data"
@@ -134,7 +135,7 @@ def build_payload(results, top_n, log_lines, generated_at=None, snapshot_id=None
         for position, view in results.get("rankings", {}).items()
     }
     games = _games(results.get("games"))
-    removed = results.get("nflverse_removed")
+    removed = results.get("availability_removed")
     promotions = results.get("depth_promotions")
     return {
         "schema": 1,
@@ -157,11 +158,7 @@ def build_payload(results, top_n, log_lines, generated_at=None, snapshot_id=None
             position: _rows(view)
             for position, view in (results.get("pool") or {}).items()
         },
-        "projection": {
-            "method": "Yahoo salary-position-depth regression",
-            "trained_through_season": (results.get("projection_model") or {}).get("trained_through_season"),
-            "holdout_metrics": (results.get("projection_model") or {}).get("holdout_metrics"),
-        },
+        "projection": showdown.projection_summary(results.get("projection_model")),
         "availability_removed": int(len(removed)) if isinstance(removed, pd.DataFrame) else 0,
         "depth_promotions": (
             [

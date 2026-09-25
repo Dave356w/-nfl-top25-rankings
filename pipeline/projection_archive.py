@@ -51,7 +51,7 @@ def capture(prepared, cfg, snapshot_id, showdown_payloads):
         captured_utc=prepared.get('inputs_captured_utc',datetime.now(timezone.utc).isoformat()),
         code_sha256=digest.hexdigest(),settings=asdict(cfg),predictions=rows,
         projection_model=prepared.get('projection_model',{}),
-        role_report=json.loads(prepared.get('nflverse_report',pd.DataFrame()).to_json(orient='records',date_format='iso')),
+        availability_removed=json.loads(prepared.get('availability_removed',pd.DataFrame()).to_json(orient='records',date_format='iso')),
         showdown_models=showdown_payloads,
         raw_inputs=prepared.get('raw_inputs',{})))
 

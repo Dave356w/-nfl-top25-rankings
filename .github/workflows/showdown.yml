@@ -30,7 +30,17 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - run: pip install -r requirements.txt nflreadpy
+      - run: pip install -r requirements.txt
+
+      # Sleeper asks for /players/nfl (about 5MB) at most once a day. The
+      # pipeline reuses a copy younger than 24h; this carries it across runs.
+      - name: Date for the Sleeper player cache
+        id: day
+        run: echo "utc=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: sleeper_cache
+          key: sleeper-players-${{ steps.day.outputs.utc }}
 
       - name: Build synchronized rankings, lineup and Showdown
         run: |

@@ -20,87 +20,83 @@ and has since diverged in the role and projection layers — see
 Each run:
 
 1. Pulls the current Yahoo NFL player feed (salaries, FPPG, the slate schedule).
-2. Applies the versioned salary-position-depth regression in
-   `model/salary_projection.json`, fitted to archived Yahoo salaries and settled
-   Yahoo half-PPR results with a full-season holdout.
-3. Cross-checks roles, roster availability and reported injuries against the published
-   [nflverse](https://github.com/nflverse/nflverse-data) depth charts and weekly
-   roster status, so injured-reserve and practice-squad players drop out and
-   role comes from a real depth chart rather than from salary order.
-4. Recomputes the regression with the resolved depth tier, removes players listed
-   Out, then ranks every priced player by projected fantasy points.
+2. Pulls [Sleeper](https://docs.sleeper.com)'s public, keyless API: `/state/nfl`
+   for the season and week, `/players/nfl` for every player's team, depth-chart
+   slot and order, roster status and injury designation, and
+   `/projections/nfl/regular/{season}/{week}` for the weekly projection.
+3. Joins each priced Yahoo player to Sleeper — by Yahoo's own player id, which
+   Sleeper carries as `yahoo_id`, then by name, team and position — and drops
+   anyone Sleeper lists Out, on IR, PUP, NFI, suspended or off an active roster.
+4. Takes each player's mean from Sleeper's half-PPR projection (the scoring Yahoo
+   DFS uses), removes anyone Sleeper does not project this week, then ranks every
+   priced player by projected fantasy points.
 5. Writes JSON and CSV into `site/data/` and deploys `site/` to Pages.
 
-Projection priority is: manual override → frozen Yahoo salary-position-depth
-regression. Sportsbook feeds and market-derived projection logic are not used.
-Yahoo FPPG remains visible as reference data but is not a model input.
+Projection priority is: manual override → Sleeper half-PPR projection. Yahoo
+FPPG remains visible as reference data but is not a model input. The frozen
+salary-position-depth regression in `model/salary_projection.json` is kept only
+for the historical backtests, where no archived Sleeper projection exists.
+
+`pipeline/sleeper.py` owns every Sleeper call. The ~5MB `/players/nfl` dump is
+cached in `sleeper_cache/` and reused for 24 hours, and each workflow restores
+that cache by UTC date, so it is pulled at most once a day as Sleeper asks. The
+projection endpoints are undocumented and may change shape, so both shapes seen
+in the wild are accepted. Sleeper's `week` can still name the finished week for
+a day after Yahoo opens the next slate, so the run fetches that week and the next
+and keeps whichever projects more of the slate's teams.
 
 ### Role, depth and mean are three different things
 
 A depth chart is not one ordered list per position. A team in three-receiver
-personnel publishes three parallel starting spots, and nflverse encodes them in
-`pos_slot`. Flattening that into WR1 → WR2 → WR3 → WR4 turns three starters into
-a starter and two deep reserves, and the deep reserves then collect a mean
-haircut meant for players who barely take the field.
+personnel publishes three parallel starting spots, and Sleeper encodes them as
+separate `depth_chart_position` slots (`LWR`, `RWR`, `SWR`), each with its own
+`depth_chart_order`. Flattening that into WR1 → WR2 → WR3 → WR4 turns three
+starters into a starter and two deep reserves.
 
 So the pipeline keeps them apart:
 
 | Column | What it is | What it drives |
 | --- | --- | --- |
-| `Role_Tier` / `Role_Label` | rank *within the player's own alignment slot*: starter, rotation, backup, reserve, specialist | the fitted regression, the backup-QB filter |
-| `Depth_Rank` | expected-opportunity rank, blending the chart's ordering with Yahoo salary | the fitted coefficients of variation and the pair correlations |
-| `Projected_FP` | the fantasy mean itself | everything downstream |
-
-The blend matters where a chart and salary disagree: a team can list one back
-first and still say publicly that two of them will split the carries. The chart
-keeps the role tier; a straight swap of two adjacent players is decided by the
-salary expectation. `Settings.role_salary_rank_weight` sets the balance — 0.0
-trusts the chart alone, 1.0 ignores it.
+| `Role_Tier` / `Role_Label` | rank *within the player's own Sleeper slot*: starter, rotation, backup, reserve, specialist (a fullback) | the backup-QB filter, the page's role column |
+| `Depth_Rank` | flat opportunity rank within team and position: role tier first, then Sleeper projection; package slots (FB) last | the fitted coefficients of variation, scoreless rates and pair correlations |
+| `Projected_FP` | Sleeper's half-PPR projection | everything downstream |
 
 ### Teammates move up when a player ahead of them is out
 
-The published chart can keep an injured starter at the top of his slot for days
-after he is ruled out. So before any role or projection is computed, the run
-reads the injury report and weekly roster, takes every player listed **Out** or
-off the active roster (IR, practice squad, cut…) off the chart, and recomputes
-the flat rank and per-slot tier for the teammates behind him. Those players are
-also removed from the Yahoo pool before the salary ordering is ranked, so both
-halves of the opportunity blend promote the replacement.
+Sleeper's chart can keep an injured starter at the top of his slot for days
+after he is ruled out. So roles and depth are ranked among *available* players
+only: when a starter is Out or on IR, the next man at his slot becomes tier 1,
+and every teammate behind him moves up one in the flat rank. Teammates Yahoo
+does not price still count, so an unpriced third back is never skipped over.
 
 Only the injured player's own slot moves: if a starting receiver is out, the
 second man at *his* slot becomes a starter; the other parallel starters are
-unchanged. A backup quarterback whose starter is out becomes tier 1, gets the
-starter's depth coefficient in the regression, and is no longer dropped by the
-backup-QB filter. A chart that already reflects the injury is left as is. Each
-promotion is printed in the run log and published as `depth_promotions` in
-`latest.json`. `Questionable` and `Doubtful` do not trigger promotion;
-`AVAILABILITY_OVERRIDES` keeps a named player on the chart, and
-`Settings.promote_past_unavailable = False` turns the step off.
+unchanged. A backup quarterback whose starter is out becomes tier 1 and is no
+longer dropped by the backup-QB filter. Each promotion is printed in the run log
+and published as `depth_promotions` in `latest.json`. `Questionable` and
+`Doubtful` do not trigger promotion; `AVAILABILITY_OVERRIDES` keeps or drops a
+named player regardless of Sleeper.
 
 ### Editing depth on the pages
 
-Every page lets you change a player's depth rank in the browser and see what
-the same frozen model says about it: the **Depth** column on the rankings and
-lineup pages, and the `D1`–`D6` picker beside each player in the Showdown lab's
-pool. Moving a player shifts the teammates between his old and new spot by one,
-the way moving a name on a depth chart does.
+The lineup page's **Depth** column and the `D1`–`D6` picker beside each player in
+the Showdown lab's pool let you change a player's depth rank in the browser.
+Moving a player shifts the teammates between his old and new spot by one, the
+way moving a name on a depth chart does. Sleeper's projection does not depend on
+depth, so an edit leaves the mean alone and changes the fitted volatility:
 
 | Page | What a depth edit re-runs |
 | --- | --- |
-| Rankings | the regression mean, then re-ranks the position from the whole priced pool (`pool` in `latest.json`), so a promoted backup outside the top 25 can climb into it |
-| My lineup | the regression mean and the P25/P90 band, then re-picks the lineup |
-| Showdown lab | the mean, CV and scoreless rate handed to the in-browser optimizer; the latent correlation matrix stays as published |
+| Rankings | nothing — the mean is Sleeper's, so there is nothing to re-rank; depth is shown, not edited |
+| My lineup | the P25/P90 band, then re-picks the lineup |
+| Showdown lab | the CV and scoreless rate handed to the in-browser optimizer; the mean and the latent correlation matrix stay as published |
 
-`site/depth-model.js` reads the exact coefficients and fitted tables from
+`site/depth-model.js` reads the fitted CV and scoreless-rate tables from
 `site/data/depth_model.json`; regenerate that file with
-`python tools/export_depth_model.py` after refitting, and
-`tests/test_depth_model_js.py` checks the JavaScript against
-`salary_projection.predict` through Node. Edits stay in that browser, are tied
-to one published snapshot, and never change what the workflow publishes. The
-fitted model has no depth effect on the mean for QB or DEF (only starting QBs
-were in the training data), so there an edit changes volatility and teammate
-order, not the projection. Manual overrides and rolling-stat fallbacks keep
-their published means.
+`python tools/export_depth_model.py` after refitting. Edits stay in that
+browser, are tied to one published snapshot, and never change what the workflow
+publishes. Manual overrides and players the run already removed (Out, injured
+reserve, unconfirmed backup QBs) cannot be changed or brought back there.
 
 ## Setup (one time)
 
@@ -166,13 +162,13 @@ All deploy the whole `site/` directory; deploys share one concurrency group.
 ## Running it locally
 
 ```bash
-pip install -r requirements.txt nflreadpy
+pip install -r requirements.txt
 python run_synced.py --top-n 25
 python -m http.server -d site 8000    # then open http://localhost:8000
 ```
 
 `--positions QB,RB,WR` limits what gets published. The run needs outbound
-network access to Yahoo and the nflverse release CDN.
+network access to Yahoo and `api.sleeper.app`.
 `run_lineup.py` builds the lineup page the same way — see
 [Running it](#running-it) — and `run_showdown.py` builds the showdown models:
 
@@ -258,17 +254,17 @@ If any feed fails hard, `run_synced.py` writes neither page and exits non-zero.
 The previously published page stays live rather than being replaced by a
 half-built one, and the failure shows up as a red run in the Actions tab.
 
-Softer failures degrade instead of stopping: an unreachable nflverse release falls
-back to the salary-order depth heuristic and records the problem in the run log,
-which the page renders under *Run details*.
+A Sleeper failure is a hard failure: without it there is no projection, depth
+or injury status, so nothing is published and the last run stays live.
 
-Availability is deliberately asymmetric. A player the weekly roster has no row
-for is treated as **unavailable**, because an unknown status is exactly the case
-where assuming "probably fine" eventually puts an ineligible player in a
-submitted lineup; name anyone you know is playing in `AVAILABILITY_OVERRIDES`.
-The one exception is a broken join: if the roster feed matches less of the pool
-than `Settings.nflverse_min_match_rate`, the filter turns itself off with a
-warning rather than dropping a slate on the strength of a name-matching bug.
+Availability is deliberately asymmetric. A priced player Sleeper has no
+confident match for is treated as **unavailable**, because an unknown status is
+exactly the case where assuming "probably fine" eventually puts an ineligible
+player in a submitted lineup; name anyone you know is playing in
+`AVAILABILITY_OVERRIDES` (and give him a `PROJECTION_OVERRIDES` value). If
+Sleeper matches less of the priced skill pool than
+`Settings.sleeper_min_match_rate` (75%), the run refuses to publish rather than
+ranking a slate on the strength of a name-matching bug.
 
 ## Showdown lineup lab
 
@@ -338,8 +334,8 @@ close for this objective. An exact solve of the tournament objective needs a
 variable per candidate per simulated game (about 50 million) and is not
 attempted.
 
-**What runs where.** `run_synced.py` fetches Yahoo and the nflverse depth,
-roster and injury data once for all three pages; `pipeline/showdown.py` reuses
+**What runs where.** `run_synced.py` fetches Yahoo and Sleeper's projections,
+depth, roster and injury data once for all three pages; `pipeline/showdown.py` reuses
 those means, builds the fitted coefficients of variation and publishes the
 PSD-repaired latent correlation matrix for each game — about 7 KB for a
 36-player pool. `site/showdown-worker.js` draws the scenarios, enumerates every
@@ -386,23 +382,20 @@ both pages from that exact final player frame.
 Each run:
 
 1. Pulls the Yahoo DFS feed for the week's FPPG, salary, opponent and kickoff.
-2. Applies the same frozen Yahoo salary-position-depth regression used by the
-   rankings and Showdown pages.
-3. Cross-checks role and availability against the newest nflverse depth
-   snapshot and the week's injury report.
+2. Takes every player's mean, depth and injury status from Sleeper — the same
+   projection the rankings and Showdown pages use.
+3. Benches anyone Sleeper lists Out, on IR, suspended or off the roster.
 4. Fills `QB / RB / RB / WR / WR / TE / K / DEF` plus one RB/WR/TE flex and publishes
    starters, bench and a review note per player.
 
-Projection priority is: salary-position-depth regression → rolling nflverse game
-logs. Kickers always use the game logs, because the DFS
-feed does not price them, and so does a rostered player whose team is playing
-but whom Yahoo omits — a Monday-only slate, say — instead of reading as a zero.
-The page shows which of the three produced every row.
+Sleeper projects every game, so kickers (which the DFS feed does not price) and
+a rostered player whose game Yahoo omits — a Monday-only slate, say — get the
+same kind of projection as everyone else instead of reading as a zero. The page
+shows the source of every row.
 
 `Floor_P25` and `Ceiling_P90` come from a lognormal band around the mean, using
-depth-calibrated coefficients of variation (`CALIBRATED_CV`). Depth widens the
-band but never haircuts the mean a second time: the weekly salary and the
-depth term already puts the player's current role into the fitted mean.
+depth-calibrated coefficients of variation (`CALIBRATED_CV`; kickers use
+`KICKER_CV`). Depth widens the band but never moves Sleeper's mean.
 
 ### Setting your team
 
@@ -423,7 +416,7 @@ constants at the top of `lineup_optimizer.py`:
 | `LINEUP_OBJECTIVE` | `FP` (mean, the default), `Floor_P25`, or `Ceiling_P90` |
 | `EXCLUDED_PLAYERS` | `None` prompts for benchings; a list (even empty) skips the prompt |
 | `MANUAL_DEPTH_OVERRIDES` | override a stale depth chart |
-| `AUTO_EXCLUDE_REPORTED_OUT` | drop anyone the injury report lists as *Out* |
+| `AUTO_EXCLUDE_REPORTED_OUT` | bench anyone Sleeper lists Out, on IR, suspended or off the roster |
 | `POOL_LIMITS` | how many players per position the page's roster editor can add from |
 
 ### Changing the roster on the page
@@ -436,8 +429,8 @@ hour before kickoff — without waiting for the next scheduled run:
   each slot, priced by the same run that published the lineup. `POOL_LIMITS` in
   `lineup_optimizer.py` sets how deep it goes.
 - **Drop** a player, or **bench** one so the optimizer has to fill his slot from
-  somewhere else. The run's own benchings — anyone the injury report lists as
-  *Out* — start out applied, and can be undone.
+  somewhere else. The run's own benchings — anyone Sleeper says cannot play —
+  start out applied, and can be undone.
 - The lineup, the totals and the CSV button all switch to the edited roster, and
   a badge in the status bar says the lineup on screen is no longer the published
   one.
@@ -456,7 +449,7 @@ commit that and the scheduled run picks from it too.
 ### Running it
 
 ```bash
-pip install -r requirements.txt nflreadpy
+pip install -r requirements.txt
 python run_synced.py                        # publish rankings + lineup together
 python run_lineup.py                        # standalone lineup-only diagnostic
 python lineup_optimizer.py                  # or print a lineup in the terminal
@@ -468,13 +461,12 @@ python lineup_optimizer.py --self-test      # offline checks, no network
 Showdown index and every Showdown game with
 one `snapshot_id`, verifies every overlapping player has the same projected FP,
 then writes the files. `run_lineup.py` remains available for lineup-only local
-diagnostics. An unavailable nflverse reference is reported in the run log and
-the salary-order depth fallback remains usable. A failed add-player pool is also
-non-fatal: the page loses its add list, says why, and still drops and benches.
+diagnostics. A failed add-player pool is non-fatal: the page loses its add list,
+says why, and still drops and benches.
 
-Yahoo prices this feed for **DFS half-PPR**. Check a close call against your
-league's scoring, and check the injury news yourself — the nflverse report is
-only as current as its last publish.
+Sleeper's projection is **half-PPR**. Check a close call against your league's
+scoring, and check the injury news yourself — a run's injury status is only as
+current as its Sleeper pull.
 
 ## How this maps to the notebook
 
@@ -498,17 +490,15 @@ The model has since changed substantially here and those changes are **not** in
 the notebook. To
 keep a Colab copy in step, port these:
 
-- `add_slot_role_tiers`, `role_label`, `apply_nflverse_roles` and
-  `apply_opportunity_ranks` replace `apply_nflverse_depth`, and
-  `apply_depth_mean_adjustments` now keys the multiplier on the role tier
+- `load_sleeper_reference` and `apply_sleeper_reference` (backed by
+  `pipeline/sleeper.py`) replace the nflverse depth, roster and injury cells and
+  the projection step: Sleeper supplies depth, availability and the mean
   (cells 3 and 9);
 - `SAME_TEAM_RB_RB_CORR` replaces the pooled `("RB", "RB")` entry in
   `SAME_TEAM_OTHER_CORR`, with `same_team_rb_rb_correlation` called from
   `target_score_correlation` (cell 11);
-- `pipeline/salary_projection.py` replaces the sportsbook projection cells with
-  the season-frozen Yahoo salary, position and depth regression;
-- `Settings.nflverse_drop_unmatched` defaults to `True`, with
-  `AVAILABILITY_OVERRIDES` and the `nflverse_min_match_rate` guard (cells 2 and 9);
+- `Settings.sleeper_drop_unmatched` defaults to `True`, with
+  `AVAILABILITY_OVERRIDES` and the `sleeper_min_match_rate` guard (cells 2 and 9);
 - `simulate_player_outcomes` factors the latent matrix with `latent_root`
   (Cholesky) rather than an eigendecomposition. The correlation targets are
   looked up by (position, depth bucket, team), so a pool with several players
@@ -578,10 +568,11 @@ entries still rest on their original fit.
 
 ## Caveats
 
-These are historical regression estimates, not predictions with a guarantee.
-Yahoo's feed is public but undocumented and can change shape without notice.
-A kicker is estimated from rolling
-nflverse game logs on the lineup page.
+These are projections, not predictions with a guarantee. Yahoo's feed and
+Sleeper's projection endpoints are public but undocumented and can change shape
+without notice. The fitted CVs, scoreless rates and correlations were calibrated
+against the old salary-regression's forecast errors; they have not been
+re-fitted against Sleeper's projections.
 
 
 ### Games Yahoo prices no cap for
@@ -745,8 +736,8 @@ seasons, then compares total Yahoo-scored point error on 2025 against a lagged
 eight-appearance average. Approval requires at least 200 holdout observations and
 at least 2% lower MAE. Results were QB 0.41%, RB 0.88%, WR 0.60%, TE 0.45% lower
 MAE: **no position passed**. No component priors were promoted into live forecasts.
-Those component priors remain disabled; the salary-position-depth regression is
-the production mean estimator.
+Those component priors remain disabled; the production mean is now Sleeper's
+half-PPR projection.
 
 This is a conditional-on-appearance historical-prior comparison, not a test of
 the salary model or participation probabilities. Archived

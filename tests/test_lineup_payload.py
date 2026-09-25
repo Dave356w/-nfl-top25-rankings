@@ -29,7 +29,7 @@ from test_lineup_optimizer import _context, _yahoo_frame
 # silent "undefined" in the browser rather than an error, so they are pinned.
 PLAYER_KEYS = ("player", "key", "pos", "team", "opponent", "kickoff_utc", "mean",
                "floor", "ceiling", "salary", "fppg", "depth", "depth_source",
-               "source", "injury", "review")
+               "source", "injury", "unavailable", "review")
 
 CONFIGURED = [
     {"Name": "Dak Prescott", "Position": "QB"},
@@ -52,7 +52,6 @@ def _results(objective="FP"):
     return {
         "roster": roster, "starters": starters, "bench": bench, "context": context,
         "excluded": excluded,
-        "projection_trained_through": 2025,
     }
 
 
@@ -77,7 +76,8 @@ class PayloadTests(unittest.TestCase):
         for key in PLAYER_KEYS:
             self.assertIn(key, self.payload["starters"][0])
             self.assertIn(key, self.payload["bench"][0])
-        self.assertEqual(self.payload["projection"]["trained_through_season"], 2025)
+        self.assertEqual(self.payload["projection"]["method"], "Sleeper half-PPR projection")
+        self.assertEqual(self.payload["projection"]["week"], 2)
 
     def test_roster_fingerprint_tracks_committed_configuration_not_projection_order(self):
         roster = _results()["roster"]
@@ -169,34 +169,31 @@ class PoolPayloadTests(unittest.TestCase):
         self.assertIn("unavailable", payload["note"])
 
 
-class DegradedFeedTests(unittest.TestCase):
-    """What the first live run actually hit: nflverse had no 2026 injuries."""
+class NoInjuryDesignationTests(unittest.TestCase):
+    """A week where Sleeper lists nobody with an injury designation."""
 
     def setUp(self):
         context = _context()
-        context["injuries"] = pd.DataFrame()
-        context["notes"] = ["Injury report unavailable (Season must be between "
-                            "2009 and 2025); nobody was auto-benched."]
+        reference = context["reference"].copy()
+        reference[["Injury_Status", "Practice_Status", "Injury_Body_Part",
+                   "Unavailable_Reason"]] = None
+        reference["Available"] = True
+        context["reference"] = reference
         roster = lo.build_roster(CONFIGURED, _yahoo_frame(), context)
-        starters, bench = lo.optimize(roster, [])
+        excluded = lo.reported_out(roster)
+        starters, bench = lo.optimize(roster, excluded)
         self.payload = run_lineup.build_payload(
             {"roster": roster, "starters": starters, "bench": bench,
-             "context": context, "projection_trained_through": 2025,
-             "excluded": []}, "FP", ["line one"])
+             "context": context, "excluded": excluded}, "FP", ["line one"])
 
-    def test_a_missing_injury_feed_still_serializes(self):
-        # With no injury frame to merge, `report_status` is pandas' NA
-        # sentinel, which json.dumps rejects outright -- the run published
-        # nothing until `_clean` learned to treat it as null.
+    def test_missing_designations_serialize_as_null(self):
+        # With nothing to report, `report_status` is pandas' NA sentinel, which
+        # json.dumps rejects outright unless `_clean` treats it as null.
         json.dumps(self.payload)
-        self.assertTrue(all(row["injury"] is None
-                            for row in self.payload["starters"]))
+        self.assertTrue(all(row["injury"] is None and row["unavailable"] is None
+                            for row in self.payload["starters"] + self.payload["bench"]))
 
-    def test_the_degradation_is_published_not_just_warned(self):
-        # A warning goes to stderr, which the page never sees. A lineup built
-        # with no injury data can start a player who is already ruled out.
-        self.assertTrue(self.payload["notes"])
-        self.assertIn("Injury report unavailable", self.payload["notes"][0])
+    def test_nobody_is_benched(self):
         self.assertEqual(self.payload["benched_by_request"], [])
 
 
@@ -271,7 +268,7 @@ class MainTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "lineup"
             with unittest.mock.patch.object(lo, "fetch_yahoo", return_value=_yahoo_frame()), \
-                 unittest.mock.patch.object(lo, "load_nfl_context", return_value=_context()), \
+                 unittest.mock.patch.object(lo, "load_sleeper_context", return_value=_context()), \
                  unittest.mock.patch.object(lo, "load_roster", return_value=CONFIGURED), \
                  _quiet():
                 code = run_lineup.main(["--out", str(out)])
@@ -280,7 +277,7 @@ class MainTests(unittest.TestCase):
             self.assertEqual(published["objective"], "FP")
             self.assertEqual(published["counts"]["roster"], len(CONFIGURED))
             self.assertTrue(published["log"])
-            self.assertEqual(published["projection"]["trained_through_season"], 2025)
+            self.assertEqual(published["projection"]["method"], "Sleeper half-PPR projection")
             self.assertEqual(len(published["starters"]), len(results["starters"]))
 
             pool = json.loads((out / "pool.json").read_text())
@@ -293,7 +290,7 @@ class MainTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "lineup"
             with unittest.mock.patch.object(lo, "fetch_yahoo", return_value=_yahoo_frame()), \
-                 unittest.mock.patch.object(lo, "load_nfl_context", return_value=_context()), \
+                 unittest.mock.patch.object(lo, "load_sleeper_context", return_value=_context()), \
                  unittest.mock.patch.object(lo, "load_roster", return_value=CONFIGURED), \
                  unittest.mock.patch.object(lo, "build_pool",
                                             side_effect=RuntimeError("depth chart empty")), \
