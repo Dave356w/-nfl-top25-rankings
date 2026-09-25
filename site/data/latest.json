@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-25T00:01:43Z",
-  "snapshot_id": "2026-09-25T00:01:43Z",
+  "generated_utc": "2026-09-25T04:52:33Z",
+  "snapshot_id": "2026-09-25T04:52:33Z",
   "run_date": "2026-09-25",
   "top_n": 25,
   "positions": [
@@ -319,7 +319,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 19.12,
-        "fppg": 17.14,
+        "fppg": 17.92,
         "salary": 33,
         "fp_per_salary": 0.58,
         "role": "starter",
@@ -591,7 +591,7 @@
         "team": "ATL",
         "opponent": "GB",
         "fp": 16.12,
-        "fppg": 18.45,
+        "fppg": 23.73,
         "salary": 35,
         "fp_per_salary": 0.461,
         "role": "starter",
@@ -1058,7 +1058,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 12.28,
-        "fppg": 20.9,
+        "fppg": 20.3,
         "salary": 28,
         "fp_per_salary": 0.438,
         "role": "starter",
@@ -1129,6 +1129,21 @@
       },
       {
         "rank": 17,
+        "player": "Drake London",
+        "team": "ATL",
+        "opponent": "GB",
+        "fp": 11.59,
+        "fppg": 11.77,
+        "salary": 25,
+        "fp_per_salary": 0.464,
+        "role": "starter",
+        "role_slot": "WR slot 1",
+        "depth": 1,
+        "kickoff_utc": "2026-09-25 00:15",
+        "method": "Yahoo salary-position-depth regression (trained through 2025)"
+      },
+      {
+        "rank": 18,
         "player": "Mike Evans",
         "team": "SF",
         "opponent": "ARI",
@@ -1140,21 +1155,6 @@
         "role_slot": "WR slot 1",
         "depth": 1,
         "kickoff_utc": "2026-09-27 20:05",
-        "method": "Yahoo salary-position-depth regression (trained through 2025)"
-      },
-      {
-        "rank": 18,
-        "player": "Drake London",
-        "team": "ATL",
-        "opponent": "GB",
-        "fp": 11.59,
-        "fppg": 5.7,
-        "salary": 25,
-        "fp_per_salary": 0.464,
-        "role": "starter",
-        "role_slot": "WR slot 1",
-        "depth": 1,
-        "kickoff_utc": "2026-09-25 00:15",
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
@@ -1495,7 +1495,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 7.78,
-        "fppg": 5.25,
+        "fppg": 5.03,
         "salary": 15,
         "fp_per_salary": 0.519,
         "role": "starter",
@@ -1977,7 +1977,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 6.06,
-        "fppg": 3.0,
+        "fppg": 1.33,
         "salary": 12,
         "fp_per_salary": 0.505,
         "role": "starter",
@@ -2206,7 +2206,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 19.12,
-        "fppg": 17.14,
+        "fppg": 17.92,
         "salary": 33,
         "fp_per_salary": 0.58,
         "role": "starter",
@@ -2446,7 +2446,7 @@
         "team": "ATL",
         "opponent": "GB",
         "fp": 10.36,
-        "fppg": 13.7,
+        "fppg": 15.04,
         "salary": 21,
         "fp_per_salary": 0.493,
         "role": "starter",
@@ -2583,7 +2583,7 @@
         "team": "ATL",
         "opponent": "GB",
         "fp": 16.12,
-        "fppg": 18.45,
+        "fppg": 23.73,
         "salary": 35,
         "fp_per_salary": 0.461,
         "role": "starter",
@@ -2988,7 +2988,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 8.26,
-        "fppg": 5.65,
+        "fppg": 4.7,
         "salary": 14,
         "fp_per_salary": 0.59,
         "role": "starter",
@@ -3318,7 +3318,7 @@
         "team": "ATL",
         "opponent": "GB",
         "fp": 2.61,
-        "fppg": 5.4,
+        "fppg": 7.27,
         "salary": 10,
         "fp_per_salary": 0.261,
         "role": "rotation",
@@ -3344,21 +3344,6 @@
       },
       {
         "rank": 57,
-        "player": "Chris Brooks",
-        "team": "GB",
-        "opponent": "ATL",
-        "fp": 2.61,
-        "fppg": 3.0,
-        "salary": 10,
-        "fp_per_salary": 0.261,
-        "role": "rotation",
-        "role_slot": "RB slot 11",
-        "depth": 2,
-        "kickoff_utc": "2026-09-25 00:15",
-        "method": "Yahoo salary-position-depth regression (trained through 2025)"
-      },
-      {
-        "rank": 58,
         "player": "Raheim Sanders",
         "team": "CLE",
         "opponent": "CAR",
@@ -3370,6 +3355,21 @@
         "role_slot": "RB slot 11",
         "depth": 2,
         "kickoff_utc": "2026-09-27 17:00",
+        "method": "Yahoo salary-position-depth regression (trained through 2025)"
+      },
+      {
+        "rank": 58,
+        "player": "Chris Brooks",
+        "team": "GB",
+        "opponent": "ATL",
+        "fp": 2.61,
+        "fppg": 2.3,
+        "salary": 10,
+        "fp_per_salary": 0.261,
+        "role": "rotation",
+        "role_slot": "RB slot 11",
+        "depth": 2,
+        "kickoff_utc": "2026-09-25 00:15",
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
@@ -3618,7 +3618,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 1.43,
-        "fppg": 1.6,
+        "fppg": 1.77,
         "salary": 10,
         "fp_per_salary": 0.143,
         "role": "backup",
@@ -4355,7 +4355,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 12.28,
-        "fppg": 20.9,
+        "fppg": 20.3,
         "salary": 28,
         "fp_per_salary": 0.438,
         "role": "starter",
@@ -4426,6 +4426,21 @@
       },
       {
         "rank": 17,
+        "player": "Drake London",
+        "team": "ATL",
+        "opponent": "GB",
+        "fp": 11.59,
+        "fppg": 11.77,
+        "salary": 25,
+        "fp_per_salary": 0.464,
+        "role": "starter",
+        "role_slot": "WR slot 1",
+        "depth": 1,
+        "kickoff_utc": "2026-09-25 00:15",
+        "method": "Yahoo salary-position-depth regression (trained through 2025)"
+      },
+      {
+        "rank": 18,
         "player": "Mike Evans",
         "team": "SF",
         "opponent": "ARI",
@@ -4437,21 +4452,6 @@
         "role_slot": "WR slot 1",
         "depth": 1,
         "kickoff_utc": "2026-09-27 20:05",
-        "method": "Yahoo salary-position-depth regression (trained through 2025)"
-      },
-      {
-        "rank": 18,
-        "player": "Drake London",
-        "team": "ATL",
-        "opponent": "GB",
-        "fp": 11.59,
-        "fppg": 5.7,
-        "salary": 25,
-        "fp_per_salary": 0.464,
-        "role": "starter",
-        "role_slot": "WR slot 1",
-        "depth": 1,
-        "kickoff_utc": "2026-09-25 00:15",
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
@@ -4760,7 +4760,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 8.43,
-        "fppg": 10.15,
+        "fppg": 12.93,
         "salary": 18,
         "fp_per_salary": 0.469,
         "role": "starter",
@@ -5375,7 +5375,7 @@
         "team": "ATL",
         "opponent": "GB",
         "fp": 4.04,
-        "fppg": 0.9,
+        "fppg": 1.23,
         "salary": 10,
         "fp_per_salary": 0.404,
         "role": "starter",
@@ -5551,11 +5551,26 @@
       },
       {
         "rank": 92,
+        "player": "Skyy Moore",
+        "team": "GB",
+        "opponent": "ATL",
+        "fp": 3.62,
+        "fppg": 2.07,
+        "salary": 10,
+        "fp_per_salary": 0.362,
+        "role": "rotation",
+        "role_slot": "WR slot 1",
+        "depth": 3,
+        "kickoff_utc": "2026-09-25 00:15",
+        "method": "Yahoo salary-position-depth regression (trained through 2025)"
+      },
+      {
+        "rank": 93,
         "player": "Jahan Dotson",
         "team": "ATL",
         "opponent": "GB",
         "fp": 3.62,
-        "fppg": 2.25,
+        "fppg": 2.03,
         "salary": 10,
         "fp_per_salary": 0.362,
         "role": "starter",
@@ -5565,7 +5580,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 93,
+        "rank": 94,
         "player": "Andrei Iosivas",
         "team": "CIN",
         "opponent": "PIT",
@@ -5580,7 +5595,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 94,
+        "rank": 95,
         "player": "Jordan Whittington",
         "team": "LA",
         "opponent": "DEN",
@@ -5592,21 +5607,6 @@
         "role_slot": "WR slot 8",
         "depth": 3,
         "kickoff_utc": "2026-09-28 00:20",
-        "method": "Yahoo salary-position-depth regression (trained through 2025)"
-      },
-      {
-        "rank": 95,
-        "player": "Skyy Moore",
-        "team": "GB",
-        "opponent": "ATL",
-        "fp": 3.62,
-        "fppg": 0.8,
-        "salary": 10,
-        "fp_per_salary": 0.362,
-        "role": "rotation",
-        "role_slot": "WR slot 1",
-        "depth": 3,
-        "kickoff_utc": "2026-09-25 00:15",
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
@@ -5926,6 +5926,21 @@
       },
       {
         "rank": 117,
+        "player": "J. Michael Sturdivant",
+        "team": "GB",
+        "opponent": "ATL",
+        "fp": 1.36,
+        "fppg": 1.85,
+        "salary": 10,
+        "fp_per_salary": 0.136,
+        "role": "rotation",
+        "role_slot": "WR slot 8",
+        "depth": 4,
+        "kickoff_utc": "2026-09-25 00:15",
+        "method": "Yahoo salary-position-depth regression (trained through 2025)"
+      },
+      {
+        "rank": 118,
         "player": "Troy Franklin",
         "team": "DEN",
         "opponent": "LA",
@@ -5940,7 +5955,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 118,
+        "rank": 119,
         "player": "Brenen Thompson",
         "team": "LAC",
         "opponent": "BUF",
@@ -5955,7 +5970,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 119,
+        "rank": 120,
         "player": "Dohnte Meyers",
         "team": "CIN",
         "opponent": "PIT",
@@ -5970,7 +5985,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 120,
+        "rank": 121,
         "player": "Chris Bell",
         "team": "MIA",
         "opponent": "KC",
@@ -5985,7 +6000,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 121,
+        "rank": 122,
         "player": "Jonathan Mingo",
         "team": "DAL",
         "opponent": "BAL",
@@ -6000,7 +6015,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 122,
+        "rank": 123,
         "player": "Deion Burks",
         "team": "IND",
         "opponent": "HOU",
@@ -6015,7 +6030,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 123,
+        "rank": 124,
         "player": "Colbie Young",
         "team": "CIN",
         "opponent": "PIT",
@@ -6030,7 +6045,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 124,
+        "rank": 125,
         "player": "Jordan Watkins",
         "team": "SF",
         "opponent": "ARI",
@@ -6045,7 +6060,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 125,
+        "rank": 126,
         "player": "Makai Lemon",
         "team": "PHI",
         "opponent": "CHI",
@@ -6060,7 +6075,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 126,
+        "rank": 127,
         "player": "Zachariah Branch",
         "team": "ATL",
         "opponent": "GB",
@@ -6075,7 +6090,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 127,
+        "rank": 128,
         "player": "KhaDarel Hodge",
         "team": "SF",
         "opponent": "ARI",
@@ -6090,7 +6105,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 128,
+        "rank": 129,
         "player": "Tylan Wallace",
         "team": "CLE",
         "opponent": "CAR",
@@ -6105,7 +6120,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 129,
+        "rank": 130,
         "player": "Dyami Brown",
         "team": "WAS",
         "opponent": "SEA",
@@ -6120,7 +6135,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 130,
+        "rank": 131,
         "player": "Konata Mumpfield",
         "team": "LA",
         "opponent": "DEN",
@@ -6135,7 +6150,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 131,
+        "rank": 132,
         "player": "Travis Hunter",
         "team": "JAC",
         "opponent": "NE",
@@ -6147,21 +6162,6 @@
         "role_slot": "WR slot 2",
         "depth": 4,
         "kickoff_utc": "2026-09-27 17:00",
-        "method": "Yahoo salary-position-depth regression (trained through 2025)"
-      },
-      {
-        "rank": 132,
-        "player": "Bo Melton",
-        "team": "GB",
-        "opponent": "ATL",
-        "fp": 1.36,
-        "fppg": 0.75,
-        "salary": 10,
-        "fp_per_salary": 0.136,
-        "role": "starter",
-        "role_slot": "WR slot 2",
-        "depth": 5,
-        "kickoff_utc": "2026-09-25 00:15",
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
@@ -6226,16 +6226,16 @@
       },
       {
         "rank": 137,
-        "player": "Chris Blair",
-        "team": "ATL",
-        "opponent": "GB",
+        "player": "Bo Melton",
+        "team": "GB",
+        "opponent": "ATL",
         "fp": 1.36,
-        "fppg": 0.55,
+        "fppg": 0.5,
         "salary": 10,
         "fp_per_salary": 0.136,
-        "role": "rotation",
+        "role": "starter",
         "role_slot": "WR slot 2",
-        "depth": 4,
+        "depth": 5,
         "kickoff_utc": "2026-09-25 00:15",
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
@@ -6271,6 +6271,21 @@
       },
       {
         "rank": 140,
+        "player": "Chris Blair",
+        "team": "ATL",
+        "opponent": "GB",
+        "fp": 1.36,
+        "fppg": 0.37,
+        "salary": 10,
+        "fp_per_salary": 0.136,
+        "role": "rotation",
+        "role_slot": "WR slot 2",
+        "depth": 4,
+        "kickoff_utc": "2026-09-25 00:15",
+        "method": "Yahoo salary-position-depth regression (trained through 2025)"
+      },
+      {
+        "rank": 141,
         "player": "Efton Chism III",
         "team": "NE",
         "opponent": "JAC",
@@ -6285,7 +6300,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 141,
+        "rank": 142,
         "player": "Ke'Shawn Williams",
         "team": "CIN",
         "opponent": "PIT",
@@ -6300,7 +6315,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 142,
+        "rank": 143,
         "player": "Barion Brown",
         "team": "NO",
         "opponent": "LV",
@@ -6315,7 +6330,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 143,
+        "rank": 144,
         "player": "Malik Benson",
         "team": "LV",
         "opponent": "NO",
@@ -6330,7 +6345,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 144,
+        "rank": 145,
         "player": "Ashton Dulin",
         "team": "IND",
         "opponent": "HOU",
@@ -6345,7 +6360,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 145,
+        "rank": 146,
         "player": "Brycen Tremayne",
         "team": "CAR",
         "opponent": "CLE",
@@ -6360,7 +6375,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 146,
+        "rank": 147,
         "player": "CJ Daniels",
         "team": "LA",
         "opponent": "DEN",
@@ -6375,7 +6390,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 147,
+        "rank": 148,
         "player": "CJ Williams",
         "team": "JAC",
         "opponent": "NE",
@@ -6390,7 +6405,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 148,
+        "rank": 149,
         "player": "Camden Brown",
         "team": "DAL",
         "opponent": "BAL",
@@ -6405,7 +6420,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 149,
+        "rank": 150,
         "player": "Cyrus Allen",
         "team": "KC",
         "opponent": "MIA",
@@ -6420,7 +6435,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 150,
+        "rank": 151,
         "player": "Derius Davis",
         "team": "LAC",
         "opponent": "BUF",
@@ -6435,7 +6450,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 151,
+        "rank": 152,
         "player": "Devin Duvernay",
         "team": "ARI",
         "opponent": "SF",
@@ -6450,7 +6465,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 152,
+        "rank": 153,
         "player": "Elijah Sarratt",
         "team": "BAL",
         "opponent": "DAL",
@@ -6462,21 +6477,6 @@
         "role_slot": "WR slot 2",
         "depth": 5,
         "kickoff_utc": "2026-09-27 20:25",
-        "method": "Yahoo salary-position-depth regression (trained through 2025)"
-      },
-      {
-        "rank": 153,
-        "player": "J. Michael Sturdivant",
-        "team": "GB",
-        "opponent": "ATL",
-        "fp": 1.36,
-        "fppg": 0.0,
-        "salary": 10,
-        "fp_per_salary": 0.136,
-        "role": "rotation",
-        "role_slot": "WR slot 8",
-        "depth": 4,
-        "kickoff_utc": "2026-09-25 00:15",
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
@@ -7027,7 +7027,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 7.78,
-        "fppg": 5.25,
+        "fppg": 5.03,
         "salary": 15,
         "fp_per_salary": 0.519,
         "role": "starter",
@@ -7308,6 +7308,21 @@
       },
       {
         "rank": 35,
+        "player": "Austin Hooper",
+        "team": "ATL",
+        "opponent": "GB",
+        "fp": 1.68,
+        "fppg": 5.55,
+        "salary": 10,
+        "fp_per_salary": 0.168,
+        "role": "backup",
+        "role_slot": "TE slot 10",
+        "depth": 2,
+        "kickoff_utc": "2026-09-25 00:15",
+        "method": "Yahoo salary-position-depth regression (trained through 2025)"
+      },
+      {
+        "rank": 36,
         "player": "Cole Kmet",
         "team": "CHI",
         "opponent": "PHI",
@@ -7322,7 +7337,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 36,
+        "rank": 37,
         "player": "Eli Raridon",
         "team": "NE",
         "opponent": "JAC",
@@ -7337,7 +7352,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 37,
+        "rank": 38,
         "player": "Blake Whiteheart",
         "team": "CLE",
         "opponent": "CAR",
@@ -7352,7 +7367,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 38,
+        "rank": 39,
         "player": "Charlie Kolar",
         "team": "LAC",
         "opponent": "BUF",
@@ -7367,7 +7382,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 39,
+        "rank": 40,
         "player": "Foster Moreau",
         "team": "HOU",
         "opponent": "IND",
@@ -7382,7 +7397,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 40,
+        "rank": 41,
         "player": "Drew Sample",
         "team": "CIN",
         "opponent": "PIT",
@@ -7397,7 +7412,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 41,
+        "rank": 42,
         "player": "Josh Oliver",
         "team": "MIN",
         "opponent": "TB",
@@ -7409,21 +7424,6 @@
         "role_slot": "TE slot 10",
         "depth": 2,
         "kickoff_utc": "2026-09-27 20:05",
-        "method": "Yahoo salary-position-depth regression (trained through 2025)"
-      },
-      {
-        "rank": 42,
-        "player": "Austin Hooper",
-        "team": "ATL",
-        "opponent": "GB",
-        "fp": 1.68,
-        "fppg": 3.0,
-        "salary": 10,
-        "fp_per_salary": 0.168,
-        "role": "backup",
-        "role_slot": "TE slot 10",
-        "depth": 2,
-        "kickoff_utc": "2026-09-25 00:15",
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
@@ -7758,21 +7758,6 @@
       },
       {
         "rank": 65,
-        "player": "Jonnu Smith",
-        "team": "GB",
-        "opponent": "ATL",
-        "fp": 0.99,
-        "fppg": 6.0,
-        "salary": 10,
-        "fp_per_salary": 0.099,
-        "role": "rotation",
-        "role_slot": "TE slot 10",
-        "depth": 3,
-        "kickoff_utc": "2026-09-25 00:15",
-        "method": "Yahoo salary-position-depth regression (trained through 2025)"
-      },
-      {
-        "rank": 66,
         "player": "Nate Adkins",
         "team": "DEN",
         "opponent": "LA",
@@ -7787,7 +7772,7 @@
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
-        "rank": 67,
+        "rank": 66,
         "player": "Michael Mayer",
         "team": "LV",
         "opponent": "NO",
@@ -7799,6 +7784,21 @@
         "role_slot": "TE slot 10",
         "depth": 3,
         "kickoff_utc": "2026-09-27 20:25",
+        "method": "Yahoo salary-position-depth regression (trained through 2025)"
+      },
+      {
+        "rank": 67,
+        "player": "Jonnu Smith",
+        "team": "GB",
+        "opponent": "ATL",
+        "fp": 0.99,
+        "fppg": 4.3,
+        "salary": 10,
+        "fp_per_salary": 0.099,
+        "role": "rotation",
+        "role_slot": "TE slot 10",
+        "depth": 3,
+        "kickoff_utc": "2026-09-25 00:15",
         "method": "Yahoo salary-position-depth regression (trained through 2025)"
       },
       {
@@ -8874,7 +8874,7 @@
         "team": "GB",
         "opponent": "ATL",
         "fp": 6.06,
-        "fppg": 3.0,
+        "fppg": 1.33,
         "salary": 12,
         "fp_per_salary": 0.505,
         "role": "starter",
@@ -8934,7 +8934,7 @@
         "team": "ATL",
         "opponent": "GB",
         "fp": 5.78,
-        "fppg": 3.0,
+        "fppg": 4.0,
         "salary": 10,
         "fp_per_salary": 0.578,
         "role": "starter",
@@ -9122,7 +9122,7 @@
     "Yahoo salary-position-depth regression (trained through 2025)": 466
   },
   "log": [
-    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-25T00:01:43Z)",
+    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-25T04:52:33Z)",
     "  nflverse: depth chart 2026: 582 offensive rows, snapshot 2026-09-24 12:42 UTC",
     "  nflverse: roster status 2026: 2,543 rows",
     "  nflverse: injury report week 3, 259 rows.",
