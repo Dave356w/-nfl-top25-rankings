@@ -19,21 +19,21 @@ and has since diverged in the role and projection layers — see
 
 Each run:
 
-1. Pulls the current Yahoo NFL player feed (salaries, FPPG, the slate schedule).
+1. Pulls the Yahoo DFS feed for one thing only: each player's salary, the
+   games they are priced in, and the single-game salary caps.
 2. Pulls [Sleeper](https://docs.sleeper.com)'s public, keyless API: `/state/nfl`
    for the season and week, `/players/nfl` for every player's team, depth-chart
-   slot and order, roster status and injury designation, and
+   slot and order and injury designation, and
    `/projections/nfl/regular/{season}/{week}` for the weekly projection.
 3. Joins each priced Yahoo player to Sleeper — by Yahoo's own player id, which
-   Sleeper carries as `yahoo_id`, then by name, team and position — and drops
-   anyone Sleeper lists Out, on IR, PUP, NFI, suspended or off an active roster.
+   Sleeper carries as `yahoo_id`, then by name, team and position.
 4. Takes each player's mean from Sleeper's half-PPR projection (the scoring Yahoo
    DFS uses), removes anyone Sleeper does not project this week, then ranks every
    priced player by projected fantasy points.
 5. Writes JSON and CSV into `site/data/` and deploys `site/` to Pages.
 
 Projection priority is: manual override → Sleeper half-PPR projection. Yahoo
-FPPG remains visible as reference data but is not a model input. The frozen
+FPPG is no longer read or shown. The frozen
 salary-position-depth regression in `model/salary_projection.json` is kept only
 for the historical backtests, where no archived Sleeper projection exists.
 
@@ -61,21 +61,21 @@ So the pipeline keeps them apart:
 | `Depth_Rank` | flat opportunity rank within team and position: role tier first, then Sleeper projection; package slots (FB) last | the fitted coefficients of variation, scoreless rates and pair correlations |
 | `Projected_FP` | Sleeper's half-PPR projection | everything downstream |
 
-### Teammates move up when a player ahead of them is out
+### Injuries are Sleeper's call
 
-Sleeper's chart can keep an injured starter at the top of his slot for days
-after he is ruled out. So roles and depth are ranked among *available* players
-only: when a starter is Out or on IR, the next man at his slot becomes tier 1,
-and every teammate behind him moves up one in the flat rank. Teammates Yahoo
-does not price still count, so an unpriced third back is never skipped over.
+There is no injury filter of our own. Sleeper folds injury news into its
+projection: a player it does not expect to play projects at zero (or is missing
+from the week), and his backup's projection rises. So availability is one test —
+does Sleeper project him above zero — and a player who fails it is left out
+with the reason `no Sleeper projection`. Sleeper's injury designation
+(Questionable, Out, IR…) is carried to the pages for display only.
 
-Only the injured player's own slot moves: if a starting receiver is out, the
-second man at *his* slot becomes a starter; the other parallel starters are
-unchanged. A backup quarterback whose starter is out becomes tier 1 and is no
-longer dropped by the backup-QB filter. Each promotion is printed in the run log
-and published as `depth_promotions` in `latest.json`. `Questionable` and
-`Doubtful` do not trigger promotion; `AVAILABILITY_OVERRIDES` keeps or drops a
-named player regardless of Sleeper.
+The depth chart is used as Sleeper publishes it, with one exception: only one
+quarterback plays and Sleeper's projection names him, so quarterbacks are
+ordered by projection. A backup starting for an injured QB1 is therefore the
+tier-1 starter, keyed to starter volatility and kept by the backup-QB filter,
+even before the chart moves. `AVAILABILITY_OVERRIDES` still keeps or drops a
+named player outright.
 
 ### Editing depth on the pages
 
@@ -381,10 +381,10 @@ both pages from that exact final player frame.
 
 Each run:
 
-1. Pulls the Yahoo DFS feed for the week's FPPG, salary, opponent and kickoff.
+1. Pulls the Yahoo DFS feed for the week's salary, opponent and kickoff.
 2. Takes every player's mean, depth and injury status from Sleeper — the same
    projection the rankings and Showdown pages use.
-3. Benches anyone Sleeper lists Out, on IR, suspended or off the roster.
+3. Benches anyone Sleeper does not project this week (ruled out or on a bye).
 4. Fills `QB / RB / RB / WR / WR / TE / K / DEF` plus one RB/WR/TE flex and publishes
    starters, bench and a review note per player.
 
@@ -416,7 +416,7 @@ constants at the top of `lineup_optimizer.py`:
 | `LINEUP_OBJECTIVE` | `FP` (mean, the default), `Floor_P25`, or `Ceiling_P90` |
 | `EXCLUDED_PLAYERS` | `None` prompts for benchings; a list (even empty) skips the prompt |
 | `MANUAL_DEPTH_OVERRIDES` | override a stale depth chart |
-| `AUTO_EXCLUDE_REPORTED_OUT` | bench anyone Sleeper lists Out, on IR, suspended or off the roster |
+| `AUTO_EXCLUDE_REPORTED_OUT` | bench anyone Sleeper does not project this week |
 | `POOL_LIMITS` | how many players per position the page's roster editor can add from |
 
 ### Changing the roster on the page
@@ -429,7 +429,7 @@ hour before kickoff — without waiting for the next scheduled run:
   each slot, priced by the same run that published the lineup. `POOL_LIMITS` in
   `lineup_optimizer.py` sets how deep it goes.
 - **Drop** a player, or **bench** one so the optimizer has to fill his slot from
-  somewhere else. The run's own benchings — anyone Sleeper says cannot play —
+  somewhere else. The run's own benchings — anyone Sleeper does not project —
   start out applied, and can be undone.
 - The lineup, the totals and the CSV button all switch to the edited roster, and
   a badge in the status bar says the lineup on screen is no longer the published

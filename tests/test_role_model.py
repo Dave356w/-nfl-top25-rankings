@@ -44,7 +44,7 @@ def chart_dump(rows, teams=("NE",)):
 class SleeperRoleTests(unittest.TestCase):
     def setUp(self):
         points = {str(i): 20.0 - i for i in range(1, 11)}
-        self.ref, _ = sf.reference(chart_dump(NE_CHART), sf.projections(points))
+        self.ref = sf.reference(chart_dump(NE_CHART), sf.projections(points))
         self.ref = self.ref.set_index("Sleeper_Name")
 
     def test_parallel_starting_receivers_are_all_tier_one(self):
@@ -65,7 +65,7 @@ class SleeperRoleTests(unittest.TestCase):
 class BackupQuarterbackTests(unittest.TestCase):
     def test_the_chart_backup_is_removed_and_the_starter_is_not(self):
         points = {str(i): 20.0 - i for i in range(1, 11)}
-        ref, _ = sf.reference(chart_dump(NE_CHART), sf.projections(points))
+        ref = sf.reference(chart_dump(NE_CHART), sf.projections(points))
         players = pd.DataFrame({
             "Name": ["Drake Maye", "Joshua Dobbs"], "Team": ["NE", "NE"],
             "Position": ["QB", "QB"], "Salary": [40, 10], "FPPG": [20.0, 5.0],
@@ -213,6 +213,7 @@ class RankingRunTests(unittest.TestCase):
         ]
         projected = {name: fppg + 0.5 for name, _, _, _, fppg in self.ROWS}
         points = {pid: projected.get(name, 1.0) for pid, name, *_ in rows}
+        del points["12"]   # Sleeper does not project a player on injured reserve
         points.update({"NE": 7.5, "SEA": 7.5})
         patches = {
             "fetch_yahoo_data": lambda *a, **k: self.yahoo_payload(),
@@ -248,7 +249,7 @@ class RankingRunTests(unittest.TestCase):
         self.assertNotIn("Joshua Dobbs", names)     # unconfirmed backup quarterback
         self.assertIn("Drake Maye", names)
         removed = results["availability_removed"].set_index("Player")
-        self.assertEqual(removed.loc["Rashid Shaheed", "Reason"], "injury status IR")
+        self.assertEqual(removed.loc["Rashid Shaheed", "Reason"], "no Sleeper projection")
 
     def test_the_mean_is_sleepers_projection(self):
         players = self.run_rankings()["players"].set_index("Name")

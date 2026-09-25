@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Weekly Lineup</title>
-<meta name="description" content="This week's recommended fantasy football lineup, built from Sleeper projections, depth charts and injury status.">
+<meta name="description" content="This week's recommended fantasy football lineup, built from Sleeper projections and depth charts.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <style>
 :root{
@@ -442,7 +442,7 @@ footer{
       <pre class="log" id="log"></pre>
       <h4>Caveats</h4>
       <p>Sleeper projects half-PPR scoring, so check a close call against
-         your own league's scoring. Injury status is only as current as the
+         your own league's scoring. Projections are only as current as the
          last run's Sleeper pull, and P25/P90 are a lognormal band around the mean
          rather than a simulated outcome. Kickoffs show in your local timezone.</p>
     </div>
@@ -616,8 +616,7 @@ footer{
   // benchings rather than quietly starting someone the workflow benched.
   function benchedByRun(row) {
     if ((published.benched_by_request || []).indexOf(row.player) >= 0) return true;
-    return !!published.auto_exclude_out &&
-      (!!row.unavailable || String(row.injury || "").toLowerCase() === "out");
+    return !!published.auto_exclude_out && !!row.unavailable;
   }
 
   function isBenched(row) {
@@ -960,7 +959,7 @@ footer{
       r.review && r.review !== "ok" ? "<span>" + escapeHtml(r.review) + "</span>" : ""
     ].join("");
 
-    return '<tr class="' + (r.unavailable || (r.review && r.review.indexOf("injury Out") >= 0) ? "out" : "") + '">' +
+    return '<tr class="' + (r.unavailable ? "out" : "") + '">' +
       '<td data-cell="slot"><span class="slot' + (isFlex ? " flex" : "") + '">' +
         escapeHtml(slot) + "</span></td>" +
       '<td data-cell="player"><span class="who"><b>' + escapeHtml(r.player) + "</b><span>" +
@@ -1038,8 +1037,8 @@ footer{
 
     el("how").textContent =
       "Every player's mean is Sleeper's half-PPR projection for the week, kickers included. " +
-      "Depth and injury status come from Sleeper too; anyone it lists Out, on IR, suspended " +
-      "or off the roster is benched. P25 and P90 are a lognormal band whose width comes " +
+      "Sleeper folds injuries into that projection, so anyone it does not project this week " +
+      "is benched; injury tags are shown for reference. P25 and P90 are a lognormal band whose width comes " +
       "from the player's depth-chart role; depth widens the band but never moves the mean.";
 
     var methods = {};

@@ -56,10 +56,10 @@ def reference(raw_players, raw_projections):
 
 def stub_loader(raw_players, raw_projections, season=2026, week=2):
     """A drop-in for `notebook.load_sleeper_reference` that never touches the network."""
-    ref, promotions = reference(raw_players, raw_projections)
+    ref = reference(raw_players, raw_projections)
     context = {"season": season, "week": week, "season_type": "regular",
                "players_fetched_utc": "2026-09-10T12:00:00+00:00"}
 
     def load(players, cfg=None):
-        return ref, promotions, dict(context)
+        return ref, dict(context)
     return load

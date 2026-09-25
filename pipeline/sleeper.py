@@ -7,7 +7,7 @@ Three of its endpoints drive every page:
     The current season, week and season type.
 ``/players/nfl``
     One ~5MB dump of every player with his team, depth-chart slot and order,
-    roster status and injury designation. Sleeper asks callers to pull it at
+    and injury designation (shown, not filtered on). Sleeper asks callers to pull it at
     most once a day, so it is cached on disk for `PLAYERS_MAX_AGE_HOURS`.
 ``/projections/nfl/{season_type}/{season}/{week}``
     Weekly projected stat lines keyed by Sleeper ``player_id``. The mean each
@@ -15,9 +15,11 @@ Three of its endpoints drive every page:
     is undocumented and may change shape without notice, so both shapes seen
     in the wild are accepted.
 
-Yahoo stays the source of salaries and the slate. Everything else about a
-player -- who starts, who is hurt, what he is expected to score -- comes from
-here. The functions below are pure transforms on the fetched JSON so the rules
+Yahoo is used only for salaries and the single-game salary caps (and the
+games those caps are keyed by). Everything else about a player -- who starts
+and what he is expected to score -- comes from here. Injuries are handled by
+Sleeper inside its projection: a player it does not expect to play projects at
+zero, and only projected players reach the pool. The functions below are pure transforms on the fetched JSON so the rules
 can be tested without the network.
 """
 from __future__ import annotations
@@ -45,13 +47,6 @@ POSITIONS = ("QB", "RB", "WR", "TE", "K", "DEF")
 # Yahoo abbreviations that differ from Sleeper's. Sleeper also keys each team
 # defense by this code, so the same map resolves a Yahoo DEF row to its player.
 YAHOO_TO_SLEEPER_TEAM = {"JAC": "JAX", "LA": "LAR", "WSH": "WAS"}
-
-# Injury designations that mean the player will not play this week. Sleeper
-# uses "Questionable" and "Doubtful" for game-time decisions; those players stay
-# in the pool with the designation shown.
-UNAVAILABLE_INJURY_STATUSES = frozenset(
-    {"OUT", "IR", "PUP", "SUS", "NFI", "DNR", "COV", "NA"}
-)
 
 # Sleeper's depth_chart_position names the alignment slot. Receivers split
 # across LWR/RWR/SWR, so three starting receivers are each order 1 in their own
@@ -205,8 +200,6 @@ def players_frame(raw: dict) -> pd.DataFrame:
             "Team": team,
             "Position": position,
             "Yahoo ID": int(yahoo) if pd.notna(yahoo) else pd.NA,
-            "Status": p.get("status"),
-            "Active": p.get("active"),
             "Injury_Status": p.get("injury_status"),
             "Injury_Body_Part": p.get("injury_body_part"),
             "Practice_Status": p.get("practice_participation"),
@@ -219,91 +212,60 @@ def players_frame(raw: dict) -> pd.DataFrame:
     return frame
 
 
-def unavailable_reason(row) -> str | None:
-    """Why a Sleeper player cannot play this week, or None if he can."""
-    if row["Position"] == "DEF":
-        return None
-    if not row["Team"]:
-        return "not on an NFL roster"
-    injury = str(row.get("Injury_Status") or "").strip().upper()
-    if injury in UNAVAILABLE_INJURY_STATUSES:
-        return f"injury status {row['Injury_Status']}"
-    status = row.get("Status")
-    if status and str(status).strip().lower() != "active":
-        return f"roster status {status}"
-    if row.get("Active") is False:
-        return "inactive"
-    return None
+def build_reference(players: pd.DataFrame, projections: pd.DataFrame) -> pd.DataFrame:
+    """Attach Sleeper's depth and projection to every Sleeper player.
 
+    Injuries are Sleeper's call, made inside its projection: a player it does not
+    expect to play is projected at zero or not at all, and his backup's
+    projection rises. So there is no separate injury filter here; `Projected` is
+    the availability test, and the injury designation is carried for display.
 
-def build_reference(players: pd.DataFrame, projections: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Attach availability, depth and projection to every Sleeper player.
-
-    Depth is ranked among *available* teammates, so the player behind an Out or
-    IR starter moves up without waiting for Sleeper's chart to catch up.
-    ``Role_Tier`` is the rank within the player's alignment slot and
-    ``Depth_Rank`` the flat opportunity rank within team and position, ordered
-    by role tier and then by projection, which is the ordinal the fitted CV,
-    scoreless-rate and correlation tables are keyed on.
-
-    Returns ``(reference, promotions)``. `promotions` lists each teammate whose
-    role tier improved because someone ahead of him in his slot is unavailable.
+    Depth is Sleeper's chart as published. ``Role_Tier`` is the rank within the
+    player's alignment slot and ``Depth_Rank`` the flat opportunity rank within
+    team and position, ordered by role tier and then by projection, which is the
+    ordinal the fitted CV, scoreless-rate and correlation tables are keyed on.
     """
     ref = players.merge(projections, on="player_id", how="left")
-    ref["Unavailable_Reason"] = ref.apply(unavailable_reason, axis=1)
-    ref["Available"] = ref["Unavailable_Reason"].isna()
+    ref["Projected"] = ref["Sleeper_FP"].fillna(0.0).gt(0)
     ref["Depth_Slot"] = ref["Depth_Chart_Position"].where(
         ref["Depth_Chart_Position"].notna(), None)
     slot_position = ref["Depth_Slot"].map(lambda s: DEPTH_SLOT_POSITION.get(str(s).upper()) if s else None)
     # A chart slot at another position (a receiver listed at RB) still orders
     # him inside his own fantasy position; only the slot name is kept.
-    ref["Charted"] = ref["Depth_Chart_Order"].notna() & slot_position.notna()
-    ref["Chart_Order"] = pd.to_numeric(ref["Depth_Chart_Order"], errors="coerce")
-    ref["Sort_FP"] = ref["Sleeper_FP"].fillna(0.0)
+    charted = ref["Depth_Chart_Order"].notna() & slot_position.notna()
+    sort_fp = ref["Sleeper_FP"].fillna(0.0)
+    work = ref.assign(_order=pd.to_numeric(ref["Depth_Chart_Order"], errors="coerce"),
+                      _fp=sort_fp)
 
-    def slot_tiers(frame):
-        charted = frame[frame["Charted"]].sort_values(
-            ["Team", "Position", "Depth_Slot", "Chart_Order", "Sort_FP", "Key"],
-            ascending=[True, True, True, True, False, True])
-        return charted.groupby(["Team", "Position", "Depth_Slot"]).cumcount() + 1
-
-    raw_tier = slot_tiers(ref)
-    live = ref[ref["Available"]]
-    live_tier = slot_tiers(live)
-    ref["Chart_Tier"] = raw_tier.reindex(ref.index).astype("Int64")
-    ref["Role_Tier"] = live_tier.reindex(ref.index).astype("Int64")
+    slotted = work[charted].sort_values(
+        ["Team", "Position", "Depth_Slot", "_order", "_fp", "Key"],
+        ascending=[True, True, True, True, False, True])
+    tiers = slotted.groupby(["Team", "Position", "Depth_Slot"]).cumcount() + 1
+    ref["Chart_Tier"] = tiers.reindex(ref.index).astype("Int64")
 
     # A package slot (a fullback) is tier 1 of its own slot but is not a
     # starter's workload, so it ranks behind every regular slot.
-    package = live["Depth_Slot"].astype(str).str.upper().isin(PACKAGE_SLOTS)
-    order = live.assign(
-        _package=package,
-        _tier=ref.loc[live.index, "Role_Tier"].astype(float).fillna(np.inf),
-    ).sort_values(["Team", "Position", "_package", "_tier", "Sort_FP", "Key"],
+    order = work.assign(
+        _package=ref["Depth_Slot"].astype(str).str.upper().isin(PACKAGE_SLOTS),
+        _tier=ref["Chart_Tier"].astype(float).fillna(np.inf),
+    ).sort_values(["Team", "Position", "_package", "_tier", "_fp", "Key"],
                   ascending=[True, True, True, True, False, True])
     depth = order.groupby(["Team", "Position"]).cumcount() + 1
     ref["Depth_Rank"] = depth.reindex(ref.index).astype("Int64")
     # An uncharted player's role is named by his opportunity rank.
-    uncharted = ref["Available"] & ref["Role_Tier"].isna()
-    ref.loc[uncharted, "Role_Tier"] = ref.loc[uncharted, "Depth_Rank"]
-    ref.loc[ref["Position"].eq("DEF") & ref["Available"], ["Role_Tier", "Depth_Rank"]] = 1
-
-    promoted = ref["Available"] & ref["Charted"] & (ref["Role_Tier"] < ref["Chart_Tier"])
-    out = ref[~ref["Available"] & ref["Charted"]]
-    rows = []
-    for _, row in ref[promoted].iterrows():
-        ahead = out[(out["Team"] == row["Team"]) & (out["Position"] == row["Position"])
-                    & (out["Depth_Slot"] == row["Depth_Slot"])
-                    & (out["Chart_Tier"] < row["Chart_Tier"])]
-        rows.append({
-            "Player": row["Sleeper_Name"], "Team": row["Team"], "Position": row["Position"],
-            "Slot": row["Depth_Slot"], "Old tier": int(row["Chart_Tier"]),
-            "New tier": int(row["Role_Tier"]),
-            "Replacing": ", ".join(ahead.sort_values("Chart_Tier")["Sleeper_Name"]),
-        })
-    promotions = pd.DataFrame(rows, columns=["Player", "Team", "Position", "Slot",
-                                             "Old tier", "New tier", "Replacing"])
-    return ref.drop(columns=["Sort_FP"]), promotions
+    ref["Role_Tier"] = ref["Chart_Tier"].fillna(ref["Depth_Rank"]).astype("Int64")
+    # Only one quarterback plays, and Sleeper's projection names him: when a
+    # starter is ruled out his projection falls to zero and the backup's rises,
+    # often days before the chart moves. So quarterbacks are ordered by
+    # projection, and the chart only breaks ties.
+    qb = work[ref["Position"].eq("QB")].assign(
+        _tier=ref["Chart_Tier"].astype(float).fillna(np.inf)
+    ).sort_values(["Team", "_fp", "_tier", "Key"], ascending=[True, False, True, True])
+    qb_rank = (qb.groupby("Team").cumcount() + 1).astype("Int64")
+    ref.loc[qb_rank.index, "Depth_Rank"] = qb_rank
+    ref.loc[qb_rank.index, "Role_Tier"] = qb_rank
+    ref.loc[ref["Position"].eq("DEF"), ["Role_Tier", "Depth_Rank"]] = 1
+    return ref
 
 
 def match_players(pool: pd.DataFrame, reference: pd.DataFrame) -> pd.Series:
@@ -378,6 +340,6 @@ def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30):
     if projections.empty:
         raise SleeperError(
             f"Sleeper has no projections for {context['season']} week {context['week']}")
-    reference, promotions = build_reference(players, projections)
+    reference = build_reference(players, projections)
     context.update(players_fetched_utc=fetched_utc, state=state)
-    return reference, promotions, context
+    return reference, context

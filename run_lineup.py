@@ -53,20 +53,19 @@ def _player_row(player: pd.Series, slot: str | None = None) -> dict:
         "floor": _clean(player.get("Floor_P25")),
         "ceiling": _clean(player.get("Ceiling_P90")),
         "salary": _clean(player.get("Salary")),
-        "fppg": _clean(player.get("FPPG")),
         "depth": _clean(player.get("Depth_Rank")),
         "depth_source": _clean(player.get("Depth_Source")),
         "source": _clean(player.get("Projection_Source")),
         "injury": _clean(player.get("report_status")),
-        # Why Sleeper says he cannot play (Out, IR, suspended, off the roster),
-        # or null. The page benches on this rather than parsing `injury`.
+        # Set when Sleeper does not project him this week (ruled out, bye), or
+        # null. The page benches on this; `injury` is display only.
         "unavailable": _clean(player.get("Unavailable_Reason")),
         "review": lo.review(player),
     }
     kickoff = player.get("Game_Time")
     if isinstance(kickoff, pd.Timestamp) and pd.notna(kickoff):
         row["kickoff_utc"] = kickoff.strftime("%Y-%m-%d %H:%M")
-    for key in ("floor", "ceiling", "fppg"):
+    for key in ("floor", "ceiling"):
         if isinstance(row[key], float):
             row[key] = round(row[key], 2)
     if slot is None:

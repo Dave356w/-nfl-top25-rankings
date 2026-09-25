@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NFL Top 25 by Position</title>
-<meta name="description" content="Daily Yahoo NFL fantasy top-25 rankings from Sleeper projections, depth charts and injury status.">
+<meta name="description" content="Daily Yahoo NFL fantasy top-25 rankings from Sleeper projections and depth charts, priced with Yahoo DFS salaries.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
 <style>
 :root{
@@ -357,7 +357,6 @@ footer{
       <select id="sortby" aria-label="Sort by">
         <option value="rank">Rank</option>
         <option value="fp">Projected FP</option>
-        <option value="fppg">Yahoo FPPG</option>
         <option value="salary">Salary</option>
         <option value="fp_per_salary">FP per $</option>
         <option value="player">Player name</option>
@@ -389,7 +388,6 @@ footer{
             <th data-sort="rank" class="num" style="width:64px">#</th>
             <th data-sort="player">Player</th>
             <th data-sort="fp" class="num">Proj FP</th>
-            <th data-sort="fppg" class="num">Yahoo FPPG</th>
             <th data-sort="salary" class="num">Salary</th>
             <th data-sort="fp_per_salary" class="num">FP / $</th>
             <th data-sort="role">Role</th>
@@ -409,14 +407,16 @@ footer{
     <div class="panel-body">
       <h4>What the numbers mean</h4>
       <p><b>Proj FP</b> is Sleeper's weekly projection for the player in half-PPR
-         scoring, the same scoring Yahoo DFS uses. Players Sleeper lists Out, on
-         injured reserve, suspended or off the active roster are not ranked.</p>
+         scoring, the same scoring Yahoo DFS uses. Sleeper folds injuries into that
+         projection, so a player it does not expect to play projects at zero and
+         is not ranked.</p>
       <p><b>Role</b> is the player's rank within his own alignment slot on the
          Sleeper depth chart, so all three receivers in a three-wide set read as
          starters rather than as a starter and two reserves. <b>Depth</b> is the
          flat opportunity rank within team and position, ordered by that role and
-         then by projection, and is what the volatility model is keyed on. A
-         teammate behind an unavailable player moves up.</p>
+         then by projection, and is what the volatility model is keyed on.
+         Quarterbacks are ordered by projection, so the one Sleeper expects to
+         start is the starter even before its chart moves.</p>
 
       <div class="legend">
         <div><span class="badge model">sleeper</span> Sleeper half-PPR projection</div>
@@ -590,9 +590,9 @@ footer{
       }
       return row;
     });
-    // run_position_rankings' tie-breaks: projection, then FPPG, salary, name.
+    // run_position_rankings' tie-breaks: projection, then salary, name.
     list.sort(function (a, b) {
-      return (b.fp - a.fp) || ((b.fppg || 0) - (a.fppg || 0)) ||
+      return (b.fp - a.fp) ||
         ((b.salary || 0) - (a.salary || 0)) || String(a.player).localeCompare(String(b.player));
     });
     return list.slice(0, Number(state.data.top_n) || list.length).map(function (r, i) {
@@ -697,7 +697,6 @@ footer{
       var meta = [
         '<span class="badge ' + methodClass(r.method) + '">' +
           escapeHtml(r.method || "—") + "</span>",
-        "<span>" + fmt(r.fppg) + " FPPG</span>",
         "<span>" + money(r.salary) + "</span>",
         "<span>" + fmt(r.fp_per_salary, 3) + " FP/$</span>",
         "<span>" + escapeHtml(r.role || "role unknown") +
@@ -719,7 +718,6 @@ footer{
           (num(r.published_fp) && r.published_fp !== r.fp
             ? '<span class="was" title="Published projection">' + fmt(r.published_fp) + "</span>"
             : "") + "</span></td>" +
-        '<td class="num mono">' + fmt(r.fppg) + "</td>" +
         '<td class="num mono">' + money(r.salary) + "</td>" +
         '<td class="num mono">' + fmt(r.fp_per_salary, 3) + "</td>" +
         '<td><span class="role" title="' + escapeHtml(r.role_slot || "") + '">' +
@@ -795,7 +793,7 @@ footer{
        ", half-PPR</div>"],
       ['<div class="k">Removed</div><div class="v">' +
        escapeHtml(String(d.availability_removed || 0)) +
-       '</div><div class="n">unavailable or unprojected</div>']
+       '</div><div class="n">unmatched or not projected</div>']
     ].map(function (h) { return '<div class="stat">' + h + "</div>"; }).join("");
     el("stats").hidden = false;
 
@@ -808,15 +806,9 @@ footer{
     }).join("") || '<span class="badge">no breakdown recorded</span>';
 
     el("feeds").textContent =
-      "Yahoo salaries + Sleeper projections, depth, roster and injury status" +
+      "Yahoo salaries + Sleeper projections and depth charts" +
       (d.availability_removed
-        ? ". Availability filter removed " + d.availability_removed + " player(s)."
-        : "") +
-      ((d.depth_promotions || []).length
-        ? ". Promoted past injuries: " + d.depth_promotions.map(function (p) {
-            return p.player + " (" + p.team + " " + p.position + ", " + p.role +
-              " for " + p.replacing + ")";
-          }).join("; ") + "."
+        ? ". " + d.availability_removed + " priced player(s) left out: unmatched or not projected."
         : "");
 
     el("log").textContent = (d.log || []).join("\n") || "No log recorded.";

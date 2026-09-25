@@ -25,7 +25,7 @@ from pipeline import sleeper
 
 
 def chart():
-    """Two receivers per slot at KC, an Out starter, and a Jacksonville back."""
+    """Two receivers per slot at KC, an Out starter, a hurt QB1, and a Jacksonville back."""
     return sf.dump([
         sf.player("100", "Xavier Worthy", "KC", "WR", "LWR", 1, injury="Out", yahoo_id=501),
         sf.player("101", "JuJu Smith-Schuster", "KC", "WR", "LWR", 2, yahoo_id=502),
@@ -39,12 +39,16 @@ def chart():
         sf.player("109", "Mike Williams", "PIT", "WR", "SWR", 1),
         sf.player("110", "Mike Williams", "NYJ", "WR", "SWR", 1),
         sf.player("111", "Offensive Tackle", "KC", "OT", "LT", 1),
+        sf.player("112", "Patrick Mahomes", "KC", "QB", "QB", 1, injury="Out"),
+        sf.player("113", "Gardner Minshew", "KC", "QB", "QB", 2),
     ], teams=("KC", "JAX", "LAR"))
 
 
-POINTS = {"100": 11.0, "101": 7.5, "102": 14.0, "103": 6.0, "104": 12.5,
-          "105": 15.0, "106": 1.0, "107": 9.0, "108": 8.0, "109": 5.0,
-          "110": 4.0, "KC": 8.0, "JAX": 6.5, "LAR": 7.0}
+# Sleeper does not project the Out receiver (100), the suspended back (107) or
+# the Out quarterback (112); his backup's projection has risen instead.
+POINTS = {"101": 7.5, "102": 14.0, "103": 6.0, "104": 12.5,
+          "105": 15.0, "106": 1.0, "108": 8.0, "109": 5.0,
+          "110": 4.0, "113": 16.0, "KC": 8.0, "JAX": 6.5, "LAR": 7.0}
 
 
 def yahoo_pool(rows):
@@ -93,48 +97,42 @@ class PlayersFrameTests(unittest.TestCase):
         self.assertEqual(self.frame.loc["100", "Yahoo ID"], 501)
 
 
-class AvailabilityAndDepthTests(unittest.TestCase):
+class DepthTests(unittest.TestCase):
     def setUp(self):
-        ref, self.promotions = sf.reference(chart(), sf.projections(POINTS))
-        self.ref = ref.set_index("player_id")
+        self.ref = sf.reference(chart(), sf.projections(POINTS)).set_index("player_id")
 
-    def test_out_suspended_and_off_roster_are_unavailable(self):
-        self.assertEqual(self.ref.loc["100", "Unavailable_Reason"], "injury status Out")
-        self.assertEqual(self.ref.loc["107", "Unavailable_Reason"], "injury status Sus")
-        self.assertEqual(self.ref.loc["106", "Unavailable_Reason"], "not on an NFL roster")
-
-    def test_questionable_is_a_game_time_decision_not_a_removal(self):
-        self.assertTrue(self.ref.loc["103", "Available"])
+    def test_injuries_are_sleepers_call_through_the_projection(self):
+        self.assertFalse(self.ref.loc["100", "Projected"])
+        self.assertFalse(self.ref.loc["107", "Projected"])
+        # A designation alone decides nothing; it is carried for display.
+        self.assertTrue(self.ref.loc["103", "Projected"])
         self.assertEqual(self.ref.loc["103", "Injury_Status"], "Questionable")
 
-    def test_the_man_behind_an_out_starter_takes_his_slot(self):
-        self.assertEqual(self.ref.loc["101", "Chart_Tier"], 2)
-        self.assertEqual(self.ref.loc["101", "Role_Tier"], 1)
-        # Only the injured player's own slot moves.
+    def test_the_chart_is_taken_as_published(self):
+        # No re-ranking around the Out starter: his backup stays second in his slot.
+        self.assertEqual(self.ref.loc["100", "Role_Tier"], 1)
+        self.assertEqual(self.ref.loc["101", "Role_Tier"], 2)
         self.assertEqual(self.ref.loc["103", "Role_Tier"], 2)
 
-    def test_promotions_name_who_they_replace(self):
-        rows = self.promotions.set_index("Player")
-        self.assertEqual(rows.loc["JuJu Smith-Schuster", "Replacing"], "Xavier Worthy")
-        self.assertEqual(rows.loc["Isiah Pacheco", "Replacing"], "Suspended Back")
-        self.assertEqual(rows.loc["JuJu Smith-Schuster", "New tier"], 1)
-
     def test_the_flat_rank_follows_role_then_projection(self):
-        # Rice (RWR1, 14.0) and Smith-Schuster (LWR1 after promotion, 7.5) are
-        # both tier 1; Brown is tier 2.
-        self.assertEqual(self.ref.loc["102", "Depth_Rank"], 1)
-        self.assertEqual(self.ref.loc["101", "Depth_Rank"], 2)
-        self.assertEqual(self.ref.loc["103", "Depth_Rank"], 3)
-        self.assertTrue(pd.isna(self.ref.loc["100", "Depth_Rank"]))
+        # Rice (RWR1, 14.0) and Worthy (LWR1, not projected) are tier 1;
+        # Smith-Schuster (7.5) and Brown (6.0) are tier 2.
+        ranks = self.ref[self.ref["Team"].eq("KC") & self.ref["Position"].eq("WR")]
+        self.assertEqual(list(ranks.sort_values("Depth_Rank").index), ["102", "100", "101", "103"])
+
+    def test_the_quarterback_sleeper_projects_is_the_starter(self):
+        self.assertEqual(self.ref.loc["113", "Depth_Rank"], 1)
+        self.assertEqual(self.ref.loc["113", "Role_Tier"], 1)
+        self.assertEqual(self.ref.loc["112", "Depth_Rank"], 2)
 
     def test_a_defense_is_always_depth_one(self):
         self.assertEqual(self.ref.loc["KC", "Depth_Rank"], 1)
-        self.assertTrue(self.ref.loc["KC", "Available"])
+        self.assertTrue(self.ref.loc["KC", "Projected"])
 
 
 class MatchTests(unittest.TestCase):
     def setUp(self):
-        self.ref, _ = sf.reference(chart(), sf.projections(POINTS))
+        self.ref = sf.reference(chart(), sf.projections(POINTS))
 
     def match(self, rows):
         return list(sleeper.match_players(yahoo_pool(rows), self.ref))
@@ -199,7 +197,7 @@ class PlayerCacheTests(unittest.TestCase):
 
 class ApplyReferenceTests(unittest.TestCase):
     def setUp(self):
-        self.ref, _ = sf.reference(chart(), sf.projections(POINTS))
+        self.ref = sf.reference(chart(), sf.projections(POINTS))
         self.pool = yahoo_pool([
             ("Xavier Worthy", "KC", "WR", 20, 501),
             ("JuJu Smith-Schuster", "KC", "WR", 12, 502),
@@ -223,14 +221,17 @@ class ApplyReferenceTests(unittest.TestCase):
         self.assertEqual(kept.loc["Rashee Rice", "Projected_FP"], 14.0)
         self.assertEqual(kept.loc["Rashee Rice", "Projection_Source"],
                          "Sleeper half-PPR projection (2026 week 3)")
-        self.assertEqual(kept.loc["JuJu Smith-Schuster", "Role_Label"], "starter")
+        self.assertEqual(kept.loc["Rashee Rice", "Role_Label"], "starter")
+        self.assertEqual(kept.loc["JuJu Smith-Schuster", "Role_Label"], "rotation")
         self.assertEqual(kept.loc["JuJu Smith-Schuster", "Role_Slot"], "WR LWR")
         self.assertEqual(kept.loc["Kansas City Chiefs", "Depth_Rank"], 1)
         self.assertEqual(removed.set_index("Player").loc["Xavier Worthy", "Reason"],
-                         "injury status Out")
+                         "no Sleeper projection")
 
     def test_an_availability_override_reinstates_or_scratches(self):
+        # Reinstating a player Sleeper does not project needs a mean as well.
         nb.AVAILABILITY_OVERRIDES.update({"Xavier Worthy": True, "Rashee Rice": False})
+        nb.PROJECTION_OVERRIDES.update({"Xavier Worthy": 9.0})
         kept, removed = self.apply()
         self.assertIn("Xavier Worthy", set(kept["Name"]))
         self.assertEqual(removed.set_index("Player").loc["Rashee Rice", "Reason"],

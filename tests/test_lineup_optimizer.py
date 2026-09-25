@@ -83,7 +83,8 @@ def _yahoo_frame():
 def _sleeper():
     """Sleeper's view of the fixture week.
 
-    Tee Higgins is ruled Out, Monday Guy plays in a game Yahoo does not price,
+    Tee Higgins is ruled Out, so Sleeper does not project him; Monday Guy plays
+    in a game Yahoo does not price,
     Bye Week Guy has no projection, and Dallas carries a second kicker who must
     not reach the add pool.
     """
@@ -100,13 +101,13 @@ def _sleeper():
         sf.player("9", "Bye Kicker", "SEA", "K", "K", 1),
         sf.player("10", "Bye Week Guy", "SEA", "RB", "RB", 1),
     ]
-    points = {"1": 13.2, "2": 11.0, "3": 19.4, "4": 14.1, "5": 7.3, "6": 12.0,
+    points = {"1": 13.2, "3": 19.4, "4": 14.1, "5": 7.3, "6": 12.0,
               "7": 9.5, "8": 3.0}
     return sf.dump(rows), sf.projections(points)
 
 
 def _context():
-    reference, _ = sf.reference(*_sleeper())
+    reference = sf.reference(*_sleeper())
     context = {"season": 2026, "week": 2, "season_type": "regular",
                "players_fetched_utc": "2026-09-10T12:00:00+00:00"}
     return lo.sleeper_context(reference, context, _yahoo_frame())
@@ -218,10 +219,11 @@ class BuildRosterTests(unittest.TestCase):
         row = self.roster.loc["Tee Higgins"]
         self.assertEqual(row["report_status"], "Out")
         self.assertEqual(row["practice_status"], "DNP")
-        self.assertIn("unavailable: injury status Out", lo.review(row))
+        self.assertIn("injury Out", lo.review(row))
 
-    def test_an_unavailable_player_is_reported_out(self):
-        self.assertEqual(lo.reported_out(self.roster.reset_index(drop=True)), ["Tee Higgins"])
+    def test_everyone_sleeper_does_not_project_is_benched(self):
+        self.assertEqual(lo.reported_out(self.roster.reset_index(drop=True)),
+                         ["Tee Higgins", "Bye Week Guy"])
 
     def test_manual_depth_overrides_win(self):
         original = dict(lo.MANUAL_DEPTH_OVERRIDES)
@@ -491,13 +493,12 @@ class RosterFileTests(unittest.TestCase):
 
 
 class ReportedOutTests(unittest.TestCase):
-    def test_it_benches_whoever_sleeper_says_cannot_play(self):
-        # Questionable is a game-time decision, so only the unavailable reason
-        # benches; the designation alone does not.
+    def test_it_benches_whoever_sleeper_does_not_project(self):
+        # The designation alone benches nobody; the projection decides.
         roster = pd.DataFrame({
             "Name": ["A", "B", "C"],
-            "report_status": ["IR", "Questionable", None],
-            "Unavailable_Reason": ["injury status IR", None, None],
+            "report_status": ["IR", "Out", None],
+            "Unavailable_Reason": ["not projected this week", None, None],
         })
         self.assertEqual(lo.reported_out(roster), ["A"])
 

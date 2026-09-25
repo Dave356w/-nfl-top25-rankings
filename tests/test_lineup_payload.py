@@ -28,7 +28,7 @@ from test_lineup_optimizer import _context, _yahoo_frame
 # Keys `site/lineup.html` reads off a player row. A missing one renders as a
 # silent "undefined" in the browser rather than an error, so they are pinned.
 PLAYER_KEYS = ("player", "key", "pos", "team", "opponent", "kickoff_utc", "mean",
-               "floor", "ceiling", "salary", "fppg", "depth", "depth_source",
+               "floor", "ceiling", "salary", "depth", "depth_source",
                "source", "injury", "unavailable", "review")
 
 CONFIGURED = [
@@ -88,7 +88,8 @@ class PayloadTests(unittest.TestCase):
 
     def test_only_starters_carry_a_slot(self):
         slots = [row["slot"] for row in self.payload["starters"]]
-        self.assertEqual(sorted(slots), sorted(["QB", "RB", "RB", "WR", "WR", "TE", "K"]))
+        # One RB slot stays empty: the only other back is not projected this week.
+        self.assertEqual(sorted(slots), sorted(["QB", "RB", "WR", "WR", "TE", "K"]))
         self.assertTrue(all("slot" not in row for row in self.payload["bench"]))
 
     def test_totals_use_the_mean_where_a_player_has_no_band(self):
@@ -100,12 +101,13 @@ class PayloadTests(unittest.TestCase):
         self.assertGreater(totals["ceiling"], totals["mean"])
 
     def test_an_out_player_is_benched_and_recorded(self):
-        self.assertEqual(self.payload["benched_by_request"], ["Tee Higgins"])
+        # Sleeper projects neither the Out receiver nor the bye-week back.
+        self.assertEqual(self.payload["benched_by_request"], ["Tee Higgins", "Bye Week Guy"])
         self.assertNotIn("Tee Higgins", [r["player"] for r in self.payload["starters"]])
 
     def test_counts_and_context_come_from_the_run(self):
         self.assertEqual(self.payload["counts"]["roster"], len(CONFIGURED))
-        self.assertEqual(self.payload["counts"]["projected"], len(CONFIGURED) - 1)
+        self.assertEqual(self.payload["counts"]["projected"], len(CONFIGURED) - 2)
         self.assertEqual(self.payload["week"], 2)
         self.assertEqual(self.payload["season"], 2026)
         self.assertEqual(self.payload["slots"], dict(lo.STARTING_POSITIONS))
@@ -175,9 +177,7 @@ class NoInjuryDesignationTests(unittest.TestCase):
     def setUp(self):
         context = _context()
         reference = context["reference"].copy()
-        reference[["Injury_Status", "Practice_Status", "Injury_Body_Part",
-                   "Unavailable_Reason"]] = None
-        reference["Available"] = True
+        reference[["Injury_Status", "Practice_Status", "Injury_Body_Part"]] = None
         context["reference"] = reference
         roster = lo.build_roster(CONFIGURED, _yahoo_frame(), context)
         excluded = lo.reported_out(roster)
@@ -190,11 +190,12 @@ class NoInjuryDesignationTests(unittest.TestCase):
         # With nothing to report, `report_status` is pandas' NA sentinel, which
         # json.dumps rejects outright unless `_clean` treats it as null.
         json.dumps(self.payload)
-        self.assertTrue(all(row["injury"] is None and row["unavailable"] is None
-                            for row in self.payload["starters"] + self.payload["bench"]))
+        rows = self.payload["starters"] + self.payload["bench"]
+        self.assertTrue(all(row["injury"] is None for row in rows))
+        self.assertTrue(all(row["unavailable"] is None for row in rows if row["mean"] > 0))
 
-    def test_nobody_is_benched(self):
-        self.assertEqual(self.payload["benched_by_request"], [])
+    def test_only_the_projection_benches(self):
+        self.assertEqual(self.payload["benched_by_request"], ["Tee Higgins", "Bye Week Guy"])
 
 
 class WriteOutputTests(unittest.TestCase):

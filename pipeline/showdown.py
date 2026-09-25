@@ -1,6 +1,6 @@
 """Export one Yahoo single-game slate as a payload a browser can optimize.
 
-The runner fetches Yahoo prices and Sleeper depth, availability and
+The runner fetches Yahoo salaries and caps and Sleeper depth and
 projections, builds a correlation model, enumerates and scores lineups, and asks the
 user questions. Feed preparation remains server-side so every visitor receives
 the same immutable model snapshot.
@@ -181,7 +181,7 @@ def build_game_payload(game_players, game, salary_cap=None, cfg=None, optimize=T
         "latent": upper_triangle(model["latent_corr"]),
         "model": {
             "family": "correlated_zero_hurdle_lognormal",
-            "limitations": ["Zero scores are represented by a fitted played-but-scoreless rate. Players Sleeper lists Out, IR, suspended or off the active roster are removed before modelling; inactive news after the Sleeper snapshot is not represented. Negative scores and discrete scoring components are still not represented."],
+            "limitations": ["Zero scores are represented by a fitted played-but-scoreless rate. Players Sleeper does not project this week are removed before modelling; news after the Sleeper snapshot is not represented. Negative scores and discrete scoring components are still not represented."],
             "psd_max_score_adjustment": round(float(model["psd_max_score_adjustment"]), 6),
             "infeasible_pairs": int(model["infeasible_pairs"]),
             "max_infeasible_shift": round(float(model["max_infeasible_shift"]), 6),

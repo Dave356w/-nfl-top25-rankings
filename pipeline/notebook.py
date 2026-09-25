@@ -248,7 +248,6 @@ def normalize_yahoo_data(payload):
         "position": "Position",
         "team": "Team",
         "salary": "Salary",
-        "fppg": "FPPG",
         "gameCode": "Game ID",
         "gameStartTime": "Game Time",
         "homeTeam": "Home Team",
@@ -256,7 +255,7 @@ def normalize_yahoo_data(payload):
     }
     df = df.rename(columns=rename)
     required = [
-        "Name", "Position", "Team", "Salary", "FPPG", "Game ID",
+        "Name", "Position", "Team", "Salary", "Game ID",
         "Game Time", "Home Team", "Away Team",
     ]
     missing = [column for column in required if column not in df]
@@ -267,7 +266,6 @@ def normalize_yahoo_data(payload):
         df["Position"].astype(str).str.upper().replace({"D/ST": "DEF", "DST": "DEF"})
     )
     df["Salary"] = pd.to_numeric(df["Salary"], errors="coerce")
-    df["FPPG"] = pd.to_numeric(df["FPPG"], errors="coerce").fillna(0.0)
     df["Game ID"] = df["Game ID"].astype(str)
     # v3.2 keeps Yahoo's own player id ("nfl.p.26753" -> 26753). Name matching against
     # any external depth-chart or injury feed is lossy; this is the stable key. Team
@@ -507,9 +505,9 @@ def apply_default_role_filters(players, include_backup_qbs=None, cfg=None):
     Default exclusion prevents a low-salary backup from entering a lineup solely
     because a high fitted CV produces a long simulated tail.
 
-    The test is the role tier, not the opportunity rank: quarterback has a single
-    alignment slot, so tier 1 is the starter and nothing else is. A DEPTH_OVERRIDES
-    entry sets both, which is how a confirmed replacement starter gets through.
+    The test is the role tier. Quarterbacks are tiered by Sleeper's projection
+    (see `sleeper.build_reference`), so the QB Sleeper expects to start is tier 1
+    even before its chart moves. A DEPTH_OVERRIDES entry of 1 also gets through.
     """
     cfg = _cfg(cfg)
     include_backup_qbs = set(include_backup_qbs or set())
@@ -553,11 +551,6 @@ def depth_sanity_report(players):
             flags.append("no chart entry; role inferred from the projection")
         elif source != "manual override":
             flags.append("chart role")
-        if (
-            player["FPPG"] <= 0.25
-            and player["Projection_Source"] != "manual override"
-        ):
-            flags.append("zero/low FPPG prior")
         if player["Position"] == "QB" and player["Depth_Rank"] > 1:
             flags.append("verify expected snaps")
         rows.append({
@@ -586,7 +579,7 @@ def apply_exclusions_interactive(players, preexcluded=None):
     view = view.reset_index(drop=True)
     view.insert(0, "Row", np.arange(len(view)))
     display(view[[
-        "Row", "Name", "Position", "Team", "Salary", "FPPG",
+        "Row", "Name", "Position", "Team", "Salary",
         "Pre_Depth_Projected_FP", "Depth_Mean_Multiplier", "Projected_FP",
         "Role_Label", "Depth_Rank", "Projection_Source",
     ]].rename(columns={
@@ -757,11 +750,12 @@ def load_sleeper_reference(players, cfg=None):
 
 
 def apply_sleeper_reference(players, reference, context=None, cfg=None):
-    """Replace depth, availability and the mean with Sleeper's, row by row.
+    """Replace depth and the mean with Sleeper's, row by row.
 
     Returns ``(kept, removed)``. `removed` lists every priced player that left the
-    pool and why: no confident Sleeper match, an unavailable roster or injury
-    status, or no projection for the week. Manual overrides win over the feed:
+    pool and why: no confident Sleeper match, or no Sleeper projection for the
+    week -- which is how Sleeper says a player is not expected to play. Sleeper's
+    injury designation is carried for display only. Manual overrides win:
     AVAILABILITY_OVERRIDES keeps or drops a player outright, DEPTH_OVERRIDES sets
     his depth, and PROJECTION_OVERRIDES sets his mean.
     """
@@ -778,7 +772,7 @@ def apply_sleeper_reference(players, reference, context=None, cfg=None):
             f"{cfg.sleeper_min_match_rate:.0%} floor; refusing to publish on a broken join."
         )
 
-    columns = ["player_id", "Available", "Unavailable_Reason", "Injury_Status",
+    columns = ["player_id", "Injury_Status",
                "Injury_Body_Part", "Practice_Status", "Depth_Slot", "Chart_Tier",
                "Role_Tier", "Depth_Rank", "Sleeper_FP"]
     joined = reference[columns].rename(columns={"player_id": "Sleeper_ID"})
@@ -791,12 +785,10 @@ def apply_sleeper_reference(players, reference, context=None, cfg=None):
     unmatched = out["Sleeper_ID"].isna()
     if cfg.sleeper_drop_unmatched:
         reason[unmatched] = "no Sleeper match"
-    unavailable = out["Available"].eq(False)
-    reason[unavailable] = out.loc[unavailable, "Unavailable_Reason"]
     reason[forced.eq(True)] = pd.NA
     reason[forced.eq(False)] = "availability override"
 
-    # Ranks for a player Sleeper could not place (unmatched or overridden back
+    # Ranks for a player Sleeper could not place (unmatched but overridden back
     # in) come from salary order among his priced teammates.
     salary_rank = out.groupby(["Team", "Position"])["Salary"].rank(
         method="first", ascending=False)
@@ -2029,11 +2021,6 @@ def _lineup_risk_notes(players, ids, salary_left, salary_cap):
     ]
     if len(deep):
         notes.append("deep role: " + ", ".join(deep["Name"].tolist()))
-    zero_history = selected[
-        selected["Projection_Source"].astype(str).str.contains("zero/low FPPG")
-    ]
-    if len(zero_history):
-        notes.append("no FPPG history: " + ", ".join(zero_history["Name"].tolist()))
     backups = selected[
         selected["Position"].eq("QB") & selected["Depth_Rank"].gt(1)
     ]
@@ -2263,16 +2250,12 @@ def run_interactive(cfg=None):
     players = all_players[all_players["Game ID"].eq(str(selected["Game ID"]))].copy()
     print(f"\n{selected['Matchup']} - cap ${salary_cap:g}")
 
-    reference, promotions, context = load_sleeper_reference(players, cfg)
+    reference, context = load_sleeper_reference(players, cfg)
     print(
         f"\nSleeper: {context['season']} week {context['week']} projections; "
         f"player dump fetched {context['players_fetched_utc']}."
     )
     players, removed = apply_sleeper_reference(players, reference, context, cfg)
-    promotions = promotions[promotions["Team"].isin(set(players["Team"].map(sleeper.normalize_team)))]
-    if len(promotions):
-        print("\nDepth promotions past unavailable teammates:")
-        display(promotions)
     if len(removed):
         print(f"\nRemoved {len(removed)} player(s) before modelling:")
         display(removed)
@@ -2406,7 +2389,6 @@ def run_interactive(cfg=None):
         "correlation_detail": corr_detail,
         "marginals": marginals,
         "availability_removed": removed,
-        "depth_promotions": promotions,
         "reliability": reliability,
         "screen_check": screen_check,
         "diversity": diversity,
@@ -2443,30 +2425,12 @@ def prepare_slate_pool(cfg=None, purpose=""):
         + (f"; {purpose}" if purpose else "")
     )
 
-    reference, depth_promotions, context = load_sleeper_reference(players, cfg)
+    reference, context = load_sleeper_reference(players, cfg)
     print(
         f"  Sleeper: {context['season']} {context['season_type']} week {context['week']} "
         f"projections; player dump fetched {context['players_fetched_utc']}."
     )
     players, removed = apply_sleeper_reference(players, reference, context, cfg)
-    # Only promotions that reach a priced player and change his role matter to
-    # these pages; a fifth receiver becoming the fourth is still a reserve.
-    priced = set(zip(players["Team"].map(sleeper.normalize_team),
-                     players["Name"].map(sleeper.normalize_name)))
-    depth_promotions = depth_promotions[[
-        (team, sleeper.normalize_name(name)) in priced
-        and role_label(position, old) != role_label(position, new)
-        for team, name, position, old, new in zip(
-            depth_promotions["Team"], depth_promotions["Player"],
-            depth_promotions["Position"], depth_promotions["Old tier"],
-            depth_promotions["New tier"])
-    ]].reset_index(drop=True)
-    for row in depth_promotions.to_dict("records"):
-        print(
-            f"  Depth promotion: {row['Player']} ({row['Team']} {row['Position']}) "
-            f"{role_label(row['Position'], row['Old tier'])} -> "
-            f"{role_label(row['Position'], row['New tier'])}, replacing {row['Replacing']}"
-        )
     for why, count in removed["Reason"].value_counts().items():
         print(f"  Removed {count} player(s): {why}.")
 
@@ -2489,7 +2453,6 @@ def prepare_slate_pool(cfg=None, purpose=""):
         "games": games,
         "cap_map": cap_map,
         "availability_removed": removed,
-        "depth_promotions": depth_promotions,
         "backup_qbs_removed": backup_qbs_removed,
         "excluded": sorted(excluded),
     }
@@ -2539,8 +2502,8 @@ def run_position_rankings(
 
     # Stable tie-breaks make repeated runs deterministic when estimates are equal.
     ordered = players.sort_values(
-        ["Position", "Projected_FP", "FPPG", "Salary", "Name"],
-        ascending=[True, False, False, False, True],
+        ["Position", "Projected_FP", "Salary", "Name"],
+        ascending=[True, False, False, True],
     ).copy()
 
     tables = {}
@@ -2553,7 +2516,6 @@ def run_position_rankings(
         group.insert(0, "Rank", np.arange(1, len(group) + 1))
         group["Estimated FP"] = group["Projected_FP"].round(2)
         group["FP / salary"] = group["FP_per_Salary"].round(3)
-        group["Yahoo FPPG"] = group["FPPG"].round(2)
         group["Kickoff UTC"] = pd.to_datetime(
             group["Game Time"], errors="coerce", utc=True
         ).dt.strftime("%Y-%m-%d %H:%M")
@@ -2563,7 +2525,7 @@ def run_position_rankings(
         group["Role slot"] = group["Role_Slot"].astype("string").fillna("")
 
         columns = [
-            "Rank", "Name", "Team", "Opponent", "Estimated FP", "Yahoo FPPG",
+            "Rank", "Name", "Team", "Opponent", "Estimated FP",
             "Salary", "FP / salary", "Role", "Role slot", "Depth_Rank",
             "Kickoff UTC", "Projection method",
         ]
@@ -2603,7 +2565,6 @@ def run_position_rankings(
         "games": games,
         "projection_model": slate["projection_model"],
         "availability_removed": slate["availability_removed"],
-        "depth_promotions": slate.get("depth_promotions", pd.DataFrame()),
         "csv": csv_path,
     }
 
