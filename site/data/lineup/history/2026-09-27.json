@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-09-27T17:28:20Z",
-  "snapshot_id": "2026-09-27T17:28:20Z",
+  "generated_utc": "2026-09-27T19:07:42Z",
+  "snapshot_id": "2026-09-27T19:07:42Z",
   "run_date": "2026-09-27",
   "season": 2026,
   "week": 3,
@@ -343,9 +343,9 @@
     "week": 3
   },
   "log": [
-    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-27T17:28:20Z)",
+    "Yahoo slate: 16 game(s), 540 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-09-27T19:07:42Z)",
     "  Sleeper: 2026 regular week 3 projections; player dump fetched 2026-09-27T15:47:47.313140+00:00.",
-    "  Removed 127 player(s): no Sleeper projection.",
+    "  Removed 128 player(s): no Sleeper projection.",
     "  Removed 8 player(s): no Sleeper match.",
     "TOP 25 QB",
     "    Rank  ...                          Projection method",
@@ -489,7 +489,7 @@
     "[25 rows x 12 columns]",
     "Ranking run time: 0.1s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-09-27T17:28:20Z (shared with position rankings).",
+    "Projection snapshot: 2026-09-27T19:07:42Z (shared with position rankings).",
     "Season 2026 week 3; Sleeper players fetched 2026-09-27T15:47:47.313140+00:00.",
     "Add pool: 301 player(s) resolved for the page's roster editor."
   ]
