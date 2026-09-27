@@ -200,6 +200,13 @@ def write_outputs(payload: dict, data_dir: Path = None,
     frame.to_csv(data / "latest.csv", index=False)
     frame.to_csv(history / f"{payload['run_date']}.csv", index=False)
 
+    return write_index(data)
+
+
+def write_index(data_dir):
+    """Rebuild index.json from the archived runs in history/."""
+    data = Path(data_dir)
+    history = data / "history"
     entries = []
     for path in sorted(history.glob("*.json"), reverse=True):
         try:
