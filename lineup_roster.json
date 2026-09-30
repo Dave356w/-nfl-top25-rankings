@@ -6,11 +6,11 @@
       "Position": "QB"
     },
     {
-      "Name": "James Cook III",
+      "Name": "Jaylen Warren",
       "Position": "RB"
     },
     {
-      "Name": "Breece Hall",
+      "Name": "James Cook III",
       "Position": "RB"
     },
     {
@@ -34,20 +34,12 @@
       "Position": "DEF"
     },
     {
-      "Name": "Jaylen Warren",
-      "Position": "RB"
-    },
-    {
-      "Name": "Geno Smith",
-      "Position": "QB"
-    },
-    {
       "Name": "Jameson Williams",
       "Position": "WR"
     },
     {
-      "Name": "Oronde Gadsden",
-      "Position": "TE"
+      "Name": "Geno Smith",
+      "Position": "QB"
     },
     {
       "Name": "Denver Broncos",
@@ -62,8 +54,16 @@
       "Position": "RB"
     },
     {
+      "Name": "Breece Hall",
+      "Position": "RB"
+    },
+    {
       "Name": "Terrance Ferguson",
       "Position": "TE"
+    },
+    {
+      "Name": "Ollie Gordon II",
+      "Position": "RB"
     }
   ]
 }
