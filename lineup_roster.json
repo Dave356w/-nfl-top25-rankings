@@ -42,6 +42,10 @@
       "Position": "QB"
     },
     {
+      "Name": "Ollie Gordon II",
+      "Position": "RB"
+    },
+    {
       "Name": "Denver Broncos",
       "Position": "DEF"
     },
@@ -54,19 +58,15 @@
       "Position": "RB"
     },
     {
-      "Name": "Breece Hall",
-      "Position": "RB"
-    },
-    {
       "Name": "Terrance Ferguson",
       "Position": "TE"
     },
     {
-      "Name": "Ollie Gordon II",
+      "Name": "Breece Hall",
       "Position": "RB"
     },
     {
-      "Name": "Isaiah Davis",
+      "Name": "CJ Donaldson",
       "Position": "RB"
     }
   ]
