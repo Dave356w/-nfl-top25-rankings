@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-06T18:17:55Z",
-  "snapshot_id": "2026-10-06T18:17:55Z",
+  "generated_utc": "2026-10-06T18:46:01Z",
+  "snapshot_id": "2026-10-06T18:46:01Z",
   "run_date": "2026-10-06",
   "season": 2026,
   "week": 5,
@@ -364,7 +364,7 @@
     "week": 5
   },
   "log": [
-    "Yahoo slate: 15 game(s), 529 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-06T18:17:55Z)",
+    "Yahoo slate: 15 game(s), 529 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-06T18:46:01Z)",
     "  Sleeper: 2026 regular week 5 projections; player dump fetched 2026-10-06T01:39:29.068467+00:00.",
     "  Removed 118 player(s): no Sleeper projection.",
     "  Removed 8 player(s): no Sleeper match.",
@@ -508,9 +508,9 @@
     "23    24  ...  Sleeper half-PPR projection (2026 week 5)",
     "24    25  ...  Sleeper half-PPR projection (2026 week 5)",
     "[25 rows x 12 columns]",
-    "Ranking run time: 0.0s",
+    "Ranking run time: 0.1s",
     "Roster: 17 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-10-06T18:17:55Z (shared with position rankings).",
+    "Projection snapshot: 2026-10-06T18:46:01Z (shared with position rankings).",
     "Season 2026 week 5; Sleeper players fetched 2026-10-06T01:39:29.068467+00:00.",
     "Benched before optimizing: Emmett Johnson, Terrance Ferguson.",
     "Add pool: 296 player(s) resolved for the page's roster editor."
