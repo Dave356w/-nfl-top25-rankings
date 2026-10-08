@@ -1,17 +1,17 @@
 slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,injury,unavailable,review
-QB,Dak Prescott,QB,DAL,TB,2026-10-09 00:15,19.49,12.82,31.67,37.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
+QB,Dak Prescott,QB,DAL,TB,2026-10-09 00:15,20.6,13.55,33.47,37.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
 RB,James Cook III,RB,BUF,LA,2026-10-13 00:15,14.8,8.11,26.91,35.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
-RB,Jaylen Warren,RB,PIT,IND,2026-10-11 17:00,13.66,7.48,24.84,28.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
-WR,Tee Higgins,WR,CIN,MIA,2026-10-11 17:00,11.05,5.3,21.37,33.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),Questionable,,injury Questionable
+RB,Jaylen Warren,RB,PIT,IND,2026-10-11 17:00,13.8,7.56,25.1,28.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
+WR,Tee Higgins,WR,CIN,MIA,2026-10-11 17:00,11.1,5.32,21.47,33.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),Questionable,,injury Questionable
 WR,Jaylen Waddle,WR,DEN,LAC,2026-10-11 20:05,10.0,5.38,18.36,23.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
-TE,Harold Fannin Jr,TE,CLE,NYJ,2026-10-11 17:00,8.96,4.02,17.78,20.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
-K,Brandon Aubrey,K,DAL,TB,,9.22,5.44,16.09,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
+TE,Harold Fannin Jr,TE,CLE,NYJ,2026-10-11 17:00,8.85,3.97,17.56,20.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
+K,Brandon Aubrey,K,DAL,TB,,9.37,5.53,16.35,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
 DEF,Denver Broncos,DEF,DEN,LAC,2026-10-11 20:05,8.27,3.49,16.76,17.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 5),,,ok
-FLEX,Ollie Gordon II,RB,MIA,CIN,2026-10-11 17:00,11.42,6.26,20.77,18.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
-BENCH,Geno Smith,QB,NYJ,CLE,2026-10-11 17:00,14.04,9.24,22.81,23.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
+FLEX,Ollie Gordon II,RB,MIA,CIN,2026-10-11 17:00,11.24,6.16,20.44,18.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
+BENCH,Geno Smith,QB,NYJ,CLE,2026-10-11 17:00,14.14,9.3,22.98,23.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
 BENCH,Jameson Williams,WR,DET,ARI,2026-10-11 20:25,10.0,4.79,19.34,19.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
 BENCH,Los Angeles Rams,DEF,LA,BUF,2026-10-13 00:15,5.93,2.5,12.02,13.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 5),,,ok
-BENCH,Malachi Fields,WR,NYG,WAS,2026-10-11 17:00,4.59,2.2,8.88,12.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
+BENCH,Malachi Fields,WR,NYG,WAS,2026-10-11 17:00,4.55,2.18,8.8,12.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,ok
 BENCH,CJ Donaldson,RB,NO,MIN,2026-10-11 17:00,2.6,0.92,5.54,10.0,3.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 5),,,depth 3
 BENCH,Emmett Johnson,RB,KC,,,0.0,,,,2.0,Sleeper depth chart,No weekly projection; bye or unmatched player,,not projected this week,no weekly projection/bye
 BENCH,Terrance Ferguson,TE,LA,BUF,,0.0,,,,5.0,Sleeper depth chart,No weekly projection; bye or unmatched player,IR,not projected this week,no weekly projection/bye; injury IR; depth 5
