@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-11T17:53:56Z",
-  "snapshot_id": "2026-10-11T17:53:56Z",
+  "generated_utc": "2026-10-11T19:37:40Z",
+  "snapshot_id": "2026-10-11T19:37:40Z",
   "run_date": "2026-10-11",
   "top_n": 25,
   "positions": [
@@ -121,7 +121,7 @@
       }
     ],
     "game_count": 15,
-    "player_count": 378,
+    "player_count": 377,
     "first_kickoff_utc": "Thu, 8 Oct 2026 17:15:00 -0700"
   },
   "rankings": {
@@ -243,7 +243,7 @@
         "player": "Bo Nix",
         "team": "DEN",
         "opponent": "LAC",
-        "fp": 17.48,
+        "fp": 17.49,
         "salary": 34,
         "fp_per_salary": 0.514,
         "role": "starter",
@@ -819,9 +819,9 @@
         "player": "RJ Harvey",
         "team": "DEN",
         "opponent": "LAC",
-        "fp": 10.04,
+        "fp": 10.05,
         "salary": 21,
-        "fp_per_salary": 0.478,
+        "fp_per_salary": 0.479,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -1893,14 +1893,14 @@
     "season_type": "regular",
     "players_fetched_utc": "2026-10-11T00:04:38.684722+00:00"
   },
-  "availability_removed": 151,
+  "availability_removed": 152,
   "method_counts": {
-    "Sleeper half-PPR projection (2026 week 5)": 378
+    "Sleeper half-PPR projection (2026 week 5)": 377
   },
   "log": [
-    "Yahoo slate: 15 game(s), 529 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-11T17:53:56Z)",
+    "Yahoo slate: 15 game(s), 529 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-11T19:37:40Z)",
     "  Sleeper: 2026 regular week 5 projections; player dump fetched 2026-10-11T00:04:38.684722+00:00.",
-    "  Removed 142 player(s): no Sleeper projection.",
+    "  Removed 143 player(s): no Sleeper projection.",
     "  Removed 9 player(s): no Sleeper match.",
     "TOP 25 QB",
     "    Rank  ...                          Projection method",

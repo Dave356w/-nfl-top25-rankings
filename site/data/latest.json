@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-11T17:53:56Z",
-  "snapshot_id": "2026-10-11T17:53:56Z",
+  "generated_utc": "2026-10-11T19:37:40Z",
+  "snapshot_id": "2026-10-11T19:37:40Z",
   "run_date": "2026-10-11",
   "top_n": 25,
   "positions": [
@@ -121,7 +121,7 @@
       }
     ],
     "game_count": 15,
-    "player_count": 378,
+    "player_count": 377,
     "first_kickoff_utc": "Thu, 8 Oct 2026 17:15:00 -0700"
   },
   "rankings": {
@@ -243,7 +243,7 @@
         "player": "Bo Nix",
         "team": "DEN",
         "opponent": "LAC",
-        "fp": 17.48,
+        "fp": 17.49,
         "salary": 34,
         "fp_per_salary": 0.514,
         "role": "starter",
@@ -819,9 +819,9 @@
         "player": "RJ Harvey",
         "team": "DEN",
         "opponent": "LAC",
-        "fp": 10.04,
+        "fp": 10.05,
         "salary": 21,
-        "fp_per_salary": 0.478,
+        "fp_per_salary": 0.479,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -2005,7 +2005,7 @@
         "player": "Bo Nix",
         "team": "DEN",
         "opponent": "LAC",
-        "fp": 17.48,
+        "fp": 17.49,
         "salary": 34,
         "fp_per_salary": 0.514,
         "role": "starter",
@@ -2651,9 +2651,9 @@
         "player": "RJ Harvey",
         "team": "DEN",
         "opponent": "LAC",
-        "fp": 10.04,
+        "fp": 10.05,
         "salary": 21,
-        "fp_per_salary": 0.478,
+        "fp_per_salary": 0.479,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -2763,7 +2763,7 @@
         "player": "J.K. Dobbins",
         "team": "DEN",
         "opponent": "LAC",
-        "fp": 8.57,
+        "fp": 8.58,
         "salary": 16,
         "fp_per_salary": 0.536,
         "role": "starter",
@@ -6628,20 +6628,6 @@
       },
       {
         "rank": 86,
-        "player": "Dallen Bentley",
-        "team": "DEN",
-        "opponent": "LAC",
-        "fp": 0.18,
-        "salary": 10,
-        "fp_per_salary": 0.018,
-        "role": "reserve",
-        "role_slot": "TE TE",
-        "depth": 4,
-        "kickoff_utc": "2026-10-11 20:05",
-        "method": "Sleeper half-PPR projection (2026 week 5)"
-      },
-      {
-        "rank": 87,
         "player": "Payne Durham",
         "team": "TB",
         "opponent": "DAL",
@@ -6655,7 +6641,7 @@
         "method": "Sleeper half-PPR projection (2026 week 5)"
       },
       {
-        "rank": 88,
+        "rank": 87,
         "player": "Jelani Woods",
         "team": "NYJ",
         "opponent": "CLE",
@@ -6669,7 +6655,7 @@
         "method": "Sleeper half-PPR projection (2026 week 5)"
       },
       {
-        "rank": 89,
+        "rank": 88,
         "player": "Kylen Granson",
         "team": "TEN",
         "opponent": "HOU",
@@ -6683,7 +6669,7 @@
         "method": "Sleeper half-PPR projection (2026 week 5)"
       },
       {
-        "rank": 90,
+        "rank": 89,
         "player": "Bauer Sharp",
         "team": "TB",
         "opponent": "DAL",
@@ -6697,7 +6683,7 @@
         "method": "Sleeper half-PPR projection (2026 week 5)"
       },
       {
-        "rank": 91,
+        "rank": 90,
         "player": "Max Klare",
         "team": "LA",
         "opponent": "BUF",
@@ -6711,7 +6697,7 @@
         "method": "Sleeper half-PPR projection (2026 week 5)"
       },
       {
-        "rank": 92,
+        "rank": 91,
         "player": "Seydou Traore",
         "team": "MIA",
         "opponent": "CIN",
@@ -6725,7 +6711,7 @@
         "method": "Sleeper half-PPR projection (2026 week 5)"
       },
       {
-        "rank": 93,
+        "rank": 92,
         "player": "Robert Tonyan",
         "team": "PIT",
         "opponent": "IND",
@@ -6739,7 +6725,7 @@
         "method": "Sleeper half-PPR projection (2026 week 5)"
       },
       {
-        "rank": 94,
+        "rank": 93,
         "player": "E.J. Jenkins",
         "team": "PHI",
         "opponent": "JAC",
@@ -6753,7 +6739,7 @@
         "method": "Sleeper half-PPR projection (2026 week 5)"
       },
       {
-        "rank": 95,
+        "rank": 94,
         "player": "Ko Kieft",
         "team": "TB",
         "opponent": "DAL",
@@ -7197,14 +7183,14 @@
     "season_type": "regular",
     "players_fetched_utc": "2026-10-11T00:04:38.684722+00:00"
   },
-  "availability_removed": 151,
+  "availability_removed": 152,
   "method_counts": {
-    "Sleeper half-PPR projection (2026 week 5)": 378
+    "Sleeper half-PPR projection (2026 week 5)": 377
   },
   "log": [
-    "Yahoo slate: 15 game(s), 529 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-11T17:53:56Z)",
+    "Yahoo slate: 15 game(s), 529 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-11T19:37:40Z)",
     "  Sleeper: 2026 regular week 5 projections; player dump fetched 2026-10-11T00:04:38.684722+00:00.",
-    "  Removed 142 player(s): no Sleeper projection.",
+    "  Removed 143 player(s): no Sleeper projection.",
     "  Removed 9 player(s): no Sleeper match.",
     "TOP 25 QB",
     "    Rank  ...                          Projection method",

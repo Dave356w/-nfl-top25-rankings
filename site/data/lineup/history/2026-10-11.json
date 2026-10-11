@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-11T17:53:56Z",
-  "snapshot_id": "2026-10-11T17:53:56Z",
+  "generated_utc": "2026-10-11T19:37:40Z",
+  "snapshot_id": "2026-10-11T19:37:40Z",
   "run_date": "2026-10-11",
   "season": 2026,
   "week": 5,
@@ -365,9 +365,9 @@
     "week": 5
   },
   "log": [
-    "Yahoo slate: 15 game(s), 529 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-11T17:53:56Z)",
+    "Yahoo slate: 15 game(s), 529 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-11T19:37:40Z)",
     "  Sleeper: 2026 regular week 5 projections; player dump fetched 2026-10-11T00:04:38.684722+00:00.",
-    "  Removed 142 player(s): no Sleeper projection.",
+    "  Removed 143 player(s): no Sleeper projection.",
     "  Removed 9 player(s): no Sleeper match.",
     "TOP 25 QB",
     "    Rank  ...                          Projection method",
@@ -511,7 +511,7 @@
     "[25 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 17 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-10-11T17:53:56Z (shared with position rankings).",
+    "Projection snapshot: 2026-10-11T19:37:40Z (shared with position rankings).",
     "Season 2026 week 5; Sleeper players fetched 2026-10-11T00:04:38.684722+00:00.",
     "Benched before optimizing: Emmett Johnson, Terrance Ferguson, Breece Hall.",
     "Add pool: 296 player(s) resolved for the page's roster editor."
