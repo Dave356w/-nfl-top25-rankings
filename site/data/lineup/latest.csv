@@ -1,10 +1,10 @@
 slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,injury,unavailable,review
 QB,Dak Prescott,QB,DAL,GB,2026-10-19 00:20,18.59,12.23,30.21,35.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
 RB,James Cook III,RB,BUF,LV,2026-10-18 20:25,16.11,8.82,29.3,35.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
-RB,Jaylen Warren,RB,PIT,TB,2026-10-18 17:00,14.38,7.88,26.15,32.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
-WR,Jaylen Waddle,WR,DEN,SEA,2026-10-16 00:15,9.15,4.92,16.8,19.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
-WR,Germie Bernard,WR,PIT,TB,2026-10-18 17:00,7.45,2.28,16.3,12.0,4.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,depth 4
-TE,Harold Fannin Jr,TE,CLE,BAL,2026-10-18 17:00,8.36,3.75,16.59,17.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+RB,Jaylen Warren,RB,PIT,TB,2026-10-18 17:00,14.37,7.87,26.13,32.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+WR,Jaylen Waddle,WR,DEN,SEA,2026-10-16 00:15,9.16,4.93,16.82,19.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+WR,Germie Bernard,WR,PIT,TB,2026-10-18 17:00,7.46,2.28,16.33,12.0,4.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,depth 4
+TE,Harold Fannin Jr,TE,CLE,BAL,2026-10-18 17:00,8.4,3.77,16.67,17.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
 K,Brandon Aubrey,K,DAL,GB,,8.74,5.16,15.25,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
 DEF,Los Angeles Rams,DEF,LA,ARI,2026-10-18 20:05,8.28,3.49,16.78,13.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 6),,,ok
 FLEX,Keenan Allen,WR,IND,TEN,2026-10-18 17:00,6.77,3.25,13.09,15.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
