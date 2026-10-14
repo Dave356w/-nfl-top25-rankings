@@ -6,16 +6,12 @@
       "Position": "QB"
     },
     {
-      "Name": "Jaylen Warren",
-      "Position": "RB"
-    },
-    {
       "Name": "James Cook III",
       "Position": "RB"
     },
     {
-      "Name": "Tee Higgins",
-      "Position": "WR"
+      "Name": "Jaylen Warren",
+      "Position": "RB"
     },
     {
       "Name": "Jaylen Waddle",
@@ -34,40 +30,45 @@
       "Position": "DEF"
     },
     {
-      "Name": "Jameson Williams",
-      "Position": "WR"
+      "Name": "Breece Hall",
+      "Position": "RB"
     },
     {
       "Name": "Geno Smith",
       "Position": "QB"
     },
     {
-      "Name": "Ollie Gordon II",
-      "Position": "RB"
-    },
-    {
       "Name": "Denver Broncos",
       "Position": "DEF"
-    },
-    {
-      "Name": "Malachi Fields",
-      "Position": "WR"
     },
     {
       "Name": "Emmett Johnson",
       "Position": "RB"
     },
     {
+      "Name": "Ollie Gordon II",
+      "Position": "RB"
+    },
+    {
+      "Name": "Jameson Williams",
+      "Position": "WR"
+    },
+    {
+      "Name": "Tee Higgins",
+      "Position": "WR"
+    },
+    {
       "Name": "Terrance Ferguson",
       "Position": "TE"
     },
     {
-      "Name": "Breece Hall",
-      "Position": "RB"
+      "Name": "Keenan Allen",
+      "Position": "WR"
     },
     {
-      "Name": "CJ Donaldson",
-      "Position": "RB"
+      "Name": "Germie Bernard",
+      "Position": "WR"
     }
   ]
 }
+
