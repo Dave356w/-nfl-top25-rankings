@@ -1,0 +1,18 @@
+slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,injury,unavailable,review
+QB,Dak Prescott,QB,DAL,GB,2026-10-19 00:20,18.44,12.13,29.96,35.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+RB,James Cook III,RB,BUF,LV,2026-10-18 20:25,16.14,8.84,29.35,35.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+RB,Jaylen Warren,RB,PIT,TB,2026-10-18 17:00,13.62,7.46,24.77,32.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+WR,Jaylen Waddle,WR,DEN,SEA,2026-10-16 00:15,9.17,4.93,16.83,19.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),Questionable,,injury Questionable
+WR,Germie Bernard,WR,PIT,TB,2026-10-18 17:00,8.22,2.52,17.99,12.0,4.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,depth 4
+TE,Harold Fannin Jr,TE,CLE,BAL,2026-10-18 17:00,8.29,3.72,16.45,17.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+K,Brandon Aubrey,K,DAL,GB,,8.81,5.2,15.38,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+DEF,Los Angeles Rams,DEF,LA,ARI,2026-10-18 20:05,8.28,3.49,16.78,13.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 6),,,ok
+FLEX,Keenan Allen,WR,IND,TEN,2026-10-18 17:00,7.7,3.69,14.89,15.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+BENCH,Geno Smith,QB,NYJ,NE,2026-10-18 17:00,13.3,8.75,21.61,22.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+BENCH,Denver Broncos,DEF,DEN,SEA,2026-10-16 00:15,6.53,2.76,13.23,18.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 6),,,ok
+BENCH,Emmett Johnson,RB,KC,LAC,2026-10-18 20:25,5.72,2.48,11.49,10.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 6),,,ok
+BENCH,Breece Hall,RB,NYJ,NE,,0.0,,,,5.0,Sleeper depth chart,No weekly projection; bye or unmatched player,Out,not projected this week,no weekly projection/bye; injury Out; depth 5
+BENCH,Ollie Gordon II,RB,MIA,,,0.0,,,,1.0,Sleeper depth chart,No weekly projection; bye or unmatched player,Questionable,not projected this week,no weekly projection/bye; injury Questionable
+BENCH,Jameson Williams,WR,DET,,,0.0,,,,3.0,Sleeper depth chart,No weekly projection; bye or unmatched player,,not projected this week,no weekly projection/bye; depth 3
+BENCH,Tee Higgins,WR,CIN,,,0.0,,,,3.0,Sleeper depth chart,No weekly projection; bye or unmatched player,,not projected this week,no weekly projection/bye; depth 3
+BENCH,Terrance Ferguson,TE,LA,ARI,,0.0,,,,5.0,Sleeper depth chart,No weekly projection; bye or unmatched player,IR,not projected this week,no weekly projection/bye; injury IR; depth 5
