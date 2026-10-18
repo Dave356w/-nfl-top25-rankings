@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-18T18:13:46Z",
-  "snapshot_id": "2026-10-18T18:13:46Z",
+  "generated_utc": "2026-10-18T22:43:44Z",
+  "snapshot_id": "2026-10-18T22:43:44Z",
   "run_date": "2026-10-18",
   "top_n": 25,
   "positions": [
@@ -114,7 +114,7 @@
       }
     ],
     "game_count": 14,
-    "player_count": 355,
+    "player_count": 354,
     "first_kickoff_utc": "Thu, 15 Oct 2026 17:15:00 -0700"
   },
   "rankings": {
@@ -124,9 +124,9 @@
         "player": "Josh Allen",
         "team": "BUF",
         "opponent": "LV",
-        "fp": 24.96,
+        "fp": 25.28,
         "salary": 40,
-        "fp_per_salary": 0.624,
+        "fp_per_salary": 0.632,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -152,9 +152,9 @@
         "player": "Matthew Stafford",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 21.49,
+        "fp": 21.34,
         "salary": 35,
-        "fp_per_salary": 0.614,
+        "fp_per_salary": 0.61,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -163,20 +163,6 @@
       },
       {
         "rank": 4,
-        "player": "Jordan Love",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 20.81,
-        "salary": 35,
-        "fp_per_salary": 0.595,
-        "role": "starter",
-        "role_slot": "QB QB",
-        "depth": 1,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 5,
         "player": "Drake Maye",
         "team": "NE",
         "opponent": "NYJ",
@@ -190,13 +176,27 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 6,
+        "rank": 5,
         "player": "Dak Prescott",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 18.78,
+        "fp": 19.95,
         "salary": 35,
-        "fp_per_salary": 0.537,
+        "fp_per_salary": 0.57,
+        "role": "starter",
+        "role_slot": "QB QB",
+        "depth": 1,
+        "kickoff_utc": "2026-10-19 00:20",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 6,
+        "player": "Jordan Love",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 19.64,
+        "salary": 35,
+        "fp_per_salary": 0.561,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -387,6 +387,20 @@
       },
       {
         "rank": 20,
+        "player": "Jacoby Brissett",
+        "team": "ARI",
+        "opponent": "LA",
+        "fp": 14.17,
+        "salary": 30,
+        "fp_per_salary": 0.472,
+        "role": "starter",
+        "role_slot": "QB QB",
+        "depth": 1,
+        "kickoff_utc": "2026-10-18 20:05",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 21,
         "player": "Sam Darnold",
         "team": "SEA",
         "opponent": "DEN",
@@ -400,7 +414,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 21,
+        "rank": 22,
         "player": "Daniel Jones",
         "team": "IND",
         "opponent": "TEN",
@@ -411,20 +425,6 @@
         "role_slot": "QB QB",
         "depth": 1,
         "kickoff_utc": "2026-10-18 17:00",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 22,
-        "player": "Jacoby Brissett",
-        "team": "ARI",
-        "opponent": "LA",
-        "fp": 14.07,
-        "salary": 30,
-        "fp_per_salary": 0.469,
-        "role": "starter",
-        "role_slot": "QB QB",
-        "depth": 1,
-        "kickoff_utc": "2026-10-18 20:05",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -518,9 +518,9 @@
         "player": "Kyren Williams",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 19.59,
+        "fp": 19.42,
         "salary": 38,
-        "fp_per_salary": 0.516,
+        "fp_per_salary": 0.511,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -543,6 +543,20 @@
       },
       {
         "rank": 6,
+        "player": "Javonte Williams",
+        "team": "DAL",
+        "opponent": "GB",
+        "fp": 17.69,
+        "salary": 34,
+        "fp_per_salary": 0.52,
+        "role": "starter",
+        "role_slot": "RB RB",
+        "depth": 1,
+        "kickoff_utc": "2026-10-19 00:20",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 7,
         "player": "Derrick Henry",
         "team": "BAL",
         "opponent": "CLE",
@@ -556,31 +570,17 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 7,
+        "rank": 8,
         "player": "James Cook III",
         "team": "BUF",
         "opponent": "LV",
-        "fp": 16.14,
+        "fp": 16.36,
         "salary": 35,
-        "fp_per_salary": 0.461,
+        "fp_per_salary": 0.467,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
         "kickoff_utc": "2026-10-18 20:25",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 8,
-        "player": "Javonte Williams",
-        "team": "DAL",
-        "opponent": "GB",
-        "fp": 15.73,
-        "salary": 34,
-        "fp_per_salary": 0.463,
-        "role": "starter",
-        "role_slot": "RB RB",
-        "depth": 1,
-        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -728,9 +728,9 @@
         "player": "Tyler Allgeier",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 11.43,
+        "fp": 11.48,
         "salary": 13,
-        "fp_per_salary": 0.879,
+        "fp_per_salary": 0.883,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -742,9 +742,9 @@
         "player": "MarShawn Lloyd",
         "team": "GB",
         "opponent": "DAL",
-        "fp": 11.12,
+        "fp": 11.06,
         "salary": 17,
-        "fp_per_salary": 0.654,
+        "fp_per_salary": 0.651,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -784,7 +784,7 @@
         "player": "Rachaad White",
         "team": "WAS",
         "opponent": "SF",
-        "fp": 9.77,
+        "fp": 9.76,
         "salary": 15,
         "fp_per_salary": 0.651,
         "role": "starter",
@@ -828,9 +828,9 @@
         "player": "Puka Nacua",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 19.28,
+        "fp": 19.36,
         "salary": 38,
-        "fp_per_salary": 0.507,
+        "fp_per_salary": 0.509,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 1,
@@ -856,9 +856,9 @@
         "player": "CeeDee Lamb",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 16.73,
+        "fp": 16.99,
         "salary": 34,
-        "fp_per_salary": 0.492,
+        "fp_per_salary": 0.5,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
@@ -867,20 +867,6 @@
       },
       {
         "rank": 4,
-        "player": "Christian Watson",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 16.15,
-        "salary": 32,
-        "fp_per_salary": 0.505,
-        "role": "starter",
-        "role_slot": "WR LWR",
-        "depth": 1,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 5,
         "player": "Nico Collins",
         "team": "HOU",
         "opponent": "JAC",
@@ -891,6 +877,20 @@
         "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-10-18 13:30",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 5,
+        "player": "Christian Watson",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 15.28,
+        "salary": 32,
+        "fp_per_salary": 0.478,
+        "role": "starter",
+        "role_slot": "WR LWR",
+        "depth": 1,
+        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -923,20 +923,6 @@
       },
       {
         "rank": 8,
-        "player": "Davante Adams",
-        "team": "LA",
-        "opponent": "ARI",
-        "fp": 14.44,
-        "salary": 30,
-        "fp_per_salary": 0.481,
-        "role": "starter",
-        "role_slot": "WR LWR",
-        "depth": 2,
-        "kickoff_utc": "2026-10-18 20:05",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 9,
         "player": "Chris Olave",
         "team": "NO",
         "opponent": "NYG",
@@ -947,6 +933,20 @@
         "role_slot": "WR RWR",
         "depth": 1,
         "kickoff_utc": "2026-10-18 17:00",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 9,
+        "player": "Davante Adams",
+        "team": "LA",
+        "opponent": "ARI",
+        "fp": 14.35,
+        "salary": 30,
+        "fp_per_salary": 0.478,
+        "role": "starter",
+        "role_slot": "WR LWR",
+        "depth": 2,
+        "kickoff_utc": "2026-10-18 20:05",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -965,20 +965,6 @@
       },
       {
         "rank": 11,
-        "player": "Matthew Golden",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 13.18,
-        "salary": 25,
-        "fp_per_salary": 0.527,
-        "role": "starter",
-        "role_slot": "WR RWR",
-        "depth": 2,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 12,
         "player": "Parker Washington",
         "team": "JAC",
         "opponent": "HOU",
@@ -989,6 +975,20 @@
         "role_slot": "WR SWR",
         "depth": 1,
         "kickoff_utc": "2026-10-18 13:30",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 12,
+        "player": "Matthew Golden",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 12.59,
+        "salary": 25,
+        "fp_per_salary": 0.504,
+        "role": "starter",
+        "role_slot": "WR RWR",
+        "depth": 2,
+        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -1021,26 +1021,12 @@
       },
       {
         "rank": 15,
-        "player": "DJ Moore",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 11.35,
-        "salary": 22,
-        "fp_per_salary": 0.516,
-        "role": "starter",
-        "role_slot": "WR LWR",
-        "depth": 1,
-        "kickoff_utc": "2026-10-18 20:25",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 16,
         "player": "Michael Wilson",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 11.28,
+        "fp": 11.33,
         "salary": 21,
-        "fp_per_salary": 0.537,
+        "fp_per_salary": 0.54,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
@@ -1048,13 +1034,13 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 17,
+        "rank": 16,
         "player": "George Pickens",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 11.15,
+        "fp": 11.22,
         "salary": 27,
-        "fp_per_salary": 0.413,
+        "fp_per_salary": 0.416,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
@@ -1062,7 +1048,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 18,
+        "rank": 17,
         "player": "Tetairoa McMillan",
         "team": "CAR",
         "opponent": "PHI",
@@ -1076,7 +1062,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 19,
+        "rank": 18,
         "player": "DK Metcalf",
         "team": "PIT",
         "opponent": "TB",
@@ -1090,7 +1076,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 20,
+        "rank": 19,
         "player": "Jalen Coker",
         "team": "CAR",
         "opponent": "PHI",
@@ -1104,7 +1090,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 21,
+        "rank": 20,
         "player": "Carnell Tate",
         "team": "TEN",
         "opponent": "IND",
@@ -1118,7 +1104,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 22,
+        "rank": 21,
         "player": "Terry McLaurin",
         "team": "WAS",
         "opponent": "SF",
@@ -1132,7 +1118,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 23,
+        "rank": 22,
         "player": "DeVonta Smith",
         "team": "PHI",
         "opponent": "CAR",
@@ -1146,7 +1132,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 24,
+        "rank": 23,
         "player": "Josh Downs",
         "team": "IND",
         "opponent": "TEN",
@@ -1160,7 +1146,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 25,
+        "rank": 24,
         "player": "Luther Burden III",
         "team": "CHI",
         "opponent": "ATL",
@@ -1169,6 +1155,20 @@
         "fp_per_salary": 0.523,
         "role": "starter",
         "role_slot": "WR RWR",
+        "depth": 1,
+        "kickoff_utc": "2026-10-18 17:00",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 25,
+        "player": "Denzel Boston",
+        "team": "CLE",
+        "opponent": "BAL",
+        "fp": 9.32,
+        "salary": 23,
+        "fp_per_salary": 0.405,
+        "role": "starter",
+        "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-10-18 17:00",
         "method": "Sleeper half-PPR projection (2026 week 6)"
@@ -1194,9 +1194,9 @@
         "player": "Trey McBride",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 12.82,
+        "fp": 12.88,
         "salary": 28,
-        "fp_per_salary": 0.458,
+        "fp_per_salary": 0.46,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -1250,9 +1250,9 @@
         "player": "Tucker Kraft",
         "team": "GB",
         "opponent": "DAL",
-        "fp": 10.79,
+        "fp": 10.27,
         "salary": 17,
-        "fp_per_salary": 0.635,
+        "fp_per_salary": 0.604,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -1261,6 +1261,20 @@
       },
       {
         "rank": 7,
+        "player": "Dalton Kincaid",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 9.13,
+        "salary": 19,
+        "fp_per_salary": 0.481,
+        "role": "starter",
+        "role_slot": "TE TE",
+        "depth": 1,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 8,
         "player": "Harold Fannin Jr.",
         "team": "CLE",
         "opponent": "BAL",
@@ -1274,7 +1288,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 8,
+        "rank": 9,
         "player": "Juwan Johnson",
         "team": "NO",
         "opponent": "NYG",
@@ -1285,20 +1299,6 @@
         "role_slot": "TE TE",
         "depth": 1,
         "kickoff_utc": "2026-10-18 17:00",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 9,
-        "player": "Dalton Kincaid",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 8.81,
-        "salary": 19,
-        "fp_per_salary": 0.464,
-        "role": "starter",
-        "role_slot": "TE TE",
-        "depth": 1,
-        "kickoff_utc": "2026-10-18 20:25",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -1334,9 +1334,9 @@
         "player": "Tyler Higbee",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 7.77,
+        "fp": 7.73,
         "salary": 13,
-        "fp_per_salary": 0.598,
+        "fp_per_salary": 0.595,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -1376,9 +1376,9 @@
         "player": "Jake Ferguson",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 7.19,
+        "fp": 7.46,
         "salary": 14,
-        "fp_per_salary": 0.514,
+        "fp_per_salary": 0.533,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -1616,9 +1616,9 @@
         "player": "Los Angeles Rams",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 8.28,
+        "fp": 8.25,
         "salary": 13,
-        "fp_per_salary": 0.637,
+        "fp_per_salary": 0.635,
         "role": "starter",
         "role_slot": "",
         "depth": 1,
@@ -1812,9 +1812,9 @@
         "player": "Green Bay Packers",
         "team": "GB",
         "opponent": "DAL",
-        "fp": 6.09,
+        "fp": 5.64,
         "salary": 12,
-        "fp_per_salary": 0.507,
+        "fp_per_salary": 0.47,
         "role": "starter",
         "role_slot": "",
         "depth": 1,
@@ -1823,20 +1823,6 @@
       },
       {
         "rank": 22,
-        "player": "Dallas Cowboys",
-        "team": "DAL",
-        "opponent": "GB",
-        "fp": 5.46,
-        "salary": 10,
-        "fp_per_salary": 0.546,
-        "role": "starter",
-        "role_slot": "",
-        "depth": 1,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 23,
         "player": "Tennessee Titans",
         "team": "TEN",
         "opponent": "IND",
@@ -1847,6 +1833,20 @@
         "role_slot": "",
         "depth": 1,
         "kickoff_utc": "2026-10-18 17:00",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 23,
+        "player": "Dallas Cowboys",
+        "team": "DAL",
+        "opponent": "GB",
+        "fp": 5.15,
+        "salary": 10,
+        "fp_per_salary": 0.515,
+        "role": "starter",
+        "role_slot": "",
+        "depth": 1,
+        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -1886,9 +1886,9 @@
         "player": "Josh Allen",
         "team": "BUF",
         "opponent": "LV",
-        "fp": 24.96,
+        "fp": 25.28,
         "salary": 40,
-        "fp_per_salary": 0.624,
+        "fp_per_salary": 0.632,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -1914,9 +1914,9 @@
         "player": "Matthew Stafford",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 21.49,
+        "fp": 21.34,
         "salary": 35,
-        "fp_per_salary": 0.614,
+        "fp_per_salary": 0.61,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -1925,20 +1925,6 @@
       },
       {
         "rank": 4,
-        "player": "Jordan Love",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 20.81,
-        "salary": 35,
-        "fp_per_salary": 0.595,
-        "role": "starter",
-        "role_slot": "QB QB",
-        "depth": 1,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 5,
         "player": "Drake Maye",
         "team": "NE",
         "opponent": "NYJ",
@@ -1952,13 +1938,27 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 6,
+        "rank": 5,
         "player": "Dak Prescott",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 18.78,
+        "fp": 19.95,
         "salary": 35,
-        "fp_per_salary": 0.537,
+        "fp_per_salary": 0.57,
+        "role": "starter",
+        "role_slot": "QB QB",
+        "depth": 1,
+        "kickoff_utc": "2026-10-19 00:20",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 6,
+        "player": "Jordan Love",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 19.64,
+        "salary": 35,
+        "fp_per_salary": 0.561,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -2149,6 +2149,20 @@
       },
       {
         "rank": 20,
+        "player": "Jacoby Brissett",
+        "team": "ARI",
+        "opponent": "LA",
+        "fp": 14.17,
+        "salary": 30,
+        "fp_per_salary": 0.472,
+        "role": "starter",
+        "role_slot": "QB QB",
+        "depth": 1,
+        "kickoff_utc": "2026-10-18 20:05",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 21,
         "player": "Sam Darnold",
         "team": "SEA",
         "opponent": "DEN",
@@ -2162,7 +2176,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 21,
+        "rank": 22,
         "player": "Daniel Jones",
         "team": "IND",
         "opponent": "TEN",
@@ -2173,20 +2187,6 @@
         "role_slot": "QB QB",
         "depth": 1,
         "kickoff_utc": "2026-10-18 17:00",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 22,
-        "player": "Jacoby Brissett",
-        "team": "ARI",
-        "opponent": "LA",
-        "fp": 14.07,
-        "salary": 30,
-        "fp_per_salary": 0.469,
-        "role": "starter",
-        "role_slot": "QB QB",
-        "depth": 1,
-        "kickoff_utc": "2026-10-18 20:05",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -2236,9 +2236,9 @@
         "player": "Justin Herbert",
         "team": "LAC",
         "opponent": "KC",
-        "fp": 12.92,
+        "fp": 12.89,
         "salary": 25,
-        "fp_per_salary": 0.517,
+        "fp_per_salary": 0.516,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -2322,9 +2322,9 @@
         "player": "Kyren Williams",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 19.59,
+        "fp": 19.42,
         "salary": 38,
-        "fp_per_salary": 0.516,
+        "fp_per_salary": 0.511,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -2347,6 +2347,20 @@
       },
       {
         "rank": 6,
+        "player": "Javonte Williams",
+        "team": "DAL",
+        "opponent": "GB",
+        "fp": 17.69,
+        "salary": 34,
+        "fp_per_salary": 0.52,
+        "role": "starter",
+        "role_slot": "RB RB",
+        "depth": 1,
+        "kickoff_utc": "2026-10-19 00:20",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 7,
         "player": "Derrick Henry",
         "team": "BAL",
         "opponent": "CLE",
@@ -2360,31 +2374,17 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 7,
+        "rank": 8,
         "player": "James Cook III",
         "team": "BUF",
         "opponent": "LV",
-        "fp": 16.14,
+        "fp": 16.36,
         "salary": 35,
-        "fp_per_salary": 0.461,
+        "fp_per_salary": 0.467,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
         "kickoff_utc": "2026-10-18 20:25",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 8,
-        "player": "Javonte Williams",
-        "team": "DAL",
-        "opponent": "GB",
-        "fp": 15.73,
-        "salary": 34,
-        "fp_per_salary": 0.463,
-        "role": "starter",
-        "role_slot": "RB RB",
-        "depth": 1,
-        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -2532,9 +2532,9 @@
         "player": "Tyler Allgeier",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 11.43,
+        "fp": 11.48,
         "salary": 13,
-        "fp_per_salary": 0.879,
+        "fp_per_salary": 0.883,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -2546,9 +2546,9 @@
         "player": "MarShawn Lloyd",
         "team": "GB",
         "opponent": "DAL",
-        "fp": 11.12,
+        "fp": 11.06,
         "salary": 17,
-        "fp_per_salary": 0.654,
+        "fp_per_salary": 0.651,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -2588,7 +2588,7 @@
         "player": "Rachaad White",
         "team": "WAS",
         "opponent": "SF",
-        "fp": 9.77,
+        "fp": 9.76,
         "salary": 15,
         "fp_per_salary": 0.651,
         "role": "starter",
@@ -2700,9 +2700,9 @@
         "player": "Blake Corum",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 7.64,
+        "fp": 7.57,
         "salary": 15,
-        "fp_per_salary": 0.509,
+        "fp_per_salary": 0.505,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -2728,9 +2728,9 @@
         "player": "Omarion Hampton",
         "team": "LAC",
         "opponent": "KC",
-        "fp": 7.36,
+        "fp": 7.33,
         "salary": 21,
-        "fp_per_salary": 0.35,
+        "fp_per_salary": 0.349,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -2756,7 +2756,7 @@
         "player": "Keaton Mitchell",
         "team": "LAC",
         "opponent": "KC",
-        "fp": 6.92,
+        "fp": 6.91,
         "salary": 13,
         "fp_per_salary": 0.532,
         "role": "rotation",
@@ -2770,9 +2770,9 @@
         "player": "Kimani Vidal",
         "team": "LAC",
         "opponent": "KC",
-        "fp": 6.27,
+        "fp": 6.26,
         "salary": 11,
-        "fp_per_salary": 0.57,
+        "fp_per_salary": 0.569,
         "role": "backup",
         "role_slot": "RB RB",
         "depth": 3,
@@ -2879,12 +2879,26 @@
       },
       {
         "rank": 44,
+        "player": "Ty Johnson",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 5.27,
+        "salary": 11,
+        "fp_per_salary": 0.479,
+        "role": "rotation",
+        "role_slot": "RB RB",
+        "depth": 2,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 45,
         "player": "Kaelon Black",
         "team": "SF",
         "opponent": "WAS",
-        "fp": 5.24,
+        "fp": 5.23,
         "salary": 10,
-        "fp_per_salary": 0.524,
+        "fp_per_salary": 0.523,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -2892,7 +2906,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 45,
+        "rank": 46,
         "player": "George Holani",
         "team": "SEA",
         "opponent": "DEN",
@@ -2906,35 +2920,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 46,
-        "player": "Ty Johnson",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 4.7,
-        "salary": 11,
-        "fp_per_salary": 0.427,
-        "role": "rotation",
-        "role_slot": "RB RB",
-        "depth": 2,
-        "kickoff_utc": "2026-10-18 20:25",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
         "rank": 47,
-        "player": "Pierre Strong Jr.",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 4.56,
-        "salary": 10,
-        "fp_per_salary": 0.456,
-        "role": "rotation",
-        "role_slot": "RB RB",
-        "depth": 2,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 48,
         "player": "Mike Washington Jr.",
         "team": "LV",
         "opponent": "BUF",
@@ -2945,6 +2931,20 @@
         "role_slot": "RB RB",
         "depth": 2,
         "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 48,
+        "player": "Pierre Strong Jr.",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 4.51,
+        "salary": 10,
+        "fp_per_salary": 0.451,
+        "role": "rotation",
+        "role_slot": "RB RB",
+        "depth": 2,
+        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -2966,9 +2966,9 @@
         "player": "Kaleb Johnson",
         "team": "GB",
         "opponent": "DAL",
-        "fp": 4.1,
+        "fp": 4.11,
         "salary": 10,
-        "fp_per_salary": 0.41,
+        "fp_per_salary": 0.411,
         "role": "backup",
         "role_slot": "RB RB",
         "depth": 3,
@@ -3050,9 +3050,9 @@
         "player": "Tyler Goodson",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 2.6,
+        "fp": 2.81,
         "salary": 10,
-        "fp_per_salary": 0.26,
+        "fp_per_salary": 0.281,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -3131,6 +3131,20 @@
       },
       {
         "rank": 62,
+        "player": "Ray Davis",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 1.16,
+        "salary": 10,
+        "fp_per_salary": 0.116,
+        "role": "backup",
+        "role_slot": "RB RB",
+        "depth": 3,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 63,
         "player": "Corey Kiner",
         "team": "NE",
         "opponent": "NYJ",
@@ -3144,7 +3158,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 63,
+        "rank": 64,
         "player": "Jeremy McNichols",
         "team": "WAS",
         "opponent": "SF",
@@ -3155,20 +3169,6 @@
         "role_slot": "RB RB",
         "depth": 3,
         "kickoff_utc": "2026-10-20 00:15",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 64,
-        "player": "Ray Davis",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 0.95,
-        "salary": 10,
-        "fp_per_salary": 0.095,
-        "role": "backup",
-        "role_slot": "RB RB",
-        "depth": 3,
-        "kickoff_utc": "2026-10-18 20:25",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -3374,9 +3374,9 @@
         "player": "Puka Nacua",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 19.28,
+        "fp": 19.36,
         "salary": 38,
-        "fp_per_salary": 0.507,
+        "fp_per_salary": 0.509,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 1,
@@ -3402,9 +3402,9 @@
         "player": "CeeDee Lamb",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 16.73,
+        "fp": 16.99,
         "salary": 34,
-        "fp_per_salary": 0.492,
+        "fp_per_salary": 0.5,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
@@ -3413,20 +3413,6 @@
       },
       {
         "rank": 4,
-        "player": "Christian Watson",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 16.15,
-        "salary": 32,
-        "fp_per_salary": 0.505,
-        "role": "starter",
-        "role_slot": "WR LWR",
-        "depth": 1,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 5,
         "player": "Nico Collins",
         "team": "HOU",
         "opponent": "JAC",
@@ -3437,6 +3423,20 @@
         "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-10-18 13:30",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 5,
+        "player": "Christian Watson",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 15.28,
+        "salary": 32,
+        "fp_per_salary": 0.478,
+        "role": "starter",
+        "role_slot": "WR LWR",
+        "depth": 1,
+        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -3469,20 +3469,6 @@
       },
       {
         "rank": 8,
-        "player": "Davante Adams",
-        "team": "LA",
-        "opponent": "ARI",
-        "fp": 14.44,
-        "salary": 30,
-        "fp_per_salary": 0.481,
-        "role": "starter",
-        "role_slot": "WR LWR",
-        "depth": 2,
-        "kickoff_utc": "2026-10-18 20:05",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 9,
         "player": "Chris Olave",
         "team": "NO",
         "opponent": "NYG",
@@ -3493,6 +3479,20 @@
         "role_slot": "WR RWR",
         "depth": 1,
         "kickoff_utc": "2026-10-18 17:00",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 9,
+        "player": "Davante Adams",
+        "team": "LA",
+        "opponent": "ARI",
+        "fp": 14.35,
+        "salary": 30,
+        "fp_per_salary": 0.478,
+        "role": "starter",
+        "role_slot": "WR LWR",
+        "depth": 2,
+        "kickoff_utc": "2026-10-18 20:05",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -3511,20 +3511,6 @@
       },
       {
         "rank": 11,
-        "player": "Matthew Golden",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 13.18,
-        "salary": 25,
-        "fp_per_salary": 0.527,
-        "role": "starter",
-        "role_slot": "WR RWR",
-        "depth": 2,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 12,
         "player": "Parker Washington",
         "team": "JAC",
         "opponent": "HOU",
@@ -3535,6 +3521,20 @@
         "role_slot": "WR SWR",
         "depth": 1,
         "kickoff_utc": "2026-10-18 13:30",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 12,
+        "player": "Matthew Golden",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 12.59,
+        "salary": 25,
+        "fp_per_salary": 0.504,
+        "role": "starter",
+        "role_slot": "WR RWR",
+        "depth": 2,
+        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -3567,26 +3567,12 @@
       },
       {
         "rank": 15,
-        "player": "DJ Moore",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 11.35,
-        "salary": 22,
-        "fp_per_salary": 0.516,
-        "role": "starter",
-        "role_slot": "WR LWR",
-        "depth": 1,
-        "kickoff_utc": "2026-10-18 20:25",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 16,
         "player": "Michael Wilson",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 11.28,
+        "fp": 11.33,
         "salary": 21,
-        "fp_per_salary": 0.537,
+        "fp_per_salary": 0.54,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
@@ -3594,13 +3580,13 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 17,
+        "rank": 16,
         "player": "George Pickens",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 11.15,
+        "fp": 11.22,
         "salary": 27,
-        "fp_per_salary": 0.413,
+        "fp_per_salary": 0.416,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
@@ -3608,7 +3594,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 18,
+        "rank": 17,
         "player": "Tetairoa McMillan",
         "team": "CAR",
         "opponent": "PHI",
@@ -3622,7 +3608,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 19,
+        "rank": 18,
         "player": "DK Metcalf",
         "team": "PIT",
         "opponent": "TB",
@@ -3636,7 +3622,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 20,
+        "rank": 19,
         "player": "Jalen Coker",
         "team": "CAR",
         "opponent": "PHI",
@@ -3650,7 +3636,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 21,
+        "rank": 20,
         "player": "Carnell Tate",
         "team": "TEN",
         "opponent": "IND",
@@ -3664,7 +3650,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 22,
+        "rank": 21,
         "player": "Terry McLaurin",
         "team": "WAS",
         "opponent": "SF",
@@ -3678,7 +3664,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 23,
+        "rank": 22,
         "player": "DeVonta Smith",
         "team": "PHI",
         "opponent": "CAR",
@@ -3692,7 +3678,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 24,
+        "rank": 23,
         "player": "Josh Downs",
         "team": "IND",
         "opponent": "TEN",
@@ -3706,7 +3692,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 25,
+        "rank": 24,
         "player": "Luther Burden III",
         "team": "CHI",
         "opponent": "ATL",
@@ -3720,7 +3706,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 26,
+        "rank": 25,
         "player": "Denzel Boston",
         "team": "CLE",
         "opponent": "BAL",
@@ -3734,11 +3720,11 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 27,
+        "rank": 26,
         "player": "Ladd McConkey",
         "team": "LAC",
         "opponent": "KC",
-        "fp": 9.3,
+        "fp": 9.29,
         "salary": 19,
         "fp_per_salary": 0.489,
         "role": "starter",
@@ -3748,7 +3734,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 28,
+        "rank": 27,
         "player": "Jaylen Waddle",
         "team": "DEN",
         "opponent": "SEA",
@@ -3762,7 +3748,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 29,
+        "rank": 28,
         "player": "Wan'Dale Robinson",
         "team": "TEN",
         "opponent": "IND",
@@ -3776,7 +3762,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 30,
+        "rank": 29,
         "player": "Xavier Worthy",
         "team": "KC",
         "opponent": "LAC",
@@ -3786,6 +3772,20 @@
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 1,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 30,
+        "player": "Keon Coleman",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 8.79,
+        "salary": 15,
+        "fp_per_salary": 0.586,
+        "role": "rotation",
+        "role_slot": "WR LWR",
+        "depth": 4,
         "kickoff_utc": "2026-10-18 20:25",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
@@ -3805,6 +3805,20 @@
       },
       {
         "rank": 32,
+        "player": "Khalil Shakir",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 8.52,
+        "salary": 16,
+        "fp_per_salary": 0.532,
+        "role": "starter",
+        "role_slot": "WR SWR",
+        "depth": 1,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 33,
         "player": "Devaughn Vele",
         "team": "NO",
         "opponent": "NYG",
@@ -3818,7 +3832,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 33,
+        "rank": 34,
         "player": "Germie Bernard",
         "team": "PIT",
         "opponent": "TB",
@@ -3832,7 +3846,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 34,
+        "rank": 35,
         "player": "Rome Odunze",
         "team": "CHI",
         "opponent": "ATL",
@@ -3846,7 +3860,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 35,
+        "rank": 36,
         "player": "Romeo Doubs",
         "team": "NE",
         "opponent": "NYJ",
@@ -3860,7 +3874,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 36,
+        "rank": 37,
         "player": "Stefon Diggs",
         "team": "WAS",
         "opponent": "SF",
@@ -3874,7 +3888,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 37,
+        "rank": 38,
         "player": "KC Concepcion Jr.",
         "team": "CLE",
         "opponent": "BAL",
@@ -3888,7 +3902,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 38,
+        "rank": 39,
         "player": "Tre Tucker",
         "team": "LV",
         "opponent": "BUF",
@@ -3902,7 +3916,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 39,
+        "rank": 40,
         "player": "Chris Godwin Jr.",
         "team": "TB",
         "opponent": "PIT",
@@ -3916,7 +3930,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 40,
+        "rank": 41,
         "player": "Keenan Allen",
         "team": "IND",
         "opponent": "TEN",
@@ -3927,20 +3941,6 @@
         "role_slot": "WR RWR",
         "depth": 2,
         "kickoff_utc": "2026-10-18 17:00",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 41,
-        "player": "Khalil Shakir",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 7.32,
-        "salary": 16,
-        "fp_per_salary": 0.458,
-        "role": "starter",
-        "role_slot": "WR SWR",
-        "depth": 2,
-        "kickoff_utc": "2026-10-18 20:25",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -3959,26 +3959,12 @@
       },
       {
         "rank": 43,
-        "player": "Keon Coleman",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 6.69,
-        "salary": 15,
-        "fp_per_salary": 0.446,
-        "role": "rotation",
-        "role_slot": "WR LWR",
-        "depth": 4,
-        "kickoff_utc": "2026-10-18 20:25",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 44,
         "player": "Kendrick Bourne",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 6.5,
+        "fp": 6.52,
         "salary": 11,
-        "fp_per_salary": 0.591,
+        "fp_per_salary": 0.593,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
@@ -3986,13 +3972,13 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 45,
+        "rank": 44,
         "player": "Ryan Flournoy",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 6.42,
+        "fp": 6.49,
         "salary": 15,
-        "fp_per_salary": 0.428,
+        "fp_per_salary": 0.433,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 3,
@@ -4000,7 +3986,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 46,
+        "rank": 45,
         "player": "Courtland Sutton",
         "team": "DEN",
         "opponent": "SEA",
@@ -4014,7 +4000,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 47,
+        "rank": 46,
         "player": "Brian Thomas Jr.",
         "team": "JAC",
         "opponent": "HOU",
@@ -4025,6 +4011,20 @@
         "role_slot": "WR LWR",
         "depth": 3,
         "kickoff_utc": "2026-10-18 13:30",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 47,
+        "player": "Joshua Palmer",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 5.64,
+        "salary": 12,
+        "fp_per_salary": 0.47,
+        "role": "starter",
+        "role_slot": "WR RWR",
+        "depth": 2,
+        "kickoff_utc": "2026-10-18 20:25",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -4046,9 +4046,9 @@
         "player": "Quentin Johnston",
         "team": "LAC",
         "opponent": "KC",
-        "fp": 5.28,
+        "fp": 5.27,
         "salary": 14,
-        "fp_per_salary": 0.377,
+        "fp_per_salary": 0.376,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 2,
@@ -4466,9 +4466,9 @@
         "player": "Theo Wease Jr.",
         "team": "LAC",
         "opponent": "KC",
-        "fp": 2.97,
+        "fp": 2.96,
         "salary": 10,
-        "fp_per_salary": 0.297,
+        "fp_per_salary": 0.296,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 3,
@@ -4550,9 +4550,9 @@
         "player": "Jalen Brooks",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 2.72,
+        "fp": 2.73,
         "salary": 10,
-        "fp_per_salary": 0.272,
+        "fp_per_salary": 0.273,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 3,
@@ -4561,34 +4561,6 @@
       },
       {
         "rank": 86,
-        "player": "Joshua Palmer",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 2.59,
-        "salary": 12,
-        "fp_per_salary": 0.216,
-        "role": "starter",
-        "role_slot": "WR RWR",
-        "depth": 3,
-        "kickoff_utc": "2026-10-18 20:25",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 87,
-        "player": "Bo Melton",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 2.53,
-        "salary": 10,
-        "fp_per_salary": 0.253,
-        "role": "rotation",
-        "role_slot": "WR RWR",
-        "depth": 4,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 88,
         "player": "Xavier Hutchinson",
         "team": "HOU",
         "opponent": "JAC",
@@ -4602,21 +4574,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 89,
-        "player": "Tutu Atwell",
-        "team": "LA",
-        "opponent": "ARI",
-        "fp": 2.5,
-        "salary": 10,
-        "fp_per_salary": 0.25,
-        "role": "rotation",
-        "role_slot": "WR RWR",
-        "depth": 4,
-        "kickoff_utc": "2026-10-18 20:05",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 90,
+        "rank": 87,
         "player": "Tez Johnson",
         "team": "TB",
         "opponent": "PIT",
@@ -4630,7 +4588,21 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 91,
+        "rank": 88,
+        "player": "Bo Melton",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 2.42,
+        "salary": 10,
+        "fp_per_salary": 0.242,
+        "role": "rotation",
+        "role_slot": "WR RWR",
+        "depth": 4,
+        "kickoff_utc": "2026-10-19 00:20",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 89,
         "player": "Calvin Ridley",
         "team": "TEN",
         "opponent": "IND",
@@ -4644,7 +4616,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 92,
+        "rank": 90,
         "player": "Brycen Tremayne",
         "team": "CAR",
         "opponent": "PHI",
@@ -4658,7 +4630,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 93,
+        "rank": 91,
         "player": "Bryce Lance",
         "team": "NO",
         "opponent": "NYG",
@@ -4672,7 +4644,21 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 94,
+        "rank": 92,
+        "player": "KaVontae Turpin",
+        "team": "DAL",
+        "opponent": "GB",
+        "fp": 2.18,
+        "salary": 10,
+        "fp_per_salary": 0.218,
+        "role": "rotation",
+        "role_slot": "WR SWR",
+        "depth": 4,
+        "kickoff_utc": "2026-10-19 00:20",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 93,
         "player": "Olamide Zaccheaus",
         "team": "ATL",
         "opponent": "CHI",
@@ -4686,21 +4672,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 95,
-        "player": "KaVontae Turpin",
-        "team": "DAL",
-        "opponent": "GB",
-        "fp": 2.1,
-        "salary": 10,
-        "fp_per_salary": 0.21,
-        "role": "rotation",
-        "role_slot": "WR SWR",
-        "depth": 4,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 96,
+        "rank": 94,
         "player": "Jordan Watkins",
         "team": "SF",
         "opponent": "WAS",
@@ -4714,7 +4686,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 97,
+        "rank": 95,
         "player": "Ja'Kobi Lane",
         "team": "BAL",
         "opponent": "CLE",
@@ -4728,7 +4700,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 98,
+        "rank": 96,
         "player": "Jerry Jeudy",
         "team": "CLE",
         "opponent": "BAL",
@@ -4742,21 +4714,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 99,
-        "player": "J. Michael Sturdivant",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 1.99,
-        "salary": 10,
-        "fp_per_salary": 0.199,
-        "role": "rotation",
-        "role_slot": "WR LWR",
-        "depth": 5,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 100,
+        "rank": 97,
         "player": "Kyle Williams",
         "team": "NE",
         "opponent": "NYJ",
@@ -4770,13 +4728,55 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
+        "rank": 98,
+        "player": "J. Michael Sturdivant",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 1.89,
+        "salary": 10,
+        "fp_per_salary": 0.189,
+        "role": "rotation",
+        "role_slot": "WR LWR",
+        "depth": 5,
+        "kickoff_utc": "2026-10-19 00:20",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 99,
+        "player": "Skyler Bell",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 1.87,
+        "salary": 10,
+        "fp_per_salary": 0.187,
+        "role": "rotation",
+        "role_slot": "WR SWR",
+        "depth": 5,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 100,
+        "player": "Konata Mumpfield",
+        "team": "LA",
+        "opponent": "ARI",
+        "fp": 1.69,
+        "salary": 10,
+        "fp_per_salary": 0.169,
+        "role": "starter",
+        "role_slot": "WR SWR",
+        "depth": 3,
+        "kickoff_utc": "2026-10-18 20:05",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
         "rank": 101,
         "player": "Savion Williams",
         "team": "GB",
         "opponent": "DAL",
-        "fp": 1.74,
+        "fp": 1.66,
         "salary": 10,
-        "fp_per_salary": 0.174,
+        "fp_per_salary": 0.166,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 3,
@@ -4816,9 +4816,9 @@
         "player": "Brenen Thompson",
         "team": "LAC",
         "opponent": "KC",
-        "fp": 1.24,
+        "fp": 1.23,
         "salary": 10,
-        "fp_per_salary": 0.124,
+        "fp_per_salary": 0.123,
         "role": "rotation",
         "role_slot": "WR SWR",
         "depth": 4,
@@ -4841,20 +4841,6 @@
       },
       {
         "rank": 106,
-        "player": "Konata Mumpfield",
-        "team": "LA",
-        "opponent": "ARI",
-        "fp": 1.21,
-        "salary": 10,
-        "fp_per_salary": 0.121,
-        "role": "starter",
-        "role_slot": "WR SWR",
-        "depth": 3,
-        "kickoff_utc": "2026-10-18 20:05",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 107,
         "player": "Deion Burks",
         "team": "IND",
         "opponent": "TEN",
@@ -4868,7 +4854,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 108,
+        "rank": 107,
         "player": "Derius Davis",
         "team": "LAC",
         "opponent": "KC",
@@ -4882,7 +4868,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 109,
+        "rank": 108,
         "player": "Dyami Brown",
         "team": "WAS",
         "opponent": "SF",
@@ -4896,7 +4882,35 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
+        "rank": 109,
+        "player": "Jordan Whittington",
+        "team": "LA",
+        "opponent": "ARI",
+        "fp": 0.83,
+        "salary": 10,
+        "fp_per_salary": 0.083,
+        "role": "rotation",
+        "role_slot": "WR SWR",
+        "depth": 4,
+        "kickoff_utc": "2026-10-18 20:05",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
         "rank": 110,
+        "player": "KeAndre Lambert-Smith",
+        "team": "LAC",
+        "opponent": "KC",
+        "fp": 0.78,
+        "salary": 10,
+        "fp_per_salary": 0.078,
+        "role": "rotation",
+        "role_slot": "WR LWR",
+        "depth": 5,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 111,
         "player": "Malik Benson",
         "team": "LV",
         "opponent": "BUF",
@@ -4910,7 +4924,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 111,
+        "rank": 112,
         "player": "Zavion Thomas",
         "team": "CHI",
         "opponent": "ATL",
@@ -4924,7 +4938,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 112,
+        "rank": 113,
         "player": "Jahdae Walker",
         "team": "CHI",
         "opponent": "ATL",
@@ -4935,20 +4949,6 @@
         "role_slot": "WR LWR",
         "depth": 5,
         "kickoff_utc": "2026-10-18 17:00",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 113,
-        "player": "Jordan Whittington",
-        "team": "LA",
-        "opponent": "ARI",
-        "fp": 0.57,
-        "salary": 10,
-        "fp_per_salary": 0.057,
-        "role": "rotation",
-        "role_slot": "WR SWR",
-        "depth": 5,
-        "kickoff_utc": "2026-10-18 20:05",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -5107,20 +5107,6 @@
       },
       {
         "rank": 125,
-        "player": "Skyler Bell",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 0.25,
-        "salary": 10,
-        "fp_per_salary": 0.025,
-        "role": "rotation",
-        "role_slot": "WR SWR",
-        "depth": 5,
-        "kickoff_utc": "2026-10-18 20:25",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 126,
         "player": "Charlie Jones",
         "team": "NYG",
         "opponent": "NO",
@@ -5134,7 +5120,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 127,
+        "rank": 126,
         "player": "Greg Dortch",
         "team": "BUF",
         "opponent": "LV",
@@ -5148,7 +5134,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 128,
+        "rank": 127,
         "player": "Anthony Gould",
         "team": "IND",
         "opponent": "TEN",
@@ -5162,7 +5148,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 129,
+        "rank": 128,
         "player": "LaJohntay Wester",
         "team": "BAL",
         "opponent": "CLE",
@@ -5176,7 +5162,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 130,
+        "rank": 129,
         "player": "Malachi Corley",
         "team": "CLE",
         "opponent": "BAL",
@@ -5190,7 +5176,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 131,
+        "rank": 130,
         "player": "Cedric Tillman",
         "team": "NO",
         "opponent": "NYG",
@@ -5204,7 +5190,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 132,
+        "rank": 131,
         "player": "Devin Duvernay",
         "team": "ARI",
         "opponent": "LA",
@@ -5218,7 +5204,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 133,
+        "rank": 132,
         "player": "Luke McCaffrey",
         "team": "WAS",
         "opponent": "SF",
@@ -5232,7 +5218,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 134,
+        "rank": 133,
         "player": "Nikko Remigio",
         "team": "KC",
         "opponent": "LAC",
@@ -5246,7 +5232,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 135,
+        "rank": 134,
         "player": "Britain Covey",
         "team": "PHI",
         "opponent": "CAR",
@@ -5280,9 +5266,9 @@
         "player": "Trey McBride",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 12.82,
+        "fp": 12.88,
         "salary": 28,
-        "fp_per_salary": 0.458,
+        "fp_per_salary": 0.46,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -5336,9 +5322,9 @@
         "player": "Tucker Kraft",
         "team": "GB",
         "opponent": "DAL",
-        "fp": 10.79,
+        "fp": 10.27,
         "salary": 17,
-        "fp_per_salary": 0.635,
+        "fp_per_salary": 0.604,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -5347,6 +5333,20 @@
       },
       {
         "rank": 7,
+        "player": "Dalton Kincaid",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 9.13,
+        "salary": 19,
+        "fp_per_salary": 0.481,
+        "role": "starter",
+        "role_slot": "TE TE",
+        "depth": 1,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 8,
         "player": "Harold Fannin Jr.",
         "team": "CLE",
         "opponent": "BAL",
@@ -5360,7 +5360,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 8,
+        "rank": 9,
         "player": "Juwan Johnson",
         "team": "NO",
         "opponent": "NYG",
@@ -5371,20 +5371,6 @@
         "role_slot": "TE TE",
         "depth": 1,
         "kickoff_utc": "2026-10-18 17:00",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 9,
-        "player": "Dalton Kincaid",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 8.81,
-        "salary": 19,
-        "fp_per_salary": 0.464,
-        "role": "starter",
-        "role_slot": "TE TE",
-        "depth": 1,
-        "kickoff_utc": "2026-10-18 20:25",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -5420,9 +5406,9 @@
         "player": "Tyler Higbee",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 7.77,
+        "fp": 7.73,
         "salary": 13,
-        "fp_per_salary": 0.598,
+        "fp_per_salary": 0.595,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -5462,9 +5448,9 @@
         "player": "Jake Ferguson",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 7.19,
+        "fp": 7.46,
         "salary": 14,
-        "fp_per_salary": 0.514,
+        "fp_per_salary": 0.533,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -5683,6 +5669,20 @@
       },
       {
         "rank": 31,
+        "player": "Dawson Knox",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 3.84,
+        "salary": 10,
+        "fp_per_salary": 0.384,
+        "role": "rotation",
+        "role_slot": "TE TE",
+        "depth": 2,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 32,
         "player": "Evan Engram",
         "team": "DEN",
         "opponent": "SEA",
@@ -5696,7 +5696,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 32,
+        "rank": 33,
         "player": "Mason Taylor",
         "team": "NYJ",
         "opponent": "NE",
@@ -5710,7 +5710,21 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 33,
+        "rank": 34,
+        "player": "Colby Parkinson",
+        "team": "LA",
+        "opponent": "ARI",
+        "fp": 3.48,
+        "salary": 11,
+        "fp_per_salary": 0.316,
+        "role": "rotation",
+        "role_slot": "TE TE",
+        "depth": 2,
+        "kickoff_utc": "2026-10-18 20:05",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 35,
         "player": "Charlie Kolar",
         "team": "LAC",
         "opponent": "KC",
@@ -5724,13 +5738,13 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 34,
+        "rank": 36,
         "player": "Oronde Gadsden",
         "team": "LAC",
         "opponent": "KC",
-        "fp": 3.41,
+        "fp": 3.4,
         "salary": 10,
-        "fp_per_salary": 0.341,
+        "fp_per_salary": 0.34,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -5738,7 +5752,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 35,
+        "rank": 37,
         "player": "Noah Gray",
         "team": "KC",
         "opponent": "LAC",
@@ -5752,7 +5766,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 36,
+        "rank": 38,
         "player": "Foster Moreau",
         "team": "HOU",
         "opponent": "JAC",
@@ -5766,7 +5780,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 37,
+        "rank": 39,
         "player": "Cole Kmet",
         "team": "CHI",
         "opponent": "ATL",
@@ -5777,34 +5791,6 @@
         "role_slot": "TE TE",
         "depth": 2,
         "kickoff_utc": "2026-10-18 17:00",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 38,
-        "player": "Colby Parkinson",
-        "team": "LA",
-        "opponent": "ARI",
-        "fp": 2.92,
-        "salary": 11,
-        "fp_per_salary": 0.265,
-        "role": "rotation",
-        "role_slot": "TE TE",
-        "depth": 2,
-        "kickoff_utc": "2026-10-18 20:05",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 39,
-        "player": "Dawson Knox",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 2.72,
-        "salary": 10,
-        "fp_per_salary": 0.272,
-        "role": "rotation",
-        "role_slot": "TE TE",
-        "depth": 2,
-        "kickoff_utc": "2026-10-18 20:25",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -5823,20 +5809,6 @@
       },
       {
         "rank": 41,
-        "player": "Jonnu Smith",
-        "team": "GB",
-        "opponent": "DAL",
-        "fp": 2.62,
-        "salary": 10,
-        "fp_per_salary": 0.262,
-        "role": "rotation",
-        "role_slot": "TE TE",
-        "depth": 2,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 42,
         "player": "Tommy Tremble",
         "team": "CAR",
         "opponent": "PHI",
@@ -5847,6 +5819,20 @@
         "role_slot": "TE TE",
         "depth": 2,
         "kickoff_utc": "2026-10-18 17:00",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 42,
+        "player": "Jonnu Smith",
+        "team": "GB",
+        "opponent": "DAL",
+        "fp": 2.51,
+        "salary": 10,
+        "fp_per_salary": 0.251,
+        "role": "rotation",
+        "role_slot": "TE TE",
+        "depth": 2,
+        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -5963,12 +5949,26 @@
       },
       {
         "rank": 51,
+        "player": "Davis Allen",
+        "team": "LA",
+        "opponent": "ARI",
+        "fp": 1.45,
+        "salary": 10,
+        "fp_per_salary": 0.145,
+        "role": "backup",
+        "role_slot": "TE TE",
+        "depth": 3,
+        "kickoff_utc": "2026-10-18 20:05",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 52,
         "player": "Elijah Higgins",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 1.43,
+        "fp": 1.44,
         "salary": 10,
-        "fp_per_salary": 0.143,
+        "fp_per_salary": 0.144,
         "role": "rotation",
         "role_slot": "TE TE",
         "depth": 2,
@@ -5976,7 +5976,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 52,
+        "rank": 53,
         "player": "Mo Alie-Cox",
         "team": "IND",
         "opponent": "TEN",
@@ -5990,7 +5990,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 53,
+        "rank": 54,
         "player": "Nate Adkins",
         "team": "DEN",
         "opponent": "SEA",
@@ -6004,7 +6004,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 54,
+        "rank": 55,
         "player": "Adam Trautman",
         "team": "DEN",
         "opponent": "SEA",
@@ -6018,7 +6018,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 55,
+        "rank": 56,
         "player": "Mitchell Evans",
         "team": "CAR",
         "opponent": "PHI",
@@ -6032,7 +6032,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 56,
+        "rank": 57,
         "player": "Nick Vannett",
         "team": "BAL",
         "opponent": "CLE",
@@ -6046,7 +6046,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 57,
+        "rank": 58,
         "player": "Oscar Delp",
         "team": "NO",
         "opponent": "NYG",
@@ -6060,7 +6060,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 58,
+        "rank": 59,
         "player": "Nate Boerkircher",
         "team": "JAC",
         "opponent": "HOU",
@@ -6074,7 +6074,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 59,
+        "rank": 60,
         "player": "Cade Stover",
         "team": "HOU",
         "opponent": "JAC",
@@ -6088,13 +6088,13 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 60,
+        "rank": 61,
         "player": "Luke Schoonmaker",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 1.06,
+        "fp": 1.07,
         "salary": 10,
-        "fp_per_salary": 0.106,
+        "fp_per_salary": 0.107,
         "role": "backup",
         "role_slot": "TE TE",
         "depth": 3,
@@ -6102,13 +6102,13 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 61,
+        "rank": 62,
         "player": "Brevyn Spann-Ford",
         "team": "DAL",
         "opponent": "GB",
-        "fp": 1.01,
+        "fp": 1.03,
         "salary": 10,
-        "fp_per_salary": 0.101,
+        "fp_per_salary": 0.103,
         "role": "rotation",
         "role_slot": "TE TE",
         "depth": 2,
@@ -6116,7 +6116,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 62,
+        "rank": 63,
         "player": "Tanner Koziol",
         "team": "JAC",
         "opponent": "HOU",
@@ -6127,20 +6127,6 @@
         "role_slot": "TE TE",
         "depth": 4,
         "kickoff_utc": "2026-10-18 13:30",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 63,
-        "player": "Davis Allen",
-        "team": "LA",
-        "opponent": "ARI",
-        "fp": 0.97,
-        "salary": 10,
-        "fp_per_salary": 0.097,
-        "role": "backup",
-        "role_slot": "TE TE",
-        "depth": 3,
-        "kickoff_utc": "2026-10-18 20:05",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -6159,6 +6145,20 @@
       },
       {
         "rank": 65,
+        "player": "Jackson Hawes",
+        "team": "BUF",
+        "opponent": "LV",
+        "fp": 0.91,
+        "salary": 10,
+        "fp_per_salary": 0.091,
+        "role": "backup",
+        "role_slot": "TE TE",
+        "depth": 3,
+        "kickoff_utc": "2026-10-18 20:25",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 66,
         "player": "Eric Saubert",
         "team": "SEA",
         "opponent": "DEN",
@@ -6172,7 +6172,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 66,
+        "rank": 67,
         "player": "Ben Sinnott",
         "team": "WAS",
         "opponent": "SF",
@@ -6186,7 +6186,7 @@
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
-        "rank": 67,
+        "rank": 68,
         "player": "Elijah Arroyo",
         "team": "SEA",
         "opponent": "DEN",
@@ -6197,20 +6197,6 @@
         "role_slot": "TE TE",
         "depth": 3,
         "kickoff_utc": "2026-10-16 00:15",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 68,
-        "player": "Jackson Hawes",
-        "team": "BUF",
-        "opponent": "LV",
-        "fp": 0.68,
-        "salary": 10,
-        "fp_per_salary": 0.068,
-        "role": "backup",
-        "role_slot": "TE TE",
-        "depth": 3,
-        "kickoff_utc": "2026-10-18 20:25",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -6246,9 +6232,9 @@
         "player": "Josh Whyle",
         "team": "GB",
         "opponent": "DAL",
-        "fp": 0.52,
+        "fp": 0.49,
         "salary": 10,
-        "fp_per_salary": 0.052,
+        "fp_per_salary": 0.049,
         "role": "backup",
         "role_slot": "TE TE",
         "depth": 3,
@@ -6414,9 +6400,9 @@
         "player": "Max Klare",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 0.11,
+        "fp": 0.1,
         "salary": 10,
-        "fp_per_salary": 0.011,
+        "fp_per_salary": 0.01,
         "role": "reserve",
         "role_slot": "TE TE",
         "depth": 4,
@@ -6556,9 +6542,9 @@
         "player": "Los Angeles Rams",
         "team": "LA",
         "opponent": "ARI",
-        "fp": 8.28,
+        "fp": 8.25,
         "salary": 13,
-        "fp_per_salary": 0.637,
+        "fp_per_salary": 0.635,
         "role": "starter",
         "role_slot": "",
         "depth": 1,
@@ -6752,9 +6738,9 @@
         "player": "Green Bay Packers",
         "team": "GB",
         "opponent": "DAL",
-        "fp": 6.09,
+        "fp": 5.64,
         "salary": 12,
-        "fp_per_salary": 0.507,
+        "fp_per_salary": 0.47,
         "role": "starter",
         "role_slot": "",
         "depth": 1,
@@ -6763,20 +6749,6 @@
       },
       {
         "rank": 22,
-        "player": "Dallas Cowboys",
-        "team": "DAL",
-        "opponent": "GB",
-        "fp": 5.46,
-        "salary": 10,
-        "fp_per_salary": 0.546,
-        "role": "starter",
-        "role_slot": "",
-        "depth": 1,
-        "kickoff_utc": "2026-10-19 00:20",
-        "method": "Sleeper half-PPR projection (2026 week 6)"
-      },
-      {
-        "rank": 23,
         "player": "Tennessee Titans",
         "team": "TEN",
         "opponent": "IND",
@@ -6787,6 +6759,20 @@
         "role_slot": "",
         "depth": 1,
         "kickoff_utc": "2026-10-18 17:00",
+        "method": "Sleeper half-PPR projection (2026 week 6)"
+      },
+      {
+        "rank": 23,
+        "player": "Dallas Cowboys",
+        "team": "DAL",
+        "opponent": "GB",
+        "fp": 5.15,
+        "salary": 10,
+        "fp_per_salary": 0.515,
+        "role": "starter",
+        "role_slot": "",
+        "depth": 1,
+        "kickoff_utc": "2026-10-19 00:20",
         "method": "Sleeper half-PPR projection (2026 week 6)"
       },
       {
@@ -6850,9 +6836,9 @@
         "player": "Arizona Cardinals",
         "team": "ARI",
         "opponent": "LA",
-        "fp": 3.23,
+        "fp": 3.25,
         "salary": 10,
-        "fp_per_salary": 0.323,
+        "fp_per_salary": 0.325,
         "role": "starter",
         "role_slot": "",
         "depth": 1,
@@ -6868,14 +6854,14 @@
     "season_type": "regular",
     "players_fetched_utc": "2026-10-18T16:20:39.450003+00:00"
   },
-  "availability_removed": 146,
+  "availability_removed": 147,
   "method_counts": {
-    "Sleeper half-PPR projection (2026 week 6)": 355
+    "Sleeper half-PPR projection (2026 week 6)": 354
   },
   "log": [
-    "Yahoo slate: 14 game(s), 502 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-18T18:13:46Z)",
+    "Yahoo slate: 14 game(s), 502 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-18T22:43:44Z)",
     "  Sleeper: 2026 regular week 6 projections; player dump fetched 2026-10-18T16:20:39.450003+00:00.",
-    "  Removed 137 player(s): no Sleeper projection.",
+    "  Removed 138 player(s): no Sleeper projection.",
     "  Removed 9 player(s): no Sleeper match.",
     "  Backup-QB filter removed 1 player(s).",
     "TOP 25 QB",
@@ -7018,6 +7004,6 @@
     "23    24  ...  Sleeper half-PPR projection (2026 week 6)",
     "24    25  ...  Sleeper half-PPR projection (2026 week 6)",
     "[25 rows x 12 columns]",
-    "Ranking run time: 0.1s"
+    "Ranking run time: 0.0s"
   ]
 }
