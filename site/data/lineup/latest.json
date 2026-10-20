@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-19T18:59:51Z",
-  "snapshot_id": "2026-10-19T18:59:51Z",
-  "run_date": "2026-10-19",
+  "generated_utc": "2026-10-20T00:05:14Z",
+  "snapshot_id": "2026-10-20T00:05:14Z",
+  "run_date": "2026-10-20",
   "season": 2026,
   "week": 6,
-  "depth_snapshot": "2026-10-19T18:59:52.698602+00:00",
+  "depth_snapshot": "2026-10-20T00:05:15.036876+00:00",
   "notes": [],
   "objective": "FP",
   "auto_exclude_out": true,
@@ -367,9 +367,10 @@
     "week": 6
   },
   "log": [
-    "Yahoo slate: 14 game(s), 502 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-19T18:59:51Z)",
-    "  Sleeper: 2026 regular week 6 projections; player dump fetched 2026-10-19T18:59:52.698602+00:00.",
-    "  Removed 137 player(s): no Sleeper projection.",
+    "Yahoo feed spans 2 NFL week blocks; selected 14 game(s), 2026-10-15 through 2026-10-19.",
+    "Yahoo slate: 14 game(s), 502 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-20T00:05:14Z)",
+    "  Sleeper: 2026 regular week 6 projections; player dump fetched 2026-10-20T00:05:15.036876+00:00.",
+    "  Removed 139 player(s): no Sleeper projection.",
     "  Removed 9 player(s): no Sleeper match.",
     "  Backup-QB filter removed 1 player(s).",
     "TOP 25 QB",
@@ -512,11 +513,11 @@
     "23    24  ...  Sleeper half-PPR projection (2026 week 6)",
     "24    25  ...  Sleeper half-PPR projection (2026 week 6)",
     "[25 rows x 12 columns]",
-    "Ranking run time: 0.0s",
+    "Ranking run time: 0.1s",
     "Roster: 17 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-10-19T18:59:51Z (shared with position rankings).",
-    "Season 2026 week 6; Sleeper players fetched 2026-10-19T18:59:52.698602+00:00.",
+    "Projection snapshot: 2026-10-20T00:05:14Z (shared with position rankings).",
+    "Season 2026 week 6; Sleeper players fetched 2026-10-20T00:05:15.036876+00:00.",
     "Benched before optimizing: Breece Hall, Ollie Gordon II, Jameson Williams, Tee Higgins, Terrance Ferguson.",
-    "Add pool: 290 player(s) resolved for the page's roster editor."
+    "Add pool: 289 player(s) resolved for the page's roster editor."
   ]
 }
