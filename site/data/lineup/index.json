@@ -2,9 +2,9 @@
   "runs": [
     {
       "date": "2026-10-20",
-      "generated_utc": "2026-10-20T00:05:14Z",
-      "week": 6,
-      "mean": 100.18,
+      "generated_utc": "2026-10-20T17:46:05Z",
+      "week": 7,
+      "mean": 107.91,
       "json": "history/2026-10-20.json",
       "csv": "history/2026-10-20.csv"
     },
