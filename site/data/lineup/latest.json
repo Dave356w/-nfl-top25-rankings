@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-20T23:36:04Z",
-  "snapshot_id": "2026-10-20T23:36:04Z",
-  "run_date": "2026-10-20",
+  "generated_utc": "2026-10-21T17:54:05Z",
+  "snapshot_id": "2026-10-21T17:54:05Z",
+  "run_date": "2026-10-21",
   "season": 2026,
   "week": 7,
-  "depth_snapshot": "2026-10-20T00:05:15.036876+00:00",
+  "depth_snapshot": "2026-10-21T17:54:05.908233+00:00",
   "notes": [],
   "objective": "FP",
   "auto_exclude_out": true,
@@ -26,9 +26,9 @@
   ],
   "roster_fingerprint": "dak prescott:QB|james cook:RB|jaylen warren:RB|jaylen waddle:WR|harold fannin:TE|brandon aubrey:K|los angeles rams:DEF|breece hall:RB|geno smith:QB|denver broncos:DEF|emmett johnson:RB|ollie gordon:RB|jameson williams:WR|tee higgins:WR|terrance ferguson:TE|keenan allen:WR|germie bernard:WR",
   "totals": {
-    "mean": 106.07,
-    "floor": 54.67,
-    "ceiling": 198.2
+    "mean": 105.98,
+    "floor": 54.66,
+    "ceiling": 197.97
   },
   "counts": {
     "roster": 17,
@@ -44,9 +44,9 @@
       "team": "NYJ",
       "opponent": "MIA",
       "kickoff_utc": "2026-10-25 17:00",
-      "mean": 16.17,
-      "floor": 10.64,
-      "ceiling": 26.28,
+      "mean": 16.32,
+      "floor": 10.74,
+      "ceiling": 26.52,
       "salary": 22.0,
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
@@ -82,16 +82,16 @@
       "team": "NYJ",
       "opponent": "MIA",
       "kickoff_utc": "2026-10-25 17:00",
-      "mean": 12.72,
-      "floor": 4.28,
-      "ceiling": 27.35,
+      "mean": 12.66,
+      "floor": 4.26,
+      "ceiling": 27.22,
       "salary": 26.0,
       "depth": 5.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper half-PPR projection (2026 week 7)",
-      "injury": "Out",
+      "injury": "Questionable",
       "unavailable": null,
-      "review": "injury Out; depth 5"
+      "review": "injury Questionable; depth 5"
     },
     {
       "slot": "WR",
@@ -101,9 +101,9 @@
       "team": "CIN",
       "opponent": "BAL",
       "kickoff_utc": "2026-10-25 17:00",
-      "mean": 12.86,
-      "floor": 6.17,
-      "ceiling": 24.87,
+      "mean": 12.78,
+      "floor": 6.13,
+      "ceiling": 24.72,
       "salary": 30.0,
       "depth": 2.0,
       "depth_source": "Sleeper depth chart",
@@ -127,9 +127,9 @@
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper half-PPR projection (2026 week 7)",
-      "injury": "Questionable",
+      "injury": null,
       "unavailable": null,
-      "review": "injury Questionable"
+      "review": "ok"
     },
     {
       "slot": "TE",
@@ -196,16 +196,16 @@
       "team": "MIA",
       "opponent": "NYJ",
       "kickoff_utc": "2026-10-25 17:00",
-      "mean": 12.42,
-      "floor": 6.8,
-      "ceiling": 22.59,
+      "mean": 12.32,
+      "floor": 6.75,
+      "ceiling": 22.4,
       "salary": 20.0,
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper half-PPR projection (2026 week 7)",
-      "injury": "Questionable",
+      "injury": null,
       "unavailable": null,
-      "review": "injury Questionable"
+      "review": "ok"
     }
   ],
   "bench": [
@@ -306,9 +306,9 @@
       "team": "KC",
       "opponent": "SEA",
       "kickoff_utc": "2026-10-26 00:20",
-      "mean": 3.28,
-      "floor": 1.42,
-      "ceiling": 6.59,
+      "mean": 3.3,
+      "floor": 1.43,
+      "ceiling": 6.63,
       "salary": 10.0,
       "depth": 2.0,
       "depth_source": "Sleeper depth chart",
@@ -364,11 +364,10 @@
     "week": 7
   },
   "log": [
-    "Yahoo slate: 14 game(s), 491 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-20T23:36:04Z)",
-    "  Sleeper: 2026 regular week 7 projections; player dump fetched 2026-10-20T00:05:15.036876+00:00.",
-    "  Removed 104 player(s): no Sleeper projection.",
-    "  Removed 6 player(s): no Sleeper match.",
-    "  Backup-QB filter removed 1 player(s).",
+    "Yahoo slate: 14 game(s), 491 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-21T17:54:05Z)",
+    "  Sleeper: 2026 regular week 7 projections; player dump fetched 2026-10-21T17:54:05.908233+00:00.",
+    "  Removed 103 player(s): no Sleeper projection.",
+    "  Removed 9 player(s): no Sleeper match.",
     "TOP 25 QB",
     "    Rank  ...                          Projection method",
     "0      1  ...  Sleeper half-PPR projection (2026 week 7)",
@@ -509,11 +508,11 @@
     "23    24  ...  Sleeper half-PPR projection (2026 week 7)",
     "24    25  ...  Sleeper half-PPR projection (2026 week 7)",
     "[25 rows x 12 columns]",
-    "Ranking run time: 0.0s",
+    "Ranking run time: 0.1s",
     "Roster: 17 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-10-20T23:36:04Z (shared with position rankings).",
-    "Season 2026 week 7; Sleeper players fetched 2026-10-20T00:05:15.036876+00:00.",
+    "Projection snapshot: 2026-10-21T17:54:05Z (shared with position rankings).",
+    "Season 2026 week 7; Sleeper players fetched 2026-10-21T17:54:05.908233+00:00.",
     "Benched before optimizing: James Cook III, Terrance Ferguson.",
-    "Add pool: 288 player(s) resolved for the page's roster editor."
+    "Add pool: 290 player(s) resolved for the page's roster editor."
   ]
 }
