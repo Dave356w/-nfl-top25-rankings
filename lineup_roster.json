@@ -6,43 +6,7 @@
       "Position": "QB"
     },
     {
-      "Name": "James Cook III",
-      "Position": "RB"
-    },
-    {
       "Name": "Jaylen Warren",
-      "Position": "RB"
-    },
-    {
-      "Name": "Jaylen Waddle",
-      "Position": "WR"
-    },
-    {
-      "Name": "Harold Fannin Jr",
-      "Position": "TE"
-    },
-    {
-      "Name": "Brandon Aubrey",
-      "Position": "K"
-    },
-    {
-      "Name": "Los Angeles Rams",
-      "Position": "DEF"
-    },
-    {
-      "Name": "Breece Hall",
-      "Position": "RB"
-    },
-    {
-      "Name": "Geno Smith",
-      "Position": "QB"
-    },
-    {
-      "Name": "Denver Broncos",
-      "Position": "DEF"
-    },
-    {
-      "Name": "Emmett Johnson",
       "Position": "RB"
     },
     {
@@ -50,25 +14,56 @@
       "Position": "RB"
     },
     {
-      "Name": "Jameson Williams",
-      "Position": "WR"
-    },
-    {
       "Name": "Tee Higgins",
       "Position": "WR"
     },
     {
-      "Name": "Terrance Ferguson",
-      "Position": "TE"
+      "Name": "Jaylen Waddle",
+      "Position": "WR"
+    },
+    {
+      "Name": "Brandon Aubrey",
+      "Position": "K"
+    },
+    {
+      "Name": "Denver Broncos",
+      "Position": "DEF"
+    },
+    {
+      "Name": "Breece Hall",
+      "Position": "RB"
+    },
+    {
+      "Name": "Jameson Williams",
+      "Position": "WR"
+    },
+    {
+      "Name": "Germie Bernard",
+      "Position": "WR"
+    },
+    {
+      "Name": "Los Angeles Rams",
+      "Position": "DEF"
+    },
+    {
+      "Name": "Emmett Johnson",
+      "Position": "RB"
     },
     {
       "Name": "Keenan Allen",
       "Position": "WR"
     },
     {
-      "Name": "Germie Bernard",
-      "Position": "WR"
+      "Name": "James Cook III",
+      "Position": "RB"
+    },
+    {
+      "Name": "Terrance Ferguson",
+      "Position": "TE"
+    },
+    {
+      "Name": "Mike Gesicki",
+      "Position": "TE"
     }
   ]
 }
-
