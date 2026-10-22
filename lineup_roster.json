@@ -10,7 +10,7 @@
       "Position": "RB"
     },
     {
-      "Name": "Ollie Gordon II",
+      "Name": "Breece Hall",
       "Position": "RB"
     },
     {
@@ -22,6 +22,10 @@
       "Position": "WR"
     },
     {
+      "Name": "Mike Gesicki",
+      "Position": "TE"
+    },
+    {
       "Name": "Brandon Aubrey",
       "Position": "K"
     },
@@ -30,7 +34,7 @@
       "Position": "DEF"
     },
     {
-      "Name": "Breece Hall",
+      "Name": "Ollie Gordon II",
       "Position": "RB"
     },
     {
@@ -46,24 +50,16 @@
       "Position": "DEF"
     },
     {
-      "Name": "Emmett Johnson",
-      "Position": "RB"
-    },
-    {
       "Name": "Keenan Allen",
       "Position": "WR"
     },
     {
-      "Name": "James Cook III",
+      "Name": "Emmett Johnson",
       "Position": "RB"
     },
     {
-      "Name": "Terrance Ferguson",
-      "Position": "TE"
-    },
-    {
-      "Name": "Mike Gesicki",
-      "Position": "TE"
+      "Name": "James Cook III",
+      "Position": "RB"
     }
   ]
 }
