@@ -1,16 +1,16 @@
 slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,injury,unavailable,review
 QB,Dak Prescott,QB,DAL,PHI,2026-10-27 00:15,16.07,10.57,26.11,33.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
-RB,Jaylen Warren,RB,PIT,NO,2026-10-25 13:30,15.28,8.37,27.79,30.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
-RB,Breece Hall,RB,NYJ,MIA,2026-10-25 17:00,12.66,4.26,27.22,26.0,5.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),Questionable,,injury Questionable; depth 5
+RB,Jaylen Warren,RB,PIT,NO,2026-10-25 13:30,15.22,8.34,27.68,30.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
+RB,Breece Hall,RB,NYJ,MIA,2026-10-25 17:00,12.68,4.27,27.27,26.0,5.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),Questionable,,injury Questionable; depth 5
 WR,Tee Higgins,WR,CIN,BAL,2026-10-25 17:00,12.73,6.1,24.62,30.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
 WR,Jaylen Waddle,WR,DEN,ARI,2026-10-25 20:05,10.63,5.72,19.51,17.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),Questionable,,injury Questionable
 TE,Hunter Henry,TE,NE,CHI,2026-10-23 00:15,7.74,3.47,15.36,16.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
 K,Brandon Aubrey,K,DAL,PHI,,8.84,5.21,15.43,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
 DEF,Denver Broncos,DEF,DEN,ARI,2026-10-25 20:05,8.22,3.47,16.66,19.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 7),,,ok
-FLEX,Ollie Gordon II,RB,MIA,NYJ,2026-10-25 17:00,12.32,6.75,22.4,20.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
+FLEX,Ollie Gordon II,RB,MIA,NYJ,2026-10-25 17:00,12.29,6.73,22.35,20.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
 BENCH,Jameson Williams,WR,DET,GB,2026-10-25 20:25,10.06,4.82,19.46,22.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
-BENCH,Germie Bernard,WR,PIT,NO,2026-10-25 13:30,9.34,4.48,18.06,17.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
+BENCH,Germie Bernard,WR,PIT,NO,2026-10-25 13:30,9.32,4.47,18.02,17.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
+BENCH,Keenan Allen,WR,IND,MIN,2026-10-25 17:00,7.29,3.5,14.1,16.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
 BENCH,Los Angeles Rams,DEF,LA,LV,2026-10-25 20:25,6.81,2.87,13.8,13.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 7),,,ok
-BENCH,Keenan Allen,WR,IND,MIN,2026-10-25 17:00,6.31,3.03,12.2,16.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
 BENCH,Emmett Johnson,RB,KC,SEA,2026-10-26 00:20,2.79,1.21,5.6,10.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 7),,,ok
 BENCH,James Cook III,RB,BUF,,,0.0,,,,1.0,Sleeper depth chart,No weekly projection; bye or unmatched player,,not projected this week,no weekly projection/bye
