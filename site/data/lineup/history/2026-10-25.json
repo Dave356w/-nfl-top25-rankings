@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-25T16:45:34Z",
-  "snapshot_id": "2026-10-25T16:45:34Z",
+  "generated_utc": "2026-10-25T16:57:43Z",
+  "snapshot_id": "2026-10-25T16:57:43Z",
   "run_date": "2026-10-25",
   "season": 2026,
   "week": 7,
@@ -328,7 +328,7 @@
     "week": 7
   },
   "log": [
-    "Yahoo slate: 14 game(s), 491 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-25T16:45:34Z)",
+    "Yahoo slate: 14 game(s), 491 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-25T16:57:43Z)",
     "  Sleeper: 2026 regular week 7 projections; player dump fetched 2026-10-25T16:45:35.384459+00:00.",
     "  Removed 129 player(s): no Sleeper projection.",
     "  Removed 10 player(s): no Sleeper match.",
@@ -474,7 +474,7 @@
     "[25 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 15 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-10-25T16:45:34Z (shared with position rankings).",
+    "Projection snapshot: 2026-10-25T16:57:43Z (shared with position rankings).",
     "Season 2026 week 7; Sleeper players fetched 2026-10-25T16:45:35.384459+00:00.",
     "Benched before optimizing: Breece Hall, James Cook III.",
     "Add pool: 290 player(s) resolved for the page's roster editor."
