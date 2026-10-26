@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-25T22:59:56Z",
-  "snapshot_id": "2026-10-25T22:59:56Z",
-  "run_date": "2026-10-25",
+  "generated_utc": "2026-10-26T18:59:08Z",
+  "snapshot_id": "2026-10-26T18:59:08Z",
+  "run_date": "2026-10-26",
   "season": 2026,
   "week": 7,
-  "depth_snapshot": "2026-10-25T16:45:35.384459+00:00",
+  "depth_snapshot": "2026-10-26T18:59:09.597767+00:00",
   "notes": [],
   "objective": "FP",
   "auto_exclude_out": true,
@@ -26,9 +26,9 @@
   ],
   "roster_fingerprint": "dak prescott:QB|jaylen warren:RB|breece hall:RB|tee higgins:WR|jaylen waddle:WR|brandon aubrey:K|denver broncos:DEF|ollie gordon:RB|jameson williams:WR|germie bernard:WR|los angeles rams:DEF|keenan allen:WR|emmett johnson:RB|james cook:RB|hunter henry:TE",
   "totals": {
-    "mean": 102.51,
-    "floor": 54.8,
-    "ceiling": 188.54
+    "mean": 102.64,
+    "floor": 54.88,
+    "ceiling": 188.76
   },
   "counts": {
     "roster": 15,
@@ -44,9 +44,9 @@
       "team": "DAL",
       "opponent": "PHI",
       "kickoff_utc": "2026-10-27 00:15",
-      "mean": 16.05,
-      "floor": 10.56,
-      "ceiling": 26.08,
+      "mean": 16.14,
+      "floor": 10.62,
+      "ceiling": 26.23,
       "salary": 33.0,
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
@@ -158,9 +158,9 @@
       "team": "DAL",
       "opponent": "PHI",
       "kickoff_utc": null,
-      "mean": 8.88,
-      "floor": 5.24,
-      "ceiling": 15.5,
+      "mean": 8.92,
+      "floor": 5.26,
+      "ceiling": 15.57,
       "salary": null,
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
@@ -203,9 +203,9 @@
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper half-PPR projection (2026 week 7)",
-      "injury": null,
+      "injury": "Questionable",
       "unavailable": null,
-      "review": "ok"
+      "review": "injury Questionable"
     }
   ],
   "bench": [
@@ -270,9 +270,9 @@
       "team": "KC",
       "opponent": "SEA",
       "kickoff_utc": "2026-10-26 00:20",
-      "mean": 3.17,
-      "floor": 1.37,
-      "ceiling": 6.37,
+      "mean": 3.18,
+      "floor": 1.38,
+      "ceiling": 6.39,
       "salary": 10.0,
       "depth": 2.0,
       "depth_source": "Sleeper depth chart",
@@ -292,12 +292,12 @@
       "floor": null,
       "ceiling": null,
       "salary": null,
-      "depth": 2.0,
+      "depth": 4.0,
       "depth_source": "Sleeper depth chart",
       "source": "No weekly projection; bye or unmatched player",
       "injury": "Out",
       "unavailable": "not projected this week",
-      "review": "no weekly projection/bye; injury Out"
+      "review": "no weekly projection/bye; injury Out; depth 4"
     },
     {
       "player": "James Cook III",
@@ -328,8 +328,9 @@
     "week": 7
   },
   "log": [
-    "Yahoo slate: 14 game(s), 491 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-25T22:59:56Z)",
-    "  Sleeper: 2026 regular week 7 projections; player dump fetched 2026-10-25T16:45:35.384459+00:00.",
+    "Yahoo feed spans 3 NFL week blocks; selected 14 game(s), 2026-10-22 through 2026-10-26.",
+    "Yahoo slate: 14 game(s), 491 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-26T18:59:08Z)",
+    "  Sleeper: 2026 regular week 7 projections; player dump fetched 2026-10-26T18:59:09.597767+00:00.",
     "  Removed 131 player(s): no Sleeper projection.",
     "  Removed 10 player(s): no Sleeper match.",
     "TOP 25 QB",
@@ -474,8 +475,8 @@
     "[25 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 15 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-10-25T22:59:56Z (shared with position rankings).",
-    "Season 2026 week 7; Sleeper players fetched 2026-10-25T16:45:35.384459+00:00.",
+    "Projection snapshot: 2026-10-26T18:59:08Z (shared with position rankings).",
+    "Season 2026 week 7; Sleeper players fetched 2026-10-26T18:59:09.597767+00:00.",
     "Benched before optimizing: Breece Hall, James Cook III.",
     "Add pool: 290 player(s) resolved for the page's roster editor."
   ]
