@@ -863,12 +863,13 @@ CALIBRATED_CV = {
 # tools/calibrate_zero_rate.py over 2016-2025 nflverse weekly stats, on the same
 # population CALIBRATED_CV was fitted on.
 #
-# Scope is deliberate. A game with no carry, target or pass attempt is *excluded*
-# from both numerator and denominator, because that is usually a player who was
-# inactive, which is handled separately by the Sleeper roster and injury filter.
-# Counting those games here would mix availability into the conditional scoring
-# distribution. What is left is the pure
-# shape effect: a WR4 who plays, runs his routes and is never thrown to.
+# The historical fit excludes games without a carry, target or pass attempt.
+# This is conditional on recorded opportunity, not on taking the field: active
+# receivers can run routes without a target. A positive Sleeper projection does
+# not guarantee participation or opportunity. These legacy rates therefore
+# understate unconditional scoreless risk in the pregame eligible pool. Retain
+# them as the reproducible baseline; calibrated candidates fit the eligible-pool
+# population and are evaluated separately before promotion.
 #
 # Sample sizes are the played-game counts behind each entry. QB3+ falls back to
 # QB2 and TE4 to TE3, matching CALIBRATED_CV's own fallbacks. RB4's 186 games are
@@ -2445,7 +2446,7 @@ def prepare_slate_pool(cfg=None, purpose=""):
     players = players[~players["Name"].isin(excluded)].copy()
     return {
         "players": players.reset_index(drop=True),
-        "raw_inputs": {"yahoo": payload},
+        "raw_inputs": {"yahoo": payload, **context.get("raw_inputs", {})},
         "projection_model": {"source": "sleeper", **{
             k: context[k] for k in ("season", "week", "season_type", "players_fetched_utc")}},
         "sleeper_context": context,

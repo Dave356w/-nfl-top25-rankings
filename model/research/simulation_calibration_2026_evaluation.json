@@ -1,0 +1,323 @@
+{
+  "audit_summary": {
+    "offensive_player_games": 398,
+    "matched_snaps": 265,
+    "zero_with_offensive_snaps": 45,
+    "zero_without_offensive_snaps_but_other_snaps": 14,
+    "zero_participation_unknown": 51,
+    "omitted_nonzero_records": 10,
+    "historical_sleeper_raw_inputs_available": false,
+    "restriction": "No omitted player is reinserted using postgame knowledge or current projections."
+  },
+  "simulation_evaluation": {
+    "method": "Expanding chronological fits; 24h outcome guard; 17 games / 432 player-game rows.",
+    "marginals": {
+      "ALL": {
+        "n": 432,
+        "observed_zeros": 111,
+        "observed_negatives": 5,
+        "baseline": {
+          "expected_zeros": 35.36,
+          "expected_negatives": 0.0,
+          "zero_brier": 0.19341675925925925,
+          "crps": 2.4648157164573266,
+          "p25_coverage": 0.39814814814814814,
+          "p90_coverage": 0.8703703703703703
+        },
+        "calibrated": {
+          "expected_zeros": 82.59677258072927,
+          "expected_negatives": 8.462474109140382,
+          "zero_brier": 0.1447731355542846,
+          "crps": 2.458831581039272,
+          "p25_coverage": 0.35648148148148145,
+          "p90_coverage": 0.8842592592592593
+        }
+      },
+      "QB": {
+        "n": 34,
+        "observed_zeros": 0,
+        "observed_negatives": 0,
+        "baseline": {
+          "expected_zeros": 0.47600000000000003,
+          "expected_negatives": 0.0,
+          "zero_brier": 0.00019600000000000002,
+          "crps": 3.9894574113605366,
+          "p25_coverage": 0.14705882352941177,
+          "p90_coverage": 0.9117647058823529
+        },
+        "calibrated": {
+          "expected_zeros": 0.21920823620823623,
+          "expected_negatives": 0.33336102699896786,
+          "zero_brier": 4.343490849474327e-05,
+          "crps": 3.998397204317074,
+          "p25_coverage": 0.14705882352941177,
+          "p90_coverage": 0.9117647058823529
+        }
+      },
+      "RB": {
+        "n": 95,
+        "observed_zeros": 18,
+        "observed_negatives": 3,
+        "baseline": {
+          "expected_zeros": 3.62,
+          "expected_negatives": 0.0,
+          "zero_brier": 0.159432547368421,
+          "crps": 2.7276737900089265,
+          "p25_coverage": 0.4,
+          "p90_coverage": 0.8736842105263158
+        },
+        "calibrated": {
+          "expected_zeros": 12.676481295604043,
+          "expected_negatives": 3.065872738273746,
+          "zero_brier": 0.12059610855633292,
+          "crps": 2.7036315695458155,
+          "p25_coverage": 0.29473684210526313,
+          "p90_coverage": 0.9052631578947369
+        }
+      },
+      "WR": {
+        "n": 158,
+        "observed_zeros": 45,
+        "observed_negatives": 1,
+        "baseline": {
+          "expected_zeros": 17.235,
+          "expected_negatives": 0.0,
+          "zero_brier": 0.2118603227848101,
+          "crps": 2.61314927875689,
+          "p25_coverage": 0.3860759493670886,
+          "p90_coverage": 0.8417721518987342
+        },
+        "calibrated": {
+          "expected_zeros": 36.762412872831284,
+          "expected_negatives": 2.2552951222289783,
+          "zero_brier": 0.17119107307442522,
+          "crps": 2.6232996647475177,
+          "p25_coverage": 0.34810126582278483,
+          "p90_coverage": 0.8544303797468354
+        }
+      },
+      "TE": {
+        "n": 111,
+        "observed_zeros": 47,
+        "observed_negatives": 0,
+        "baseline": {
+          "expected_zeros": 14.029,
+          "expected_negatives": 0.0,
+          "zero_brier": 0.30566984684684684,
+          "crps": 1.589858202853092,
+          "p25_coverage": 0.5045045045045045,
+          "p90_coverage": 0.8648648648648649
+        },
+        "calibrated": {
+          "expected_zeros": 32.28078361819915,
+          "expected_negatives": 0.473146743202271,
+          "zero_brier": 0.20739430267109776,
+          "crps": 1.5697405845391734,
+          "p25_coverage": 0.5045045045045045,
+          "p90_coverage": 0.8648648648648649
+        }
+      },
+      "DEF": {
+        "n": 34,
+        "observed_zeros": 1,
+        "observed_negatives": 1,
+        "baseline": {
+          "expected_zeros": 0.0,
+          "expected_negatives": 0.0,
+          "zero_brier": 0.029411764705882353,
+          "crps": 2.3728817915346165,
+          "p25_coverage": 0.35294117647058826,
+          "p90_coverage": 0.9705882352941176
+        },
+        "calibrated": {
+          "expected_zeros": 0.6578865578865579,
+          "expected_negatives": 2.334798478436419,
+          "zero_brier": 0.029850891689983977,
+          "crps": 2.373593736511067,
+          "p25_coverage": 0.29411764705882354,
+          "p90_coverage": 1.0
+        }
+      }
+    },
+    "maximum_mean_preservation_error": 1.7763568394002505e-15,
+    "maximum_score_correlation_adjustment": 2.5396351688300456e-14,
+    "correlation_groups": 28,
+    "correlation_groups_target_inside_interval": 27,
+    "correlation_policy": "Historical correlation targets retained, with attainable-range/PSD repair; diagnostics do not justify an unconstrained refit from 17 games.",
+    "limitations": [
+      "Correlations pool standardized forecast residuals for players projected at least 2 FP; pairs share games.",
+      "Correlation intervals resample whole games, not pairs; exploratory across many relationships.",
+      "OOF here excludes every evaluated game in the decision block from its calibration; the research design still followed inspection of this season."
+    ],
+    "paired_forecast_score_changes": {
+      "zero_brier": {
+        "calibrated_minus_baseline": -0.04864362370497469,
+        "game_bootstrap_95": [
+          -0.05913905484803721,
+          -0.03799148009865574
+        ],
+        "lower_is_better": true
+      },
+      "crps": {
+        "calibrated_minus_baseline": -0.005984135418054594,
+        "game_bootstrap_95": [
+          -0.025658573492495566,
+          0.01469223163382573
+        ],
+        "lower_is_better": true
+      }
+    }
+  },
+  "portfolio_comparison_summary": {
+    "games": 17,
+    "seeds": [
+      356,
+      357,
+      358,
+      359,
+      360,
+      361,
+      362,
+      363,
+      364,
+      365
+    ],
+    "entries": 20,
+    "baseline_vs_calibrated": {
+      "0.75/0.25": {
+        "baseline_actual_best": 93.94988235294117,
+        "calibrated_actual_best": 93.7384705882353,
+        "calibrated_minus_baseline": -0.21141176470588277,
+        "game_bootstrap_95": [
+          -1.1814955882352953,
+          0.7246470588235286
+        ],
+        "game_wins": 7,
+        "game_ties": 0,
+        "game_losses": 10,
+        "positive_seed_means": 5,
+        "seed_mean_range": [
+          -1.280000000000002,
+          0.8464705882352942
+        ]
+      },
+      "1/0.25": {
+        "baseline_actual_best": 94.23370588235294,
+        "calibrated_actual_best": 94.1495294117647,
+        "calibrated_minus_baseline": -0.08417647058823606,
+        "game_bootstrap_95": [
+          -0.9312985294117663,
+          0.7314720588235283
+        ],
+        "game_wins": 6,
+        "game_ties": 0,
+        "game_losses": 11,
+        "positive_seed_means": 5,
+        "seed_mean_range": [
+          -1.1652941176470581,
+          1.3682352941176448
+        ]
+      },
+      "0.75/1": {
+        "baseline_actual_best": 94.82005882352941,
+        "calibrated_actual_best": 94.05858823529411,
+        "calibrated_minus_baseline": -0.7614705882352942,
+        "game_bootstrap_95": [
+          -1.654941176470588,
+          0.11123676470588205
+        ],
+        "game_wins": 6,
+        "game_ties": 0,
+        "game_losses": 11,
+        "positive_seed_means": 2,
+        "seed_mean_range": [
+          -1.9500000000000028,
+          0.14000000000000057
+        ]
+      },
+      "1/1": {
+        "baseline_actual_best": 95.17647058823529,
+        "calibrated_actual_best": 94.41582352941177,
+        "calibrated_minus_baseline": -0.7606470588235296,
+        "game_bootstrap_95": [
+          -1.675073529411765,
+          0.0948897058823524
+        ],
+        "game_wins": 5,
+        "game_ties": 0,
+        "game_losses": 12,
+        "positive_seed_means": 2,
+        "seed_mean_range": [
+          -2.8370588235294103,
+          1.0199999999999994
+        ]
+      }
+    },
+    "calibrated_exposure_vs_defaults": {
+      "1/0.25": {
+        "lift": 0.41105882352941175,
+        "game_bootstrap_95": [
+          -0.1940014705882355,
+          1.1867676470588246
+        ],
+        "positive_seed_means": 9,
+        "game_wins": 10,
+        "game_ties": 0,
+        "game_losses": 7
+      },
+      "0.75/1": {
+        "lift": 0.3201176470588234,
+        "game_bootstrap_95": [
+          -0.2518823529411761,
+          0.9158926470588216
+        ],
+        "positive_seed_means": 8,
+        "game_wins": 8,
+        "game_ties": 4,
+        "game_losses": 5
+      },
+      "1/1": {
+        "lift": 0.6773529411764706,
+        "game_bootstrap_95": [
+          -0.12466029411764827,
+          1.5414749999999995
+        ],
+        "positive_seed_means": 9,
+        "game_wins": 9,
+        "game_ties": 0,
+        "game_losses": 8
+      }
+    },
+    "interpretation": "Expanding historical calibration; same frozen means, pool and prices; exploratory, no untouched future outcomes."
+  },
+  "replay_manifest": {
+    "base_commit": "566f78628508c4bdfa45abb6db5fd93f64fe48a0",
+    "worker_sha256": "7b28993e2a6458a911d35fdda34a183bc61dceabab05787e963612946a757ec0",
+    "calibration_sha256": "69bba564ef736512494f416191f42a093a599f2639ea1604a2004fdf829da4c1",
+    "seeds": [
+      356,
+      357,
+      358,
+      359,
+      360,
+      361,
+      362,
+      363,
+      364,
+      365
+    ],
+    "games": 17,
+    "settings": [
+      "0.75/0.25",
+      "1/0.25",
+      "0.75/1",
+      "1/1"
+    ],
+    "entries": 20,
+    "validation": "Expanding chronological fits; minimum 24h after each training kickoff; no target game in fit.",
+    "unchanged": "Archived player means, modeled player pool and contest salary data.",
+    "final_worker_sha256": "d62e9a1f362448fa56d0362f85a25a789031d8ecd7b90a7c02cd9e54032852b7",
+    "final_calibration_sha256": "a26536637a78fb0c99fc7c353d06f3421ecb7f4232fc152591fc34bab36a8977",
+    "implementation_note": "Finite/domain validation guards were added during the run; score transforms, fit values and selection calculations were unchanged. Selected entries are retained."
+  }
+}

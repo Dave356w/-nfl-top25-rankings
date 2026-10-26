@@ -6,6 +6,7 @@ import tempfile
 import unittest
 import pandas as pd
 from pipeline import projection_archive as archive
+from pipeline import notebook as nb
 
 
 def snapshot(captured='2026-09-13T16:00:00Z',mean=10):
@@ -16,6 +17,16 @@ def snapshot(captured='2026-09-13T16:00:00Z',mean=10):
 
 
 class ProjectionArchiveTests(unittest.TestCase):
+    def test_capture_preserves_role_exclusions_and_sleeper_inputs(self):
+        player=dict(Name='Example',Team='KC',Position='WR',Depth_Rank=1,
+                    **{'Yahoo ID':1,'Game ID':'g','Game Time':'2026-09-13T17:00:00Z'},
+                    Projected_FP=10.,Projection_Source='Sleeper',Salary=20.)
+        prepared=dict(players=pd.DataFrame([player]),backup_qbs_removed=['Backup'],excluded=['Bench'],
+                      raw_inputs={'sleeper_players':{'p':{'fantasy_positions':['WR']}}})
+        got=archive.capture(prepared,nb.CFG,'test',[])
+        self.assertEqual(got['role_filters'],dict(backup_qbs_removed=['Backup'],excluded=['Bench']))
+        self.assertIn('sleeper_players',got['raw_inputs'])
+
     def actuals(self):
         return pd.DataFrame([dict(game_id='g',player_key='yahoo:1',actual_fp=12,
             realized_at_utc='2026-09-13T21:00:00Z')])
