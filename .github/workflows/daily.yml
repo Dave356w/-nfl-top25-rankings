@@ -12,13 +12,14 @@ on:
     inputs:
       top_n:
         description: "Players published per position"
-        default: "25"
+        default: "50"
         required: false
   push:
     branches: [main]
     paths:
       - "site/**"
       - "pipeline/**"
+      - "model/zero_score_calibration.json"
       - "market_audit.py"
       - "lineup_optimizer.py"
       - "run_lineup.py"
@@ -61,7 +62,7 @@ jobs:
           key: sleeper-players-${{ steps.day.outputs.utc }}
 
       - name: Build synchronized rankings, lineup and Showdown
-        run: python run_synced.py --top-n "${{ inputs.top_n || '25' }}"
+        run: python run_synced.py --top-n "${{ inputs.top_n || '50' }}"
 
       - name: Commit today's synchronized data
         run: |

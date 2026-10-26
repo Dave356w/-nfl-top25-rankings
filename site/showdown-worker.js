@@ -240,9 +240,28 @@ function hurdleScoreCorrelation(latent, cv, zero, n) {
 
 /* ---------- simulation --------------------------------------------------- */
 
+function signedHurdleScore(latent, marginal) {
+  const u = normalCdf(latent), pn = marginal.negative_probability, p0 = marginal.zero_probability;
+  if (u < pn) return marginal.negative_value;
+  if (u < pn + p0) return 0;
+  return marginal.positive_scale * Math.exp(normalPpf((u - pn - p0) / (1 - pn - p0)) *
+    marginal.positive_sigma - 0.5 * marginal.positive_sigma ** 2);
+}
+
 function simulate(simulations, seed) {
   const players = model.players;
   const n = players.length;
+  for (const player of players) {
+    if (!player.marginal) continue;
+    const m = player.marginal;
+    if (![m.negative_probability, m.zero_probability, m.negative_value,
+      m.positive_sigma, m.positive_scale].every(Number.isFinite) ||
+      m.negative_probability < 0 || m.zero_probability < 0 ||
+      m.negative_probability + m.zero_probability >= 1 ||
+      m.negative_value >= 0 || m.positive_sigma <= 0 || m.positive_scale <= 0) {
+      throw new Error("Invalid calibrated signed-score marginal.");
+    }
+  }
   const cv = Float64Array.from(players, (p) => p.cv);
   const means = Float64Array.from(players, (p) => p.fp);
   // An older payload has no fitted zero rate; treating it as 0 reproduces the
@@ -268,7 +287,9 @@ function simulate(simulations, seed) {
       const row = i * n;
       for (let k = 0; k <= i; k++) correlated += root[row + k] * draws[k];
       const half = 0.5 * sigma[i] * sigma[i];
-      if (zero[i] > 0) {
+      if (players[i].marginal) {
+        out[i * simulations + s] = signedHurdleScore(correlated, players[i].marginal);
+      } else if (zero[i] > 0) {
         const uniform = normalCdf(correlated);
         out[i * simulations + s] = uniform < zero[i] ? 0
           : scale[i] * Math.exp(normalPpf((uniform - zero[i]) / (1 - zero[i])) * sigma[i] - half);
@@ -278,6 +299,15 @@ function simulate(simulations, seed) {
     }
   }
 
+  if (players.some((p) => p.marginal)) {
+    if (!players.every((p) => p.marginal) || !Array.isArray(model.calibrated_covariance) ||
+        model.calibrated_covariance.length !== n * n || !model.calibrated_covariance.every(Number.isFinite)) {
+      throw new Error("A calibrated model requires every marginal and its validated covariance matrix.");
+    }
+    covariance = Float64Array.from(model.calibrated_covariance);
+    scenarios = out; simCount = simulations; simSeed = seed;
+    return;
+  }
   const score = hurdleScoreCorrelation(latent, cv, zero, n);
   covariance = new Float64Array(n * n);
   for (let i = 0; i < n; i++) {
@@ -1067,6 +1097,7 @@ function portfolio(scored, order, options) {
  *    five with a different Superstar is a different entry.
  */
 const LAB_DEFAULTS = { maxPlayerExposure: 0.75, maxSuperstarExposure: 0.25 };
+const TOURNAMENT_DEFAULTS = { maxPlayerExposure: 1, maxSuperstarExposure: 1 };
 
 function labLimits(entries, options) {
   return {
@@ -1510,7 +1541,9 @@ const TOURNAMENT_MAX_ENTRIES = 150;
  * and there is no cap on players shared between entries. */
 function engineOptions(request, settings = model.settings || {}) {
   const contest = request.contest === "h2h" ? "h2h" : "tournament";
-  const detail = DETAIL[request.detail] || (request.detail === "full"
+  const requestedDetail = request.detail || "full";
+  const defaults = contest === "tournament" ? TOURNAMENT_DEFAULTS : LAB_DEFAULTS;
+  const detail = DETAIL[requestedDetail] || (requestedDetail === "full"
     ? { simulations: settings.simulations, candidates: settings.max_candidate_lineups }
     : DETAIL.standard);
   const share = (value, fallback) => {
@@ -1535,8 +1568,8 @@ function engineOptions(request, settings = model.settings || {}) {
     constructionRules: [],
     // Tournament entries cover the scenarios; head-to-head ranks on the mean.
     objective: tournament ? "portfolio" : "expected",
-    maxPlayerExposure: share(request.maxPlayerExposure, LAB_DEFAULTS.maxPlayerExposure),
-    maxSuperstarExposure: share(request.maxSuperstarExposure, LAB_DEFAULTS.maxSuperstarExposure),
+    maxPlayerExposure: share(request.maxPlayerExposure, defaults.maxPlayerExposure),
+    maxSuperstarExposure: share(request.maxSuperstarExposure, defaults.maxSuperstarExposure),
   };
 }
 
@@ -1623,7 +1656,7 @@ if (typeof module !== "undefined" && module.exports) {
     LINEUP_SIZE, WORKER_PROTOCOL, LAB_DEFAULTS, exposureLimit, labLimits, labTracker, lookaheadPick,
     allPairs, exactSelect, setSolver, scenarioPortfolio, setModel, simulate,
     enumerate, screen, score, orderBy, portfolio, describe, diversity, latentMatrix,
-    cholesky, scoreCorrelation, normalCdf, normalPpf, conditionalCv, hurdleCoefficients,
+    cholesky, scoreCorrelation, normalCdf, normalPpf, conditionalCv, hurdleCoefficients, signedHurdleScore,
     hurdleScoreCorrelation, constructionSchedule, apportionedRuleCounts,
     matchesConstructionRule, h2hMultiEntry, topPairs, engineOptions, solve,
     covarianceMatrix: () => covariance,

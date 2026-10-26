@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "family": "eligible_pool_zero_only_v1",
+  "cutoff_utc": "2026-10-26T21:15:34.626557+00:00",
+  "last_training_kickoff": "2026-10-25T06:30:00-07:00",
+  "training_games": [
+    "nfl.g.13593415",
+    "nfl.g.13593421",
+    "nfl.g.13593435",
+    "nfl.g.13593450",
+    "nfl.g.13593451",
+    "nfl.g.13593452",
+    "nfl.g.13593453",
+    "nfl.g.13593490",
+    "nfl.g.13593502",
+    "nfl.g.13593554",
+    "nfl.g.13593555",
+    "nfl.g.13593556",
+    "nfl.g.13593559",
+    "nfl.g.13593560",
+    "nfl.g.13593617",
+    "nfl.g.13593618",
+    "nfl.g.13593619",
+    "nfl.g.13593623",
+    "nfl.g.13593624",
+    "nfl.g.13593625",
+    "nfl.g.13593677",
+    "nfl.g.13593678"
+  ],
+  "training_rows": 586,
+  "prior_strength": 20.0,
+  "zero": {
+    "QB": {
+      "1": 0.004375,
+      "2": 0.259,
+      "3": 0.259,
+      "4": 0.259
+    },
+    "RB": {
+      "1": 0.001875,
+      "2": 0.14032786885245901,
+      "3": 0.2652,
+      "4": 0.45142857142857146
+    },
+    "WR": {
+      "1": 0.0375,
+      "2": 0.049523809523809526,
+      "3": 0.2617241379310345,
+      "4": 0.4567567567567568
+    },
+    "TE": {
+      "1": 0.030625,
+      "2": 0.40984126984126984,
+      "3": 0.4956190476190476,
+      "4": 0.4956190476190476
+    },
+    "DEF": {
+      "1": 0.015625,
+      "2": 0.015625,
+      "3": 0.015625,
+      "4": 0.015625
+    }
+  },
+  "cv": {
+    "QB": {
+      "1": 0.47557806659500157,
+      "2": 0.922,
+      "3": 0.922,
+      "4": 0.922
+    },
+    "RB": {
+      "1": 0.6715315957068299,
+      "2": 1.0439055759442106,
+      "3": 1.4047599170695806,
+      "4": 1.6886748209888331
+    },
+    "WR": {
+      "1": 0.7141352049220727,
+      "2": 0.8070115802026401,
+      "3": 1.2317619706577692,
+      "4": 1.7681000145474761
+    },
+    "TE": {
+      "1": 0.866754069887198,
+      "2": 1.734090071263749,
+      "3": 2.2637643989109013,
+      "4": 2.2637643989109013
+    },
+    "DEF": {
+      "1": 0.9657631245281695,
+      "2": 0.9657631245281695,
+      "3": 0.9657631245281695,
+      "4": 0.9657631245281695
+    }
+  },
+  "source": "Exact archived pregame eligible pools matched to Yahoo settled points.",
+  "method": "Unconditional zero probabilities by position/depth, beta shrinkage and weighted monotonic pooling. Preserve legacy positive conditional shape and unconditional means; recalculate total CV.",
+  "limitations": [
+    "This is zero-only calibration; signed-score and positive-tail refits remain research-only.",
+    "Negative outcomes remain unsupported by this production distribution.",
+    "Future validation is required; portfolio ROI has not been established."
+  ]
+}

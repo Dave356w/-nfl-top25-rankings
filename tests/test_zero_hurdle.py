@@ -65,10 +65,10 @@ class TableTests(unittest.TestCase):
                     f"{position}{bucket}: cv {cv} cannot carry a {rate} zero rate",
                 )
 
-    def test_a_defense_carries_no_hurdle(self):
-        # Weekly player stats have no DST scoring, so nothing is fitted, and a
-        # defense can also score negative, which this model does not represent.
-        self.assertEqual(set(nb.ZERO_RATE["DEF"].values()), {0.0})
+    def test_defense_uses_the_eligible_pool_zero_calibration(self):
+        self.assertEqual(set(nb.LEGACY_ZERO_RATE["DEF"].values()), {0.0})
+        self.assertGreater(nb.ZERO_RATE["DEF"][1],0.)
+        self.assertEqual(len(set(nb.ZERO_RATE["DEF"].values())),1)
 
     def test_deeper_players_are_scoreless_more_often(self):
         for position in ("RB", "WR", "TE"):

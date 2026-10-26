@@ -254,8 +254,8 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
               <label for="detail">Accuracy</label>
               <select id="detail">
                 <option value="quick">Quick</option>
-                <option value="standard" selected>Standard</option>
-                <option value="full">Full (matches the published run; slower)</option>
+                <option value="standard">Standard</option>
+                <option value="full" selected>Full (matches the published run; slower)</option>
               </select>
             </div>
           </details>
@@ -297,9 +297,10 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
     <div class="panel-body">
       <h4>Rules for every entry</h4>
       <p>Every lineup fits the salary cap and Yahoo's roster rules, uses only the
-        players you left in, and uses your depth edits. By default no player is in
-        more than 75% of your entries and no Superstar in more than 25% (rounded
-        down, at least one). There is no limit on how many players two entries
+        players you left in, and uses your depth edits. Tournament exposure defaults
+        to 1 / 1, allowing any player or Superstar in every entry. Head-to-head
+        defaults to 75% player and 25% Superstar exposure (rounded down, at least
+        one). Full accuracy is selected by default. There is no limit on how many players two entries
         share; the only repeat that is skipped is the same five players with the
         same Superstar. When the limits cannot fill every entry, the page shows
         the ones that fit.</p>
@@ -346,8 +347,9 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
   var DEPTH_POSITIONS = ["QB", "RB", "WR", "TE"];
   var DEPTH_KEY = "nfl-showdown-depth-v1";
   var THEME_KEY = "nfl-top25-theme";
-  // Both contests share these; keep in step with showdown-worker.js LAB_DEFAULTS.
+  // Head-to-head retains its existing caps; tournament exposure is unrestricted.
   var EXPOSURE = { player: 0.75, superstar: 0.25 };
+  var TOURNAMENT_EXPOSURE = { player: 1, superstar: 1 };
   var CONTESTS = {
     h2h: {
       entries: 3, max: 50, title: "Head-to-head",
@@ -479,10 +481,11 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
 
   /* ---------- setup controls ---------- */
   function applyContestDefaults() {
+    var exposure = state.contest === "tournament" ? TOURNAMENT_EXPOSURE : EXPOSURE;
     el("entries").value = state.entries[state.contest];
     el("entries").max = CONTESTS[state.contest].max;
-    el("player-exposure").value = EXPOSURE.player;
-    el("superstar-exposure").value = EXPOSURE.superstar;
+    el("player-exposure").value = exposure.player;
+    el("superstar-exposure").value = exposure.superstar;
     el("contest-hint").textContent = CONTESTS[state.contest].hint;
   }
 

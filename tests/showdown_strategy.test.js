@@ -125,8 +125,8 @@ test('engine options: both contests share the lab rules, the published settings 
   w.setModel(game);
   const tournament = w.engineOptions({contest: 'tournament', entries: 20, salaryCap: 120, detail: 'full'});
   assert.equal(tournament.objective, 'portfolio');
-  assert.equal(tournament.maxPlayerExposure, .75);   // not the published run's .5
-  assert.equal(tournament.maxSuperstarExposure, .25); // not the published run's .35
+  assert.equal(tournament.maxPlayerExposure, 1);
+  assert.equal(tournament.maxSuperstarExposure, 1);
   assert.equal(tournament.maxShared, null);           // no overlap limit
   assert.deepEqual(tournament.constructionRules, []);
   assert.equal(tournament.simulations, 2000);
@@ -135,7 +135,7 @@ test('engine options: both contests share the lab rules, the published settings 
   assert.equal(h2h.maxPlayerExposure, .75);
   assert.equal(h2h.maxSuperstarExposure, .25);
   assert.equal(h2h.maxShared, null);
-  assert.equal(h2h.simulations, 10000);          // standard is the default detail
+  assert.equal(h2h.simulations, 2000);           // full repeats this fixture's published count
   assert.equal(w.engineOptions({contest: 'h2h', detail: 'quick'}).simulations, 5000);
   assert.equal(w.engineOptions({contest: 'h2h', maxSuperstarExposure: .5}).maxSuperstarExposure, .5);
 });
@@ -150,7 +150,7 @@ test('solve refuses requests it cannot answer, in words a visitor can act on', (
 });
 
 // The rules every lab entry obeys, whichever contest built it.
-function assertLabRules(result, included = game.players.map((_, i) => i), shares = {player: .75, superstar: .25}) {
+function assertLabRules(result, included = game.players.map((_, i) => i), shares = result.contest === 'tournament' ? {player: 1, superstar: 1} : {player: .75, superstar: .25}) {
   const {player, superstar} = result.limits;
   assert.equal(player, Math.max(1, Math.floor(result.requested * shares.player + 1e-9)));
   assert.equal(superstar, Math.max(1, Math.floor(result.requested * shares.superstar + 1e-9)));
@@ -324,7 +324,7 @@ test('tournament: entries follow the lab rules with no overlap limit', () => {
   assert.equal(result.requested, 20);
   assert.equal(result.filled, 20);
   assert.equal(result.entries.length, result.filled);
-  assert.deepEqual(result.limits, {player: 15, superstar: 5});
+  assert.deepEqual(result.limits, {player: 20, superstar: 20});
   assertLabRules(result);
   // The published run caps shared players at three; the lab does not.
   assert.ok(result.diversity.max_shared > 3, `max shared ${result.diversity.max_shared}`);
@@ -374,7 +374,7 @@ test('tournament: the swap pass raises the selection score and keeps the rules',
 test('tournament: a short list comes back when the limits run out', () => {
   const result = solve({contest: 'tournament', entries: 20, maxPlayerExposure: .1});
   assert.ok(result.filled >= 1 && result.filled < 20);
-  assertLabRules(result, undefined, {player: .1, superstar: .25});
+  assertLabRules(result, undefined, {player: .1, superstar: 1});
 });
 
 test('tournament: one entry is the highest-expected lineup', () => {

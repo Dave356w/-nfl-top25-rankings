@@ -88,6 +88,19 @@ class PlayersFrameTests(unittest.TestCase):
     def test_only_fantasy_positions_are_kept(self):
         self.assertNotIn("111", self.frame.index)
 
+    def test_two_way_and_fullback_fantasy_eligibility_is_retained(self):
+        raw = {
+            "a": {"position":"DB", "fantasy_positions":["DB","WR"], "full_name":"Two Way", "team":"JAX"},
+            "b": {"position":"FB", "fantasy_positions":["RB"], "full_name":"Full Back", "team":"DAL"},
+            "c": {"position":"DB", "fantasy_positions":["DB"], "full_name":"Defender", "team":"JAX"},
+            "d": {"position":"DB", "fantasy_positions":["RB","WR"], "full_name":"Ambiguous", "team":"JAX"},
+        }
+        frame=sleeper.players_frame(raw).set_index("player_id")
+        self.assertEqual(frame.loc['a','Position'],'WR')
+        self.assertEqual(frame.loc['b','Position'],'RB')
+        self.assertNotIn('c',frame.index)
+        self.assertNotIn('d',frame.index)
+
     def test_a_defense_is_keyed_by_its_team_code(self):
         self.assertEqual(self.frame.loc["KC", "Position"], "DEF")
         self.assertEqual(self.frame.loc["KC", "Team"], "KC")

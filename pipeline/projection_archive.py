@@ -52,6 +52,8 @@ def capture(prepared, cfg, snapshot_id, showdown_payloads):
         code_sha256=digest.hexdigest(),settings=asdict(cfg),predictions=rows,
         projection_model=prepared.get('projection_model',{}),
         availability_removed=json.loads(prepared.get('availability_removed',pd.DataFrame()).to_json(orient='records',date_format='iso')),
+        role_filters=dict(backup_qbs_removed=prepared.get('backup_qbs_removed',[]),
+                          excluded=prepared.get('excluded',[])),
         showdown_models=showdown_payloads,
         raw_inputs=prepared.get('raw_inputs',{})))
 

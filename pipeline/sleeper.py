@@ -184,7 +184,13 @@ def players_frame(raw: dict) -> pd.DataFrame:
             continue
         position = str(p.get("position") or "").upper()
         if position not in POSITIONS:
-            continue
+            # Two-way players and fullbacks can have a non-fantasy primary
+            # position while still being eligible in an offensive fantasy slot.
+            eligible = [str(value).upper() for value in (p.get("fantasy_positions") or [])
+                        if str(value).upper() in POSITIONS]
+            if len(set(eligible)) != 1:
+                continue  # no supported slot, or ambiguous eligibility
+            position = eligible[0]
         if position == "DEF":
             name = f"{p.get('first_name') or ''} {p.get('last_name') or ''}".strip() or str(pid)
             team = normalize_team(p.get("team") or pid)
@@ -215,10 +221,10 @@ def players_frame(raw: dict) -> pd.DataFrame:
 def build_reference(players: pd.DataFrame, projections: pd.DataFrame) -> pd.DataFrame:
     """Attach Sleeper's depth and projection to every Sleeper player.
 
-    Injuries are Sleeper's call, made inside its projection: a player it does not
-    expect to play is projected at zero or not at all, and his backup's
-    projection rises. So there is no separate injury filter here; `Projected` is
-    the availability test, and the injury designation is carried for display.
+    `Projected` means the feed supplied a positive mean. This is the inclusion
+    rule, not a guarantee that the player participates or receives an opportunity.
+    The injury designation is carried for display. The scoring distribution must
+    still represent unconditional zero outcomes among included players.
 
     Depth is Sleeper's chart as published. ``Role_Tier`` is the rank within the
     player's alignment slot and ``Depth_Rank`` the flat opportunity rank within
@@ -337,10 +343,17 @@ def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30):
     state = fetch_state(timeout)
     raw_players, fetched_utc = fetch_players(cache_dir, max(timeout, 60))
     players = players_frame(raw_players)
-    context, projections = resolve_week(state, slate_teams, players=players)
+    captured_projections = {}
+    def capture_projection(season, week, season_type):
+        raw = fetch_projections(season, week, season_type)
+        captured_projections[f"{season_type}/{season}/{week}"] = raw
+        return raw
+    context, projections = resolve_week(state, slate_teams, players=players, fetch=capture_projection)
     if projections.empty:
         raise SleeperError(
             f"Sleeper has no projections for {context['season']} week {context['week']}")
     reference = build_reference(players, projections)
     context.update(players_fetched_utc=fetched_utc, state=state)
+    context["raw_inputs"] = {"sleeper_state": state, "sleeper_players": raw_players,
+                             "sleeper_projections": captured_projections}
     return reference, context

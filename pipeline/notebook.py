@@ -65,7 +65,7 @@ class Settings:
     max_enumeration_players: int = 36
 
     # This is a strategy filter, not a Yahoo rule. Leave it off by default: the
-    # 50% exposure cap needs a broad enough roster pool to complete 20 entries.
+    # Tight exposure caps need a broad enough roster pool to complete 20 entries.
     # The candidate objective still ranks cheap weak rosters on their merits.
     min_salary_used_pct: float = 0.0
     candidate_ceiling_weight: float = 0.85
@@ -75,10 +75,10 @@ class Settings:
     # entries that differ by a single player; the v3.1 default produced 19 such pairs
     # out of 190 on the NE-SEA slate. Lowered to 3 so every pair of entries differs by
     # at least two players. The diversity report prints the overlap actually used.
-    # Twenty entries therefore allow each player at most 10 times and each
-    # Superstar at most 7 times. exposure_limit deliberately rounds down.
-    max_player_exposure: float = 0.50
-    max_superstar_exposure: float = 0.35
+    # Exposure defaults permit every requested entry; custom fractions are
+    # deliberately rounded down by exposure_limit.
+    max_player_exposure: float = 1.0
+    max_superstar_exposure: float = 1.0
     max_shared_players: int = 3
     use_construction_quotas: bool = False
     showdown_objective: str = "auto"
@@ -863,12 +863,13 @@ CALIBRATED_CV = {
 # tools/calibrate_zero_rate.py over 2016-2025 nflverse weekly stats, on the same
 # population CALIBRATED_CV was fitted on.
 #
-# Scope is deliberate. A game with no carry, target or pass attempt is *excluded*
-# from both numerator and denominator, because that is usually a player who was
-# inactive, which is handled separately by the Sleeper roster and injury filter.
-# Counting those games here would mix availability into the conditional scoring
-# distribution. What is left is the pure
-# shape effect: a WR4 who plays, runs his routes and is never thrown to.
+# The historical fit excludes games without a carry, target or pass attempt.
+# This is conditional on recorded opportunity, not on taking the field: active
+# receivers can run routes without a target. A positive Sleeper projection does
+# not guarantee participation or opportunity. These legacy rates therefore
+# understate unconditional scoreless risk in the pregame eligible pool. Retain
+# them as the reproducible baseline; calibrated candidates fit the eligible-pool
+# population and are evaluated separately before promotion.
 #
 # Sample sizes are the played-game counts behind each entry. QB3+ falls back to
 # QB2 and TE4 to TE3, matching CALIBRATED_CV's own fallbacks. RB4's 186 games are
@@ -885,6 +886,16 @@ ZERO_RATE = {
     "TE": {1: 0.048, 2: 0.141, 3: 0.176, 4: 0.176},  # 4,874 / 2,502 / 499
     "DEF": {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0},
 }
+
+# Preserve the historical constants for reproducible research fits. Production
+# uses an eligible-pool zero-only fit; positive conditional shape and means stay
+# fixed while total CV changes consistently with the new zero probability.
+LEGACY_CALIBRATED_CV = {p: dict(v) for p,v in CALIBRATED_CV.items()}
+LEGACY_ZERO_RATE = {p: dict(v) for p,v in ZERO_RATE.items()}
+from pipeline.zero_calibration import load as _load_zero_calibration
+ZERO_CALIBRATION, CALIBRATED_CV, ZERO_RATE = _load_zero_calibration(
+    Path(__file__).resolve().parents[1]/'model/zero_score_calibration.json',
+    LEGACY_CALIBRATED_CV, LEGACY_ZERO_RATE)
 
 QB_WR_CORR = {1: 0.217, 2: 0.171, 3: 0.129, 4: 0.076}
 QB_TE_CORR = {1: 0.152, 2: 0.085, 3: 0.072, 4: 0.060}
@@ -2445,7 +2456,7 @@ def prepare_slate_pool(cfg=None, purpose=""):
     players = players[~players["Name"].isin(excluded)].copy()
     return {
         "players": players.reset_index(drop=True),
-        "raw_inputs": {"yahoo": payload},
+        "raw_inputs": {"yahoo": payload, **context.get("raw_inputs", {})},
         "projection_model": {"source": "sleeper", **{
             k: context[k] for k in ("season", "week", "season_type", "players_fetched_utc")}},
         "sleeper_context": context,
@@ -2459,7 +2470,7 @@ def prepare_slate_pool(cfg=None, purpose=""):
 
 
 def run_position_rankings(
-    top_n=25,
+    top_n=50,
     cfg=None,
     positions=VALID_POSITIONS,
     export_csv=True,
