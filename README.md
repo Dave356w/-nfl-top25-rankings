@@ -1,6 +1,6 @@
-# NFL Top 25 by Position
+# NFL Top 50 by Position
 
-A daily rebuild of the Yahoo NFL full-slate top-25 rankings for QB, RB, WR, TE
+A daily rebuild of the Yahoo NFL full-slate top-50 rankings for QB, RB, WR, TE
 and DEF, published as a static web page. GitHub Actions runs the pipeline once
 a day; GitHub Pages serves the result.
 
@@ -273,7 +273,7 @@ from the published projections. It asks four things: the **game**, the
 **contest** (head-to-head or tournament), the number of **entries**, and — only
 for a game Yahoo has not priced yet — the **salary cap**. A collapsed
 *Advanced* section holds the two exposure limits and an accuracy setting
-(*Quick*, *Standard*, or *Full*, which repeats the published run's scenario and
+(*Quick*, *Standard*, or the default *Full*, which repeats the published run's scenario and
 candidate counts). The player list lets you leave players out and edit depth
 (see [Editing depth on the pages](#editing-depth-on-the-pages)). The result is a
 four-number summary, one sentence on how the entries were chosen, and the
@@ -284,10 +284,9 @@ entries themselves.
 1. Every lineup comes from the run's own enumeration, so the salary cap,
    Yahoo's roster rules, the position limits, your exclusions and your depth
    edits always hold.
-2. No player is in more than *Max player exposure* of the entries (default
-   0.75) and no Superstar in more than *Max Superstar exposure* (default 0.25),
-   each rounded down with a minimum of one. The published run's 50% / 35%
-   portfolio settings do not apply to the page.
+2. Tournament exposure defaults to **1 / 1**, so each player or Superstar may
+   appear in every entry. Head-to-head retains 0.75 / 0.25. Custom limits round
+   down with a minimum of one appearance.
 3. There is no limit on how many players two entries share. The only repeat
    that is refused is an exact one: the same five players with the same
    Superstar. The same five with a different Superstar is a different entry.
@@ -612,10 +611,11 @@ cheap weak rosters on their merits; raise the slider only deliberately.
 ### Showdown selection controls
 
 Exposure shares round down to whole appearances among the requested entries.
-In the daily run, the tournament's 50% player cap permits 10 of 20 entries and
-the 35% Superstar cap 7 of 20; a single entry bypasses both. The lineup lab
-uses 75% and 25% instead (15 and 5 of 20), with a minimum of one appearance and
-no cap on shared players.
+The daily tournament run and browser tournament both default to 1 / 1 exposure.
+The browser defaults to Full accuracy (the published settings: 20,000 scenarios
+and a 25,000-candidate setting). Head-to-head retains 75% / 25% exposure. Custom
+limits round down with a minimum of one appearance. The browser has no cap on
+shared players; the server reference retains its existing overlap setting.
 
 The daily run's position limits (QB 0-2, RB 0-2, WR 0-3, TE 0-2, DEF 0-1) and
 salary floor apply on the page too; Yahoo itself imposes no position limits.
@@ -650,6 +650,20 @@ late inactive news can still arrive after the NFLVerse snapshot.
 
 ### Zero scores
 
+The default is now **zero-only eligible-pool calibration**, recorded in
+`model/zero_score_calibration.json`. Its training game IDs, cutoff, shrinkage
+strength and rates are retained in that artifact. It uses only already-settled
+games with a 24-hour guard, estimates unconditional zero risk for the pregame
+eligible pool, and pools deeper-role probabilities monotonically. Player means
+and the legacy positive conditional distribution shape are preserved; total CV
+is recalculated from the new zero probability. Python and browser depth edits
+read the same exported tables. The signed-score and positive-tail refit from
+the research replay remains opt-in. This default does not claim an improvement
+in portfolio ROI or represent negative scores.
+
+The original conditional-on-opportunity rates and CVs remain available as
+`LEGACY_ZERO_RATE` and `LEGACY_CALIBRATED_CV` for reproducing the research below.
+
 A mean-preserving lognormal is strictly positive, so the old simulator gave every
 player a floor. Measurement says that was right for starters and badly wrong for
 everyone else. Over 2016-2025, the share of games landing below each player's
@@ -663,22 +677,22 @@ modelled P25 — 25% if the model were calibrated — ran:
 
 Ceilings were fine everywhere: 85-91% of games fell below the modelled P90.
 
-`ZERO_RATE` therefore carries a fitted probability that a player who **took the
-field** still finished on zero, and `hurdle_transform` puts an atom there. Writing
+`LEGACY_ZERO_RATE` was fitted conditional on a recorded carry, target or pass
+attempt. `hurdle_transform` puts an atom at the configured zero rate. Writing
 `p` for that rate and `c` for the CV of the scoring part,
 
 ```
 mean = (1 - p) * (m / (1 - p)) = m          CV^2 = (c^2 + p) / (1 - p)
 ```
 
-so holding `CALIBRATED_CV` fixed pins `c^2 = CV^2 (1 - p) - p`. **The published
-mean and CV do not move.** Only the shape does, with mass taken out of the lower
-body and placed on zero.
+The old model held total CV fixed and solved for the conditional shape. The
+zero-only default instead preserves the legacy conditional shape and the mean,
+then solves this identity for the new total CV.
 
-Scope is the argument. A game with no carry, target or pass attempt is dropped
-from both numerator and denominator, because that is usually a player who was
-inactive and is handled by the availability layer. What is left is the pure usage
-effect: a fourth receiver who dressed, ran his routes and was never thrown to.
+The legacy fit dropped games with no carry, target or pass attempt from both
+numerator and denominator. That is not a reliable participation test: an active
+receiver can run routes without a target. The eligible-pool calibration includes
+those zero outcomes without calling every zero-score player inactive.
 `tools/calibrate_zero_rate.py` reproduces the table and prints both rates so the
 gap is visible.
 
@@ -694,9 +708,9 @@ A pool has about a dozen distinct pairs, so the coefficients are cached and the
 whole inversion costs about 0.1s per game. With every rate set to zero it reduces
 to the old closed form exactly, which the tests pin.
 
-DEF is held at zero throughout: weekly player stats carry no team-defense scoring,
-so nothing is fitted, and a defense can post a negative score, which this model
-does not represent either.
+The legacy DEF zero rate was zero because its training feed lacked team-defense
+scoring. The default artifact now uses settled Yahoo DEF outcomes for its zero
+rate. Negative scores remain unsupported by this zero-only production model.
 
 ### Historical salary model
 

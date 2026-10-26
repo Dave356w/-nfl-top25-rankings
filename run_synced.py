@@ -99,7 +99,7 @@ def validate_page_consistency(
 
 def build_synced_payloads(
     *,
-    top_n: int = 25,
+    top_n: int = 50,
     positions=nb.VALID_POSITIONS,
     roster_path: str | None = None,
     objective: str = lo.LINEUP_OBJECTIVE,
@@ -214,7 +214,7 @@ def build_synced_payloads(
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--top-n", type=int, default=25)
+    parser.add_argument("--top-n", type=int, default=50)
     parser.add_argument("--positions", default=",".join(nb.VALID_POSITIONS))
     parser.add_argument("--roster", default=None)
     parser.add_argument(

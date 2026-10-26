@@ -489,10 +489,12 @@ class RosterRuleTests(unittest.TestCase):
                     for index in chosen
                 ))
 
-    def test_the_strategy_defaults_match_the_archived_roster_review(self):
+    def test_the_strategy_defaults_use_full_accuracy_and_unrestricted_exposure(self):
         self.assertEqual(nb.CFG.min_salary_used_pct, 0.0)
-        self.assertEqual(nb.CFG.max_player_exposure, 0.50)
-        self.assertEqual(nb.CFG.max_superstar_exposure, 0.35)
+        self.assertEqual(nb.CFG.simulations, 20_000)
+        self.assertEqual(nb.CFG.max_candidate_lineups, 25_000)
+        self.assertEqual(nb.CFG.max_player_exposure, 1.0)
+        self.assertEqual(nb.CFG.max_superstar_exposure, 1.0)
         self.assertEqual(nb.CFG.max_shared_players, 3)
         self.assertEqual(nb.CFG.position_limits, {
             "QB": (0, 2), "RB": (0, 2), "WR": (0, 3),

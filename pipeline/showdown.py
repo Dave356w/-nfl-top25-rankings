@@ -181,7 +181,9 @@ def build_game_payload(game_players, game, salary_cap=None, cfg=None, optimize=T
         "latent": upper_triangle(model["latent_corr"]),
         "model": {
             "family": "correlated_zero_hurdle_lognormal",
-            "limitations": ["Zero scores are represented by a fitted played-but-scoreless rate. Players Sleeper does not project this week are removed before modelling; news after the Sleeper snapshot is not represented. Negative scores and discrete scoring components are still not represented."],
+            "zero_calibration": nb.ZERO_CALIBRATION['family'],
+            "zero_calibration_cutoff": nb.ZERO_CALIBRATION['cutoff_utc'],
+            "limitations": ["Zero scores use an eligible-pool calibration. Means and positive conditional shape are preserved; total variance is recalculated. News after the Sleeper snapshot, negative scores and discrete scoring components are not represented."],
             "psd_max_score_adjustment": round(float(model["psd_max_score_adjustment"]), 6),
             "infeasible_pairs": int(model["infeasible_pairs"]),
             "max_infeasible_shift": round(float(model["max_infeasible_shift"]), 6),

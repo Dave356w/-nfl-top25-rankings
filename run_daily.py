@@ -208,8 +208,8 @@ def write_index(data_dir):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--top-n", type=int, default=25,
-                        help="players published per position (default 25)")
+    parser.add_argument("--top-n", type=int, default=50,
+                        help="players published per position (default 50)")
     parser.add_argument("--positions", default=",".join(nb.VALID_POSITIONS),
                         help="comma-separated positions to publish")
     args = parser.parse_args(argv)

@@ -1097,6 +1097,7 @@ function portfolio(scored, order, options) {
  *    five with a different Superstar is a different entry.
  */
 const LAB_DEFAULTS = { maxPlayerExposure: 0.75, maxSuperstarExposure: 0.25 };
+const TOURNAMENT_DEFAULTS = { maxPlayerExposure: 1, maxSuperstarExposure: 1 };
 
 function labLimits(entries, options) {
   return {
@@ -1540,7 +1541,9 @@ const TOURNAMENT_MAX_ENTRIES = 150;
  * and there is no cap on players shared between entries. */
 function engineOptions(request, settings = model.settings || {}) {
   const contest = request.contest === "h2h" ? "h2h" : "tournament";
-  const detail = DETAIL[request.detail] || (request.detail === "full"
+  const requestedDetail = request.detail || "full";
+  const defaults = contest === "tournament" ? TOURNAMENT_DEFAULTS : LAB_DEFAULTS;
+  const detail = DETAIL[requestedDetail] || (requestedDetail === "full"
     ? { simulations: settings.simulations, candidates: settings.max_candidate_lineups }
     : DETAIL.standard);
   const share = (value, fallback) => {
@@ -1565,8 +1568,8 @@ function engineOptions(request, settings = model.settings || {}) {
     constructionRules: [],
     // Tournament entries cover the scenarios; head-to-head ranks on the mean.
     objective: tournament ? "portfolio" : "expected",
-    maxPlayerExposure: share(request.maxPlayerExposure, LAB_DEFAULTS.maxPlayerExposure),
-    maxSuperstarExposure: share(request.maxSuperstarExposure, LAB_DEFAULTS.maxSuperstarExposure),
+    maxPlayerExposure: share(request.maxPlayerExposure, defaults.maxPlayerExposure),
+    maxSuperstarExposure: share(request.maxSuperstarExposure, defaults.maxSuperstarExposure),
   };
 }
 

@@ -26,6 +26,8 @@ def fit(rows, cutoff, prior_strength=PRIOR_STRENGTH):
     if not rows:raise ValueError('Earlier training observations are required')
     negative=[r['actual_yahoo_fp'] for r in rows if r['actual_yahoo_fp']<0]
     global_neg=len(negative)/len(rows)
+    legacy_cv=getattr(nb,'LEGACY_CALIBRATED_CV',nb.CALIBRATED_CV)
+    legacy_zero=getattr(nb,'LEGACY_ZERO_RATE',nb.ZERO_RATE)
     cells={}
     for position in nb.VALID_POSITIONS:
         posrows=[r for r in rows if r['position']==position]
@@ -34,11 +36,11 @@ def fit(rows, cutoff, prior_strength=PRIOR_STRENGTH):
         neg_value=float(np.mean(neg or negative or [-1.0]))
         for depth in range(1,5):
             cell=[r for r in posrows if min(int(r['depth']),4)==depth]
-            p0=(sum(r['actual_yahoo_fp']==0 for r in cell)+prior_strength*nb.ZERO_RATE[position][depth])/(len(cell)+prior_strength)
+            p0=(sum(r['actual_yahoo_fp']==0 for r in cell)+prior_strength*legacy_zero[position][depth])/(len(cell)+prior_strength)
             # Positive-shape residuals must come from the same Sleeper forecast era.
             positives=[r for r in cell if r['cohort']=='sleeper' and r['actual_yahoo_fp']>0 and r['projected_fp']>0]
             logs=np.log([r['actual_yahoo_fp']/r['projected_fp'] for r in positives])
-            prior_sigma2=math.log1p(float(nb.conditional_lognormal_cv(nb.CALIBRATED_CV[position][depth],nb.ZERO_RATE[position][depth]))**2)
+            prior_sigma2=math.log1p(float(nb.conditional_lognormal_cv(legacy_cv[position][depth],legacy_zero[position][depth]))**2)
             sigma2=(float(np.sum((logs-logs.mean())**2)) if len(logs)>1 else 0.0)+prior_strength*prior_sigma2
             sigma2/=max(len(logs)-1,0)+prior_strength
             if p0+neg_prob>=1:raise ValueError('No positive probability remains')

@@ -53,7 +53,7 @@ function makeNode(id) {
 async function page({ routes: extraRoutes = {}, depthModel = false } = {}) {
   const nodes = {}, workers = [];
   const node = (id) => (nodes[id] ||= makeNode(id));
-  node("detail").value = "standard";
+  node("detail").value = html.match(/<option value="([^"]+)" selected>/)[1];
   const radios = ["h2h", "tournament"].map((value) => {
     const radio = node("contest-" + value);
     radio.value = value;
@@ -153,20 +153,21 @@ test("head-to-head is the default and sends only what the visitor chose", async 
   assert.equal(message.type, "solve");
   assert.deepEqual(JSON.parse(JSON.stringify(message.request)), {
     contest: "h2h", entries: 3, included: [0, 1, 2, 3, 4, 5], salaryCap: 100,
-    detail: "standard", maxPlayerExposure: 0.75, maxSuperstarExposure: 0.25,
+    detail: "full", maxPlayerExposure: 0.75, maxSuperstarExposure: 0.25,
   });
   assert.equal(p.node("run").disabled, true);
 });
 
-test("each contest keeps its own entry count; both share the exposure defaults", async () => {
+test("each contest keeps its entry count and tournament defaults to full exposure", async () => {
   const p = await page();
   p.node("entries").value = "7";
   p.node("entries").handlers.change();
   p.contest("tournament");
   assert.equal(p.node("entries").value, 20);
   // The published run's own .5 / .35 settings do not apply to the lab.
-  assert.equal(p.node("player-exposure").value, 0.75);
-  assert.equal(p.node("superstar-exposure").value, 0.25);
+  assert.equal(p.node("player-exposure").value, 1);
+  assert.equal(p.node("superstar-exposure").value, 1);
+  assert.equal(p.node("detail").value, "full");
   assert.match(p.node("results-title").textContent, /Tournament/);
   assert.equal(p.run().request.contest, "tournament");
   p.contest("h2h");
