@@ -1,16 +1,16 @@
 slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,injury,unavailable,review
-QB,Dak Prescott,QB,DAL,ARI,2026-11-01 18:00,22.09,14.54,35.9,34.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
-RB,James Cook III,RB,BUF,BAL,2026-11-01 18:00,15.44,8.46,28.08,37.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
+QB,Dak Prescott,QB,DAL,ARI,2026-11-01 18:00,22.34,14.7,36.3,34.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
+RB,James Cook III,RB,BUF,BAL,2026-11-01 18:00,15.43,8.45,28.06,37.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
 RB,Jaylen Warren,RB,PIT,CLE,2026-11-01 18:00,13.54,7.42,24.62,31.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
-WR,Tee Higgins,WR,CIN,TEN,2026-11-01 18:00,13.47,6.46,26.05,33.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
-WR,Jaylen Waddle,WR,DEN,KC,2026-11-01 21:25,9.09,4.89,16.69,17.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),Questionable,,injury Questionable
-TE,Hunter Henry,TE,NE,MIA,2026-11-01 21:25,7.78,3.49,15.44,17.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
-K,Brandon Aubrey,K,DAL,ARI,,9.89,5.83,17.26,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
+WR,Tee Higgins,WR,CIN,TEN,2026-11-01 18:00,13.49,6.47,26.09,33.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
+WR,Jaylen Waddle,WR,DEN,KC,2026-11-01 21:25,9.15,4.92,16.8,17.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),Questionable,,injury Questionable
+TE,Hunter Henry,TE,NE,MIA,2026-11-01 21:25,7.79,3.49,15.46,17.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
+K,Brandon Aubrey,K,DAL,ARI,,9.93,5.86,17.33,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
 DEF,Los Angeles Rams,DEF,LA,LAC,2026-11-01 21:05,8.78,3.71,17.79,12.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 8),,,ok
-FLEX,Ollie Gordon II,RB,MIA,NE,2026-11-01 21:25,12.06,6.61,21.93,23.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
-BENCH,Breece Hall,RB,NYJ,LV,2026-11-01 18:00,10.01,3.37,21.52,26.0,4.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),Out,,injury Out; depth 4
+FLEX,Ollie Gordon II,RB,MIA,NE,2026-11-01 21:25,12.07,6.61,21.95,23.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
+BENCH,Breece Hall,RB,NYJ,LV,2026-11-01 18:00,10.21,3.44,21.95,26.0,4.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),Out,,injury Out; depth 4
 BENCH,Jameson Williams,WR,DET,MIN,2026-11-01 18:00,8.5,4.08,16.44,26.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
-BENCH,Germie Bernard,WR,PIT,CLE,2026-11-01 18:00,8.17,3.92,15.8,15.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
-BENCH,Keenan Allen,WR,IND,JAC,2026-11-01 18:00,7.09,3.4,13.71,14.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
-BENCH,Denver Broncos,DEF,DEN,KC,2026-11-01 21:25,6.83,2.88,13.84,16.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 8),,,ok
+BENCH,Germie Bernard,WR,PIT,CLE,2026-11-01 18:00,8.16,3.91,15.78,15.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
+BENCH,Keenan Allen,WR,IND,JAC,2026-11-01 18:00,7.34,3.52,14.2,14.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
+BENCH,Denver Broncos,DEF,DEN,KC,2026-11-01 21:25,6.77,2.86,13.72,16.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 8),,,ok
 BENCH,Emmett Johnson,RB,KC,DEN,2026-11-01 21:25,3.71,1.61,7.45,10.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 8),,,ok
