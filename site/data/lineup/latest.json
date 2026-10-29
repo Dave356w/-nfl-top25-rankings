@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-29T16:20:43Z",
-  "snapshot_id": "2026-10-29T16:20:43Z",
+  "generated_utc": "2026-10-29T18:47:42Z",
+  "snapshot_id": "2026-10-29T18:47:42Z",
   "run_date": "2026-10-29",
   "season": 2026,
   "week": 8,
@@ -326,9 +326,9 @@
   },
   "log": [
     "Yahoo feed spans 2 NFL week blocks; selected 13 game(s), 2026-10-29 through 2026-11-01.",
-    "Yahoo slate: 13 game(s), 457 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-29T16:20:43Z)",
+    "Yahoo slate: 13 game(s), 457 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-29T18:47:42Z)",
     "  Sleeper: 2026 regular week 8 projections; player dump fetched 2026-10-29T00:34:42.625915+00:00.",
-    "  Removed 90 player(s): no Sleeper projection.",
+    "  Removed 91 player(s): no Sleeper projection.",
     "  Removed 2 player(s): no Sleeper match.",
     "TOP 26 QB",
     "    Rank  ...                          Projection method",
@@ -549,7 +549,7 @@
     "[26 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 15 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-10-29T16:20:43Z (shared with position rankings).",
+    "Projection snapshot: 2026-10-29T18:47:42Z (shared with position rankings).",
     "Season 2026 week 8; Sleeper players fetched 2026-10-29T00:34:42.625915+00:00.",
     "Add pool: 286 player(s) resolved for the page's roster editor."
   ]

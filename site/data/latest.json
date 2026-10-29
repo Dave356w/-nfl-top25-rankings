@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-29T16:20:43Z",
-  "snapshot_id": "2026-10-29T16:20:43Z",
+  "generated_utc": "2026-10-29T18:47:42Z",
+  "snapshot_id": "2026-10-29T18:47:42Z",
   "run_date": "2026-10-29",
   "top_n": 50,
   "positions": [
@@ -23,9 +23,9 @@
       },
       {
         "game_id": "nfl.g.13593682",
-        "matchup": "IND vs JAC",
+        "matchup": "IND vs JAX",
         "away": "IND",
-        "home": "JAC",
+        "home": "JAX",
         "kickoff_utc": "Sun, 1 Nov 2026 10:00:00 -0800"
       },
       {
@@ -79,9 +79,9 @@
       },
       {
         "game_id": "nfl.g.13593690",
-        "matchup": "LAC vs LA",
+        "matchup": "LAC vs LAR",
         "away": "LAC",
-        "home": "LA",
+        "home": "LAR",
         "kickoff_utc": "Sun, 1 Nov 2026 13:05:00 -0800"
       },
       {
@@ -107,7 +107,7 @@
       }
     ],
     "game_count": 13,
-    "player_count": 365,
+    "player_count": 364,
     "first_kickoff_utc": "Thu, 29 Oct 2026 17:15:00 -0700"
   },
   "rankings": {
@@ -171,7 +171,7 @@
       {
         "rank": 5,
         "player": "Trevor Lawrence",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 21.43,
         "salary": 38,
@@ -201,9 +201,9 @@
         "player": "Jacoby Brissett",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 18.66,
+        "fp": 18.72,
         "salary": 29,
-        "fp_per_salary": 0.643,
+        "fp_per_salary": 0.646,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -339,7 +339,7 @@
       {
         "rank": 17,
         "player": "Matthew Stafford",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 16.05,
         "salary": 35,
@@ -452,7 +452,7 @@
         "rank": 25,
         "player": "Justin Herbert",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 13.47,
         "salary": 24,
         "fp_per_salary": 0.561,
@@ -466,7 +466,7 @@
         "rank": 26,
         "player": "Daniel Jones",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 11.96,
         "salary": 20,
         "fp_per_salary": 0.598,
@@ -523,7 +523,7 @@
       {
         "rank": 4,
         "player": "Kyren Williams",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 18.27,
         "salary": 36,
@@ -594,7 +594,7 @@
         "rank": 9,
         "player": "Jonathan Taylor",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 15.16,
         "salary": 37,
         "fp_per_salary": 0.41,
@@ -663,7 +663,7 @@
       {
         "rank": 14,
         "player": "Bhayshul Tuten",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 13.46,
         "salary": 27,
@@ -790,7 +790,7 @@
         "rank": 23,
         "player": "Omarion Hampton",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 9.28,
         "salary": 19,
         "fp_per_salary": 0.488,
@@ -861,9 +861,9 @@
         "player": "Jeremiyah Love",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 8.43,
+        "fp": 8.44,
         "salary": 21,
-        "fp_per_salary": 0.401,
+        "fp_per_salary": 0.402,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -887,7 +887,7 @@
       {
         "rank": 30,
         "player": "Blake Corum",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 7.09,
         "salary": 19,
@@ -931,9 +931,9 @@
         "player": "Tyler Allgeier",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 6.37,
+        "fp": 6.38,
         "salary": 14,
-        "fp_per_salary": 0.455,
+        "fp_per_salary": 0.456,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -972,7 +972,7 @@
         "rank": 36,
         "player": "Kimani Vidal",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 6.18,
         "salary": 11,
         "fp_per_salary": 0.562,
@@ -1013,7 +1013,7 @@
       {
         "rank": 39,
         "player": "Chris Rodriguez Jr.",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 5.64,
         "salary": 14,
@@ -1070,7 +1070,7 @@
         "rank": 43,
         "player": "Keaton Mitchell",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 5.2,
         "salary": 11,
         "fp_per_salary": 0.473,
@@ -1168,7 +1168,7 @@
         "rank": 50,
         "player": "Seth McGowan",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 3.83,
         "salary": 10,
         "fp_per_salary": 0.383,
@@ -1197,7 +1197,7 @@
       {
         "rank": 2,
         "player": "Puka Nacua",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 18.06,
         "salary": 39,
@@ -1295,7 +1295,7 @@
       {
         "rank": 9,
         "player": "Parker Washington",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 13.83,
         "salary": 32,
@@ -1339,9 +1339,9 @@
         "player": "Michael Wilson",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 13.14,
+        "fp": 13.16,
         "salary": 19,
-        "fp_per_salary": 0.692,
+        "fp_per_salary": 0.693,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
@@ -1520,7 +1520,7 @@
         "rank": 25,
         "player": "Ladd McConkey",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 9.22,
         "salary": 18,
         "fp_per_salary": 0.512,
@@ -1589,7 +1589,7 @@
       {
         "rank": 30,
         "player": "Jakobi Meyers",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 8.71,
         "salary": 17,
@@ -1674,7 +1674,7 @@
         "rank": 36,
         "player": "Josh Downs",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 8.12,
         "salary": 15,
         "fp_per_salary": 0.541,
@@ -1689,9 +1689,9 @@
         "player": "Kendrick Bourne",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 7.66,
+        "fp": 7.67,
         "salary": 12,
-        "fp_per_salary": 0.638,
+        "fp_per_salary": 0.639,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
@@ -1716,7 +1716,7 @@
         "rank": 39,
         "player": "Keenan Allen",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 7.48,
         "salary": 14,
         "fp_per_salary": 0.534,
@@ -1856,7 +1856,7 @@
         "rank": 49,
         "player": "Quentin Johnston",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 5.72,
         "salary": 14,
         "fp_per_salary": 0.409,
@@ -1887,9 +1887,9 @@
         "player": "Trey McBride",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 15.3,
+        "fp": 15.33,
         "salary": 28,
-        "fp_per_salary": 0.546,
+        "fp_per_salary": 0.548,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -1941,7 +1941,7 @@
       {
         "rank": 5,
         "player": "Brenton Strange",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 8.81,
         "salary": 16,
@@ -2012,7 +2012,7 @@
         "rank": 10,
         "player": "Tyler Warren",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 8.51,
         "salary": 19,
         "fp_per_salary": 0.448,
@@ -2109,7 +2109,7 @@
       {
         "rank": 17,
         "player": "Tyler Higbee",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 6.78,
         "salary": 11,
@@ -2207,7 +2207,7 @@
       {
         "rank": 24,
         "player": "Colby Parkinson",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 5.35,
         "salary": 13,
@@ -2292,7 +2292,7 @@
         "rank": 30,
         "player": "Oronde Gadsden",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 3.62,
         "salary": 10,
         "fp_per_salary": 0.362,
@@ -2320,7 +2320,7 @@
         "rank": 32,
         "player": "Charlie Kolar",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 3.26,
         "salary": 10,
         "fp_per_salary": 0.326,
@@ -2543,7 +2543,7 @@
       {
         "rank": 48,
         "player": "Nate Boerkircher",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 1.23,
         "salary": 10,
@@ -2615,7 +2615,7 @@
       {
         "rank": 3,
         "player": "Jacksonville Jaguars",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 8.95,
         "salary": 15,
@@ -2643,7 +2643,7 @@
       {
         "rank": 5,
         "player": "Los Angeles Rams",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 8.53,
         "salary": 12,
@@ -2868,7 +2868,7 @@
         "rank": 21,
         "player": "Los Angeles Chargers",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 4.42,
         "salary": 10,
         "fp_per_salary": 0.442,
@@ -2910,7 +2910,7 @@
         "rank": 24,
         "player": "Indianapolis Colts",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 3.93,
         "salary": 10,
         "fp_per_salary": 0.393,
@@ -3011,7 +3011,7 @@
       {
         "rank": 5,
         "player": "Trevor Lawrence",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 21.43,
         "salary": 38,
@@ -3041,9 +3041,9 @@
         "player": "Jacoby Brissett",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 18.66,
+        "fp": 18.72,
         "salary": 29,
-        "fp_per_salary": 0.643,
+        "fp_per_salary": 0.646,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -3179,7 +3179,7 @@
       {
         "rank": 17,
         "player": "Matthew Stafford",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 16.05,
         "salary": 35,
@@ -3292,7 +3292,7 @@
         "rank": 25,
         "player": "Justin Herbert",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 13.47,
         "salary": 24,
         "fp_per_salary": 0.561,
@@ -3306,7 +3306,7 @@
         "rank": 26,
         "player": "Daniel Jones",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 11.96,
         "salary": 20,
         "fp_per_salary": 0.598,
@@ -3363,7 +3363,7 @@
       {
         "rank": 4,
         "player": "Kyren Williams",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 18.27,
         "salary": 36,
@@ -3434,7 +3434,7 @@
         "rank": 9,
         "player": "Jonathan Taylor",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 15.16,
         "salary": 37,
         "fp_per_salary": 0.41,
@@ -3503,7 +3503,7 @@
       {
         "rank": 14,
         "player": "Bhayshul Tuten",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 13.46,
         "salary": 27,
@@ -3630,7 +3630,7 @@
         "rank": 23,
         "player": "Omarion Hampton",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 9.28,
         "salary": 19,
         "fp_per_salary": 0.488,
@@ -3701,9 +3701,9 @@
         "player": "Jeremiyah Love",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 8.43,
+        "fp": 8.44,
         "salary": 21,
-        "fp_per_salary": 0.401,
+        "fp_per_salary": 0.402,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -3727,7 +3727,7 @@
       {
         "rank": 30,
         "player": "Blake Corum",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 7.09,
         "salary": 19,
@@ -3771,9 +3771,9 @@
         "player": "Tyler Allgeier",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 6.37,
+        "fp": 6.38,
         "salary": 14,
-        "fp_per_salary": 0.455,
+        "fp_per_salary": 0.456,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -3812,7 +3812,7 @@
         "rank": 36,
         "player": "Kimani Vidal",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 6.18,
         "salary": 11,
         "fp_per_salary": 0.562,
@@ -3853,7 +3853,7 @@
       {
         "rank": 39,
         "player": "Chris Rodriguez Jr.",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 5.64,
         "salary": 14,
@@ -3910,7 +3910,7 @@
         "rank": 43,
         "player": "Keaton Mitchell",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 5.2,
         "salary": 11,
         "fp_per_salary": 0.473,
@@ -4008,7 +4008,7 @@
         "rank": 50,
         "player": "Seth McGowan",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 3.83,
         "salary": 10,
         "fp_per_salary": 0.383,
@@ -4105,7 +4105,7 @@
       {
         "rank": 57,
         "player": "LeQuint Allen Jr.",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 1.53,
         "salary": 10,
@@ -4147,7 +4147,7 @@
       {
         "rank": 60,
         "player": "Ameer Abdullah",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 0.98,
         "salary": 10,
@@ -4385,7 +4385,7 @@
       {
         "rank": 77,
         "player": "Dean Connors",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 0.16,
         "salary": 10,
@@ -4414,7 +4414,7 @@
         "rank": 79,
         "player": "DJ Giddens",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 0.13,
         "salary": 10,
         "fp_per_salary": 0.013,
@@ -4527,7 +4527,7 @@
       {
         "rank": 2,
         "player": "Puka Nacua",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 18.06,
         "salary": 39,
@@ -4625,7 +4625,7 @@
       {
         "rank": 9,
         "player": "Parker Washington",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 13.83,
         "salary": 32,
@@ -4669,9 +4669,9 @@
         "player": "Michael Wilson",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 13.14,
+        "fp": 13.16,
         "salary": 19,
-        "fp_per_salary": 0.692,
+        "fp_per_salary": 0.693,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
@@ -4850,7 +4850,7 @@
         "rank": 25,
         "player": "Ladd McConkey",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 9.22,
         "salary": 18,
         "fp_per_salary": 0.512,
@@ -4919,7 +4919,7 @@
       {
         "rank": 30,
         "player": "Jakobi Meyers",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 8.71,
         "salary": 17,
@@ -5004,7 +5004,7 @@
         "rank": 36,
         "player": "Josh Downs",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 8.12,
         "salary": 15,
         "fp_per_salary": 0.541,
@@ -5019,9 +5019,9 @@
         "player": "Kendrick Bourne",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 7.66,
+        "fp": 7.67,
         "salary": 12,
-        "fp_per_salary": 0.638,
+        "fp_per_salary": 0.639,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
@@ -5046,7 +5046,7 @@
         "rank": 39,
         "player": "Keenan Allen",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 7.48,
         "salary": 14,
         "fp_per_salary": 0.534,
@@ -5186,7 +5186,7 @@
         "rank": 49,
         "player": "Quentin Johnston",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 5.72,
         "salary": 14,
         "fp_per_salary": 0.409,
@@ -5326,7 +5326,7 @@
         "rank": 59,
         "player": "Tre' Harris",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 4.43,
         "salary": 12,
         "fp_per_salary": 0.369,
@@ -5409,7 +5409,7 @@
       {
         "rank": 65,
         "player": "Konata Mumpfield",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 3.78,
         "salary": 10,
@@ -5423,7 +5423,7 @@
       {
         "rank": 66,
         "player": "Josh Cameron",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 3.64,
         "salary": 10,
@@ -5437,7 +5437,7 @@
       {
         "rank": 67,
         "player": "Travis Hunter",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 3.38,
         "salary": 11,
@@ -5493,7 +5493,7 @@
       {
         "rank": 71,
         "player": "Jordan Whittington",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 3.21,
         "salary": 10,
@@ -5535,7 +5535,7 @@
       {
         "rank": 74,
         "player": "Brian Thomas Jr.",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 3.0,
         "salary": 11,
@@ -5564,7 +5564,7 @@
         "rank": 76,
         "player": "Laquon Treadwell",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 2.97,
         "salary": 10,
         "fp_per_salary": 0.297,
@@ -5717,7 +5717,7 @@
       {
         "rank": 87,
         "player": "Tutu Atwell",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 2.19,
         "salary": 10,
@@ -5760,7 +5760,7 @@
         "rank": 90,
         "player": "KeAndre Lambert-Smith",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 1.76,
         "salary": 10,
         "fp_per_salary": 0.176,
@@ -5984,7 +5984,7 @@
         "rank": 106,
         "player": "Ashton Dulin",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 0.76,
         "salary": 10,
         "fp_per_salary": 0.076,
@@ -5998,7 +5998,7 @@
         "rank": 107,
         "player": "Brenen Thompson",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 0.67,
         "salary": 10,
         "fp_per_salary": 0.067,
@@ -6054,7 +6054,7 @@
         "rank": 111,
         "player": "Deion Burks",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 0.52,
         "salary": 10,
         "fp_per_salary": 0.052,
@@ -6081,7 +6081,7 @@
       {
         "rank": 113,
         "player": "CJ Daniels",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 0.46,
         "salary": 10,
@@ -6250,7 +6250,7 @@
         "rank": 125,
         "player": "Derius Davis",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 0.25,
         "salary": 10,
         "fp_per_salary": 0.025,
@@ -6292,7 +6292,7 @@
         "rank": 128,
         "player": "Theo Wease Jr.",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 0.23,
         "salary": 10,
         "fp_per_salary": 0.023,
@@ -6318,6 +6318,20 @@
       },
       {
         "rank": 130,
+        "player": "Devin Duvernay",
+        "team": "ARI",
+        "opponent": "DAL",
+        "fp": 0.19,
+        "salary": 10,
+        "fp_per_salary": 0.019,
+        "role": "rotation",
+        "role_slot": "WR SWR",
+        "depth": 5,
+        "kickoff_utc": "2026-11-01 18:00",
+        "method": "Sleeper half-PPR projection (2026 week 8)"
+      },
+      {
+        "rank": 131,
         "player": "LaJohntay Wester",
         "team": "BAL",
         "opponent": "BUF",
@@ -6327,20 +6341,6 @@
         "role": "rotation",
         "role_slot": "WR SWR",
         "depth": 6,
-        "kickoff_utc": "2026-11-01 18:00",
-        "method": "Sleeper half-PPR projection (2026 week 8)"
-      },
-      {
-        "rank": 131,
-        "player": "Devin Duvernay",
-        "team": "ARI",
-        "opponent": "DAL",
-        "fp": 0.18,
-        "salary": 10,
-        "fp_per_salary": 0.018,
-        "role": "rotation",
-        "role_slot": "WR SWR",
-        "depth": 5,
         "kickoff_utc": "2026-11-01 18:00",
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
@@ -6432,7 +6432,7 @@
         "rank": 138,
         "player": "Anthony Gould",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 0.08,
         "salary": 10,
         "fp_per_salary": 0.008,
@@ -6449,9 +6449,9 @@
         "player": "Trey McBride",
         "team": "ARI",
         "opponent": "DAL",
-        "fp": 15.3,
+        "fp": 15.33,
         "salary": 28,
-        "fp_per_salary": 0.546,
+        "fp_per_salary": 0.548,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -6503,7 +6503,7 @@
       {
         "rank": 5,
         "player": "Brenton Strange",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 8.81,
         "salary": 16,
@@ -6574,7 +6574,7 @@
         "rank": 10,
         "player": "Tyler Warren",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 8.51,
         "salary": 19,
         "fp_per_salary": 0.448,
@@ -6671,7 +6671,7 @@
       {
         "rank": 17,
         "player": "Tyler Higbee",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 6.78,
         "salary": 11,
@@ -6769,7 +6769,7 @@
       {
         "rank": 24,
         "player": "Colby Parkinson",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 5.35,
         "salary": 13,
@@ -6854,7 +6854,7 @@
         "rank": 30,
         "player": "Oronde Gadsden",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 3.62,
         "salary": 10,
         "fp_per_salary": 0.362,
@@ -6882,7 +6882,7 @@
         "rank": 32,
         "player": "Charlie Kolar",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 3.26,
         "salary": 10,
         "fp_per_salary": 0.326,
@@ -7105,7 +7105,7 @@
       {
         "rank": 48,
         "player": "Nate Boerkircher",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 1.23,
         "salary": 10,
@@ -7161,7 +7161,7 @@
       {
         "rank": 52,
         "player": "Tanner Koziol",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 1.06,
         "salary": 10,
@@ -7202,20 +7202,6 @@
       },
       {
         "rank": 55,
-        "player": "Tip Reiman",
-        "team": "ARI",
-        "opponent": "DAL",
-        "fp": 0.89,
-        "salary": 10,
-        "fp_per_salary": 0.089,
-        "role": "reserve",
-        "role_slot": "TE TE",
-        "depth": 5,
-        "kickoff_utc": "2026-11-01 18:00",
-        "method": "Sleeper half-PPR projection (2026 week 8)"
-      },
-      {
-        "rank": 56,
         "player": "Grant Calcaterra",
         "team": "PHI",
         "opponent": "WAS",
@@ -7229,9 +7215,9 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 57,
+        "rank": 56,
         "player": "Davis Allen",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 0.84,
         "salary": 11,
@@ -7243,7 +7229,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 58,
+        "rank": 57,
         "player": "Eli Stowers",
         "team": "PHI",
         "opponent": "WAS",
@@ -7257,7 +7243,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 59,
+        "rank": 58,
         "player": "Ben Sinnott",
         "team": "WAS",
         "opponent": "PHI",
@@ -7271,10 +7257,10 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 60,
+        "rank": 59,
         "player": "Mo Alie-Cox",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 0.75,
         "salary": 10,
         "fp_per_salary": 0.075,
@@ -7285,7 +7271,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 61,
+        "rank": 60,
         "player": "Johnny Mundt",
         "team": "PHI",
         "opponent": "WAS",
@@ -7299,7 +7285,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 62,
+        "rank": 61,
         "player": "Jackson Hawes",
         "team": "BUF",
         "opponent": "BAL",
@@ -7313,7 +7299,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 63,
+        "rank": 62,
         "player": "Gavin Bartholomew",
         "team": "MIN",
         "opponent": "DET",
@@ -7327,7 +7313,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 64,
+        "rank": 63,
         "player": "Charlie Woerner",
         "team": "ATL",
         "opponent": "TB",
@@ -7341,7 +7327,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 65,
+        "rank": 64,
         "player": "Jake Briningstool",
         "team": "KC",
         "opponent": "DEN",
@@ -7355,10 +7341,10 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 66,
+        "rank": 65,
         "player": "Pharaoh Brown",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 0.52,
         "salary": 10,
         "fp_per_salary": 0.052,
@@ -7369,7 +7355,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 67,
+        "rank": 66,
         "player": "Colson Yankoff",
         "team": "WAS",
         "opponent": "PHI",
@@ -7383,10 +7369,10 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 68,
+        "rank": 67,
         "player": "Drew Ogletree",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 0.48,
         "salary": 10,
         "fp_per_salary": 0.048,
@@ -7397,7 +7383,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 69,
+        "rank": 68,
         "player": "Ian Thomas",
         "team": "LV",
         "opponent": "NYJ",
@@ -7411,10 +7397,10 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 70,
+        "rank": 69,
         "player": "Hayden Rucci",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 0.45,
         "salary": 10,
         "fp_per_salary": 0.045,
@@ -7425,7 +7411,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 71,
+        "rank": 70,
         "player": "Jack Endries",
         "team": "CIN",
         "opponent": "TEN",
@@ -7439,7 +7425,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 72,
+        "rank": 71,
         "player": "Nick Vannett",
         "team": "BAL",
         "opponent": "BUF",
@@ -7453,9 +7439,9 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 73,
+        "rank": 72,
         "player": "Quintin Morris",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 0.41,
         "salary": 10,
@@ -7467,7 +7453,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 74,
+        "rank": 73,
         "player": "Cameron Latu",
         "team": "NE",
         "opponent": "MIA",
@@ -7481,7 +7467,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 75,
+        "rank": 74,
         "player": "Justin Joly",
         "team": "MIA",
         "opponent": "NE",
@@ -7495,10 +7481,10 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 76,
+        "rank": 75,
         "player": "Will Mallory",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 0.29,
         "salary": 10,
         "fp_per_salary": 0.029,
@@ -7509,7 +7495,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 77,
+        "rank": 76,
         "player": "Jelani Woods",
         "team": "NYJ",
         "opponent": "LV",
@@ -7523,7 +7509,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 78,
+        "rank": 77,
         "player": "Ja'Tavion Sanders",
         "team": "CAR",
         "opponent": "GB",
@@ -7537,7 +7523,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 79,
+        "rank": 78,
         "player": "Ben Yurosek",
         "team": "MIN",
         "opponent": "DET",
@@ -7551,7 +7537,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 80,
+        "rank": 79,
         "player": "Payne Durham",
         "team": "TB",
         "opponent": "ATL",
@@ -7565,7 +7551,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 81,
+        "rank": 80,
         "player": "Dallen Bentley",
         "team": "DEN",
         "opponent": "KC",
@@ -7579,7 +7565,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 82,
+        "rank": 81,
         "player": "Kylen Granson",
         "team": "TEN",
         "opponent": "CIN",
@@ -7593,7 +7579,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 83,
+        "rank": 82,
         "player": "Bauer Sharp",
         "team": "TB",
         "opponent": "ATL",
@@ -7607,7 +7593,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 84,
+        "rank": 83,
         "player": "David Martin-Robinson",
         "team": "TEN",
         "opponent": "CIN",
@@ -7621,9 +7607,9 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 85,
+        "rank": 84,
         "player": "Max Klare",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 0.09,
         "salary": 10,
@@ -7635,7 +7621,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 86,
+        "rank": 85,
         "player": "Josh Whyle",
         "team": "GB",
         "opponent": "CAR",
@@ -7649,7 +7635,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 87,
+        "rank": 86,
         "player": "Seydou Traore",
         "team": "MIA",
         "opponent": "NE",
@@ -7663,7 +7649,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 88,
+        "rank": 87,
         "player": "Feleipe Franks",
         "team": "CAR",
         "opponent": "GB",
@@ -7677,7 +7663,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 89,
+        "rank": 88,
         "player": "Robert Tonyan",
         "team": "PIT",
         "opponent": "CLE",
@@ -7691,7 +7677,7 @@
         "method": "Sleeper half-PPR projection (2026 week 8)"
       },
       {
-        "rank": 90,
+        "rank": 89,
         "player": "Ko Kieft",
         "team": "TB",
         "opponent": "ATL",
@@ -7737,7 +7723,7 @@
       {
         "rank": 3,
         "player": "Jacksonville Jaguars",
-        "team": "JAC",
+        "team": "JAX",
         "opponent": "IND",
         "fp": 8.95,
         "salary": 15,
@@ -7765,7 +7751,7 @@
       {
         "rank": 5,
         "player": "Los Angeles Rams",
-        "team": "LA",
+        "team": "LAR",
         "opponent": "LAC",
         "fp": 8.53,
         "salary": 12,
@@ -7990,7 +7976,7 @@
         "rank": 21,
         "player": "Los Angeles Chargers",
         "team": "LAC",
-        "opponent": "LA",
+        "opponent": "LAR",
         "fp": 4.42,
         "salary": 10,
         "fp_per_salary": 0.442,
@@ -8032,7 +8018,7 @@
         "rank": 24,
         "player": "Indianapolis Colts",
         "team": "IND",
-        "opponent": "JAC",
+        "opponent": "JAX",
         "fp": 3.93,
         "salary": 10,
         "fp_per_salary": 0.393,
@@ -8079,15 +8065,15 @@
     "season_type": "regular",
     "players_fetched_utc": "2026-10-29T00:34:42.625915+00:00"
   },
-  "availability_removed": 92,
+  "availability_removed": 93,
   "method_counts": {
-    "Sleeper half-PPR projection (2026 week 8)": 365
+    "Sleeper half-PPR projection (2026 week 8)": 364
   },
   "log": [
     "Yahoo feed spans 2 NFL week blocks; selected 13 game(s), 2026-10-29 through 2026-11-01.",
-    "Yahoo slate: 13 game(s), 457 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-29T16:20:43Z)",
+    "Yahoo slate: 13 game(s), 457 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-29T18:47:42Z)",
     "  Sleeper: 2026 regular week 8 projections; player dump fetched 2026-10-29T00:34:42.625915+00:00.",
-    "  Removed 90 player(s): no Sleeper projection.",
+    "  Removed 91 player(s): no Sleeper projection.",
     "  Removed 2 player(s): no Sleeper match.",
     "TOP 26 QB",
     "    Rank  ...                          Projection method",
