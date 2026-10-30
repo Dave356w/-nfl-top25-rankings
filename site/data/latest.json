@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-10-30T18:24:53Z",
-  "snapshot_id": "2026-10-30T18:24:53Z",
+  "generated_utc": "2026-10-30T19:11:21Z",
+  "snapshot_id": "2026-10-30T19:11:21Z",
   "run_date": "2026-10-30",
   "top_n": 50,
   "positions": [
@@ -7959,7 +7959,7 @@
   },
   "log": [
     "Yahoo feed spans 2 NFL week blocks; selected 13 game(s), 2026-10-29 through 2026-11-01.",
-    "Yahoo slate: 13 game(s), 457 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-30T18:24:53Z)",
+    "Yahoo slate: 13 game(s), 457 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-10-30T19:11:21Z)",
     "  Sleeper: 2026 regular week 8 projections; player dump fetched 2026-10-30T00:33:51.871326+00:00.",
     "  Removed 99 player(s): no Sleeper projection.",
     "  Removed 2 player(s): no Sleeper match.",
