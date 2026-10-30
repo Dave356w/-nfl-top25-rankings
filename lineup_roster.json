@@ -6,11 +6,11 @@
       "Position": "QB"
     },
     {
-      "Name": "Jaylen Warren",
+      "Name": "James Cook III",
       "Position": "RB"
     },
     {
-      "Name": "Breece Hall",
+      "Name": "Jaylen Warren",
       "Position": "RB"
     },
     {
@@ -22,15 +22,23 @@
       "Position": "WR"
     },
     {
+      "Name": "Hunter Henry",
+      "Position": "TE"
+    },
+    {
       "Name": "Brandon Aubrey",
       "Position": "K"
     },
     {
-      "Name": "Denver Broncos",
+      "Name": "Los Angeles Rams",
       "Position": "DEF"
     },
     {
       "Name": "Ollie Gordon II",
+      "Position": "RB"
+    },
+    {
+      "Name": "Breece Hall",
       "Position": "RB"
     },
     {
@@ -42,7 +50,7 @@
       "Position": "WR"
     },
     {
-      "Name": "Los Angeles Rams",
+      "Name": "Denver Broncos",
       "Position": "DEF"
     },
     {
@@ -54,12 +62,8 @@
       "Position": "RB"
     },
     {
-      "Name": "James Cook III",
-      "Position": "RB"
-    },
-    {
-      "Name": "Hunter Henry",
-      "Position": "TE"
+      "Name": "Brian Thomas Jr.",
+      "Position": "WR"
     }
   ]
 }
