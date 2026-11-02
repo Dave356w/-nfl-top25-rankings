@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-02T14:51:31Z",
-  "snapshot_id": "2026-11-02T14:51:31Z",
+  "generated_utc": "2026-11-02T22:07:21Z",
+  "snapshot_id": "2026-11-02T22:07:21Z",
   "run_date": "2026-11-02",
   "season": 2026,
   "week": 8,
@@ -345,8 +345,8 @@
     "week": 8
   },
   "log": [
-    "Yahoo feed spans 2 NFL week blocks; selected 1 game(s), 2026-11-02 through 2026-11-02.",
-    "Yahoo slate: 1 game(s), 33 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-02T14:51:31Z)",
+    "Yahoo feed spans 3 NFL week blocks; selected 1 game(s), 2026-11-02 through 2026-11-02.",
+    "Yahoo slate: 1 game(s), 33 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-02T22:07:21Z)",
     "  Sleeper: 2026 regular week 8 projections; player dump fetched 2026-11-02T00:11:34.046667+00:00.",
     "  Removed 9 player(s): no Sleeper projection.",
     "TOP 2 QB",
@@ -390,7 +390,7 @@
     "[2 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-11-02T14:51:31Z (shared with position rankings).",
+    "Projection snapshot: 2026-11-02T22:07:21Z (shared with position rankings).",
     "Season 2026 week 8; Sleeper players fetched 2026-11-02T00:11:34.046667+00:00.",
     "Benched before optimizing: Breece Hall.",
     "Add pool: 53 player(s) resolved for the page's roster editor."
