@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-02T22:07:21Z",
-  "snapshot_id": "2026-11-02T22:07:21Z",
-  "run_date": "2026-11-02",
+  "generated_utc": "2026-11-03T02:44:51Z",
+  "snapshot_id": "2026-11-03T02:44:51Z",
+  "run_date": "2026-11-03",
   "season": 2026,
   "week": 8,
-  "depth_snapshot": "2026-11-02T00:11:34.046667+00:00",
+  "depth_snapshot": "2026-11-03T02:44:52.888273+00:00",
   "notes": [],
   "objective": "FP",
   "auto_exclude_out": true,
@@ -146,9 +146,9 @@
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper half-PPR projection (2026 week 8)",
-      "injury": "Questionable",
+      "injury": "Out",
       "unavailable": null,
-      "review": "injury Questionable"
+      "review": "injury Out"
     },
     {
       "slot": "K",
@@ -346,8 +346,8 @@
   },
   "log": [
     "Yahoo feed spans 3 NFL week blocks; selected 1 game(s), 2026-11-02 through 2026-11-02.",
-    "Yahoo slate: 1 game(s), 33 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-02T22:07:21Z)",
-    "  Sleeper: 2026 regular week 8 projections; player dump fetched 2026-11-02T00:11:34.046667+00:00.",
+    "Yahoo slate: 1 game(s), 33 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-03T02:44:51Z)",
+    "  Sleeper: 2026 regular week 8 projections; player dump fetched 2026-11-03T02:44:52.888273+00:00.",
     "  Removed 9 player(s): no Sleeper projection.",
     "TOP 2 QB",
     "   Rank  ...                          Projection method",
@@ -390,8 +390,8 @@
     "[2 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-11-02T22:07:21Z (shared with position rankings).",
-    "Season 2026 week 8; Sleeper players fetched 2026-11-02T00:11:34.046667+00:00.",
+    "Projection snapshot: 2026-11-03T02:44:51Z (shared with position rankings).",
+    "Season 2026 week 8; Sleeper players fetched 2026-11-03T02:44:52.888273+00:00.",
     "Benched before optimizing: Breece Hall.",
     "Add pool: 53 player(s) resolved for the page's roster editor."
   ]
