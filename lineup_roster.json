@@ -22,6 +22,10 @@
       "Position": "WR"
     },
     {
+      "Name": "Mike Gesicki",
+      "Position": "TE"
+    },
+    {
       "Name": "Brandon Aubrey",
       "Position": "K"
     },
@@ -58,12 +62,8 @@
       "Position": "RB"
     },
     {
-      "Name": "Germie Bernard",
-      "Position": "WR"
-    },
-    {
-      "Name": "Mike Gesicki",
-      "Position": "TE"
+      "Name": "C.J. Stroud",
+      "Position": "QB"
     }
   ]
 }
