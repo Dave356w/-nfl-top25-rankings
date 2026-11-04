@@ -10,7 +10,7 @@
       "Position": "RB"
     },
     {
-      "Name": "Jaylen Warren",
+      "Name": "Ollie Gordon II",
       "Position": "RB"
     },
     {
@@ -18,44 +18,32 @@
       "Position": "WR"
     },
     {
-      "Name": "Jaylen Waddle",
+      "Name": "Jameson Williams",
       "Position": "WR"
-    },
-    {
-      "Name": "Hunter Henry",
-      "Position": "TE"
     },
     {
       "Name": "Brandon Aubrey",
       "Position": "K"
     },
     {
-      "Name": "Los Angeles Rams",
-      "Position": "DEF"
-    },
-    {
-      "Name": "Ollie Gordon II",
-      "Position": "RB"
-    },
-    {
-      "Name": "Breece Hall",
-      "Position": "RB"
-    },
-    {
-      "Name": "Jameson Williams",
-      "Position": "WR"
-    },
-    {
-      "Name": "Germie Bernard",
-      "Position": "WR"
-    },
-    {
       "Name": "Denver Broncos",
       "Position": "DEF"
     },
     {
+      "Name": "Jaylen Waddle",
+      "Position": "WR"
+    },
+    {
       "Name": "Keenan Allen",
       "Position": "WR"
+    },
+    {
+      "Name": "Los Angeles Rams",
+      "Position": "DEF"
+    },
+    {
+      "Name": "Breece Hall",
+      "Position": "RB"
     },
     {
       "Name": "Emmett Johnson",
@@ -64,6 +52,18 @@
     {
       "Name": "Brian Thomas Jr.",
       "Position": "WR"
+    },
+    {
+      "Name": "Jaylen Warren",
+      "Position": "RB"
+    },
+    {
+      "Name": "Germie Bernard",
+      "Position": "WR"
+    },
+    {
+      "Name": "Mike Gesicki",
+      "Position": "TE"
     }
   ]
 }
