@@ -1,0 +1,17 @@
+slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,injury,unavailable,review
+QB,Dak Prescott,QB,DAL,IND,2026-11-08 18:00,19.7,12.96,32.01,35.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+RB,James Cook III,RB,BUF,MIN,2026-11-10 01:15,14.08,7.71,25.6,37.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+RB,Ollie Gordon II,RB,MIA,DET,2026-11-08 18:00,13.67,7.49,24.86,22.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+WR,Tee Higgins,WR,CIN,ATL,2026-11-08 14:30,14.0,6.71,27.08,36.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+WR,Jameson Williams,WR,DET,MIA,2026-11-08 18:00,11.22,5.38,21.7,28.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+TE,Mike Gesicki,TE,CIN,ATL,2026-11-08 14:30,8.5,3.81,16.87,18.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+K,Brandon Aubrey,K,DAL,IND,,9.93,5.86,17.33,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+DEF,Denver Broncos,DEF,DEN,CAR,2026-11-08 18:00,7.24,3.06,14.67,17.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 9),,,ok
+FLEX,Keenan Allen,WR,IND,DAL,2026-11-08 18:00,9.05,4.87,16.61,16.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+BENCH,C.J. Stroud,QB,HOU,LAC,2026-11-08 21:05,16.87,11.1,27.41,34.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+BENCH,Jaylen Waddle,WR,DEN,CAR,2026-11-08 18:00,8.95,4.81,16.43,20.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+BENCH,Breece Hall,RB,NYJ,KC,2026-11-08 18:00,8.88,4.86,16.15,26.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+BENCH,Los Angeles Rams,DEF,LA,WAS,2026-11-08 18:00,6.62,2.79,13.41,13.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 9),,,ok
+BENCH,Emmett Johnson,RB,KC,NYJ,2026-11-08 18:00,5.6,2.43,11.25,13.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,ok
+BENCH,Brian Thomas Jr.,WR,JAC,BAL,2026-11-06 01:15,3.13,1.22,6.5,11.0,3.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 9),,,depth 3
+BENCH,Jaylen Warren,RB,PIT,,,0.0,,,,1.0,Sleeper depth chart,No weekly projection; bye or unmatched player,,not projected this week,no weekly projection/bye
