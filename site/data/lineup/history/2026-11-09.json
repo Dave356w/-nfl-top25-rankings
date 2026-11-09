@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-09T00:27:49Z",
-  "snapshot_id": "2026-11-09T00:27:49Z",
+  "generated_utc": "2026-11-09T22:52:13Z",
+  "snapshot_id": "2026-11-09T22:52:13Z",
   "run_date": "2026-11-09",
   "season": 2026,
   "week": 9,
@@ -26,9 +26,9 @@
   ],
   "roster_fingerprint": "dak prescott:QB|james cook:RB|ollie gordon:RB|tee higgins:WR|jameson williams:WR|mike gesicki:TE|brandon aubrey:K|denver broncos:DEF|jaylen waddle:WR|keenan allen:WR|los angeles rams:DEF|breece hall:RB|emmett johnson:RB|brian thomas:WR|jaylen warren:RB|cj stroud:QB",
   "totals": {
-    "mean": 108.75,
-    "floor": 58.57,
-    "ceiling": 199.24
+    "mean": 109.09,
+    "floor": 58.76,
+    "ceiling": 199.86
   },
   "counts": {
     "roster": 16,
@@ -63,9 +63,9 @@
       "team": "BUF",
       "opponent": "MIN",
       "kickoff_utc": "2026-11-10 01:15",
-      "mean": 14.08,
-      "floor": 7.71,
-      "ceiling": 25.6,
+      "mean": 14.42,
+      "floor": 7.9,
+      "ceiling": 26.22,
       "salary": 37.0,
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
@@ -345,9 +345,10 @@
     "week": 9
   },
   "log": [
-    "Yahoo slate: 15 game(s), 598 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-09T00:27:49Z)",
+    "Yahoo feed spans 2 NFL week blocks; selected 15 game(s), 2026-11-05 through 2026-11-09.",
+    "Yahoo slate: 15 game(s), 598 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-09T22:52:13Z)",
     "  Sleeper: 2026 regular week 9 projections; player dump fetched 2026-11-09T00:27:49.727058+00:00.",
-    "  Removed 206 player(s): no Sleeper projection.",
+    "  Removed 207 player(s): no Sleeper projection.",
     "  Removed 7 player(s): no Sleeper match.",
     "TOP 30 QB",
     "    Rank  ...                          Projection method",
@@ -576,7 +577,7 @@
     "[30 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-11-09T00:27:49Z (shared with position rankings).",
+    "Projection snapshot: 2026-11-09T22:52:13Z (shared with position rankings).",
     "Season 2026 week 9; Sleeper players fetched 2026-11-09T00:27:49.727058+00:00.",
     "Benched before optimizing: Jaylen Warren.",
     "Add pool: 296 player(s) resolved for the page's roster editor."
