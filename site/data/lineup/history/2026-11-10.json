@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-10T19:54:41Z",
-  "snapshot_id": "2026-11-10T19:54:41Z",
+  "generated_utc": "2026-11-10T20:12:22Z",
+  "snapshot_id": "2026-11-10T20:12:22Z",
   "run_date": "2026-11-10",
   "season": 2026,
   "week": 10,
@@ -346,12 +346,12 @@
     "week": 10
   },
   "log": [
-    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-10T19:54:41Z)",
+    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-10T20:12:22Z)",
     "  Sleeper: 2026 regular week 10 projections; player dump fetched 2026-11-10T03:08:00.212363+00:00.",
-    "  Removed 175 player(s): no Sleeper projection.",
+    "  Removed 176 player(s): no Sleeper projection.",
     "  Removed 4 player(s): no Sleeper match.",
     "  Backup-QB filter removed 1 player(s).",
-    "TOP 28 QB",
+    "TOP 27 QB",
     "    Rank  ...                           Projection method",
     "0      1  ...  Sleeper half-PPR projection (2026 week 10)",
     "1      2  ...  Sleeper half-PPR projection (2026 week 10)",
@@ -380,8 +380,7 @@
     "24    25  ...  Sleeper half-PPR projection (2026 week 10)",
     "25    26  ...  Sleeper half-PPR projection (2026 week 10)",
     "26    27  ...  Sleeper half-PPR projection (2026 week 10)",
-    "27    28  ...  Sleeper half-PPR projection (2026 week 10)",
-    "[28 rows x 12 columns]",
+    "[27 rows x 12 columns]",
     "TOP 50 RB",
     "    Rank  ...                           Projection method",
     "0      1  ...  Sleeper half-PPR projection (2026 week 10)",
@@ -574,9 +573,9 @@
     "[28 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-11-10T19:54:41Z (shared with position rankings).",
+    "Projection snapshot: 2026-11-10T20:12:22Z (shared with position rankings).",
     "Season 2026 week 10; Sleeper players fetched 2026-11-10T03:08:00.212363+00:00.",
     "Benched before optimizing: Denver Broncos, Jaylen Waddle.",
-    "Add pool: 289 player(s) resolved for the page's roster editor."
+    "Add pool: 288 player(s) resolved for the page's roster editor."
   ]
 }
