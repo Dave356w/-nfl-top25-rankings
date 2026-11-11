@@ -1,0 +1,17 @@
+slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,injury,unavailable,review
+QB,Dak Prescott,QB,DAL,SF,2026-11-15 21:25,18.68,12.29,30.35,36.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+RB,Jaylen Warren,RB,PIT,CIN,2026-11-16 01:20,15.62,8.56,28.41,33.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+RB,James Cook III,RB,BUF,NYJ,2026-11-15 18:00,14.6,8.0,26.55,38.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+WR,Tee Higgins,WR,CIN,PIT,2026-11-16 01:20,14.59,7.0,28.22,38.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+WR,Jameson Williams,WR,DET,NE,2026-11-15 14:30,10.63,5.1,20.56,26.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+TE,Mike Gesicki,TE,CIN,PIT,2026-11-16 01:20,8.69,3.9,17.25,16.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+K,Brandon Aubrey,K,DAL,SF,,9.2,5.43,16.06,,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+DEF,Los Angeles Rams,DEF,LA,ARI,2026-11-15 21:05,8.19,3.46,16.6,14.0,1.0,Sleeper projection order,Sleeper half-PPR projection (2026 week 10),,,ok
+FLEX,Ollie Gordon II,RB,MIA,IND,2026-11-15 18:00,13.77,7.54,25.04,20.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+BENCH,C.J. Stroud,QB,HOU,CLE,2026-11-15 18:00,16.21,10.67,26.34,36.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+BENCH,Breece Hall,RB,NYJ,BUF,2026-11-15 18:00,8.14,4.46,14.8,25.0,1.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+BENCH,Emmett Johnson,RB,KC,ATL,2026-11-15 18:00,5.95,2.58,11.95,15.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+BENCH,Keenan Allen,WR,SF,DAL,2026-11-15 21:25,4.85,2.33,9.38,15.0,2.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,ok
+BENCH,Brian Thomas Jr.,WR,JAC,TEN,2026-11-15 18:00,3.54,1.37,7.35,10.0,3.0,Sleeper depth chart,Sleeper half-PPR projection (2026 week 10),,,depth 3
+BENCH,Jaylen Waddle,WR,DEN,,,0.0,,,,2.0,Sleeper depth chart,No weekly projection; bye or unmatched player,Out,not projected this week,no weekly projection/bye; injury Out
+BENCH,Denver Broncos,DEF,DEN,,,0.0,,,,1.0,Sleeper projection order,No weekly projection; bye or unmatched player,,not projected this week,no weekly projection/bye
