@@ -1,6 +1,13 @@
 {
   "runs": [
     {
+      "date": "2026-11-13",
+      "generated_utc": "2026-11-13T01:38:39Z",
+      "game_count": 14,
+      "json": "history/2026-11-13.json",
+      "csv": "history/2026-11-13.csv"
+    },
+    {
       "date": "2026-11-12",
       "generated_utc": "2026-11-12T21:32:41Z",
       "game_count": 14,
