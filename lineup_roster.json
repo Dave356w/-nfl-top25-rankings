@@ -10,7 +10,7 @@
       "Position": "RB"
     },
     {
-      "Name": "Ollie Gordon II",
+      "Name": "Jaylen Warren",
       "Position": "RB"
     },
     {
@@ -30,20 +30,16 @@
       "Position": "K"
     },
     {
-      "Name": "Denver Broncos",
-      "Position": "DEF"
-    },
-    {
-      "Name": "Jaylen Waddle",
-      "Position": "WR"
-    },
-    {
-      "Name": "Keenan Allen",
-      "Position": "WR"
-    },
-    {
       "Name": "Los Angeles Rams",
       "Position": "DEF"
+    },
+    {
+      "Name": "Ollie Gordon II",
+      "Position": "RB"
+    },
+    {
+      "Name": "C.J. Stroud",
+      "Position": "QB"
     },
     {
       "Name": "Breece Hall",
@@ -54,16 +50,20 @@
       "Position": "RB"
     },
     {
-      "Name": "Brian Thomas Jr.",
+      "Name": "Keenan Allen",
       "Position": "WR"
     },
     {
-      "Name": "Jaylen Warren",
-      "Position": "RB"
+      "Name": "Jaylen Waddle",
+      "Position": "WR"
     },
     {
-      "Name": "C.J. Stroud",
-      "Position": "QB"
+      "Name": "Denver Broncos",
+      "Position": "DEF"
+    },
+    {
+      "Name": "Tyler Higbee",
+      "Position": "TE"
     }
   ]
 }
