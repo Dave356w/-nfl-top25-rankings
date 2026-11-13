@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-13T16:36:40Z",
-  "snapshot_id": "2026-11-13T16:36:40Z",
+  "generated_utc": "2026-11-13T19:31:12Z",
+  "snapshot_id": "2026-11-13T19:31:12Z",
   "run_date": "2026-11-13",
   "season": 2026,
   "week": 10,
@@ -24,11 +24,11 @@
     "WR",
     "TE"
   ],
-  "roster_fingerprint": "dak prescott:QB|james cook:RB|ollie gordon:RB|tee higgins:WR|jameson williams:WR|mike gesicki:TE|brandon aubrey:K|denver broncos:DEF|jaylen waddle:WR|keenan allen:WR|los angeles rams:DEF|breece hall:RB|emmett johnson:RB|brian thomas:WR|jaylen warren:RB|cj stroud:QB",
+  "roster_fingerprint": "dak prescott:QB|james cook:RB|jaylen warren:RB|tee higgins:WR|jameson williams:WR|mike gesicki:TE|brandon aubrey:K|los angeles rams:DEF|ollie gordon:RB|cj stroud:QB|breece hall:RB|emmett johnson:RB|keenan allen:WR|jaylen waddle:WR|denver broncos:DEF|tyler higbee:TE",
   "totals": {
-    "mean": 114.72,
-    "floor": 61.64,
-    "ceiling": 210.43
+    "mean": 113.96,
+    "floor": 61.14,
+    "ceiling": 209.2
   },
   "counts": {
     "roster": 16,
@@ -44,9 +44,9 @@
       "team": "DAL",
       "opponent": "SF",
       "kickoff_utc": "2026-11-15 21:25",
-      "mean": 18.68,
-      "floor": 12.29,
-      "ceiling": 30.35,
+      "mean": 17.92,
+      "floor": 11.79,
+      "ceiling": 29.12,
       "salary": 36.0,
       "depth": 1.0,
       "depth_source": "Sleeper depth chart",
@@ -246,6 +246,24 @@
       "review": "ok"
     },
     {
+      "player": "Tyler Higbee",
+      "key": "tyler higbee",
+      "pos": "TE",
+      "team": "LA",
+      "opponent": "ARI",
+      "kickoff_utc": "2026-11-15 21:05",
+      "mean": 6.96,
+      "floor": 3.12,
+      "ceiling": 13.81,
+      "salary": 11.0,
+      "depth": 1.0,
+      "depth_source": "Sleeper depth chart",
+      "source": "Sleeper half-PPR projection (2026 week 10)",
+      "injury": "Questionable",
+      "unavailable": null,
+      "review": "injury Questionable"
+    },
+    {
       "player": "Emmett Johnson",
       "key": "emmett johnson",
       "pos": "RB",
@@ -274,24 +292,6 @@
       "floor": 1.82,
       "ceiling": 9.74,
       "salary": 15.0,
-      "depth": 3.0,
-      "depth_source": "Sleeper depth chart",
-      "source": "Sleeper half-PPR projection (2026 week 10)",
-      "injury": null,
-      "unavailable": null,
-      "review": "depth 3"
-    },
-    {
-      "player": "Brian Thomas Jr.",
-      "key": "brian thomas",
-      "pos": "WR",
-      "team": "JAC",
-      "opponent": "TEN",
-      "kickoff_utc": "2026-11-15 18:00",
-      "mean": 3.72,
-      "floor": 1.44,
-      "ceiling": 7.73,
-      "salary": 10.0,
       "depth": 3.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper half-PPR projection (2026 week 10)",
@@ -337,8 +337,8 @@
     }
   ],
   "benched_by_request": [
-    "Denver Broncos",
-    "Jaylen Waddle"
+    "Jaylen Waddle",
+    "Denver Broncos"
   ],
   "projection": {
     "method": "Sleeper half-PPR projection",
@@ -346,9 +346,9 @@
     "week": 10
   },
   "log": [
-    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-13T16:36:40Z)",
+    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-13T19:31:12Z)",
     "  Sleeper: 2026 regular week 10 projections; player dump fetched 2026-11-13T01:38:40.575974+00:00.",
-    "  Removed 178 player(s): no Sleeper projection.",
+    "  Removed 181 player(s): no Sleeper projection.",
     "  Removed 5 player(s): no Sleeper match.",
     "TOP 28 QB",
     "    Rank  ...                           Projection method",
@@ -573,9 +573,9 @@
     "[28 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-11-13T16:36:40Z (shared with position rankings).",
+    "Projection snapshot: 2026-11-13T19:31:12Z (shared with position rankings).",
     "Season 2026 week 10; Sleeper players fetched 2026-11-13T01:38:40.575974+00:00.",
-    "Benched before optimizing: Denver Broncos, Jaylen Waddle.",
+    "Benched before optimizing: Jaylen Waddle, Denver Broncos.",
     "Add pool: 290 player(s) resolved for the page's roster editor."
   ]
 }
