@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-13T19:31:12Z",
-  "snapshot_id": "2026-11-13T19:31:12Z",
+  "generated_utc": "2026-11-13T20:19:12Z",
+  "snapshot_id": "2026-11-13T20:19:12Z",
   "run_date": "2026-11-13",
   "season": 2026,
   "week": 10,
@@ -346,7 +346,7 @@
     "week": 10
   },
   "log": [
-    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-13T19:31:12Z)",
+    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-13T20:19:12Z)",
     "  Sleeper: 2026 regular week 10 projections; player dump fetched 2026-11-13T01:38:40.575974+00:00.",
     "  Removed 181 player(s): no Sleeper projection.",
     "  Removed 5 player(s): no Sleeper match.",
@@ -573,7 +573,7 @@
     "[28 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-11-13T19:31:12Z (shared with position rankings).",
+    "Projection snapshot: 2026-11-13T20:19:12Z (shared with position rankings).",
     "Season 2026 week 10; Sleeper players fetched 2026-11-13T01:38:40.575974+00:00.",
     "Benched before optimizing: Jaylen Waddle, Denver Broncos.",
     "Add pool: 290 player(s) resolved for the page's roster editor."
