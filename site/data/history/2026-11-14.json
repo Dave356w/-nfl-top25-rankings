@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-14T20:27:31Z",
-  "snapshot_id": "2026-11-14T20:27:31Z",
+  "generated_utc": "2026-11-14T20:43:59Z",
+  "snapshot_id": "2026-11-14T20:43:59Z",
   "run_date": "2026-11-14",
   "top_n": 50,
   "positions": [
@@ -3026,14 +3026,14 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 10)": 372
   },
   "log": [
-    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T20:27:31Z)",
+    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T20:43:59Z)",
     "  Sleeper: 2026 regular week 10 projections; player dump fetched 2026-11-14T01:14:05.471501+00:00.",
     "  ESPN: matched 409 of 415 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 3 -- Jaydn Ott (KC) S=3.56 E=7.16, Gavin Bartholomew (MIN) S=4.88 E=6.69, Ben Yurosek (MIN) S=3.51 E=2.5",
     "    ESPN: out: 5 -- Chris Brooks (GB) S=3.59 E=4.12, Andrei Iosivas (CIN) S=2.92 E=0.0, Travis Etienne Jr. (NO) S=8.04 E=9.36, Tyrell Shavers (BUF) S=1.62 E=0.0, David Njoku (LAC) S=3.28 E=0.0",
     "    ESPN only: 7 -- Harrison Wallace III (ARI) S=nan E=2.76, Brennan Presley (LAR) S=nan E=1.52, Ryan Izzo () S=nan E=1.4, Mark Redman (GB) S=nan E=0.84, Jameis Winston (NYG) S=nan E=0.65, Coleman Owen (GB) S=nan E=0.14, Anthony Tyus III (CAR) S=nan E=0.04",
     "    sources disagree: 7 -- Xavier Hutchinson (HOU) S=4.93 E=8.24, MarShawn Lloyd (GB) S=2.97 E=6.45, Las Vegas Raiders (LV) S=5.88 E=3.47, Atlanta Falcons (ATL) S=5.49 E=3.14, Kevin Coleman Jr. (MIA) S=2.12 E=6.31, Darnell Mooney (NYG) S=2.93 E=5.26, Jalen Nailor (LV) S=2.99 E=5.07",
-    "  Three-source mean: 409 projected players (328 on all three, 68 on two, 13 on one). CBS review: 15 flagged player(s), 13 found on CBS; CBS scaled to Sleeper DEF x0.64, K x0.99, QB x0.87, RB x1.03, TE x0.97, WR x0.95.",
+    "  Three-source mean: 409 projected players (328 on all three, 68 on two, 13 on one). CBS review: 15 flagged player(s), 14 found on CBS; CBS scaled to Sleeper DEF x0.64, K x0.99, QB x0.87, RB x1.03, TE x0.97, WR x0.95.",
     "    Jaydn Ott (KC RB): S=3.56 E=7.16 C=5.83 -> 6.5 [CBS confirms the promotion]",
     "    Xavier Hutchinson (HOU WR): S=4.93 E=8.24 C=4.75 -> 5.97 [CBS sides with Sleeper]",
     "    Las Vegas Raiders (LV DEF): S=5.88 E=3.47 C=5.62 -> 4.99 [CBS sides with Sleeper]",
@@ -3042,7 +3042,7 @@
     "    Kevin Coleman Jr. (MIA WR): S=2.12 E=6.31 C=4.56 -> 4.33 [CBS sides with ESPN]",
     "    Darnell Mooney (NYG WR): S=2.93 E=5.26 C=4.46 -> 4.22 [CBS sides with ESPN]",
     "    MarShawn Lloyd (GB RB): S=2.97 E=6.45 C=2.89 -> 4.1 [CBS sides with Sleeper]",
-    "    Jalen Nailor (LV WR): S=2.99 E=5.07 C=None -> 4.03 [not on CBS -- unconfirmed]",
+    "    Jalen Nailor (LV WR): S=2.99 E=5.07 C=2.99 -> 3.68 [CBS sides with Sleeper]",
     "    Ben Yurosek (MIN TE): S=3.51 E=2.5 C=2.61 -> 2.55 [CBS confirms the promotion]",
     "    Chris Brooks (GB RB): S=3.59 E=4.12 C=None -> 0.0 [not on CBS -- unconfirmed]",
     "    Andrei Iosivas (CIN WR): S=2.92 E=0.0 C=4.6 -> 0.0 [CBS still projects him -- review]",
