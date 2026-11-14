@@ -2,11 +2,13 @@ name: Daily rankings
 
 on:
   schedule:
-    # One scheduled publisher refreshes all three pages. Daily afternoon runs
-    # include Wednesday, Monday and other non-Thursday evening games.
-    # GitHub may queue scheduled runs, so these times are approximate.
-    - cron: "0 13 * * *"
-    - cron: "0 21 * * *"
+    # Twice daily, every day. GitHub queued the old on-the-hour schedules by
+    # 3-7 hours (13:00 UTC landed ~18:00-20:00), so these sit off the hour and
+    # each has a backup that only builds if the primary has not landed yet.
+    - cron: "23 14 * * *"   # morning: 6:23 PT / 9:23 ET
+    - cron: "51 15 * * *"   # morning backup (skipped if a fresh snapshot exists)
+    - cron: "37 21 * * *"   # afternoon: 1:37 PT, after the 4:00 ET injury reports
+    - cron: "13 23 * * *"   # afternoon backup (skipped if a fresh snapshot exists)
     # Game-day refreshes (UTC; set for Eastern standard time, Nov-Mar). Each
     # lands just after a kickoff window's inactive lists (~90 min before kick)
     # and before the next kickoff. Off-the-hour minutes dodge GitHub's busiest
@@ -51,22 +53,49 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    outputs:
+      skipped: ${{ steps.gate.outputs.skip }}
     steps:
       - uses: actions/checkout@v4
 
+      # A backup schedule builds only when its primary has not published in
+      # the last 100 minutes (queued, delayed or failed). Every other trigger
+      # -- primaries, game-day runs, pushes, manual runs -- always builds.
+      - name: Skip a backup run when the primary already landed
+        id: gate
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          case "$SCHEDULE" in
+            "51 15 * * *"|"13 23 * * *")
+              # The snapshot's own timestamp; a shallow checkout has no history.
+              last=$(python3 -c "import json,datetime as d;print(int(d.datetime.fromisoformat(json.load(open('site/data/lineup/latest.json'))['generated_utc'].replace('Z','+00:00')).timestamp()))" 2>/dev/null || echo 0)
+              age=$(( $(date +%s) - ${last:-0} ))
+              if [ "$age" -lt 6000 ]; then
+                echo "Fresh snapshot ${age}s old; backup run skipped."
+                echo "skip=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+          esac
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
       - uses: actions/setup-python@v5
+        if: steps.gate.outputs.skip != 'true'
         with:
           python-version: "3.11"
           cache: pip
 
-      - run: pip install -r requirements.txt
+      - if: steps.gate.outputs.skip != 'true'
+        run: pip install -r requirements.txt
 
       # Sleeper asks for /players/nfl (about 5MB) at most once a day. The
       # pipeline reuses a copy younger than 24h; this carries it across runs.
       - name: Date for the Sleeper player cache
+        if: steps.gate.outputs.skip != 'true'
         id: day
         run: echo "utc=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
+        if: steps.gate.outputs.skip != 'true'
         with:
           path: sleeper_cache
           key: sleeper-players-${{ steps.day.outputs.utc }}
@@ -75,6 +104,7 @@ jobs:
       # window. run_synced writes nothing until every page validates, so a
       # failed attempt leaves the last good snapshot in place.
       - name: Build synchronized rankings, lineup and Showdown
+        if: steps.gate.outputs.skip != 'true'
         run: |
           for attempt in 1 2 3; do
             python run_synced.py --top-n "${{ inputs.top_n || '50' }}" && exit 0
@@ -85,6 +115,7 @@ jobs:
           exit 1
 
       - name: Commit today's synchronized data
+        if: steps.gate.outputs.skip != 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -97,6 +128,7 @@ jobs:
   # section, and each deploy publishes a fresh checkout of latest main.
   deploy:
     needs: build
+    if: needs.build.outputs.skipped != 'true'
     runs-on: ubuntu-latest
     concurrency:
       group: pages-publish
@@ -115,13 +147,22 @@ jobs:
         with:
           path: site
 
-      # Pages' artifact API fails transiently ("No artifacts named
-      # github-pages", 2026-11-14 18:40Z). One delayed retry rides that out.
+      # Pages' artifact lookup fails intermittently: "No artifacts named
+      # github-pages" (Nov 12, Nov 14) and "Multiple artifacts named
+      # github-pages" (Nov 5, a re-run). The retry uploads a fresh artifact
+      # under its own name and deploys that one, so neither failure repeats.
       - id: deployment
         uses: actions/deploy-pages@v4
         continue-on-error: true
       - if: steps.deployment.outcome == 'failure'
-        run: sleep 60
+        run: sleep 45
+      - if: steps.deployment.outcome == 'failure'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+          name: github-pages-retry-${{ github.run_attempt }}
       - id: deployment_retry
         if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-retry-${{ github.run_attempt }}

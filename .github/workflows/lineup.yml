@@ -88,13 +88,22 @@ jobs:
         with:
           path: site
 
-      # Pages' artifact API fails transiently ("No artifacts named
-      # github-pages", 2026-11-14 18:40Z). One delayed retry rides that out.
+      # Pages' artifact lookup fails intermittently: "No artifacts named
+      # github-pages" (Nov 12, Nov 14) and "Multiple artifacts named
+      # github-pages" (Nov 5, a re-run). The retry uploads a fresh artifact
+      # under its own name and deploys that one, so neither failure repeats.
       - id: deployment
         uses: actions/deploy-pages@v4
         continue-on-error: true
       - if: steps.deployment.outcome == 'failure'
-        run: sleep 60
+        run: sleep 45
+      - if: steps.deployment.outcome == 'failure'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+          name: github-pages-retry-${{ github.run_attempt }}
       - id: deployment_retry
         if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-retry-${{ github.run_attempt }}

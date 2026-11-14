@@ -68,7 +68,7 @@ where they exist and marks refetched past weeks as unverified.
 
 ### Game-day reruns and kickoff locks
 
-`daily.yml` reruns after each kickoff window's inactive lists. A rerun reads
+`daily.yml` refreshes twice daily (14:23 and 21:37 UTC, each with a backup that runs only if the primary has not landed), and reruns after each kickoff window's inactive lists. A rerun reads
 the last published `latest.json`; any player whose kickoff has passed keeps
 the slot (or bench spot) it gave him, and only players yet to play are
 re-optimized. Kickers borrow their team's kickoff, since Yahoo does not price
