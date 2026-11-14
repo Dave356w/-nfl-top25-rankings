@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Weekly Lineup</title>
-<meta name="description" content="This week's recommended fantasy football lineup, built from Sleeper projections and depth charts.">
+<meta name="description" content="This week's recommended fantasy football lineup, built from the average of Sleeper, ESPN and CBS projections and Sleeper depth charts.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <style>
 :root{
@@ -281,6 +281,8 @@ footer{
   .meta-line span{white-space:nowrap}
 }
 @media (min-width:761px){ td[data-cell="meta"]{display:none} }
+  .sources{margin:4px 0 10px 18px;padding:0}
+  .sources li{margin:3px 0}
 </style>
 </head>
 <body>
@@ -427,8 +429,33 @@ footer{
     <div class="panel-body">
       <h4>How the lineup is picked</h4>
       <p id="how"></p>
+      <h4>Projection sources</h4>
+      <p>Every projection is the equal-weight average of three independent weekly
+         half-PPR projections, refreshed on every run:</p>
+      <ul class="sources">
+        <li><b>Sleeper</b> &mdash; weekly projection plus the depth chart and roles.</li>
+        <li><b>ESPN</b> &mdash; weekly projection plus the freshest injury status.</li>
+        <li><b>CBS Sports</b> &mdash; weekly projection, rescaled to Sleeper's scale per
+            position because CBS's standard scoring differs from Yahoo half-PPR.</li>
+      </ul>
+      <p>A player listed by only two sources gets the average of those two (CBS covers
+         about the top 100 per position). Three news rules sit on top:</p>
+      <ul class="sources">
+        <li><b>ESPN says out</b> &rarr; projected 0 and dropped, even if another source
+            still projects him.</li>
+        <li><b>Starter ruled out</b> &rarr; his backup moves up to starter on the depth chart,
+            and while Sleeper still trails the news his projection averages ESPN and CBS only.</li>
+        <li><b>Sources disagree</b> by more than 40% &rarr; still averaged, and listed with
+            CBS's verdict in the run summary on GitHub.</li>
+      </ul>
+      <p>If CBS is unreachable the run publishes the Sleeper + ESPN average; if ESPN is
+         also down, Sleeper alone. The label on each player says which was used.</p>
+      <p><b>Why an average:</b> on 2026 weeks 1&ndash;9 no single source was more accurate
+         than another, and only the three-way average beat Sleeper alone by a reliable
+         margin (about 0.1 point less error per player-week). A check reruns every
+         Tuesday; results are on the <a href="./#detail">rankings page</a>.</p>
       <div class="legend">
-        <div><span class="badge model">sleeper</span> Sleeper + ESPN + CBS half-PPR weekly mean (equal weights; Sleeper alone if the others fail)</div>
+        <div><span class="badge model">sleeper</span> projection average (label names the sources used)</div>
       </div>
       <h4>Projection sources in this lineup</h4>
       <div class="chips" id="methods"></div>
@@ -441,10 +468,13 @@ footer{
       <h4>Run log</h4>
       <pre class="log" id="log"></pre>
       <h4>Caveats</h4>
-      <p>Sleeper projects half-PPR scoring, so check a close call against
-         your own league's scoring. Projections are only as current as the
-         last run's Sleeper pull, and P25/P90 are a lognormal band around the mean
-         rather than a simulated outcome. Kickoffs show in your local timezone.</p>
+      <p>Projections are half-PPR, so check a close call against your own
+         league's scoring. They are only as current as the last run, and P25/P90
+         are a lognormal band around the mean rather than a simulated outcome.
+         Each player row also carries the three sources' separate numbers
+         (<code>sleeper_mean</code>, <code>espn_mean</code>, <code>cbs_mean</code>)
+         in <a href="data/lineup/latest.json">latest.json</a>. Players whose game has
+         kicked off stay where the last run put them. Kickoffs show in your local timezone.</p>
     </div>
   </details>
 
@@ -1002,7 +1032,10 @@ footer{
       { k: "Week", v: num(d.week) ? "Week " + d.week : "—",
         n: d.season ? d.season + " season" : "" },
       { k: "Objective", v: objectiveLabel(d.objective), n: slots },
-      { k: "Projections", v: "Sleeper",
+      { k: "Projections", v: (function (mm) {
+          mm = String(mm || "");
+          return mm.indexOf("CBS") >= 0 ? "3-source avg" : mm.indexOf("ESPN") >= 0 ? "Sleeper+ESPN" : "Sleeper";
+        })((d.projection || {}).method),
         n: num(m.week) ? "half-PPR, week " + m.week : "half-PPR" }
     ].map(function (s) {
       return '<div class="stat"><div class="k">' + escapeHtml(s.k) + '</div><div class="v">' +
@@ -1036,8 +1069,8 @@ footer{
     );
 
     el("how").textContent =
-      "Every player's mean is Sleeper's half-PPR projection for the week, kickers included. " +
-      "Sleeper folds injuries into that projection, so anyone it does not project this week " +
+      "Every player's mean is the average of the Sleeper, ESPN and CBS half-PPR projections for the week, " +
+      "kickers included (see Projection sources). Anyone the sources do not project this week, or ESPN lists as out, " +
       "is benched; injury tags are shown for reference. P25 and P90 are a lognormal band whose width comes " +
       "from the player's depth-chart role; depth widens the band but never moves the mean.";
 

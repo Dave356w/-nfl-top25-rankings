@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NFL Top 50 by Position</title>
-<meta name="description" content="Daily Yahoo NFL fantasy top-50 rankings from Sleeper projections and depth charts, priced with Yahoo DFS salaries.">
+<meta name="description" content="Daily Yahoo NFL fantasy top-50 rankings from the average of Sleeper, ESPN and CBS projections, with Sleeper depth charts and Yahoo DFS salaries.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
 <style>
 :root{
@@ -297,6 +297,12 @@ footer{
   .meta-line span{white-space:nowrap}
 }
 @media (min-width:761px){ td[data-cell="meta"]{display:none} }
+  .sources{margin:4px 0 10px 18px;padding:0}
+  .sources li{margin:3px 0}
+  .sq-table{border-collapse:collapse;margin:6px 0;font-size:13px}
+  .sq-table th,.sq-table td{padding:3px 10px 3px 0;text-align:left}
+  .sq-table td+td,.sq-table th+th{text-align:right}
+  .sq-foot{font-size:12px;opacity:.75;margin-top:2px}
 </style>
 </head>
 <body>
@@ -406,10 +412,10 @@ footer{
     <summary>Run details, data sources and caveats</summary>
     <div class="panel-body">
       <h4>What the numbers mean</h4>
-      <p><b>Proj FP</b> is Sleeper's weekly projection for the player in half-PPR
-         scoring, the same scoring Yahoo DFS uses. Sleeper folds injuries into that
-         projection, so a player it does not expect to play projects at zero and
-         is not ranked.</p>
+      <p><b>Proj FP</b> is the player's weekly projection in half-PPR scoring, the
+         same scoring Yahoo DFS uses: the average of Sleeper, ESPN and CBS (see
+         <i>Projection sources</i> below). A player the sources do not expect to play
+         projects at zero and is not ranked.</p>
       <p><b>Role</b> is the player's rank within his own alignment slot on the
          Sleeper depth chart, so all three receivers in a three-wide set read as
          starters rather than as a starter and two reserves. <b>Depth</b> is the
@@ -418,8 +424,34 @@ footer{
          Quarterbacks are ordered by projection, so the one Sleeper expects to
          start is the starter even before its chart moves.</p>
 
+      <h4>Projection sources</h4>
+      <p>Every projection is the equal-weight average of three independent weekly
+         half-PPR projections, refreshed on every run:</p>
+      <ul class="sources">
+        <li><b>Sleeper</b> &mdash; weekly projection plus the depth chart and roles.</li>
+        <li><b>ESPN</b> &mdash; weekly projection plus the freshest injury status.</li>
+        <li><b>CBS Sports</b> &mdash; weekly projection, rescaled to Sleeper's scale per
+            position because CBS's standard scoring differs from Yahoo half-PPR.</li>
+      </ul>
+      <p>A player listed by only two sources gets the average of those two (CBS covers
+         about the top 100 per position). Three news rules sit on top:</p>
+      <ul class="sources">
+        <li><b>ESPN says out</b> &rarr; projected 0 and dropped, even if another source
+            still projects him.</li>
+        <li><b>Starter ruled out</b> &rarr; his backup moves up to starter on the depth chart,
+            and while Sleeper still trails the news his projection averages ESPN and CBS only.</li>
+        <li><b>Sources disagree</b> by more than 40% &rarr; still averaged, and listed with
+            CBS's verdict in the run summary on GitHub.</li>
+      </ul>
+      <p>If CBS is unreachable the run publishes the Sleeper + ESPN average; if ESPN is
+         also down, Sleeper alone. The label on each player says which was used.</p>
+      <p><b>Why an average:</b> on 2026 weeks 1&ndash;9 no single source was more accurate
+         than another, and only the three-way average beat Sleeper alone by a reliable
+         margin (about 0.1 point less error per player-week). A check reruns every
+         Tuesday<span class="sq-note"></span>.</p>
+      <div class="sq" id="sq" hidden></div>
       <div class="legend">
-        <div><span class="badge model">sleeper</span> Sleeper + ESPN + CBS half-PPR mean (equal weights; Sleeper alone if the others fail)</div>
+        <div><span class="badge model">sleeper</span> projection average (label names the sources used)</div>
         <div><span class="badge override">override</span> manual value</div>
       </div>
       <h4>Projection sources used on this slate</h4>
@@ -429,9 +461,9 @@ footer{
       <h4>Run log</h4>
       <pre class="log" id="log"></pre>
       <h4>Caveats</h4>
-      <p>These are projections, not predictions with a guarantee. Yahoo's feed and
-         Sleeper's projection endpoint are undocumented, and a run's injury status
-         can lag late team news.
+      <p>These are projections, not predictions with a guarantee. The Yahoo, Sleeper,
+         ESPN and CBS feeds are all unofficial and can change shape without notice,
+         and a run's injury status can lag late team news.
          Kickoff times are shown in
          your local timezone.</p>
     </div>
@@ -482,6 +514,44 @@ footer{
   }
 
   function money(v) { return num(v) ? "$" + v.toLocaleString() : "—"; }
+
+  // "3-source avg" / "Sleeper+ESPN" / "Sleeper": what the run actually used.
+  function sourceShort(projection) {
+    var m = String((projection && projection.method) || "");
+    if (m.indexOf("CBS") >= 0) return "3-source avg";
+    if (m.indexOf("ESPN") >= 0) return "Sleeper+ESPN";
+    return "Sleeper";
+  }
+
+  // The weekly source-quality check (tools/evaluate_sources.py), if published.
+  function renderSourceQuality() {
+    fetch("data/source_quality.json", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (q) {
+        if (!q || !q.overall || !q.overall.length) return;
+        var paired = {};
+        (q.paired_vs_sleeper || []).forEach(function (p) { paired[p.source] = p; });
+        var rows = q.overall.map(function (r) {
+          var p = paired[r.source];
+          var diff = p ? (p.mae_minus_sleeper > 0 ? "+" : "") + p.mae_minus_sleeper.toFixed(2) +
+            (p.significant ? (p.mae_minus_sleeper < 0 ? " ✓" : " ✗") : "") : "—";
+          return "<tr><td>" + escapeHtml(r.source) + "</td><td>" + r.mae.toFixed(2) +
+            "</td><td>" + diff + "</td><td>" + (r.rank_rho == null ? "—" : r.rank_rho.toFixed(2)) + "</td></tr>";
+        }).join("");
+        var weeks = q.weeks || [];
+        el("sq").innerHTML =
+          "<table class=\"sq-table\"><thead><tr><th>Source</th><th>Avg miss</th>" +
+          "<th>vs Sleeper</th><th>Rank ρ</th></tr></thead><tbody>" + rows + "</tbody></table>" +
+          "<p class=\"sq-foot\">" + escapeHtml(q.sample.player_weeks + " player-weeks, weeks " +
+          weeks[0] + "–" + weeks[weeks.length - 1] + ", checked " + String(q.generated_utc).slice(0, 10)) +
+          ". Avg miss = mean absolute error in points; ✓ = reliably better than Sleeper (95%).</p>";
+        el("sq").hidden = false;
+        document.querySelectorAll(".sq-note").forEach(function (n) {
+          n.textContent = "; latest results below";
+        });
+      })
+      .catch(function () {});
+  }
 
   function escapeHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -788,7 +858,7 @@ footer{
        "</div>"],
       ['<div class="k">Players priced</div><div class="v">' + d.slate.player_count +
        '</div><div class="n">' + escapeHtml((d.positions || []).join(" · ")) + "</div>"],
-      ['<div class="k">Projections</div><div class="v">Sleeper</div><div class="n">' +
+      ['<div class="k">Projections</div><div class="v">' + escapeHtml(sourceShort(projection)) + '</div><div class="n">' +
        escapeHtml(projection.week ? projection.season + " week " + projection.week : "—") +
        ", half-PPR</div>"],
       ['<div class="k">Removed</div><div class="v">' +
@@ -806,7 +876,8 @@ footer{
     }).join("") || '<span class="badge">no breakdown recorded</span>';
 
     el("feeds").textContent =
-      "Yahoo salaries + Sleeper projections and depth charts" +
+      "Yahoo salaries; " + (projection.method || "Sleeper half-PPR projection") +
+      "; Sleeper depth charts" +
       (d.availability_removed
         ? ". " + d.availability_removed + " priced player(s) left out: unmatched or not projected."
         : "");
@@ -873,6 +944,7 @@ footer{
   });
 
   /* ---------- load ---------- */
+  renderSourceQuality();
   fetch("data/latest.json", { cache: "no-store" })
     .then(function (r) {
       if (!r.ok) throw new Error("HTTP " + r.status);

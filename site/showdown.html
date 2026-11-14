@@ -321,13 +321,16 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
         (for at most a second and a half).</p>
       <h4>Player pool and depth</h4>
       <p>Untick a player to leave them out. Changing a player's depth re-reads their
-        volatility and scoreless rate from the published tables; Sleeper's
+        volatility and scoreless rate from the published tables; the
         projection stays as published. Teammates between the old and new spot
         shift by one. Depth edits stay in this browser.</p>
       <h4>Where the numbers come from</h4>
-      <p>A daily GitHub Actions run takes every player's projection and depth
-        from Sleeper, salaries and caps from Yahoo, and publishes each game's
-        correlation model.
+      <p>A GitHub Actions run (daily, plus after each game-day inactives list)
+        averages every player's Sleeper, ESPN and CBS half-PPR projections,
+        takes depth from Sleeper's chart (with a backup moved up when ESPN rules
+        his starter out), salaries and caps from Yahoo, and publishes each game's
+        correlation model. The <a href="./#detail">rankings page</a> describes the
+        projection sources and their weekly accuracy check.
         This page simulates the game and searches every valid lineup on your
         device, so results vary slightly from run to run. Projections are
         estimates; check late injury news before lock.</p>
