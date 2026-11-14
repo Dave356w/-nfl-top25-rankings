@@ -122,3 +122,25 @@ class KickoffLockTest(unittest.TestCase):
         self.assertEqual(self.lo.kickoff_locks(self.previous, 2026, 11, now="2026-11-15 19:00"), {})
         self.assertEqual(self.lo.kickoff_locks(self.previous, 2026, 10, now="2026-11-15 17:00"), {})
         self.assertEqual(self.lo.kickoff_locks(None, 2026, 10), {})
+
+
+class DepthPromotionTest(unittest.TestCase):
+    """A starter ESPN rules out leaves the chart, so his backup is tier 1."""
+
+    def test_backup_promoted_when_starter_out(self):
+        players = PLAYERS.copy()
+        players["Depth_Chart_Position"] = ["RB", "RB", "QB", "RB", None, "LWR", "LWR"]
+        players["Depth_Chart_Order"] = pd.array([1, 2, 1, 1, pd.NA, 1, 1], dtype="Int64")
+        frame = espn.projection_frame(RAW, 10, sleeper.normalize_name)
+        blended, _ = espn.blend(players, SLEEPER, frame, weight=0.5)
+        ref = sleeper.build_reference(players, blended).set_index("player_id")
+        self.assertEqual(int(ref.loc["13337", "Role_Tier"]), 1)   # Johnson
+        self.assertEqual(int(ref.loc["13337", "Depth_Rank"]), 1)
+        self.assertGreater(int(ref.loc["8151", "Depth_Rank"]), 1)  # Walker
+
+    def test_no_espn_column_leaves_chart_alone(self):
+        players = PLAYERS.copy()
+        players["Depth_Chart_Position"] = ["RB", "RB", "QB", "RB", None, "LWR", "LWR"]
+        players["Depth_Chart_Order"] = pd.array([1, 2, 1, 1, pd.NA, 1, 1], dtype="Int64")
+        ref = sleeper.build_reference(players, SLEEPER).set_index("player_id")
+        self.assertEqual(int(ref.loc["13337", "Role_Tier"]), 2)

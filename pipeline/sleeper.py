@@ -241,6 +241,14 @@ def build_reference(players: pd.DataFrame, projections: pd.DataFrame) -> pd.Data
     """
     ref = players.merge(projections, on="player_id", how="left")
     ref["Projected"] = ref["Sleeper_FP"].fillna(0.0).gt(0)
+    if "ESPN_Status" in ref:
+        # A player ESPN has ruled out leaves the chart for the week, so the man
+        # behind him in his slot becomes that slot's tier 1 -- and gets a
+        # starter's CV, zero rate and correlations, not a backup's. Sleeper's
+        # chart can lag the news by days, as its projections do.
+        from pipeline.espn import OUT_STATUSES, NEWS_OVERRIDE_STATUSES
+        ruled_out = ref["ESPN_Status"].isin(OUT_STATUSES | NEWS_OVERRIDE_STATUSES) & ~ref["Projected"]
+        ref["Depth_Chart_Order"] = ref["Depth_Chart_Order"].mask(ruled_out)
     ref["Depth_Slot"] = ref["Depth_Chart_Position"].where(
         ref["Depth_Chart_Position"].notna(), None)
     slot_position = ref["Depth_Slot"].map(lambda s: DEPTH_SLOT_POSITION.get(str(s).upper()) if s else None)
