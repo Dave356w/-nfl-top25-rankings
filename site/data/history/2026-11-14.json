@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-14T19:12:30Z",
-  "snapshot_id": "2026-11-14T19:12:30Z",
+  "generated_utc": "2026-11-14T19:43:26Z",
+  "snapshot_id": "2026-11-14T19:43:26Z",
   "run_date": "2026-11-14",
   "top_n": 50,
   "positions": [
@@ -124,7 +124,7 @@
         "player": "Josh Allen",
         "team": "BUF",
         "opponent": "NYJ",
-        "fp": 24.34,
+        "fp": 24.31,
         "salary": 40,
         "fp_per_salary": 0.608,
         "role": "starter",
@@ -194,9 +194,9 @@
         "player": "Patrick Mahomes",
         "team": "KC",
         "opponent": "ATL",
-        "fp": 19.25,
+        "fp": 19.01,
         "salary": 35,
-        "fp_per_salary": 0.55,
+        "fp_per_salary": 0.543,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -208,9 +208,9 @@
         "player": "Bryce Young",
         "team": "CAR",
         "opponent": "NO",
-        "fp": 18.84,
+        "fp": 18.86,
         "salary": 30,
-        "fp_per_salary": 0.628,
+        "fp_per_salary": 0.629,
         "role": "starter",
         "role_slot": "QB QB",
         "depth": 1,
@@ -546,9 +546,9 @@
         "player": "James Cook III",
         "team": "BUF",
         "opponent": "NYJ",
-        "fp": 18.2,
+        "fp": 18.41,
         "salary": 38,
-        "fp_per_salary": 0.479,
+        "fp_per_salary": 0.484,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -557,12 +557,12 @@
       },
       {
         "rank": 4,
-        "player": "Bijan Robinson",
-        "team": "ATL",
-        "opponent": "KC",
-        "fp": 17.58,
-        "salary": 38,
-        "fp_per_salary": 0.463,
+        "player": "Chuba Hubbard",
+        "team": "CAR",
+        "opponent": "NO",
+        "fp": 17.62,
+        "salary": 34,
+        "fp_per_salary": 0.518,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -571,12 +571,12 @@
       },
       {
         "rank": 5,
-        "player": "Chuba Hubbard",
-        "team": "CAR",
-        "opponent": "NO",
-        "fp": 17.27,
-        "salary": 34,
-        "fp_per_salary": 0.508,
+        "player": "Bijan Robinson",
+        "team": "ATL",
+        "opponent": "KC",
+        "fp": 17.58,
+        "salary": 38,
+        "fp_per_salary": 0.463,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -630,9 +630,9 @@
         "player": "Emmett Johnson",
         "team": "KC",
         "opponent": "ATL",
-        "fp": 15.03,
+        "fp": 14.97,
         "salary": 15,
-        "fp_per_salary": 1.002,
+        "fp_per_salary": 0.998,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -882,9 +882,9 @@
         "player": "Jordan Mason",
         "team": "MIN",
         "opponent": "GB",
-        "fp": 8.65,
+        "fp": 8.64,
         "salary": 18,
-        "fp_per_salary": 0.481,
+        "fp_per_salary": 0.48,
         "role": "starter",
         "role_slot": "RB RB",
         "depth": 1,
@@ -949,20 +949,6 @@
       },
       {
         "rank": 32,
-        "player": "Jaydn Ott",
-        "team": "KC",
-        "opponent": "ATL",
-        "fp": 7.16,
-        "salary": 10,
-        "fp_per_salary": 0.716,
-        "role": "rotation",
-        "role_slot": "RB RB",
-        "depth": 2,
-        "kickoff_utc": "2026-11-15 18:00",
-        "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
-      },
-      {
-        "rank": 33,
         "player": "Chris Rodriguez Jr.",
         "team": "JAX",
         "opponent": "TEN",
@@ -976,7 +962,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 34,
+        "rank": 33,
         "player": "Braelon Allen",
         "team": "NYJ",
         "opponent": "BUF",
@@ -990,7 +976,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 35,
+        "rank": 34,
         "player": "Dylan Sampson",
         "team": "CLE",
         "opponent": "HOU",
@@ -1004,7 +990,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 36,
+        "rank": 35,
         "player": "Lan Larison",
         "team": "NE",
         "opponent": "DET",
@@ -1018,7 +1004,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 37,
+        "rank": 36,
         "player": "Devin Singletary",
         "team": "NYG",
         "opponent": "WAS",
@@ -1032,7 +1018,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 38,
+        "rank": 37,
         "player": "Emari Demercado",
         "team": "HOU",
         "opponent": "CLE",
@@ -1046,13 +1032,27 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 39,
+        "rank": 38,
         "player": "Kaleb Johnson",
         "team": "GB",
         "opponent": "MIN",
         "fp": 6.6,
         "salary": 13,
         "fp_per_salary": 0.508,
+        "role": "rotation",
+        "role_slot": "RB RB",
+        "depth": 2,
+        "kickoff_utc": "2026-11-15 18:00",
+        "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
+      },
+      {
+        "rank": 39,
+        "player": "Jaydn Ott",
+        "team": "KC",
+        "opponent": "ATL",
+        "fp": 6.5,
+        "salary": 10,
+        "fp_per_salary": 0.65,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -1187,26 +1187,26 @@
       },
       {
         "rank": 49,
-        "player": "MarShawn Lloyd",
-        "team": "GB",
-        "opponent": "MIN",
-        "fp": 4.71,
-        "salary": 11,
-        "fp_per_salary": 0.428,
-        "role": "starter",
+        "player": "Ty Johnson",
+        "team": "BUF",
+        "opponent": "NYJ",
+        "fp": 4.53,
+        "salary": 12,
+        "fp_per_salary": 0.378,
+        "role": "rotation",
         "role_slot": "RB RB",
-        "depth": 1,
+        "depth": 2,
         "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
         "rank": 50,
-        "player": "Ty Johnson",
-        "team": "BUF",
-        "opponent": "NYJ",
-        "fp": 4.61,
-        "salary": 12,
-        "fp_per_salary": 0.384,
+        "player": "Tyjae Spears",
+        "team": "TEN",
+        "opponent": "JAX",
+        "fp": 3.97,
+        "salary": 11,
+        "fp_per_salary": 0.361,
         "role": "rotation",
         "role_slot": "RB RB",
         "depth": 2,
@@ -1276,9 +1276,9 @@
         "player": "Justin Jefferson",
         "team": "MIN",
         "opponent": "GB",
-        "fp": 14.95,
+        "fp": 14.94,
         "salary": 29,
-        "fp_per_salary": 0.516,
+        "fp_per_salary": 0.515,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
@@ -1430,9 +1430,9 @@
         "player": "Rashee Rice",
         "team": "KC",
         "opponent": "ATL",
-        "fp": 11.39,
+        "fp": 11.37,
         "salary": 25,
-        "fp_per_salary": 0.456,
+        "fp_per_salary": 0.455,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 1,
@@ -1514,7 +1514,7 @@
         "player": "Jalen Coker",
         "team": "CAR",
         "opponent": "NO",
-        "fp": 10.06,
+        "fp": 10.07,
         "salary": 16,
         "fp_per_salary": 0.629,
         "role": "starter",
@@ -1598,9 +1598,9 @@
         "player": "Jordan Addison",
         "team": "MIN",
         "opponent": "GB",
-        "fp": 8.81,
+        "fp": 8.89,
         "salary": 15,
-        "fp_per_salary": 0.587,
+        "fp_per_salary": 0.593,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
@@ -1640,7 +1640,7 @@
         "player": "Khalil Shakir",
         "team": "BUF",
         "opponent": "NYJ",
-        "fp": 8.36,
+        "fp": 8.35,
         "salary": 18,
         "fp_per_salary": 0.464,
         "role": "starter",
@@ -1763,6 +1763,20 @@
       },
       {
         "rank": 40,
+        "player": "Josh Downs",
+        "team": "KC",
+        "opponent": "ATL",
+        "fp": 7.2,
+        "salary": 15,
+        "fp_per_salary": 0.48,
+        "role": "starter",
+        "role_slot": "WR LWR",
+        "depth": 2,
+        "kickoff_utc": "2026-11-15 18:00",
+        "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
+      },
+      {
+        "rank": 41,
         "player": "Caleb Douglas",
         "team": "MIA",
         "opponent": "IND",
@@ -1776,21 +1790,21 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 41,
+        "rank": 42,
         "player": "Xavier Worthy",
         "team": "KC",
         "opponent": "ATL",
-        "fp": 7.04,
+        "fp": 7.1,
         "salary": 16,
-        "fp_per_salary": 0.44,
+        "fp_per_salary": 0.444,
         "role": "starter",
         "role_slot": "WR RWR",
-        "depth": 2,
+        "depth": 3,
         "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 42,
+        "rank": 43,
         "player": "Konata Mumpfield",
         "team": "LAR",
         "opponent": "ARI",
@@ -1804,7 +1818,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 43,
+        "rank": 44,
         "player": "Tutu Atwell",
         "team": "LAR",
         "opponent": "ARI",
@@ -1818,7 +1832,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 44,
+        "rank": 45,
         "player": "Ryan Flournoy",
         "team": "DAL",
         "opponent": "SF",
@@ -1829,20 +1843,6 @@
         "role_slot": "WR SWR",
         "depth": 3,
         "kickoff_utc": "2026-11-15 21:25",
-        "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
-      },
-      {
-        "rank": 45,
-        "player": "Josh Downs",
-        "team": "KC",
-        "opponent": "ATL",
-        "fp": 6.84,
-        "salary": 15,
-        "fp_per_salary": 0.456,
-        "role": "starter",
-        "role_slot": "WR LWR",
-        "depth": 3,
-        "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
@@ -1903,15 +1903,15 @@
       },
       {
         "rank": 50,
-        "player": "Xavier Hutchinson",
-        "team": "HOU",
-        "opponent": "CLE",
-        "fp": 6.58,
-        "salary": 13,
-        "fp_per_salary": 0.506,
+        "player": "Chimere Dike",
+        "team": "TEN",
+        "opponent": "JAX",
+        "fp": 6.46,
+        "salary": 12,
+        "fp_per_salary": 0.538,
         "role": "rotation",
-        "role_slot": "WR LWR",
-        "depth": 4,
+        "role_slot": "WR SWR",
+        "depth": 3,
         "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       }
@@ -2062,9 +2062,9 @@
         "player": "Dalton Kincaid",
         "team": "BUF",
         "opponent": "NYJ",
-        "fp": 7.65,
+        "fp": 7.64,
         "salary": 18,
-        "fp_per_salary": 0.425,
+        "fp_per_salary": 0.424,
         "role": "starter",
         "role_slot": "TE TE",
         "depth": 1,
@@ -2157,20 +2157,6 @@
       },
       {
         "rank": 18,
-        "player": "Gavin Bartholomew",
-        "team": "MIN",
-        "opponent": "GB",
-        "fp": 6.69,
-        "salary": 10,
-        "fp_per_salary": 0.669,
-        "role": "starter",
-        "role_slot": "TE TE",
-        "depth": 1,
-        "kickoff_utc": "2026-11-15 18:00",
-        "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
-      },
-      {
-        "rank": 19,
         "player": "Darnell Washington",
         "team": "PIT",
         "opponent": "CIN",
@@ -2184,7 +2170,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 20,
+        "rank": 19,
         "player": "Chig Okonkwo",
         "team": "WAS",
         "opponent": "NYG",
@@ -2198,7 +2184,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 21,
+        "rank": 20,
         "player": "Tyler Higbee",
         "team": "LAR",
         "opponent": "ARI",
@@ -2212,7 +2198,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 22,
+        "rank": 21,
         "player": "Juwan Johnson",
         "team": "NO",
         "opponent": "CAR",
@@ -2226,7 +2212,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 23,
+        "rank": 22,
         "player": "Colby Parkinson",
         "team": "LAR",
         "opponent": "ARI",
@@ -2240,7 +2226,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 24,
+        "rank": 23,
         "player": "Greg Dulcich",
         "team": "MIA",
         "opponent": "IND",
@@ -2254,7 +2240,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 25,
+        "rank": 24,
         "player": "Dalton Schultz",
         "team": "HOU",
         "opponent": "CLE",
@@ -2268,7 +2254,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 26,
+        "rank": 25,
         "player": "Eli Raridon",
         "team": "NE",
         "opponent": "DET",
@@ -2282,7 +2268,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 27,
+        "rank": 26,
         "player": "Mark Andrews",
         "team": "BAL",
         "opponent": "LAC",
@@ -2296,7 +2282,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 28,
+        "rank": 27,
         "player": "Gunnar Helm",
         "team": "TEN",
         "opponent": "JAX",
@@ -2310,7 +2296,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 29,
+        "rank": 28,
         "player": "Mason Taylor",
         "team": "NYJ",
         "opponent": "BUF",
@@ -2324,7 +2310,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 30,
+        "rank": 29,
         "player": "Michael Mayer",
         "team": "LV",
         "opponent": "SEA",
@@ -2338,13 +2324,13 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 31,
+        "rank": 30,
         "player": "Tommy Tremble",
         "team": "CAR",
         "opponent": "NO",
-        "fp": 4.95,
+        "fp": 4.96,
         "salary": 11,
-        "fp_per_salary": 0.45,
+        "fp_per_salary": 0.451,
         "role": "rotation",
         "role_slot": "TE TE",
         "depth": 2,
@@ -2352,7 +2338,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 32,
+        "rank": 31,
         "player": "Brevyn Spann-Ford",
         "team": "DAL",
         "opponent": "SF",
@@ -2363,6 +2349,20 @@
         "role_slot": "TE TE",
         "depth": 1,
         "kickoff_utc": "2026-11-15 21:25",
+        "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
+      },
+      {
+        "rank": 32,
+        "player": "Gavin Bartholomew",
+        "team": "MIN",
+        "opponent": "GB",
+        "fp": 4.41,
+        "salary": 10,
+        "fp_per_salary": 0.441,
+        "role": "starter",
+        "role_slot": "TE TE",
+        "depth": 1,
+        "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
@@ -2524,9 +2524,9 @@
         "player": "Ben Yurosek",
         "team": "MIN",
         "opponent": "GB",
-        "fp": 2.5,
+        "fp": 2.55,
         "salary": 10,
-        "fp_per_salary": 0.25,
+        "fp_per_salary": 0.255,
         "role": "rotation",
         "role_slot": "TE TE",
         "depth": 2,
@@ -2817,6 +2817,20 @@
       },
       {
         "rank": 15,
+        "player": "Las Vegas Raiders",
+        "team": "LV",
+        "opponent": "SEA",
+        "fp": 5.62,
+        "salary": 11,
+        "fp_per_salary": 0.511,
+        "role": "starter",
+        "role_slot": "",
+        "depth": 1,
+        "kickoff_utc": "2026-11-15 21:05",
+        "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
+      },
+      {
+        "rank": 16,
         "player": "Pittsburgh Steelers",
         "team": "PIT",
         "opponent": "CIN",
@@ -2830,7 +2844,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 16,
+        "rank": 17,
         "player": "New Orleans Saints",
         "team": "NO",
         "opponent": "CAR",
@@ -2844,7 +2858,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 17,
+        "rank": 18,
         "player": "Detroit Lions",
         "team": "DET",
         "opponent": "NE",
@@ -2858,7 +2872,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 18,
+        "rank": 19,
         "player": "San Francisco 49ers",
         "team": "SF",
         "opponent": "DAL",
@@ -2872,7 +2886,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 19,
+        "rank": 20,
         "player": "Los Angeles Chargers",
         "team": "LAC",
         "opponent": "BAL",
@@ -2886,7 +2900,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 20,
+        "rank": 21,
         "player": "Cleveland Browns",
         "team": "CLE",
         "opponent": "HOU",
@@ -2900,7 +2914,7 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 21,
+        "rank": 22,
         "player": "Carolina Panthers",
         "team": "CAR",
         "opponent": "NO",
@@ -2914,21 +2928,21 @@
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 22,
-        "player": "Las Vegas Raiders",
-        "team": "LV",
-        "opponent": "SEA",
-        "fp": 4.68,
-        "salary": 11,
-        "fp_per_salary": 0.425,
+        "rank": 23,
+        "player": "Atlanta Falcons",
+        "team": "ATL",
+        "opponent": "KC",
+        "fp": 4.92,
+        "salary": 10,
+        "fp_per_salary": 0.492,
         "role": "starter",
         "role_slot": "",
         "depth": 1,
-        "kickoff_utc": "2026-11-15 21:05",
+        "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
-        "rank": 23,
+        "rank": 24,
         "player": "New England Patriots",
         "team": "NE",
         "opponent": "DET",
@@ -2939,20 +2953,6 @@
         "role_slot": "",
         "depth": 1,
         "kickoff_utc": "2026-11-15 14:30",
-        "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
-      },
-      {
-        "rank": 24,
-        "player": "Atlanta Falcons",
-        "team": "ATL",
-        "opponent": "KC",
-        "fp": 4.32,
-        "salary": 10,
-        "fp_per_salary": 0.432,
-        "role": "starter",
-        "role_slot": "",
-        "depth": 1,
-        "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
       {
@@ -3025,13 +3025,29 @@
     "Sleeper + ESPN half-PPR blend (2026 week 10)": 372
   },
   "log": [
-    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T19:12:30Z)",
+    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T19:43:26Z)",
     "  Sleeper: 2026 regular week 10 projections; player dump fetched 2026-11-14T01:14:05.471501+00:00.",
-    "  ESPN: matched 410 of 416 projected players; blend weight 0.50.",
-    "    ESPN only (starter out): 4 -- Emmett Johnson (KC) S=16.04 E=15.03, Jaydn Ott (KC) S=3.27 E=7.16, Gavin Bartholomew (MIN) S=4.88 E=6.69, Ben Yurosek (MIN) S=3.22 E=2.5",
-    "    ESPN: out: 7 -- Adam Randall (BAL) S=0.2 E=0.0, Chris Brooks (GB) S=3.59 E=4.12, Andrei Iosivas (CIN) S=2.92 E=0.0, Travis Etienne Jr. (NO) S=8.04 E=9.36, Jonathon Brooks (CAR) S=4.42 E=0.0, Tyrell Shavers (BUF) S=1.63 E=0.0, David Njoku (LAC) S=3.29 E=0.0",
+    "  ESPN: matched 409 of 416 projected players; blend weight 0.50.",
+    "    ESPN only (starter out): 3 -- Jaydn Ott (KC) S=3.56 E=7.16, Gavin Bartholomew (MIN) S=4.88 E=6.69, Ben Yurosek (MIN) S=3.51 E=2.5",
+    "    ESPN: out: 6 -- Adam Randall (BAL) S=0.2 E=0.0, Chris Brooks (GB) S=3.59 E=4.12, Andrei Iosivas (CIN) S=2.92 E=0.0, Travis Etienne Jr. (NO) S=8.04 E=9.36, Tyrell Shavers (BUF) S=1.63 E=0.0, David Njoku (LAC) S=3.29 E=0.0",
     "    ESPN only: 7 -- Harrison Wallace III (ARI) S=nan E=2.76, Brennan Presley (LAR) S=nan E=1.52, Ryan Izzo () S=nan E=1.4, Mark Redman (GB) S=nan E=0.84, Jameis Winston (NYG) S=nan E=0.65, Coleman Owen (GB) S=nan E=0.14, Anthony Tyus III (CAR) S=nan E=0.04",
-    "    sources disagree: 7 -- Xavier Hutchinson (HOU) S=4.92 E=8.24, MarShawn Lloyd (GB) S=2.97 E=6.45, Las Vegas Raiders (LV) S=5.88 E=3.47, Atlanta Falcons (ATL) S=5.49 E=3.14, Kevin Coleman Jr. (MIA) S=2.12 E=6.31, Darnell Mooney (NYG) S=2.93 E=5.26, Jalen Nailor (LV) S=2.86 E=5.07",
+    "    sources disagree: 7 -- Xavier Hutchinson (HOU) S=4.92 E=8.24, MarShawn Lloyd (GB) S=2.97 E=6.45, Las Vegas Raiders (LV) S=5.88 E=3.47, Atlanta Falcons (ATL) S=5.49 E=3.14, Kevin Coleman Jr. (MIA) S=2.12 E=6.31, Darnell Mooney (NYG) S=2.93 E=5.26, Jalen Nailor (LV) S=2.99 E=5.07",
+    "  CBS referee: 16 flagged player(s) checked, 14 found on CBS; scale to Sleeper DEF x0.64, K x0.99, QB x0.87, RB x1.03, TE x0.97, WR x0.95.",
+    "    Jaydn Ott (KC RB): S=3.56 E=7.16 C=5.83 -> 6.5 [CBS confirms the promotion]",
+    "    Las Vegas Raiders (LV DEF): S=5.88 E=3.47 C=5.62 -> 5.62 [CBS sides with Sleeper]",
+    "    Xavier Hutchinson (HOU WR): S=4.92 E=8.24 C=4.75 -> 4.92 [CBS sides with Sleeper]",
+    "    Atlanta Falcons (ATL DEF): S=5.49 E=3.14 C=4.92 -> 4.92 [CBS sides with Sleeper]",
+    "    Kevin Coleman Jr. (MIA WR): S=2.12 E=6.31 C=4.56 -> 4.56 [CBS sides with ESPN]",
+    "    Darnell Mooney (NYG WR): S=2.93 E=5.26 C=4.46 -> 4.46 [CBS sides with ESPN]",
+    "    Gavin Bartholomew (MIN TE): S=4.88 E=6.69 C=2.13 -> 4.41 [CBS sides with Sleeper -- review]",
+    "    Jalen Nailor (LV WR): S=2.99 E=5.07 C=None -> 4.03 [not on CBS -- unconfirmed]",
+    "    MarShawn Lloyd (GB RB): S=2.97 E=6.45 C=2.89 -> 2.97 [CBS sides with Sleeper]",
+    "    Ben Yurosek (MIN TE): S=3.51 E=2.5 C=2.61 -> 2.55 [CBS confirms the promotion]",
+    "    Chris Brooks (GB RB): S=3.59 E=4.12 C=None -> 0.0 [not on CBS -- unconfirmed]",
+    "    Adam Randall (BAL RB): S=0.2 E=0.0 C=1.7 -> 0.0 [CBS agrees: out]",
+    "    Andrei Iosivas (CIN WR): S=2.92 E=0.0 C=4.6 -> 0.0 [CBS still projects him -- review]",
+    "    Travis Etienne Jr. (NO RB): S=8.04 E=9.36 C=8.0 -> 0.0 [CBS still projects him -- review]",
+    "    Tyrell Shavers (BUF WR): S=1.63 E=0.0 C=3.18 -> 0.0 [CBS still projects him -- review]",
     "  Removed 191 player(s): no Sleeper projection.",
     "  Removed 5 player(s): no Sleeper match.",
     "  Backup-QB filter removed 1 player(s).",
