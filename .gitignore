@@ -15,3 +15,4 @@ yahoo_showdown_export*/
 
 # Offline calibration downloads (tools/calibrate_*.py)
 tools/.nflverse_calibration_cache/
+source_eval_cache/

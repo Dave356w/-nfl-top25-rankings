@@ -235,7 +235,13 @@ def projection_summary(model):
     """The projection block every page payload carries."""
     model = model or {}
     return {
-        "method": "Sleeper half-PPR projection",
+        "method": {
+            "sleeper": "Sleeper half-PPR projection",
+            "sleeper+espn": "Sleeper + ESPN half-PPR blend",
+            "sleeper+espn+cbs": "Sleeper + ESPN + CBS half-PPR mean",
+            "sleeper+cbs": "Sleeper half-PPR projection",
+        }.get(str(model.get("source") or "sleeper"), "Sleeper half-PPR projection"),
+        "source": model.get("source") or "sleeper",
         "season": model.get("season"),
         "week": model.get("week"),
         "season_type": model.get("season_type"),

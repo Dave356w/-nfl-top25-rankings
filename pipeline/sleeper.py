@@ -45,10 +45,11 @@ PROJECTION_FIELD = "pts_half_ppr"
 # A second projection source (pipeline/espn.py) is blended into Sleeper's mean.
 # `Sleeper_FP` downstream is the blended mean; `Sleeper_Raw_FP` keeps Sleeper's.
 USE_ESPN = True
-# CBS referees only the players Sleeper and ESPN disagree on (pipeline/cbs.py).
+# CBS is the third source in the equal-weight mean (pipeline/cbs.py).
 USE_CBS = True
 PROJECTION_LABEL_SLEEPER = "Sleeper half-PPR projection"
 PROJECTION_LABEL_BLEND = "Sleeper + ESPN half-PPR blend"
+PROJECTION_LABEL_THREE = "Sleeper + ESPN + CBS half-PPR mean"
 POSITIONS = ("QB", "RB", "WR", "TE", "K", "DEF")
 
 # Yahoo abbreviations that differ from Sleeper's. Sleeper also keys each team
@@ -380,7 +381,7 @@ def blend_espn(players: pd.DataFrame, projections: pd.DataFrame, context: dict,
 
 
 def referee_with_cbs(players, blended, context, notes, fetch=None):
-    """Settle the blend's flagged conflicts with CBS; on any failure keep the blend."""
+    """Make the mean three-way with CBS; on any failure keep the Sleeper + ESPN blend."""
     from pipeline import cbs
     fetch = fetch or cbs.fetch
     context["projection_conflicts"] = []
@@ -389,11 +390,12 @@ def referee_with_cbs(players, blended, context, notes, fetch=None):
     try:
         frame = cbs.projection_frame(fetch(context["season"], context["week"]),
                                      normalize_name, normalize_team)
-        refereed, cbs_notes, conflicts = cbs.referee(players, blended, frame)
+        refereed, cbs_notes, conflicts = cbs.combine(players, blended, frame)
     except Exception as exc:  # a third opinion: never fatal
         return blended, notes + [f"CBS referee skipped ({exc}); conflicts unconfirmed."]
     context["projection_conflicts"] = conflicts
     context["cbs_rows"] = frame.to_dict("records")
+    context["cbs_ok"] = True
     return refereed, notes + cbs_notes
 
 
@@ -416,8 +418,9 @@ def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30, espn_fetch
                                                      cbs_fetch)
     reference = build_reference(players, projections)
     context.update(players_fetched_utc=fetched_utc, state=state,
-                   projection_label=PROJECTION_LABEL_BLEND if espn_rows is not None
-                   else PROJECTION_LABEL_SLEEPER,
+                   projection_label=(PROJECTION_LABEL_THREE if context.get("cbs_ok")
+                                     else PROJECTION_LABEL_BLEND if espn_rows is not None
+                                     else PROJECTION_LABEL_SLEEPER),
                    projection_notes=blend_notes)
     context["raw_inputs"] = {"sleeper_state": state, "sleeper_players": raw_players,
                              "sleeper_projections": captured_projections}

@@ -428,7 +428,7 @@ footer{
       <h4>How the lineup is picked</h4>
       <p id="how"></p>
       <div class="legend">
-        <div><span class="badge model">sleeper</span> Sleeper half-PPR weekly projection</div>
+        <div><span class="badge model">sleeper</span> Sleeper + ESPN + CBS half-PPR weekly mean (equal weights; Sleeper alone if the others fail)</div>
       </div>
       <h4>Projection sources in this lineup</h4>
       <div class="chips" id="methods"></div>
@@ -1061,7 +1061,7 @@ footer{
       : "Nobody was forced to the bench; every player was eligible.";
 
     el("feeds").textContent =
-      "Sleeper half-PPR projections" +
+      ((d.projection && d.projection.method) || "Sleeper half-PPR projection") + "s" +
       (num(m.week) ? " for " + (m.season || "") + " week " + m.week : "") + ".";
 
     // A feed that degraded (an unpublished injury report, say) changes what

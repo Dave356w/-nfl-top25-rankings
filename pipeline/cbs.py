@@ -1,24 +1,28 @@
-"""CBS Sports: a third projection, used only to referee Sleeper/ESPN conflicts.
+"""CBS Sports: the third projection in the equal-weight mean.
 
 CBS publishes weekly projections as server-rendered tables, one page per
 position, with no key:
 ``/fantasy/football/stats/{POS}/{season}/{week}/projections/nonppr/``.
 Half-PPR is CBS's standard total plus half a point per projected reception.
+CBS standard scoring is not Yahoo half-PPR (passing TDs, defenses), so each
+position is rescaled to Sleeper by the median ratio over unflagged players.
 
-CBS does not move the mean of a player the other two agree on. It is read
-only where the blend flagged a conflict:
+`combine` makes every projected player's mean the equal-weight mean of the
+sources that list him -- Sleeper, ESPN, rescaled CBS. A source-quality check on
+weeks 1-9 of 2026 (tools/evaluate_sources.py) found no single source better
+than another, and the three-way mean the only combination reliably better
+than Sleeper alone (MAE 4.68 vs 4.78, and on held-out weeks 6-9 4.66 vs 4.84).
 
-* ``sources disagree`` (Sleeper and ESPN > 40% apart): the mean becomes the
-  median of the three -- whichever of Sleeper/ESPN CBS sides with wins, and
-  a single outlier cannot drag the number.
-* ``ESPN only (starter out)`` (a backup promoted on injury news Sleeper has
-  not absorbed): the mean becomes the average of ESPN and CBS, both of which
-  have had the news; CBS siding with Sleeper is called out for review.
-* ``ESPN: out`` while Sleeper still projects him: the player stays at zero
-  (ESPN's status is the freshest signal), but a CBS projection above
-  `OUT_CHECK_FP` is called out for review.
+Overrides on top of the mean:
 
-Like ESPN, CBS is a second opinion: any failure leaves the blend untouched.
+* ``ESPN: out`` -- stays at zero; a CBS projection above `OUT_CHECK_FP` is
+  called out for review.
+* ``ESPN only (starter out)`` / ``ESPN only`` -- Sleeper is stale or silent,
+  so the mean is ESPN and CBS only.
+* ``sources disagree`` -- the plain mean, plus a verdict on which side CBS
+  took, for the job-summary conflict table.
+
+Any CBS failure leaves the Sleeper + ESPN blend untouched.
 """
 from __future__ import annotations
 
@@ -132,9 +136,11 @@ def attach(players: pd.DataFrame, cbs: pd.DataFrame) -> pd.Series:
                       zip(keys, players["Team"], players["Position"])], index=players.index)
 
 
-def referee(players: pd.DataFrame, blended: pd.DataFrame, cbs: pd.DataFrame
+def combine(players: pd.DataFrame, blended: pd.DataFrame, cbs: pd.DataFrame
             ) -> tuple[pd.DataFrame, list[str], list[dict]]:
-    """Apply the module rules to flagged rows. Returns (blended, notes, conflicts)."""
+    """Equal-weight mean of Sleeper, ESPN and rescaled CBS for every projected
+    player, with the ESPN-out and starter-out overrides, plus a verdict on each
+    flagged conflict. Returns (frame, notes, conflicts)."""
     work = blended.merge(players[["player_id", "Sleeper_Name", "Key", "Team", "Position"]],
                          on="player_id", how="left")
     raw_c = attach(work, cbs)
@@ -152,20 +158,27 @@ def referee(players: pd.DataFrame, blended: pd.DataFrame, cbs: pd.DataFrame
     has_c = c.notna()
     verdict = pd.Series(pd.NA, index=work.index, dtype="object")
 
+    # The mean: every projected player gets the equal-weight mean of whichever
+    # sources have him (weeks 1-9 2026: MAE 4.68 vs Sleeper 4.78, 95% CI of the
+    # gain -0.15..-0.06; held up out of sample). Overrides on top:
+    out = flag.eq("ESPN: out")                      # stays at zero
+    news = flag.eq("ESPN only (starter out)")       # Sleeper is stale: E and C only
+    espn_only = flag.eq("ESPN only")                # Sleeper has nothing: E and C
+    projected = pd.to_numeric(work["Sleeper_FP"], errors="coerce").gt(0) & ~out
+    stale_s = news | espn_only
+    parts = pd.concat([s.where(~stale_s), e, c], axis=1)
+    mean = parts.mean(axis=1, skipna=True)
+    work.loc[projected, "Sleeper_FP"] = mean[projected].round(2)
+    work["Sources_Used"] = parts.notna().sum(axis=1).where(projected, 0).astype(int)
+
     disagree = flag.eq("sources disagree")
     rows = disagree & has_c
-    work.loc[rows, "Sleeper_FP"] = pd.concat([s, e, c], axis=1)[rows].median(axis=1).round(2)
     verdict[rows] = np.where((c - e).abs()[rows] <= (c - s).abs()[rows],
                              "CBS sides with ESPN", "CBS sides with Sleeper")
-
-    news = flag.eq("ESPN only (starter out)")
     rows = news & has_c
-    work.loc[rows, "Sleeper_FP"] = ((e[rows] + c[rows]) / 2).round(2)
     s_ref = s.fillna(0.0)
     verdict[rows] = np.where((c - e).abs()[rows] <= (c - s_ref).abs()[rows],
                              "CBS confirms the promotion", "CBS sides with Sleeper -- review")
-
-    out = flag.eq("ESPN: out")
     verdict[out & c.ge(OUT_CHECK_FP)] = "CBS still projects him -- review"
     verdict[out & has_c & c.lt(OUT_CHECK_FP)] = "CBS agrees: out"
     verdict[(disagree | news | out) & ~has_c] = "not on CBS -- unconfirmed"
@@ -181,13 +194,16 @@ def referee(players: pd.DataFrame, blended: pd.DataFrame, cbs: pd.DataFrame
         "cbs": None if pd.isna(r.CBS_FP) else float(r.CBS_FP),
         "final": float(r.Sleeper_FP), "verdict": r.CBS_Verdict,
     } for r in reviewed.itertuples()]
-    notes = [f"CBS referee: {len(conflicts)} flagged player(s) checked, "
-             f"{int(has_c[disagree | news | out].sum())} found on CBS; scale to Sleeper "
+    used = work.loc[projected, "Sources_Used"].value_counts().to_dict()
+    notes = [f"Three-source mean: {int(projected.sum())} projected players "
+             f"({used.get(3, 0)} on all three, {used.get(2, 0)} on two, {used.get(1, 0)} on one). "
+             f"CBS review: {len(conflicts)} flagged player(s), "
+             f"{int(has_c[disagree | news | out].sum())} found on CBS; CBS scaled to Sleeper "
              + ", ".join(f"{k} x{v:.2f}" for k, v in sorted(scale.items())) + "."]
     for r in conflicts[:15]:
         notes.append(f"  {r['player']} ({r['team']} {r['pos']}): S={r['sleeper']} E={r['espn']} "
                      f"C={r['cbs']} -> {r['final']} [{r['verdict']}]")
-    keep = list(blended.columns) + ["CBS_FP", "CBS_Verdict"]
+    keep = list(blended.columns) + ["CBS_FP", "CBS_Verdict", "Sources_Used"]
     return work[keep], notes, conflicts
 
 

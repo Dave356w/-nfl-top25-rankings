@@ -58,23 +58,25 @@ class CBSRefereeTest(unittest.TestCase):
             "Projection_Flag": ["ESPN only (starter out)", "sources disagree", "ESPN: out", pd.NA],
         })
         frame = cbs.projection_frame({"RB": RB}, sleeper.normalize_name, sleeper.normalize_team)
-        self.out, self.notes, self.conflicts = cbs.referee(players, blended, frame)
+        self.out, self.notes, self.conflicts = cbs.combine(players, blended, frame)
         self.by = self.out.set_index("player_id")
 
     def test_promotion_averages_espn_and_cbs(self):
         self.assertAlmostEqual(self.by.loc["1", "Sleeper_FP"], 14.09)
         self.assertIn("CBS confirms the promotion", self.by.loc["1", "Projection_Flag"])
 
-    def test_disagreement_takes_the_median(self):
-        self.assertAlmostEqual(self.by.loc["2", "Sleeper_FP"], 7.2)   # median(7.58, 4.01, 7.2)
+    def test_disagreement_takes_the_three_way_mean(self):
+        self.assertAlmostEqual(self.by.loc["2", "Sleeper_FP"], 6.26)  # mean(7.58, 4.01, 7.2)
+        self.assertEqual(self.by.loc["2", "Sources_Used"], 3)
         self.assertIn("CBS sides with Sleeper", self.by.loc["2", "CBS_Verdict"])
 
     def test_out_stays_zero_but_is_called_out(self):
         self.assertEqual(self.by.loc["3", "Sleeper_FP"], 0.0)
         self.assertEqual(self.by.loc["3", "CBS_Verdict"], "CBS still projects him -- review")
 
-    def test_unflagged_players_untouched(self):
-        self.assertEqual(self.by.loc["4", "Sleeper_FP"], 9.0)
+    def test_every_projected_player_gets_the_mean_of_his_sources(self):
+        self.assertAlmostEqual(self.by.loc["4", "Sleeper_FP"], 9.05)  # not on CBS: mean(S, E)
+        self.assertEqual(self.by.loc["4", "Sources_Used"], 2)
         self.assertTrue(pd.isna(self.by.loc["4", "CBS_Verdict"]))
         self.assertEqual(len(self.conflicts), 3)
         self.assertIn("| Player |", cbs.summary_markdown(self.conflicts, 10))

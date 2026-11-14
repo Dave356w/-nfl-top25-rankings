@@ -1,0 +1,557 @@
+{
+  "generated_utc": "2026-11-14T20:02:10Z",
+  "season": 2026,
+  "weeks": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "sample": {
+    "player_weeks": 1752,
+    "players": 263,
+    "min_projection": 5.0
+  },
+  "overall": [
+    {
+      "source": "Sleeper",
+      "n": 1752,
+      "mae": 4.803,
+      "rmse": 6.177,
+      "bias": -0.295,
+      "rank_rho": 0.336,
+      "calibration_slope": 0.921
+    },
+    {
+      "source": "ESPN",
+      "n": 1752,
+      "mae": 4.825,
+      "rmse": 6.205,
+      "bias": -0.383,
+      "rank_rho": 0.328,
+      "calibration_slope": 0.922
+    },
+    {
+      "source": "CBS",
+      "n": 1752,
+      "mae": 4.808,
+      "rmse": 6.182,
+      "bias": -0.326,
+      "rank_rho": 0.32,
+      "calibration_slope": 0.92
+    },
+    {
+      "source": "Sleeper+ESPN",
+      "n": 1752,
+      "mae": 4.785,
+      "rmse": 6.151,
+      "bias": -0.339,
+      "rank_rho": 0.339,
+      "calibration_slope": 0.943
+    },
+    {
+      "source": "Mean of 3",
+      "n": 1752,
+      "mae": 4.701,
+      "rmse": 6.024,
+      "bias": -0.335,
+      "rank_rho": 0.357,
+      "calibration_slope": 1.015
+    }
+  ],
+  "by_position": {
+    "DEF": [
+      {
+        "source": "Sleeper",
+        "n": 222,
+        "mae": 4.256,
+        "rmse": 5.485,
+        "bias": -0.008,
+        "rank_rho": 0.281,
+        "calibration_slope": 0.98
+      },
+      {
+        "source": "ESPN",
+        "n": 222,
+        "mae": 4.24,
+        "rmse": 5.703,
+        "bias": -1.608,
+        "rank_rho": 0.263,
+        "calibration_slope": 0.997
+      },
+      {
+        "source": "CBS",
+        "n": 222,
+        "mae": 4.72,
+        "rmse": 6.028,
+        "bias": -0.123,
+        "rank_rho": 0.052,
+        "calibration_slope": 0.08
+      },
+      {
+        "source": "Sleeper+ESPN",
+        "n": 222,
+        "mae": 4.195,
+        "rmse": 5.521,
+        "bias": -0.808,
+        "rank_rho": 0.278,
+        "calibration_slope": 1.08
+      },
+      {
+        "source": "Mean of 3",
+        "n": 222,
+        "mae": 4.261,
+        "rmse": 5.563,
+        "bias": -0.58,
+        "rank_rho": 0.241,
+        "calibration_slope": 0.981
+      }
+    ],
+    "K": [
+      {
+        "source": "Sleeper",
+        "n": 197,
+        "mae": 3.874,
+        "rmse": 4.913,
+        "bias": -1.017,
+        "rank_rho": 0.083,
+        "calibration_slope": 0.464
+      },
+      {
+        "source": "ESPN",
+        "n": 197,
+        "mae": 3.959,
+        "rmse": 4.946,
+        "bias": -0.149,
+        "rank_rho": 0.039,
+        "calibration_slope": -0.035
+      },
+      {
+        "source": "CBS",
+        "n": 197,
+        "mae": 3.987,
+        "rmse": 5.013,
+        "bias": -1.075,
+        "rank_rho": 0.039,
+        "calibration_slope": 0.249
+      },
+      {
+        "source": "Sleeper+ESPN",
+        "n": 197,
+        "mae": 3.873,
+        "rmse": 4.889,
+        "bias": -0.583,
+        "rank_rho": 0.059,
+        "calibration_slope": 0.226
+      },
+      {
+        "source": "Mean of 3",
+        "n": 197,
+        "mae": 3.872,
+        "rmse": 4.895,
+        "bias": -0.747,
+        "rank_rho": 0.084,
+        "calibration_slope": 0.308
+      }
+    ],
+    "QB": [
+      {
+        "source": "Sleeper",
+        "n": 202,
+        "mae": 6.041,
+        "rmse": 7.401,
+        "bias": -0.761,
+        "rank_rho": 0.346,
+        "calibration_slope": 0.927
+      },
+      {
+        "source": "ESPN",
+        "n": 202,
+        "mae": 5.93,
+        "rmse": 7.419,
+        "bias": -1.118,
+        "rank_rho": 0.34,
+        "calibration_slope": 0.944
+      },
+      {
+        "source": "CBS",
+        "n": 202,
+        "mae": 6.217,
+        "rmse": 7.856,
+        "bias": -1.095,
+        "rank_rho": 0.339,
+        "calibration_slope": 0.526
+      },
+      {
+        "source": "Sleeper+ESPN",
+        "n": 202,
+        "mae": 5.97,
+        "rmse": 7.373,
+        "bias": -0.939,
+        "rank_rho": 0.368,
+        "calibration_slope": 0.992
+      },
+      {
+        "source": "Mean of 3",
+        "n": 202,
+        "mae": 5.924,
+        "rmse": 7.3,
+        "bias": -0.991,
+        "rank_rho": 0.366,
+        "calibration_slope": 0.934
+      }
+    ],
+    "RB": [
+      {
+        "source": "Sleeper",
+        "n": 374,
+        "mae": 4.681,
+        "rmse": 6.081,
+        "bias": 0.262,
+        "rank_rho": 0.602,
+        "calibration_slope": 0.905
+      },
+      {
+        "source": "ESPN",
+        "n": 374,
+        "mae": 4.839,
+        "rmse": 6.174,
+        "bias": 0.507,
+        "rank_rho": 0.608,
+        "calibration_slope": 0.899
+      },
+      {
+        "source": "CBS",
+        "n": 374,
+        "mae": 4.799,
+        "rmse": 6.22,
+        "bias": 0.251,
+        "rank_rho": 0.609,
+        "calibration_slope": 0.911
+      },
+      {
+        "source": "Sleeper+ESPN",
+        "n": 374,
+        "mae": 4.731,
+        "rmse": 6.087,
+        "bias": 0.385,
+        "rank_rho": 0.61,
+        "calibration_slope": 0.918
+      },
+      {
+        "source": "Mean of 3",
+        "n": 374,
+        "mae": 4.581,
+        "rmse": 5.886,
+        "bias": 0.34,
+        "rank_rho": 0.643,
+        "calibration_slope": 1.034
+      }
+    ],
+    "TE": [
+      {
+        "source": "Sleeper",
+        "n": 235,
+        "mae": 4.767,
+        "rmse": 5.87,
+        "bias": -0.324,
+        "rank_rho": 0.266,
+        "calibration_slope": 0.744
+      },
+      {
+        "source": "ESPN",
+        "n": 235,
+        "mae": 4.742,
+        "rmse": 5.878,
+        "bias": -0.584,
+        "rank_rho": 0.267,
+        "calibration_slope": 0.751
+      },
+      {
+        "source": "CBS",
+        "n": 235,
+        "mae": 4.476,
+        "rmse": 5.587,
+        "bias": -0.337,
+        "rank_rho": 0.385,
+        "calibration_slope": 1.038
+      },
+      {
+        "source": "Sleeper+ESPN",
+        "n": 235,
+        "mae": 4.744,
+        "rmse": 5.849,
+        "bias": -0.454,
+        "rank_rho": 0.27,
+        "calibration_slope": 0.779
+      },
+      {
+        "source": "Mean of 3",
+        "n": 235,
+        "mae": 4.605,
+        "rmse": 5.701,
+        "bias": -0.415,
+        "rank_rho": 0.329,
+        "calibration_slope": 0.968
+      }
+    ],
+    "WR": [
+      {
+        "source": "Sleeper",
+        "n": 522,
+        "mae": 5.009,
+        "rmse": 6.553,
+        "bias": -0.35,
+        "rank_rho": 0.44,
+        "calibration_slope": 0.792
+      },
+      {
+        "source": "ESPN",
+        "n": 522,
+        "mae": 5.0,
+        "rmse": 6.481,
+        "bias": -0.214,
+        "rank_rho": 0.45,
+        "calibration_slope": 0.892
+      },
+      {
+        "source": "CBS",
+        "n": 522,
+        "mae": 4.767,
+        "rmse": 6.137,
+        "bias": -0.24,
+        "rank_rho": 0.496,
+        "calibration_slope": 1.098
+      },
+      {
+        "source": "Sleeper+ESPN",
+        "n": 522,
+        "mae": 4.978,
+        "rmse": 6.482,
+        "bias": -0.282,
+        "rank_rho": 0.449,
+        "calibration_slope": 0.862
+      },
+      {
+        "source": "Mean of 3",
+        "n": 522,
+        "mae": 4.856,
+        "rmse": 6.286,
+        "bias": -0.268,
+        "rank_rho": 0.48,
+        "calibration_slope": 1.007
+      }
+    ]
+  },
+  "paired_vs_sleeper": [
+    {
+      "source": "ESPN",
+      "mae_minus_sleeper": 0.022,
+      "ci95": [
+        -0.038,
+        0.082
+      ],
+      "significant": false
+    },
+    {
+      "source": "CBS",
+      "mae_minus_sleeper": 0.006,
+      "ci95": [
+        -0.114,
+        0.132
+      ],
+      "significant": false
+    },
+    {
+      "source": "Sleeper+ESPN",
+      "mae_minus_sleeper": -0.017,
+      "ci95": [
+        -0.049,
+        0.015
+      ],
+      "significant": false
+    },
+    {
+      "source": "Mean of 3",
+      "mae_minus_sleeper": -0.102,
+      "ci95": [
+        -0.147,
+        -0.056
+      ],
+      "significant": true
+    }
+  ],
+  "time_split": {
+    "test_weeks": [
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "test": [
+      {
+        "source": "Sleeper",
+        "n": 939,
+        "mae": 4.882,
+        "rmse": 6.248,
+        "bias": -0.107,
+        "rank_rho": 0.345,
+        "calibration_slope": 0.848
+      },
+      {
+        "source": "ESPN",
+        "n": 939,
+        "mae": 4.893,
+        "rmse": 6.266,
+        "bias": -0.177,
+        "rank_rho": 0.338,
+        "calibration_slope": 0.846
+      },
+      {
+        "source": "CBS",
+        "n": 939,
+        "mae": 4.849,
+        "rmse": 6.197,
+        "bias": -0.182,
+        "rank_rho": 0.318,
+        "calibration_slope": 0.87
+      },
+      {
+        "source": "Sleeper+ESPN",
+        "n": 939,
+        "mae": 4.862,
+        "rmse": 6.214,
+        "bias": -0.142,
+        "rank_rho": 0.345,
+        "calibration_slope": 0.868
+      },
+      {
+        "source": "Mean of 3",
+        "n": 939,
+        "mae": 4.769,
+        "rmse": 6.079,
+        "bias": -0.155,
+        "rank_rho": 0.364,
+        "calibration_slope": 0.936
+      }
+    ]
+  },
+  "by_week_mae": {
+    "1": {
+      "Sleeper": 4.75,
+      "ESPN": 4.783,
+      "CBS": 4.858,
+      "Sleeper+ESPN": 4.727,
+      "Mean of 3": 4.662
+    },
+    "2": {
+      "Sleeper": 4.644,
+      "ESPN": 4.705,
+      "CBS": 4.908,
+      "Sleeper+ESPN": 4.643,
+      "Mean of 3": 4.606
+    },
+    "3": {
+      "Sleeper": 4.925,
+      "ESPN": 5.056,
+      "CBS": 4.571,
+      "Sleeper+ESPN": 4.973,
+      "Mean of 3": 4.758
+    },
+    "4": {
+      "Sleeper": 4.518,
+      "ESPN": 4.435,
+      "CBS": 4.709,
+      "Sleeper+ESPN": 4.433,
+      "Mean of 3": 4.456
+    },
+    "5": {
+      "Sleeper": 5.018,
+      "ESPN": 5.316,
+      "CBS": 5.281,
+      "Sleeper+ESPN": 5.152,
+      "Mean of 3": 5.124
+    },
+    "6": {
+      "Sleeper": 4.692,
+      "ESPN": 4.539,
+      "CBS": 4.592,
+      "Sleeper+ESPN": 4.589,
+      "Mean of 3": 4.422
+    },
+    "7": {
+      "Sleeper": 4.812,
+      "ESPN": 4.771,
+      "CBS": 4.807,
+      "Sleeper+ESPN": 4.772,
+      "Mean of 3": 4.687
+    },
+    "8": {
+      "Sleeper": 4.964,
+      "ESPN": 5.021,
+      "CBS": 4.888,
+      "Sleeper+ESPN": 4.955,
+      "Mean of 3": 4.898
+    },
+    "9": {
+      "Sleeper": 4.913,
+      "ESPN": 4.803,
+      "CBS": 4.675,
+      "Sleeper+ESPN": 4.831,
+      "Mean of 3": 4.703
+    }
+  },
+  "origin": {
+    "1": {
+      "Sleeper": "refetched",
+      "ESPN": "refetched",
+      "CBS": "refetched"
+    },
+    "2": {
+      "Sleeper": "refetched",
+      "ESPN": "refetched",
+      "CBS": "refetched"
+    },
+    "3": {
+      "Sleeper": "refetched",
+      "ESPN": "refetched",
+      "CBS": "refetched"
+    },
+    "4": {
+      "Sleeper": "refetched",
+      "ESPN": "refetched",
+      "CBS": "refetched"
+    },
+    "5": {
+      "Sleeper": "refetched",
+      "ESPN": "refetched",
+      "CBS": "refetched"
+    },
+    "6": {
+      "Sleeper": "refetched",
+      "ESPN": "refetched",
+      "CBS": "refetched"
+    },
+    "7": {
+      "Sleeper": "refetched",
+      "ESPN": "refetched",
+      "CBS": "refetched"
+    },
+    "8": {
+      "Sleeper": "pregame archive",
+      "ESPN": "refetched",
+      "CBS": "refetched"
+    },
+    "9": {
+      "Sleeper": "pregame archive",
+      "ESPN": "refetched",
+      "CBS": "refetched"
+    }
+  }
+}

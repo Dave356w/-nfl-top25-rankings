@@ -32,8 +32,8 @@ Each run:
    priced player by projected fantasy points.
 5. Writes JSON and CSV into `site/data/` and deploys `site/` to Pages.
 
-Projection priority is: manual override → Sleeper + ESPN half-PPR blend →
-Sleeper alone (if ESPN is unreachable).
+Projection priority is: manual override → Sleeper + ESPN + CBS mean →
+Sleeper + ESPN blend (CBS unreachable) → Sleeper alone (ESPN unreachable).
 
 ### ESPN second opinion
 
@@ -46,17 +46,25 @@ for the week, since Sleeper's backup lines predate the news. Each run logs
 lineup rows carry `sleeper_mean` and `espn_mean`. The weight is not fitted yet;
 the archived ESPN rows make that possible after a few weeks.
 
-### CBS referee for conflicts
+### Three-source mean (Sleeper, ESPN, CBS)
 
-`pipeline/cbs.py` reads CBS Sports' keyless weekly projection tables and uses
-them only on players the blend flagged. CBS is first rescaled to Sleeper per
-position (median ratio over unflagged players), because CBS standard scoring
-is not Yahoo half-PPR. Then: a Sleeper/ESPN disagreement takes the median of
-the three; a backup promoted on starter-out news (only while Sleeper is still
-more than 20% off ESPN) takes the mean of ESPN and CBS; an ESPN "out" stays at
-zero but is called out for review if CBS still projects him. Each Actions run
-writes the conflict table to its job summary, with your roster's conflicts on
-top, and the lineup payload carries `conflicts` and a per-row `cbs_mean`.
+Every projected player's mean is the equal-weight mean of the sources that
+list him: Sleeper, ESPN, and CBS Sports (`pipeline/cbs.py`, keyless weekly
+tables) rescaled to Sleeper per position, because CBS standard scoring is not
+Yahoo half-PPR. Overrides: ESPN "out" stays at zero (called out for review if
+CBS still projects him); a backup promoted on starter-out news while Sleeper is
+still >20% off ESPN, or a player only ESPN projects, takes the mean of ESPN and
+CBS. Sleeper/ESPN disagreements are listed with a CBS verdict in each Actions
+job summary (your roster first). If CBS fails the Sleeper + ESPN blend
+publishes; if ESPN fails, Sleeper alone.
+
+Why equal weights: on 2026 weeks 1-9 (1,752 player-weeks) no single source beat
+another, and only the three-way mean beat Sleeper reliably (MAE 4.70 vs 4.80,
+95% CI of the gain -0.15 to -0.06; also better on held-out later weeks).
+Per-position source picks overfit and lost out of sample, so there are none.
+`tools/evaluate_sources.py` reruns this every Tuesday (`source_quality.yml`)
+and writes `site/data/source_quality.json`; it uses archived pregame captures
+where they exist and marks refetched past weeks as unverified.
 
 ### Game-day reruns and kickoff locks
 

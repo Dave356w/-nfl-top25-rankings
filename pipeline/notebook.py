@@ -2459,7 +2459,7 @@ def prepare_slate_pool(cfg=None, purpose=""):
     return {
         "players": players.reset_index(drop=True),
         "raw_inputs": {"yahoo": payload, **context.get("raw_inputs", {})},
-        "projection_model": {"source": "sleeper+espn" if context.get("raw_inputs", {}).get("espn_projections") else "sleeper", **{
+        "projection_model": {"source": "+".join(["sleeper"] + [n for n in ("espn", "cbs") if context.get("raw_inputs", {}).get(f"{n}_projections")]), **{
             k: context[k] for k in ("season", "week", "season_type", "players_fetched_utc")}},
         "sleeper_context": context,
         "inputs_captured_utc": datetime.now(timezone.utc).isoformat(),
