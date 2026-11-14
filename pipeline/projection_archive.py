@@ -68,7 +68,11 @@ def _immutable(path, data):
         with path.open('xb') as stream:
             stream.write(data)
     except FileExistsError:
-        if path.read_bytes()!=data:
+        # Compare content, not compressed bytes: the same JSON gzips to
+        # different bytes under different zlib builds (a runner image update),
+        # and that must not fail a publish.
+        existing=path.read_bytes()
+        if existing!=data and gzip.decompress(existing)!=gzip.decompress(data):
             raise ValueError(f'Archive collision: {path.name}')
 
 

@@ -108,6 +108,7 @@ def build_synced_payloads(
     showdown_simulations: int | None = None,
     showdown_max_games: int | None = None,
     showdown_optimize: bool = True,
+    previous_lineup: dict | None = None,
 ):
     """Build all page contracts without writing partial output."""
     generated_at = datetime.now(timezone.utc)
@@ -149,6 +150,7 @@ def build_synced_payloads(
             excluded=excluded,
             objective=objective,
             no_pool=no_pool,
+            previous=previous_lineup,
         )
 
     rankings_payload = run_daily.build_payload(
@@ -244,6 +246,7 @@ def main(argv=None):
             showdown_simulations=args.showdown_simulations,
             showdown_max_games=args.showdown_max_games,
             showdown_optimize=not args.showdown_no_optimize,
+            previous_lineup=run_lineup.read_previous(Path(args.site_dir) / "data" / "lineup"),
         )
     except Exception:
         traceback.print_exc()

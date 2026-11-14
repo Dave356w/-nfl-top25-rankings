@@ -822,7 +822,7 @@ def apply_sleeper_reference(players, reference, context=None, cfg=None):
         out.loc[out["Name"].eq(name), "Player_Style"] = style
 
     week = context.get("week")
-    source = "Sleeper half-PPR projection" + (
+    source = context.get("projection_label", "Sleeper half-PPR projection") + (
         f" ({context.get('season')} week {week})" if week is not None else "")
     out["Projected_FP"] = pd.to_numeric(out["Sleeper_FP"], errors="coerce")
     out["Projection_Source"] = source
@@ -2441,6 +2441,8 @@ def prepare_slate_pool(cfg=None, purpose=""):
         f"  Sleeper: {context['season']} {context['season_type']} week {context['week']} "
         f"projections; player dump fetched {context['players_fetched_utc']}."
     )
+    for note in context.get("projection_notes", []):
+        print(f"  {note}")
     players, removed = apply_sleeper_reference(players, reference, context, cfg)
     for why, count in removed["Reason"].value_counts().items():
         print(f"  Removed {count} player(s): {why}.")
@@ -2457,7 +2459,7 @@ def prepare_slate_pool(cfg=None, purpose=""):
     return {
         "players": players.reset_index(drop=True),
         "raw_inputs": {"yahoo": payload, **context.get("raw_inputs", {})},
-        "projection_model": {"source": "sleeper", **{
+        "projection_model": {"source": "sleeper+espn" if context.get("raw_inputs", {}).get("espn_projections") else "sleeper", **{
             k: context[k] for k in ("season", "week", "season_type", "players_fetched_utc")}},
         "sleeper_context": context,
         "inputs_captured_utc": datetime.now(timezone.utc).isoformat(),

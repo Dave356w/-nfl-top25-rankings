@@ -45,9 +45,15 @@ jobs:
 
       - name: Build synchronized rankings, lineup and Showdown
         run: |
-          python run_synced.py \
-            --objective "${{ inputs.objective || 'FP' }}" \
-            --exclude "${{ inputs.exclude || '' }}"
+          for attempt in 1 2 3; do
+            python run_synced.py \
+              --objective "${{ inputs.objective || 'FP' }}" \
+              --exclude "${{ inputs.exclude || '' }}" && exit 0
+            echo "::warning::run_synced attempt $attempt failed"
+            sleep $((attempt * 90))
+          done
+          echo "::error::run_synced failed 3 times; the previous snapshot stays live"
+          exit 1
 
       - name: Commit this synchronized run
         run: |

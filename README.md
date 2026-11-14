@@ -32,7 +32,28 @@ Each run:
    priced player by projected fantasy points.
 5. Writes JSON and CSV into `site/data/` and deploys `site/` to Pages.
 
-Projection priority is: manual override → Sleeper half-PPR projection. Yahoo
+Projection priority is: manual override → Sleeper + ESPN half-PPR blend →
+Sleeper alone (if ESPN is unreachable).
+
+### ESPN second opinion
+
+`pipeline/espn.py` pulls ESPN's keyless weekly projections and injury status and
+blends them into Sleeper's mean (`ESPN_WEIGHT`, default 0.5). ESPN's OUT/IR
+status zeroes a player Sleeper still projects; when ESPN rules out a team's
+Sleeper depth-1 player, his teammates at that position take ESPN's number alone
+for the week, since Sleeper's backup lines predate the news. Each run logs
+"ESPN: out", "ESPN only (starter out)" and "sources disagree" lists, and the
+lineup rows carry `sleeper_mean` and `espn_mean`. The weight is not fitted yet;
+the archived ESPN rows make that possible after a few weeks.
+
+### Game-day reruns and kickoff locks
+
+`daily.yml` reruns after each kickoff window's inactive lists. A rerun reads
+the last published `latest.json`; any player whose kickoff has passed keeps
+the slot (or bench spot) it gave him, and only players yet to play are
+re-optimized. Kickers borrow their team's kickoff, since Yahoo does not price
+them. Each build retries three times before giving up, and a failed build
+publishes nothing, so the last good snapshot stays live. Yahoo
 FPPG is no longer read or shown. The frozen
 salary-position-depth regression in `model/salary_projection.json` is kept only
 for the historical backtests, where no archived Sleeper projection exists.

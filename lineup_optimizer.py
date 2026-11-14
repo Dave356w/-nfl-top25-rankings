@@ -193,14 +193,20 @@ def sleeper_context(reference: pd.DataFrame, context: dict, yahoo: pd.DataFrame)
         yahoo[["Team", "Opponent"]],
         yahoo[["Opponent", "Team"]].set_axis(["Team", "Opponent"], axis=1),
     ]).dropna().drop_duplicates("Team")
+    timed = yahoo.dropna(subset=["Game_Time"]) if "Game_Time" in yahoo else yahoo.iloc[0:0]
+    kickoffs = timed.groupby("Team")["Game_Time"].min() if len(timed) else pd.Series(dtype=object)
     return {"season": context["season"], "week": context["week"],
+            "kickoffs": kickoffs,
             "season_type": context["season_type"],
             "depth_stamp": context["players_fetched_utc"],
-            "reference": reference, "schedule": schedule, "notes": []}
+            "projection_label": context.get("projection_label", sleeper.PROJECTION_LABEL_SLEEPER),
+            "reference": reference, "schedule": schedule,
+            "notes": list(context.get("projection_notes", []))}
 
 
 def _projection_source(ctx: dict) -> str:
-    return f"Sleeper half-PPR projection ({ctx.get('season')} week {ctx.get('week')})"
+    label = ctx.get("projection_label", sleeper.PROJECTION_LABEL_SLEEPER)
+    return f"{label} ({ctx.get('season')} week {ctx.get('week')})"
 
 
 def _sleeper_match(ctx: dict, key: str, team, position: str):
@@ -257,7 +263,7 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
     for column in ["Depth_Rank", "Projection_CV"]:
         roster[column] = np.nan
     for column in ["Depth_Source", "report_status", "practice_status",
-                   "report_primary_injury"]:
+                   "report_primary_injury", "Projection_Flag"]:
         roster[column] = pd.Series(pd.NA, index=roster.index, dtype="object")
 
     source = _projection_source(ctx)
@@ -285,6 +291,12 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
         if not p.Projection_Frozen and pd.notna(row.get("Sleeper_FP")):
             roster.at[i, "Projected_FP"] = float(row["Sleeper_FP"])
             roster.at[i, "Projection_Source"] = source
+        for column in ("Sleeper_Raw_FP", "ESPN_FP"):
+            value = pd.to_numeric(row.get(column), errors="coerce")
+            roster.at[i, column] = float(value) if pd.notna(value) else np.nan
+        flag = row.get("Projection_Flag")
+        if flag is not None and pd.notna(flag):
+            roster.at[i, "Projection_Flag"] = flag
 
     roster["Team"] = roster["Team"].map(normalize_team)
     roster["Depth_Rank"] = roster["Depth_Rank"].fillna(roster["Fallback_Depth"])
@@ -313,6 +325,11 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
         roster["FP"].gt(0), None, "not projected this week")
     roster = roster.merge(ctx["schedule"].drop_duplicates("Team"), on="Team", how="left", suffixes=("", "_NFL"))
     roster["Opponent"] = roster["Opponent"].fillna(roster.get("Opponent_NFL"))
+    # Yahoo does not price kickers, so a kicker has no Game_Time of his own.
+    # Every player on a team shares its kickoff; borrow it so kickers lock too.
+    kickoffs = ctx.get("kickoffs")
+    if isinstance(kickoffs, pd.Series) and len(kickoffs):
+        roster["Game_Time"] = roster["Game_Time"].fillna(roster["Team"].map(kickoffs))
 
     roster["Floor_P25"], roster["Ceiling_P90"] = np.nan, np.nan
     fitted = roster["Projection_CV"].notna()
@@ -403,24 +420,70 @@ def reported_out(roster: pd.DataFrame) -> list[str]:
     return roster.loc[roster["Unavailable_Reason"].notna(), "Name"].tolist()
 
 
-def optimize(roster: pd.DataFrame, excluded: list[str], objective: str = LINEUP_OBJECTIVE):
-    """Exactly fill fixed slots and one RB/WR/TE flex for an additive metric."""
+def kickoff_locks(previous: dict | None, season, week, now=None) -> dict[str, str | None]:
+    """Players whose game has kicked off keep the slot the last published run gave them.
+
+    Returns ``{key: slot}`` for locked starters and ``{key: None}`` for locked
+    bench players. A rerun after kickoff must not move a player whose game has
+    started: the league has already locked him wherever he was. Only a payload
+    for the same season and week counts; anything unreadable locks nothing.
+    """
+    if not isinstance(previous, dict):
+        return {}
+    if previous.get("season") != season or previous.get("week") != week:
+        return {}
+    now = pd.Timestamp(now or pd.Timestamp.now(tz="UTC"))
+    now = now.tz_localize("UTC") if now.tzinfo is None else now.tz_convert("UTC")
+    locks: dict[str, str | None] = {}
+    for rows, starting in ((previous.get("starters") or [], True), (previous.get("bench") or [], False)):
+        for row in rows:
+            key, kickoff = (row or {}).get("key"), (row or {}).get("kickoff_utc")
+            if not key or not kickoff:
+                continue
+            t = pd.to_datetime(kickoff, errors="coerce", utc=True)
+            if pd.notna(t) and t <= now:
+                locks[key] = row.get("slot") if starting else None
+    return locks
+
+
+def optimize(roster: pd.DataFrame, excluded: list[str], objective: str = LINEUP_OBJECTIVE,
+             locks: dict[str, str | None] | None = None):
+    """Exactly fill fixed slots and one RB/WR/TE flex for an additive metric.
+
+    ``locks`` (from `kickoff_locks`) pins players whose game has started: a
+    locked starter keeps his slot, a locked bench player cannot be started,
+    and only the open slots are optimized.
+    """
     if objective not in {"FP", "Floor_P25", "Ceiling_P90"}:
         raise ValueError("LINEUP_OBJECTIVE must be FP, Floor_P25, or Ceiling_P90")
     work = roster.copy()
     work["Selection_Score"] = pd.to_numeric(work[objective], errors="coerce").fillna(work.FP)
+    work["Locked"] = False
     excluded_keys = {normalize_name(n) for n in excluded}
-    available = work[~work.Key.isin(excluded_keys)].copy()
-    ids = []
-    for position, count in STARTING_POSITIONS.items():
-        if position == "FLEX": continue
+    open_slots = dict(STARTING_POSITIONS)
+    ids, slots = [], {}
+    for key, slot in (locks or {}).items():
+        hit = work.index[work.Key.eq(key)]
+        if not len(hit):
+            continue  # dropped from the roster since the last run
+        i = hit[0]
+        work.at[i, "Locked"] = True
+        if slot is None or open_slots.get(slot, 0) <= 0:
+            excluded_keys.add(key)  # locked on the bench (or slot already full)
+            continue
+        open_slots[slot] -= 1
+        ids.append(i); slots[i] = slot
+    available = work[~work.Key.isin(excluded_keys) & ~work.index.isin(ids)].copy()
+    for position, count in open_slots.items():
+        if position == "FLEX" or count <= 0: continue
         chosen = available[available.Position.eq(position)].nlargest(count, "Selection_Score")
         if len(chosen) < count: print(f"Warning: only {len(chosen)} of {count} available for {position}.")
         ids += chosen.index.tolist(); available = available.drop(chosen.index)
-    flex = available[available.Position.isin(FLEX_ELIGIBLE)].nlargest(STARTING_POSITIONS.get("FLEX", 0), "Selection_Score")
+        slots.update({i: position for i in chosen.index})
+    flex = available[available.Position.isin(FLEX_ELIGIBLE)].nlargest(open_slots.get("FLEX", 0), "Selection_Score")
     ids += flex.index.tolist()
-    starters = work.loc[ids].copy(); starters["Slot"] = starters.Position
-    starters.loc[flex.index, "Slot"] = "FLEX"
+    slots.update({i: "FLEX" for i in flex.index})
+    starters = work.loc[ids].copy(); starters["Slot"] = [slots[i] for i in ids]
     return starters, work.drop(ids)
 
 
@@ -432,6 +495,9 @@ def review(p: pd.Series) -> str:
     if pd.notna(p.get("report_status")): notes.append(f"injury {p.report_status}")
     if pd.notna(p.get("practice_status")): notes.append(str(p.practice_status))
     if pd.notna(p.Depth_Rank) and int(p.Depth_Rank) >= 3 and p.Position != "K": notes.append(f"depth {int(p.Depth_Rank)}")
+    if bool(p.get("Locked", False)): notes.append("locked: game started")
+    flag = p.get("Projection_Flag")
+    if flag is not None and pd.notna(flag): notes.append(str(flag))
     return "; ".join(notes) or "ok"
 
 

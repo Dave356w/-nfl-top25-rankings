@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import sleeper_fixtures as sf
 from pipeline import notebook as nb
-from pipeline import sleeper
+from pipeline import espn, sleeper
 
 
 def chart():
@@ -293,6 +293,9 @@ class LoaderWiringTests(unittest.TestCase):
             patch.object(sleeper, "fetch_projections",
                          side_effect=lambda season, week, kind="regular", timeout=30:
                          sf.projections(POINTS) if week == 3 else {}),
+            # The ESPN blend has its own tests (test_espn.py); here it is down,
+            # which also proves Sleeper alone still publishes.
+            patch.object(espn, "fetch", side_effect=espn.ESPNError("offline test")),
         ]
         for item in self.patches:
             item.start()

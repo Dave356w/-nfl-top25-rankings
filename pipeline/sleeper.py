@@ -42,6 +42,11 @@ PLAYERS_MAX_AGE_HOURS = 24.0
 # handful, but the floor keeps any loop that grows later well clear of that.
 MIN_CALL_INTERVAL_SECONDS = 0.1
 PROJECTION_FIELD = "pts_half_ppr"
+# A second projection source (pipeline/espn.py) is blended into Sleeper's mean.
+# `Sleeper_FP` downstream is the blended mean; `Sleeper_Raw_FP` keeps Sleeper's.
+USE_ESPN = True
+PROJECTION_LABEL_SLEEPER = "Sleeper half-PPR projection"
+PROJECTION_LABEL_BLEND = "Sleeper + ESPN half-PPR blend"
 POSITIONS = ("QB", "RB", "WR", "TE", "K", "DEF")
 
 # Yahoo abbreviations that differ from Sleeper's. Sleeper also keys each team
@@ -198,6 +203,7 @@ def players_frame(raw: dict) -> pd.DataFrame:
             name = p.get("full_name") or f"{p.get('first_name') or ''} {p.get('last_name') or ''}".strip()
             team = normalize_team(p.get("team"))
         yahoo = pd.to_numeric(p.get("yahoo_id"), errors="coerce")
+        espn_id = pd.to_numeric(p.get("espn_id"), errors="coerce")
         order = pd.to_numeric(p.get("depth_chart_order"), errors="coerce")
         rows.append({
             "player_id": str(p.get("player_id") or pid),
@@ -206,6 +212,7 @@ def players_frame(raw: dict) -> pd.DataFrame:
             "Team": team,
             "Position": position,
             "Yahoo ID": int(yahoo) if pd.notna(yahoo) else pd.NA,
+            "ESPN ID": int(espn_id) if pd.notna(espn_id) else pd.NA,
             "Injury_Status": p.get("injury_status"),
             "Injury_Body_Part": p.get("injury_body_part"),
             "Practice_Status": p.get("practice_participation"),
@@ -214,6 +221,7 @@ def players_frame(raw: dict) -> pd.DataFrame:
         })
     frame = pd.DataFrame(rows)
     frame["Yahoo ID"] = frame["Yahoo ID"].astype("Int64")
+    frame["ESPN ID"] = frame["ESPN ID"].astype("Int64")
     frame["Depth_Chart_Order"] = frame["Depth_Chart_Order"].astype("Int64")
     return frame
 
@@ -338,7 +346,30 @@ def resolve_week(state: dict, slate_teams, fetch=None, players=None):
     return {"season": season, "week": chosen, "season_type": season_type}, frame
 
 
-def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30):
+def blend_espn(players: pd.DataFrame, projections: pd.DataFrame, context: dict,
+               fetch=None) -> tuple[pd.DataFrame, list[str], list | None]:
+    """Blend ESPN's projection into Sleeper's; on any ESPN failure keep Sleeper's.
+
+    Returns (projections, notes, compact ESPN rows for the archive or None).
+    """
+    from pipeline import espn  # local: sleeper.py stays importable on its own
+    fetch = fetch or espn.fetch
+    if not USE_ESPN:
+        return projections, ["ESPN blend disabled; Sleeper projections only."], None
+    try:
+        raw = fetch(context["season"], context["week"])
+        frame = espn.projection_frame(raw, context["week"], normalize_name)
+        if frame["ESPN_FP"].notna().sum() == 0:
+            raise espn.ESPNError(f"ESPN has no week {context['week']} projections")
+        blended, notes = espn.blend(players, projections, frame)
+        if blended.empty:
+            raise espn.ESPNError("ESPN blend produced no projected players")
+        return blended, notes, espn.compact(frame)
+    except Exception as exc:  # ESPN is a second opinion: never fatal
+        return projections, [f"ESPN blend skipped ({exc}); Sleeper projections only."], None
+
+
+def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30, espn_fetch=None):
     """Fetch state, players and projections and build the joined reference."""
     state = fetch_state(timeout)
     raw_players, fetched_utc = fetch_players(cache_dir, max(timeout, 60))
@@ -352,8 +383,14 @@ def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30):
     if projections.empty:
         raise SleeperError(
             f"Sleeper has no projections for {context['season']} week {context['week']}")
+    projections, blend_notes, espn_rows = blend_espn(players, projections, context, espn_fetch)
     reference = build_reference(players, projections)
-    context.update(players_fetched_utc=fetched_utc, state=state)
+    context.update(players_fetched_utc=fetched_utc, state=state,
+                   projection_label=PROJECTION_LABEL_BLEND if espn_rows is not None
+                   else PROJECTION_LABEL_SLEEPER,
+                   projection_notes=blend_notes)
     context["raw_inputs"] = {"sleeper_state": state, "sleeper_players": raw_players,
                              "sleeper_projections": captured_projections}
+    if espn_rows is not None:
+        context["raw_inputs"]["espn_projections"] = espn_rows
     return reference, context

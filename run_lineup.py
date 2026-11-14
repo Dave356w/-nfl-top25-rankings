@@ -56,10 +56,14 @@ def _player_row(player: pd.Series, slot: str | None = None) -> dict:
         "depth": _clean(player.get("Depth_Rank")),
         "depth_source": _clean(player.get("Depth_Source")),
         "source": _clean(player.get("Projection_Source")),
+        # The two inputs to the blended mean, so a reader can see a disagreement.
+        "sleeper_mean": _clean(player.get("Sleeper_Raw_FP")),
+        "espn_mean": _clean(player.get("ESPN_FP")),
         "injury": _clean(player.get("report_status")),
         # Set when Sleeper does not project him this week (ruled out, bye), or
         # null. The page benches on this; `injury` is display only.
         "unavailable": _clean(player.get("Unavailable_Reason")),
+        "locked": bool(player.get("Locked", False)),
         "review": lo.review(player),
     }
     kickoff = player.get("Game_Time")
@@ -142,7 +146,7 @@ def build_payload(
                   bench.sort_values("FP", ascending=False).iterrows()],
         "benched_by_request": list(results.get("excluded") or []),
         "projection": {
-            "method": "Sleeper half-PPR projection",
+            "method": context.get("projection_label") or "Sleeper half-PPR projection",
             "season": _clean(context.get("season")),
             "week": _clean(context.get("week")),
         },
@@ -233,8 +237,13 @@ def _finish_lineup(
     excluded: list[str],
     objective: str,
     no_pool: bool = False,
+    previous: dict | None = None,
 ) -> tuple[dict, pd.DataFrame, str | None]:
-    """Resolve, optimize and optionally build the editor pool from one projection frame."""
+    """Resolve, optimize and optionally build the editor pool from one projection frame.
+
+    ``previous`` is the last published latest.json; players whose game has
+    kicked off keep the slot it gave them.
+    """
     context = lo.load_sleeper_context(yahoo)
     yahoo = lo.with_sleeper_projections(yahoo, context)
     roster = lo.build_roster(configured, yahoo, context)
@@ -247,7 +256,10 @@ def _finish_lineup(
         excluded = list(dict.fromkeys(excluded + lo.reported_out(roster)))
     if excluded:
         print(f"Benched before optimizing: {', '.join(excluded)}.")
-    starters, bench = lo.optimize(roster, excluded, objective)
+    locks = lo.kickoff_locks(previous, context["season"], context["week"])
+    if locks:
+        print(f"Locked after kickoff: {', '.join(sorted(locks))}.")
+    starters, bench = lo.optimize(roster, excluded, objective, locks=locks)
     results = {
         "roster": roster,
         "starters": starters,
@@ -275,6 +287,7 @@ def build_from_prepared_slate(
     excluded: list[str] | None = None,
     objective: str = lo.LINEUP_OBJECTIVE,
     no_pool: bool = False,
+    previous: dict | None = None,
 ) -> tuple[dict, pd.DataFrame, str | None]:
     """Build a lineup from the exact final projections used by the rankings page."""
     yahoo = lo.yahoo_from_prepared_slate(prepared_slate["players"])
@@ -284,7 +297,17 @@ def build_from_prepared_slate(
         list(excluded or []),
         objective,
         no_pool,
+        previous,
     )
+
+
+def read_previous(data_dir: Path | None) -> dict | None:
+    """The last published lineup, or None if missing or unreadable."""
+    path = Path(data_dir or DATA) / "latest.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
 
 
 def main(argv=None):
@@ -319,6 +342,7 @@ def main(argv=None):
                 excluded,
                 args.objective,
                 args.no_pool,
+                read_previous(Path(args.out) if args.out else None),
             )
     except Exception:
         traceback.print_exc()

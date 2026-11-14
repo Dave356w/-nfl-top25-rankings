@@ -7,7 +7,17 @@ on:
     # GitHub may queue scheduled runs, so these times are approximate.
     - cron: "0 13 * * *"
     - cron: "0 21 * * *"
-    - cron: "30 15 * * 0"
+    # Game-day refreshes (UTC; set for Eastern standard time, Nov-Mar). Each
+    # lands just after a kickoff window's inactive lists (~90 min before kick)
+    # and before the next kickoff. Off-the-hour minutes dodge GitHub's busiest
+    # queue. Players whose game has started stay locked where the previous
+    # run put them, so a late run can only move players who have not played.
+    - cron: "7 13 * * 0"    # Sun: before the 9:30 ET international game
+    - cron: "38 16 * * 0"   # Sun: after 1:00 ET inactives
+    - cron: "4 20 * * 0"    # Sun: after 4:05/4:25 ET inactives
+    - cron: "53 23 * * 0"   # Sun: after Sunday-night inactives
+    - cron: "47 23 * * 4"   # Thu: after Thursday-night inactives
+    - cron: "47 23 * * 1"   # Mon: after Monday-night inactives
   workflow_dispatch:
     inputs:
       top_n:
@@ -61,8 +71,18 @@ jobs:
           path: sleeper_cache
           key: sleeper-players-${{ steps.day.outputs.utc }}
 
+      # A feed hiccup (Yahoo, Sleeper or ESPN) should cost a retry, not the
+      # window. run_synced writes nothing until every page validates, so a
+      # failed attempt leaves the last good snapshot in place.
       - name: Build synchronized rankings, lineup and Showdown
-        run: python run_synced.py --top-n "${{ inputs.top_n || '50' }}"
+        run: |
+          for attempt in 1 2 3; do
+            python run_synced.py --top-n "${{ inputs.top_n || '50' }}" && exit 0
+            echo "::warning::run_synced attempt $attempt failed"
+            sleep $((attempt * 90))
+          done
+          echo "::error::run_synced failed 3 times; the previous snapshot stays live"
+          exit 1
 
       - name: Commit today's synchronized data
         run: |
