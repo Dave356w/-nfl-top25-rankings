@@ -201,7 +201,8 @@ def sleeper_context(reference: pd.DataFrame, context: dict, yahoo: pd.DataFrame)
             "depth_stamp": context["players_fetched_utc"],
             "projection_label": context.get("projection_label", sleeper.PROJECTION_LABEL_SLEEPER),
             "reference": reference, "schedule": schedule,
-            "notes": list(context.get("projection_notes", []))}
+            "notes": list(context.get("projection_notes", [])),
+            "conflicts": list(context.get("projection_conflicts", []))}
 
 
 def _projection_source(ctx: dict) -> str:
@@ -291,7 +292,7 @@ def build_roster(configured: list[dict], yahoo: pd.DataFrame, ctx: dict) -> pd.D
         if not p.Projection_Frozen and pd.notna(row.get("Sleeper_FP")):
             roster.at[i, "Projected_FP"] = float(row["Sleeper_FP"])
             roster.at[i, "Projection_Source"] = source
-        for column in ("Sleeper_Raw_FP", "ESPN_FP"):
+        for column in ("Sleeper_Raw_FP", "ESPN_FP", "CBS_FP"):
             value = pd.to_numeric(row.get(column), errors="coerce")
             roster.at[i, column] = float(value) if pd.notna(value) else np.nan
         flag = row.get("Projection_Flag")

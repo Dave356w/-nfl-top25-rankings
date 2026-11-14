@@ -65,6 +65,14 @@ class ESPNBlendTest(unittest.TestCase):
         self.assertAlmostEqual(self.by.loc["13337", "Sleeper_FP"], 15.5)
         self.assertEqual(self.by.loc["13337", "Projection_Flag"], "ESPN only (starter out)")
 
+    def test_override_stops_once_sleeper_catches_up(self):
+        caught_up = SLEEPER.assign(Sleeper_FP=SLEEPER["Sleeper_FP"].where(
+            SLEEPER["player_id"].ne("13337"), 15.0))
+        blended, _ = espn.blend(PLAYERS, caught_up, self.frame, weight=0.5)
+        row = blended.set_index("player_id").loc["13337"]
+        self.assertAlmostEqual(row.Sleeper_FP, 15.25)
+        self.assertTrue(pd.isna(row.Projection_Flag))
+
     def test_weighted_mean_and_disagreement(self):
         self.assertAlmostEqual(self.by.loc["12000", "Sleeper_FP"], 14.0)  # (13 + 15) / 2
         self.assertTrue(pd.isna(self.by.loc["12000", "Projection_Flag"]))

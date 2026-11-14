@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import json
+import os
 import sys
 import traceback
 from datetime import datetime, timezone
@@ -279,7 +280,29 @@ def main(argv=None):
         f"{built['compared']} cross-page projections verified; "
         f"{len(ranking_entries)} ranking and {len(lineup_entries)} lineup run(s) archived."
     )
+    _write_conflict_summary(built["lineup"])
     return 0
+
+
+def _write_conflict_summary(lineup_payload: dict) -> None:
+    """Show Sleeper/ESPN/CBS conflicts on the Actions run page, when run there."""
+    path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not path:
+        return
+    from pipeline import cbs
+    roster = {row.get("key") for row in (lineup_payload.get("starters") or [])
+              + (lineup_payload.get("bench") or [])}
+    conflicts = lineup_payload.get("conflicts") or []
+    mine = [c for c in conflicts if lo.normalize_name(c["player"]) in roster]
+    text = cbs.summary_markdown(conflicts, lineup_payload.get("week"))
+    if mine:
+        text = ("**On your roster:** " + ", ".join(f"{c['player']} ({c['verdict']})" for c in mine)
+                + "\n\n" + text)
+    try:
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(text)
+    except OSError:
+        pass  # a summary is a convenience; never fail a publish over it
 
 
 if __name__ == "__main__":

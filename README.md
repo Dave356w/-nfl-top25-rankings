@@ -46,6 +46,18 @@ for the week, since Sleeper's backup lines predate the news. Each run logs
 lineup rows carry `sleeper_mean` and `espn_mean`. The weight is not fitted yet;
 the archived ESPN rows make that possible after a few weeks.
 
+### CBS referee for conflicts
+
+`pipeline/cbs.py` reads CBS Sports' keyless weekly projection tables and uses
+them only on players the blend flagged. CBS is first rescaled to Sleeper per
+position (median ratio over unflagged players), because CBS standard scoring
+is not Yahoo half-PPR. Then: a Sleeper/ESPN disagreement takes the median of
+the three; a backup promoted on starter-out news (only while Sleeper is still
+more than 20% off ESPN) takes the mean of ESPN and CBS; an ESPN "out" stays at
+zero but is called out for review if CBS still projects him. Each Actions run
+writes the conflict table to its job summary, with your roster's conflicts on
+top, and the lineup payload carries `conflicts` and a per-row `cbs_mean`.
+
 ### Game-day reruns and kickoff locks
 
 `daily.yml` reruns after each kickoff window's inactive lists. A rerun reads

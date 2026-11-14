@@ -45,6 +45,8 @@ PROJECTION_FIELD = "pts_half_ppr"
 # A second projection source (pipeline/espn.py) is blended into Sleeper's mean.
 # `Sleeper_FP` downstream is the blended mean; `Sleeper_Raw_FP` keeps Sleeper's.
 USE_ESPN = True
+# CBS referees only the players Sleeper and ESPN disagree on (pipeline/cbs.py).
+USE_CBS = True
 PROJECTION_LABEL_SLEEPER = "Sleeper half-PPR projection"
 PROJECTION_LABEL_BLEND = "Sleeper + ESPN half-PPR blend"
 POSITIONS = ("QB", "RB", "WR", "TE", "K", "DEF")
@@ -355,7 +357,7 @@ def resolve_week(state: dict, slate_teams, fetch=None, players=None):
 
 
 def blend_espn(players: pd.DataFrame, projections: pd.DataFrame, context: dict,
-               fetch=None) -> tuple[pd.DataFrame, list[str], list | None]:
+               fetch=None, cbs_fetch=None) -> tuple[pd.DataFrame, list[str], list | None]:
     """Blend ESPN's projection into Sleeper's; on any ESPN failure keep Sleeper's.
 
     Returns (projections, notes, compact ESPN rows for the archive or None).
@@ -372,12 +374,31 @@ def blend_espn(players: pd.DataFrame, projections: pd.DataFrame, context: dict,
         blended, notes = espn.blend(players, projections, frame)
         if blended.empty:
             raise espn.ESPNError("ESPN blend produced no projected players")
-        return blended, notes, espn.compact(frame)
     except Exception as exc:  # ESPN is a second opinion: never fatal
         return projections, [f"ESPN blend skipped ({exc}); Sleeper projections only."], None
+    return (*referee_with_cbs(players, blended, context, notes, cbs_fetch), espn.compact(frame))
 
 
-def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30, espn_fetch=None):
+def referee_with_cbs(players, blended, context, notes, fetch=None):
+    """Settle the blend's flagged conflicts with CBS; on any failure keep the blend."""
+    from pipeline import cbs
+    fetch = fetch or cbs.fetch
+    context["projection_conflicts"] = []
+    if not USE_CBS:
+        return blended, notes + ["CBS referee disabled."]
+    try:
+        frame = cbs.projection_frame(fetch(context["season"], context["week"]),
+                                     normalize_name, normalize_team)
+        refereed, cbs_notes, conflicts = cbs.referee(players, blended, frame)
+    except Exception as exc:  # a third opinion: never fatal
+        return blended, notes + [f"CBS referee skipped ({exc}); conflicts unconfirmed."]
+    context["projection_conflicts"] = conflicts
+    context["cbs_rows"] = frame.to_dict("records")
+    return refereed, notes + cbs_notes
+
+
+def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30, espn_fetch=None,
+         cbs_fetch=None):
     """Fetch state, players and projections and build the joined reference."""
     state = fetch_state(timeout)
     raw_players, fetched_utc = fetch_players(cache_dir, max(timeout, 60))
@@ -391,7 +412,8 @@ def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30, espn_fetch
     if projections.empty:
         raise SleeperError(
             f"Sleeper has no projections for {context['season']} week {context['week']}")
-    projections, blend_notes, espn_rows = blend_espn(players, projections, context, espn_fetch)
+    projections, blend_notes, espn_rows = blend_espn(players, projections, context, espn_fetch,
+                                                     cbs_fetch)
     reference = build_reference(players, projections)
     context.update(players_fetched_utc=fetched_utc, state=state,
                    projection_label=PROJECTION_LABEL_BLEND if espn_rows is not None
@@ -401,4 +423,6 @@ def load(slate_teams, cache_dir="sleeper_cache", timeout: float = 30, espn_fetch
                              "sleeper_projections": captured_projections}
     if espn_rows is not None:
         context["raw_inputs"]["espn_projections"] = espn_rows
+    if context.get("cbs_rows"):
+        context["raw_inputs"]["cbs_projections"] = context.pop("cbs_rows")
     return reference, context

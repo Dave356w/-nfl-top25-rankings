@@ -59,6 +59,7 @@ def _player_row(player: pd.Series, slot: str | None = None) -> dict:
         # The two inputs to the blended mean, so a reader can see a disagreement.
         "sleeper_mean": _clean(player.get("Sleeper_Raw_FP")),
         "espn_mean": _clean(player.get("ESPN_FP")),
+        "cbs_mean": _clean(player.get("CBS_FP")),
         "injury": _clean(player.get("report_status")),
         # Set when Sleeper does not project him this week (ruled out, bye), or
         # null. The page benches on this; `injury` is display only.
@@ -145,6 +146,8 @@ def build_payload(
         "bench": [_player_row(p) for _, p in
                   bench.sort_values("FP", ascending=False).iterrows()],
         "benched_by_request": list(results.get("excluded") or []),
+        # Sleeper/ESPN disagreements and how CBS settled each one.
+        "conflicts": list(context.get("conflicts") or []),
         "projection": {
             "method": context.get("projection_label") or "Sleeper half-PPR projection",
             "season": _clean(context.get("season")),

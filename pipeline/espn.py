@@ -38,6 +38,9 @@ OUT_STATUSES = frozenset({"OUT", "INJURY_RESERVE", "SUSPENSION", "DOUBTFUL_OUT"}
 # were built before the news, and averaging would keep half of a stale backup
 # line. That position group uses ESPN alone for the week.
 NEWS_OVERRIDE_STATUSES = frozenset({"OUT", "DOUBTFUL", "SUSPENSION"})
+# ... but only while Sleeper is still stale: more than this far below/above
+# ESPN. Once Sleeper has absorbed the news, the ordinary blend applies.
+NEWS_STALE_RATIO = 0.20
 DISAGREE_RATIO = 0.40      # flag |S - E| / max(S, E) above this ...
 DISAGREE_MIN_FP = 5.0      # ... when the larger projection is at least this
 REQUEST_LIMIT = 2000
@@ -198,7 +201,10 @@ def blend(players: pd.DataFrame, projections: pd.DataFrame, espn: pd.DataFrame,
         if groups:
             in_group = pd.Series([(t, p) in groups for t, p in zip(work["Team"], work["Position"])],
                                  index=work.index)
-            news = in_group & e.notna() & ~out_flag & ~ruled_out
+            # Only where Sleeper has not caught up yet (NEWS_STALE_RATIO).
+            hi_ = pd.concat([s, e], axis=1).max(axis=1)
+            stale = s.isna() | ((s - e).abs() / hi_.where(hi_ > 0)).gt(NEWS_STALE_RATIO)
+            news = in_group & e.notna() & ~out_flag & ~ruled_out & stale
             mean[news] = e[news]
     mean[out_flag] = 0.0
 
