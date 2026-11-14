@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "generated_utc": "2026-11-14T18:59:47Z",
-  "snapshot_id": "2026-11-14T18:59:47Z",
+  "generated_utc": "2026-11-14T19:12:30Z",
+  "snapshot_id": "2026-11-14T19:12:30Z",
   "run_date": "2026-11-14",
   "season": 2026,
   "week": 10,
@@ -677,10 +677,10 @@
       "opponent": "ATL",
       "kickoff_utc": "2026-11-15 18:00",
       "mean": 15.03,
-      "floor": 6.52,
-      "ceiling": 30.18,
+      "floor": 8.23,
+      "ceiling": 27.33,
       "salary": 15.0,
-      "depth": 2.0,
+      "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper + ESPN half-PPR blend (2026 week 10)",
       "sleeper_mean": 16.04,
@@ -3071,10 +3071,10 @@
       "opponent": "ATL",
       "kickoff_utc": "2026-11-15 18:00",
       "mean": 7.16,
-      "floor": 2.52,
-      "ceiling": 15.25,
+      "floor": 3.1,
+      "ceiling": 14.38,
       "salary": 10.0,
-      "depth": 3.0,
+      "depth": 2.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper + ESPN half-PPR blend (2026 week 10)",
       "sleeper_mean": 3.27,
@@ -3082,7 +3082,7 @@
       "injury": "Questionable",
       "unavailable": null,
       "locked": false,
-      "review": "injury Questionable; depth 3; ESPN only (starter out)"
+      "review": "injury Questionable; ESPN only (starter out)"
     },
     {
       "player": "Darren Waller",
@@ -3449,10 +3449,10 @@
       "opponent": "CLE",
       "kickoff_utc": "2026-11-15 18:00",
       "mean": 6.72,
-      "floor": 2.37,
-      "ceiling": 14.31,
+      "floor": 2.91,
+      "ceiling": 13.5,
       "salary": 10.0,
-      "depth": 3.0,
+      "depth": 2.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper + ESPN half-PPR blend (2026 week 10)",
       "sleeper_mean": 6.72,
@@ -3460,7 +3460,7 @@
       "injury": null,
       "unavailable": null,
       "locked": false,
-      "review": "depth 3"
+      "review": "ok"
     },
     {
       "player": "Gavin Bartholomew",
@@ -3470,10 +3470,10 @@
       "opponent": "GB",
       "kickoff_utc": "2026-11-15 18:00",
       "mean": 6.69,
-      "floor": 2.05,
-      "ceiling": 14.64,
+      "floor": 3.0,
+      "ceiling": 13.28,
       "salary": 10.0,
-      "depth": 2.0,
+      "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper + ESPN half-PPR blend (2026 week 10)",
       "sleeper_mean": 4.88,
@@ -3701,10 +3701,10 @@
       "opponent": "JAC",
       "kickoff_utc": "2026-11-15 18:00",
       "mean": 6.46,
-      "floor": 1.98,
-      "ceiling": 14.14,
+      "floor": 2.51,
+      "ceiling": 13.42,
       "salary": 12.0,
-      "depth": 4.0,
+      "depth": 3.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper + ESPN half-PPR blend (2026 week 10)",
       "sleeper_mean": 6.88,
@@ -3712,7 +3712,7 @@
       "injury": null,
       "unavailable": null,
       "locked": false,
-      "review": "depth 4"
+      "review": "depth 3"
     },
     {
       "player": "New York Giants",
@@ -5045,10 +5045,10 @@
       "opponent": "GB",
       "kickoff_utc": "2026-11-15 18:00",
       "mean": 4.0,
-      "floor": 1.22,
-      "ceiling": 8.75,
+      "floor": 1.55,
+      "ceiling": 8.31,
       "salary": 10.0,
-      "depth": 4.0,
+      "depth": 3.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper + ESPN half-PPR blend (2026 week 10)",
       "sleeper_mean": 3.57,
@@ -5056,7 +5056,7 @@
       "injury": null,
       "unavailable": null,
       "locked": false,
-      "review": "depth 4"
+      "review": "depth 3"
     },
     {
       "player": "Jordan Watkins",
@@ -5405,7 +5405,7 @@
       "floor": 1.01,
       "ceiling": 7.24,
       "salary": 10.0,
-      "depth": 5.0,
+      "depth": 4.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper + ESPN half-PPR blend (2026 week 10)",
       "sleeper_mean": 2.72,
@@ -5413,7 +5413,7 @@
       "injury": null,
       "unavailable": null,
       "locked": false,
-      "review": "depth 5"
+      "review": "depth 4"
     },
     {
       "player": "Jerry Jeudy",
@@ -5717,10 +5717,10 @@
       "opponent": "GB",
       "kickoff_utc": "2026-11-15 18:00",
       "mean": 2.5,
-      "floor": 0.59,
-      "ceiling": 5.63,
+      "floor": 0.76,
+      "ceiling": 5.47,
       "salary": 10.0,
-      "depth": 3.0,
+      "depth": 2.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper + ESPN half-PPR blend (2026 week 10)",
       "sleeper_mean": 3.22,
@@ -5728,7 +5728,7 @@
       "injury": null,
       "unavailable": null,
       "locked": false,
-      "review": "depth 3; ESPN only (starter out)"
+      "review": "ESPN only (starter out)"
     },
     {
       "player": "Josh Cuevas",

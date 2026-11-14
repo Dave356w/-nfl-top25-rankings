@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-14T18:59:47Z",
-  "snapshot_id": "2026-11-14T18:59:47Z",
+  "generated_utc": "2026-11-14T19:12:30Z",
+  "snapshot_id": "2026-11-14T19:12:30Z",
   "run_date": "2026-11-14",
   "season": 2026,
   "week": 10,
@@ -33,8 +33,8 @@
   "roster_fingerprint": "dak prescott:QB|james cook:RB|jaylen warren:RB|tee higgins:WR|jameson williams:WR|mike gesicki:TE|brandon aubrey:K|los angeles rams:DEF|ollie gordon:RB|cj stroud:QB|breece hall:RB|emmett johnson:RB|keenan allen:WR|jaylen waddle:WR|denver broncos:DEF|tyler higbee:TE",
   "totals": {
     "mean": 115.71,
-    "floor": 60.64,
-    "ceiling": 214.83
+    "floor": 62.35,
+    "ceiling": 211.98
   },
   "counts": {
     "roster": 16,
@@ -95,10 +95,10 @@
       "opponent": "ATL",
       "kickoff_utc": "2026-11-15 18:00",
       "mean": 15.03,
-      "floor": 6.52,
-      "ceiling": 30.18,
+      "floor": 8.23,
+      "ceiling": 27.33,
       "salary": 15.0,
-      "depth": 2.0,
+      "depth": 1.0,
       "depth_source": "Sleeper depth chart",
       "source": "Sleeper + ESPN half-PPR blend (2026 week 10)",
       "sleeper_mean": 16.04,
@@ -400,7 +400,7 @@
     "week": 10
   },
   "log": [
-    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T18:59:47Z)",
+    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T19:12:30Z)",
     "  Sleeper: 2026 regular week 10 projections; player dump fetched 2026-11-14T01:14:05.471501+00:00.",
     "  ESPN: matched 410 of 416 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 4 -- Emmett Johnson (KC) S=16.04 E=15.03, Jaydn Ott (KC) S=3.27 E=7.16, Gavin Bartholomew (MIN) S=4.88 E=6.69, Ben Yurosek (MIN) S=3.22 E=2.5",
@@ -633,7 +633,7 @@
     "[28 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 16 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-11-14T18:59:47Z (shared with position rankings).",
+    "Projection snapshot: 2026-11-14T19:12:30Z (shared with position rankings).",
     "Season 2026 week 10; Sleeper players fetched 2026-11-14T01:14:05.471501+00:00.",
     "ESPN: matched 410 of 416 projected players; blend weight 0.50.",
     "  ESPN only (starter out): 4 -- Emmett Johnson (KC) S=16.04 E=15.03, Jaydn Ott (KC) S=3.27 E=7.16, Gavin Bartholomew (MIN) S=4.88 E=6.69, Ben Yurosek (MIN) S=3.22 E=2.5",

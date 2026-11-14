@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-14T18:59:47Z",
-  "snapshot_id": "2026-11-14T18:59:47Z",
+  "generated_utc": "2026-11-14T19:12:30Z",
+  "snapshot_id": "2026-11-14T19:12:30Z",
   "run_date": "2026-11-14",
   "top_n": 50,
   "positions": [
@@ -633,9 +633,9 @@
         "fp": 15.03,
         "salary": 15,
         "fp_per_salary": 1.002,
-        "role": "rotation",
+        "role": "starter",
         "role_slot": "RB RB",
-        "depth": 2,
+        "depth": 1,
         "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
@@ -955,9 +955,9 @@
         "fp": 7.16,
         "salary": 10,
         "fp_per_salary": 0.716,
-        "role": "backup",
+        "role": "rotation",
         "role_slot": "RB RB",
-        "depth": 3,
+        "depth": 2,
         "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
@@ -1039,9 +1039,9 @@
         "fp": 6.72,
         "salary": 10,
         "fp_per_salary": 0.672,
-        "role": "backup",
+        "role": "rotation",
         "role_slot": "RB RB",
-        "depth": 3,
+        "depth": 2,
         "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
@@ -2163,9 +2163,9 @@
         "fp": 6.69,
         "salary": 10,
         "fp_per_salary": 0.669,
-        "role": "rotation",
+        "role": "starter",
         "role_slot": "TE TE",
-        "depth": 2,
+        "depth": 1,
         "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
@@ -2527,9 +2527,9 @@
         "fp": 2.5,
         "salary": 10,
         "fp_per_salary": 0.25,
-        "role": "backup",
+        "role": "rotation",
         "role_slot": "TE TE",
-        "depth": 3,
+        "depth": 2,
         "kickoff_utc": "2026-11-15 18:00",
         "method": "Sleeper + ESPN half-PPR blend (2026 week 10)"
       },
@@ -3025,7 +3025,7 @@
     "Sleeper + ESPN half-PPR blend (2026 week 10)": 372
   },
   "log": [
-    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T18:59:47Z)",
+    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T19:12:30Z)",
     "  Sleeper: 2026 regular week 10 projections; player dump fetched 2026-11-14T01:14:05.471501+00:00.",
     "  ESPN: matched 410 of 416 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 4 -- Emmett Johnson (KC) S=16.04 E=15.03, Jaydn Ott (KC) S=3.27 E=7.16, Gavin Bartholomew (MIN) S=4.88 E=6.69, Ben Yurosek (MIN) S=3.22 E=2.5",
