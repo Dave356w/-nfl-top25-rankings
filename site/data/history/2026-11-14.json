@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-14T18:57:10Z",
-  "snapshot_id": "2026-11-14T18:57:10Z",
+  "generated_utc": "2026-11-14T18:59:47Z",
+  "snapshot_id": "2026-11-14T18:59:47Z",
   "run_date": "2026-11-14",
   "top_n": 50,
   "positions": [
@@ -3025,7 +3025,7 @@
     "Sleeper + ESPN half-PPR blend (2026 week 10)": 372
   },
   "log": [
-    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T18:57:10Z)",
+    "Yahoo slate: 14 game(s), 569 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-14T18:59:47Z)",
     "  Sleeper: 2026 regular week 10 projections; player dump fetched 2026-11-14T01:14:05.471501+00:00.",
     "  ESPN: matched 410 of 416 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 4 -- Emmett Johnson (KC) S=16.04 E=15.03, Jaydn Ott (KC) S=3.27 E=7.16, Gavin Bartholomew (MIN) S=4.88 E=6.69, Ben Yurosek (MIN) S=3.22 E=2.5",
