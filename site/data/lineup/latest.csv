@@ -1,17 +1,17 @@
 slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,sleeper_mean,espn_mean,cbs_mean,injury,unavailable,locked,review
 QB,Dak Prescott,QB,DAL,SF,2026-11-15 21:25,18.08,11.9,29.38,36.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),17.94,16.55,19.75,,,False,ok
-RB,James Cook III,RB,BUF,NYJ,2026-11-15 18:00,17.77,9.73,32.32,38.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),16.93,19.71,16.68,,,False,ok
-RB,Jaylen Warren,RB,PIT,CIN,2026-11-16 01:20,15.37,8.42,27.95,33.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),15.6,14.19,16.31,,,False,ok
-WR,Tee Higgins,WR,CIN,PIT,2026-11-16 01:20,13.94,6.68,26.96,38.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),14.6,13.07,14.15,,,False,ok
-WR,Jameson Williams,WR,DET,NE,2026-11-15 14:30,10.54,5.05,20.38,26.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),10.5,10.11,11.01,,,False,ok
+RB,James Cook III,RB,BUF,NYJ,2026-11-15 18:00,17.8,9.75,32.37,38.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),16.93,19.71,16.75,,,False,ok
+RB,Jaylen Warren,RB,PIT,CIN,2026-11-16 01:20,15.39,8.43,27.99,33.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),15.6,14.19,16.39,,,False,ok
+WR,Tee Higgins,WR,CIN,PIT,2026-11-16 01:20,13.91,6.67,26.9,38.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),14.58,13.07,14.08,,,False,ok
+WR,Jameson Williams,WR,DET,NE,2026-11-15 14:30,10.52,5.04,20.35,26.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),10.5,10.11,10.96,,,False,ok
 TE,Brenton Strange,TE,JAC,TEN,2026-11-15 18:00,8.29,3.72,16.45,14.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),7.91,7.68,9.29,,,False,ok
-K,Brandon Aubrey,K,DAL,SF,2026-11-15 21:25,9.88,5.83,17.24,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),8.92,10.47,10.25,,,False,ok
-DEF,Los Angeles Rams,DEF,LA,ARI,2026-11-15 21:05,8.46,3.57,17.14,14.0,1.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),8.74,8.26,8.37,,,False,ok
-FLEX,Emmett Johnson,RB,KC,ATL,2026-11-15 18:00,14.51,7.95,26.39,15.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),14.91,15.03,13.58,,,False,ok
-BENCH,C.J. Stroud,QB,HOU,CLE,2026-11-15 18:00,17.5,11.52,28.44,36.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),17.78,18.27,16.46,,,False,ok
-BENCH,Ollie Gordon II,RB,MIA,IND,2026-11-15 18:00,13.03,7.14,23.7,20.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),12.48,14.99,11.62,,,False,ok
-BENCH,Breece Hall,RB,NYJ,BUF,2026-11-15 18:00,11.24,6.16,20.44,25.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),10.64,11.0,12.08,,,False,ok
-BENCH,Mike Gesicki,TE,CIN,PIT,2026-11-16 01:20,7.41,3.32,14.71,16.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),8.23,6.22,7.79,,,False,ok
-BENCH,Keenan Allen,WR,SF,DAL,2026-11-15 21:25,6.51,2.53,13.53,15.0,3.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),5.16,7.11,7.26,,,False,depth 3
+K,Brandon Aubrey,K,DAL,SF,2026-11-15 21:25,9.87,5.82,17.23,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),8.92,10.47,10.22,,,False,ok
+DEF,Los Angeles Rams,DEF,LA,ARI,2026-11-15 21:05,8.45,3.57,17.12,14.0,1.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),8.74,8.26,8.35,,,False,ok
+FLEX,Emmett Johnson,RB,KC,ATL,2026-11-15 18:00,14.53,7.96,26.42,15.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),14.91,15.03,13.64,,,False,ok
+BENCH,C.J. Stroud,QB,HOU,CLE,2026-11-15 18:00,17.45,11.48,28.36,36.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),17.78,18.27,16.29,,,False,ok
+BENCH,Ollie Gordon II,RB,MIA,IND,2026-11-15 18:00,13.03,7.14,23.7,20.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),12.44,14.99,11.67,,,False,ok
+BENCH,Breece Hall,RB,NYJ,BUF,2026-11-15 18:00,11.26,6.17,20.48,25.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),10.64,11.0,12.13,,,False,ok
+BENCH,Mike Gesicki,TE,CIN,PIT,2026-11-16 01:20,7.41,3.32,14.71,16.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),8.21,6.22,7.79,,,False,ok
+BENCH,Keenan Allen,WR,SF,DAL,2026-11-15 21:25,6.5,2.52,13.5,15.0,3.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 10),5.16,7.11,7.23,,,False,depth 3
 BENCH,Jaylen Waddle,WR,DEN,,,0.0,,,,2.0,Sleeper depth chart,No weekly projection; bye or unmatched player,,,,Out,not projected this week,False,no weekly projection/bye; injury Out
 BENCH,Denver Broncos,DEF,DEN,,,0.0,,,,1.0,Sleeper projection order,No weekly projection; bye or unmatched player,,,,,not projected this week,False,no weekly projection/bye
