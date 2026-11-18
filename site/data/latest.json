@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-18T04:51:52Z",
-  "snapshot_id": "2026-11-18T04:51:52Z",
+  "generated_utc": "2026-11-18T05:03:00Z",
+  "snapshot_id": "2026-11-18T05:03:00Z",
   "run_date": "2026-11-18",
   "top_n": 50,
   "positions": [
@@ -5996,16 +5996,16 @@
       },
       {
         "rank": 101,
-        "player": "Derius Davis",
-        "team": "LAC",
-        "opponent": "NYJ",
-        "fp": 1.16,
+        "player": "Devontez Walker",
+        "team": "BAL",
+        "opponent": "CAR",
+        "fp": 1.13,
         "salary": 10,
-        "fp_per_salary": 0.116,
+        "fp_per_salary": 0.113,
         "role": "rotation",
-        "role_slot": "WR SWR",
+        "role_slot": "WR RWR",
         "depth": 4,
-        "kickoff_utc": "2026-11-22 21:05",
+        "kickoff_utc": "2026-11-22 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
@@ -6088,7 +6088,7 @@
         "fp_per_salary": 0.077,
         "role": "rotation",
         "role_slot": "WR LWR",
-        "depth": 5,
+        "depth": 4,
         "kickoff_utc": "2026-11-22 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
@@ -6108,20 +6108,6 @@
       },
       {
         "rank": 109,
-        "player": "Devontez Walker",
-        "team": "BAL",
-        "opponent": "CAR",
-        "fp": 0.62,
-        "salary": 10,
-        "fp_per_salary": 0.062,
-        "role": "rotation",
-        "role_slot": "WR RWR",
-        "depth": 4,
-        "kickoff_utc": "2026-11-22 18:00",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
-      },
-      {
-        "rank": 110,
         "player": "Brandon Smith",
         "team": "PIT",
         "opponent": "PHI",
@@ -6135,7 +6121,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
-        "rank": 111,
+        "rank": 110,
         "player": "Greg Dortch",
         "team": "BUF",
         "opponent": "MIA",
@@ -6146,6 +6132,20 @@
         "role_slot": "WR RWR",
         "depth": 3,
         "kickoff_utc": "2026-11-22 18:00",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
+      },
+      {
+        "rank": 111,
+        "player": "Derius Davis",
+        "team": "LAC",
+        "opponent": "NYJ",
+        "fp": 0.51,
+        "salary": 10,
+        "fp_per_salary": 0.051,
+        "role": "rotation",
+        "role_slot": "WR SWR",
+        "depth": 5,
+        "kickoff_utc": "2026-11-22 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
@@ -8281,7 +8281,7 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)": 379
   },
   "log": [
-    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-18T04:51:52Z)",
+    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-18T05:03:00Z)",
     "  Sleeper: 2026 regular week 11 projections; player dump fetched 2026-11-18T03:06:55.112213+00:00.",
     "  ESPN: matched 415 of 419 projected players; blend weight 0.50.",
     "    ESPN: out: 8 -- Adam Randall (BAL) S=0.21 E=0.0, Roman Wilson (PIT) S=2.76 E=6.15, Andrei Iosivas (CIN) S=4.42 E=3.44, Will Shipley (PHI) S=2.96 E=4.08, Jacory Croskey-Merritt (WAS) S=7.11 E=7.12, Jonathon Brooks (CAR) S=3.88 E=3.84, Tyrell Shavers (BUF) S=1.89 E=0.0, Michael Pittman Jr. (PIT) S=3.34 E=4.68",
