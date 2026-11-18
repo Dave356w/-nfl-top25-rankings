@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-18T18:39:21Z",
-  "snapshot_id": "2026-11-18T18:39:21Z",
+  "generated_utc": "2026-11-18T19:54:31Z",
+  "snapshot_id": "2026-11-18T19:54:31Z",
   "run_date": "2026-11-18",
   "top_n": 50,
   "positions": [
@@ -2963,13 +2963,13 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)": 380
   },
   "log": [
-    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-18T18:39:21Z)",
+    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-18T19:54:31Z)",
     "  Sleeper: 2026 regular week 11 projections; player dump fetched 2026-11-18T03:06:55.112213+00:00.",
     "  ESPN: matched 414 of 418 projected players; blend weight 0.50.",
-    "    ESPN: out: 7 -- Adam Randall (BAL) S=0.21 E=0.0, Roman Wilson (PIT) S=2.75 E=6.15, Andrei Iosivas (CIN) S=4.52 E=3.44, Will Shipley (PHI) S=2.96 E=4.08, Jacory Croskey-Merritt (WAS) S=7.14 E=7.12, Jonathon Brooks (CAR) S=3.87 E=3.84, Michael Pittman Jr. (PIT) S=3.33 E=4.68",
-    "    ESPN only: 4 -- Zay Jones (ARI) S=nan E=1.2, Will Mallory (IND) S=nan E=1.1, Ryan Izzo () S=nan E=0.8, Jameis Winston (NYG) S=nan E=0.68",
+    "    ESPN: out: 6 -- Roman Wilson (PIT) S=2.75 E=6.15, Andrei Iosivas (CIN) S=4.52 E=3.44, Will Shipley (PHI) S=2.96 E=4.08, Jacory Croskey-Merritt (WAS) S=7.14 E=7.12, Jonathon Brooks (CAR) S=3.87 E=3.84, Michael Pittman Jr. (PIT) S=3.33 E=4.68",
+    "    ESPN only: 3 -- Zay Jones (ARI) S=nan E=1.2, Ryan Izzo () S=nan E=0.8, Jameis Winston (NYG) S=nan E=0.68",
     "    sources disagree: 7 -- Dallas Cowboys (DAL) S=7.18 E=3.71, Jauan Jennings (MIN) S=2.75 E=5.71, Omar Cooper Jr. (NYJ) S=8.38 E=0.0, Las Vegas Raiders (LV) S=5.19 E=2.7, Germie Bernard (PIT) S=5.25 E=2.49, Jalen Nailor (LV) S=2.39 E=5.28, Calvin Ridley (TEN) S=1.48 E=5.22",
-    "  Three-source mean: 411 projected players (333 on all three, 64 on two, 14 on one). CBS review: 14 flagged player(s), 11 found on CBS; CBS scaled to Sleeper DEF x0.64, K x0.93, QB x0.83, RB x0.99, TE x0.95, WR x0.95.",
+    "  Three-source mean: 411 projected players (334 on all three, 64 on two, 13 on one). CBS review: 13 flagged player(s), 10 found on CBS; CBS scaled to Sleeper DEF x0.64, K x0.93, QB x0.83, RB x0.99, TE x0.95, WR x0.95.",
     "    Dallas Cowboys (DAL DEF): S=7.18 E=3.71 C=5.13 -> 5.34 [CBS sides with ESPN]",
     "    Germie Bernard (PIT WR): S=5.25 E=2.49 C=5.68 -> 4.47 [CBS sides with Sleeper]",
     "    Jauan Jennings (MIN WR): S=2.75 E=5.71 C=None -> 4.23 [not on CBS -- unconfirmed]",
@@ -2977,7 +2977,6 @@
     "    Las Vegas Raiders (LV DEF): S=5.19 E=2.7 C=2.95 -> 3.61 [CBS sides with ESPN]",
     "    Jalen Nailor (LV WR): S=2.39 E=5.28 C=2.84 -> 3.5 [CBS sides with Sleeper]",
     "    Calvin Ridley (TEN WR): S=1.48 E=5.22 C=None -> 3.35 [not on CBS -- unconfirmed]",
-    "    Adam Randall (BAL RB): S=0.21 E=0.0 C=1.63 -> 0.0 [CBS agrees: out]",
     "    Roman Wilson (PIT WR): S=2.75 E=6.15 C=5.21 -> 0.0 [CBS still projects him -- review]",
     "    Andrei Iosivas (CIN WR): S=4.52 E=3.44 C=4.6 -> 0.0 [CBS still projects him -- review]",
     "    Jacory Croskey-Merritt (WAS RB): S=7.14 E=7.12 C=None -> 0.0 [not on CBS -- unconfirmed]",
