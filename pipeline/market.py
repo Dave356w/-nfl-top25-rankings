@@ -2215,6 +2215,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 # Display-only reference for the lineup page
 # ---------------------------------------------------------------------------
 MARKET_DISPLAY_POSITIONS = ("QB", "RB", "WR", "TE")
+# Qualities whose fantasy_points cover every core scoring component (td-estimate
+# fills yards from a regression and is shown marked as an estimate).
+COMPLETE_QUALITIES = ("good", "fair", "td-estimate")
 
 
 def market_reference(normalize_name, normalize_team, timeout: float = 45.0,
@@ -2243,7 +2246,8 @@ def market_reference(normalize_name, normalize_team, timeout: float = 45.0,
             notes.append(f"{feed}: {len(parsed):,} player-market records")
         except Exception as exc:  # one feed down never blocks the other
             notes.append(f"{feed} unavailable ({type(exc).__name__}: {exc})")
-    empty = pd.DataFrame(columns=["Key", "Team", "Market_FP", "Market_Quality", "Market_Props"])
+    empty = pd.DataFrame(columns=["Key", "Team", "Market_FP", "Market_Quality", "Market_Props",
+                                  "Market_Kickoff"])
     if not collections:
         return empty, notes
     merged = merge_player_collections(*collections)
@@ -2260,8 +2264,14 @@ def market_reference(normalize_name, normalize_team, timeout: float = 45.0,
                 continue
         except ValueError:
             pass
+        # A partial or unconverted TD-only sum is a subtotal, not a full-game
+        # estimate: publish its props but no points, so it is never read
+        # (or highlighted) as a whole projection.
+        complete = p.quality in COMPLETE_QUALITIES
         rows.append({"Key": normalize_name(p.player), "Team": normalize_team(p.team),
-                     "Market_FP": round(float(p.fantasy_points), 2),
+                     "Market_FP": round(float(p.fantasy_points), 2) if complete else None,
+                     # Kept so the lineup only attaches props for the game it is pricing.
+                     "Market_Kickoff": start,
                      "Market_Quality": p.quality,
                      "Market_Props": props_summary(
                          by_player.get((normalize_name(p.player), normalize_team(p.team))),

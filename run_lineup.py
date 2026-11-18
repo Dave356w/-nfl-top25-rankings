@@ -40,6 +40,7 @@ DEFAULT_ROSTER = ROOT / "lineup_roster.json"
 # Display-only market column. Off unless the workflow sets MARKET_DISPLAY=1, so
 # tests and local runs never touch the prop feeds.
 MARKET_ENV = "MARKET_DISPLAY"
+MARKET_KICKOFF_TOLERANCE = pd.Timedelta(hours=6)
 
 
 def _player_row(player: pd.Series, slot: str | None = None) -> dict:
@@ -268,6 +269,16 @@ def attach_market(frames: list[pd.DataFrame], fetch=None) -> list[str]:
         keyed = ref.set_index(["Key", "Team"])
         idx = pd.MultiIndex.from_arrays([frame["Key"], frame["Team"].map(normalize_team)])
         hit = idx.isin(keyed.index)
+        # Name+team alone would pin next week's props on a row for this week's
+        # game (e.g. a kickoff-locked player): require the same kickoff, within
+        # a few hours since books and Yahoo can list slightly different times.
+        if hit.any() and "Market_Kickoff" in keyed:
+            game = pd.to_datetime(frame["Game_Time"], errors="coerce", utc=True) \
+                if "Game_Time" in frame else pd.Series(pd.NaT, index=frame.index)
+            book = pd.to_datetime(keyed["Market_Kickoff"].reindex(idx).to_numpy(),
+                                  errors="coerce", utc=True)
+            same = (abs(pd.Series(book, index=frame.index) - game) <= MARKET_KICKOFF_TOLERANCE)
+            hit = hit & same.fillna(False).to_numpy()
         if hit.any():
             sub = keyed.reindex(idx[hit])
             frame.loc[hit, "Market_FP"] = sub["Market_FP"].to_numpy()

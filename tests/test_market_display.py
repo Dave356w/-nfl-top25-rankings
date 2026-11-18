@@ -77,3 +77,40 @@ class PropsSummaryTest(unittest.TestCase):
         run_lineup.attach_market([f], fetch=ref)
         self.assertEqual(run_lineup._player_row(f.iloc[0])["market_props"],
                          "Rec 3.5 · RecYd 34.5 · TD 31%")
+
+
+class ReviewFixesTest(unittest.TestCase):
+    def test_props_for_another_game_are_not_attached(self):
+        """Next week's lines must not land on this week's row (kickoff mismatch)."""
+        def ref():
+            r, n = _ref()
+            r["Market_Kickoff"] = ["2026-11-22T18:00:00Z", "2026-11-29T18:00:00Z"]
+            return r, n
+        f = _frame()
+        f["Game_Time"] = pd.to_datetime(["2026-11-22 18:00", "2026-11-24 01:15", "2026-11-22 18:00"], utc=True)
+        run_lineup.attach_market([f], fetch=ref)
+        self.assertEqual(f.loc[0, "Market_FP"], 6.57)       # same game
+        self.assertTrue(pd.isna(f.loc[1, "Market_FP"]))     # next week's game
+
+    def test_incomplete_sums_publish_props_but_no_points(self):
+        from unittest import mock
+        from pipeline import market
+        from pipeline.sleeper import normalize_name, normalize_team
+
+        def proj(name, quality, fp):
+            return market.Projection("e", "A @ B", "2099-01-01T18:00:00Z", "CIN", name, "QB",
+                                     fp, quality, {"passing_yards": 250.0}, {})
+        made = [proj("Joe Burrow", "partial", 9.97), proj("Ja'Marr Chase", "td-only", 3.1),
+                proj("Tee Higgins", "good", 14.9)]
+        with mock.patch.object(market, "fetch_bovada_payload", return_value={}), \
+             mock.patch.object(market, "validate_bovada_payload"), \
+             mock.patch.object(market, "parse_bovada_payload", return_value={"k": 1}), \
+             mock.patch.object(market, "fetch_underdog_payload", side_effect=RuntimeError("down")), \
+             mock.patch.object(market, "merge_player_collections", return_value={}), \
+             mock.patch.object(market, "make_projections", return_value=(made, 0.17, 0)):
+            frame, _ = market.market_reference(normalize_name, normalize_team)
+        fp = dict(zip(frame["Key"], frame["Market_FP"]))
+        self.assertTrue(pd.isna(fp[normalize_name("Joe Burrow")]))
+        self.assertTrue(pd.isna(fp[normalize_name("Ja'Marr Chase")]))
+        self.assertEqual(fp[normalize_name("Tee Higgins")], 14.9)
+        self.assertTrue(frame["Market_Props"].notna().all())

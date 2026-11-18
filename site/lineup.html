@@ -986,11 +986,15 @@ footer{
   // 25% away from the projection.
   function marketCell(r) {
     if (!num(r.market_mean)) {
-      return '<span class="mkt none" title="No market lines for this player">—</span>';
+      var why = r.market_props ? "Incomplete lines: not a full-game estimate"
+                               : "No market lines for this player";
+      return '<span class="mkt none" title="' + why + '">—</span>';
     }
-    var gap = num(r.mean) ? r.market_mean - r.mean : 0;
-    var dev = num(r.mean) && Math.abs(gap) >= 2.5 && Math.abs(gap) >= 0.25 * Math.max(r.mean, 1);
     var td = r.market_quality === "td-estimate";
+    var gap = num(r.mean) ? r.market_mean - r.mean : 0;
+    // Only a direct, complete component sum is compared with the projection.
+    var dev = !td && num(r.mean) && Math.abs(gap) >= 2.5 &&
+      Math.abs(gap) >= 0.25 * Math.max(r.mean, 1);
     var title = "Market " + fmt(r.market_mean) + " (" + escapeHtml(r.market_quality || "") + ")" +
       (num(r.mean) ? ", " + (gap >= 0 ? "+" : "") + fmt(gap) + " vs projection" : "");
     return '<span class="mkt' + (dev ? " dev" : "") + (td ? " td" : "") + '" title="' + title + '">' +
