@@ -296,6 +296,7 @@ def _finish_lineup(
     objective: str,
     no_pool: bool = False,
     previous: dict | None = None,
+    market_pool: pd.DataFrame | None = None,
 ) -> tuple[dict, pd.DataFrame, str | None]:
     """Resolve, optimize and optionally build the editor pool from one projection frame.
 
@@ -338,7 +339,7 @@ def _finish_lineup(
             print(pool_note)
 
     if os.environ.get(MARKET_ENV) == "1":
-        for note in attach_market([roster, starters, bench, pool]):
+        for note in attach_market([roster, starters, bench, pool, market_pool]):
             print(note)
             context.setdefault("notes", []).append(note)
     return results, pool, pool_note
@@ -351,17 +352,26 @@ def build_from_prepared_slate(
     objective: str = lo.LINEUP_OBJECTIVE,
     no_pool: bool = False,
     previous: dict | None = None,
+    showdown_players: pd.DataFrame | None = None,
 ) -> tuple[dict, pd.DataFrame, str | None]:
-    """Build a lineup from the exact final projections used by the rankings page."""
+    """Build a lineup from the exact final projections used by the rankings page.
+
+    If supplied, showdown_players is a copy of the prepared player frame that
+    receives the same kickoff-matched market data as the lineup.
+    """
     yahoo = lo.yahoo_from_prepared_slate(prepared_slate["players"])
-    return _finish_lineup(
+    results = _finish_lineup(
         configured,
         yahoo,
         list(excluded or []),
         objective,
         no_pool,
         previous,
+        market_pool=yahoo if showdown_players is not None else None,
     )
+    if showdown_players is not None and "Market_FP" in yahoo:
+        showdown_players["Market_FP"] = yahoo["Market_FP"]
+    return results
 
 
 def read_previous(data_dir: Path | None) -> dict | None:

@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import lineup_optimizer as lo
 import run_synced
 import run_showdown
+from pipeline import market
 from pipeline import notebook as nb
 from pipeline import showdown
 from test_showdown import _StubbedFeeds
@@ -327,14 +328,26 @@ class SharedShowdownTests(unittest.TestCase):
 
     def test_publisher_prepares_once_and_writes_all_views_with_one_snapshot(self):
         configured = [{"Name": "Drake Maye", "Position": "QB"}]
-        with tempfile.TemporaryDirectory() as directory:
-            with patch.object(nb, "prepare_slate_pool", wraps=nb.prepare_slate_pool) as prepare:
-                with patch.object(lo, "load_sleeper_context", return_value=_context()):
-                    with patch.object(lo, "load_roster", return_value=configured):
-                        with contextlib.redirect_stdout(io.StringIO()):
-                            code = run_synced.main([
-                                "--site-dir", directory, "--showdown-no-optimize",
-                            ])
+        market_rows = pd.DataFrame({
+            "Key": [lo.normalize_name("Drake Maye"), lo.normalize_name("Sam Darnold")],
+            "Team": ["NE", "SEA"],
+            "Market_FP": [19.5, 16.0],
+            "Market_Quality": ["good", "good"],
+            "Market_Kickoff": ["2026-09-13T17:00:00Z", "2026-09-20T17:00:00Z"],
+        })
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.dict("os.environ", {run_synced.run_lineup.MARKET_ENV: "1"}),
+            patch.object(market, "market_reference", return_value=(market_rows, [])) as fetch_market,
+            patch.object(nb, "prepare_slate_pool", wraps=nb.prepare_slate_pool) as prepare,
+            patch.object(lo, "load_sleeper_context", return_value=_context()),
+            patch.object(lo, "load_roster", return_value=configured),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            code = run_synced.main([
+                "--site-dir", directory, "--showdown-no-optimize",
+            ])
+            fetch_market.assert_called_once()
             self.assertEqual(code, 0)
             self.assertEqual(prepare.call_count, 1)
             root = Path(directory) / "data"
@@ -344,6 +357,9 @@ class SharedShowdownTests(unittest.TestCase):
             documents = [json.loads(path.read_text()) for path in paths]
             self.assertEqual(len({doc["snapshot_id"] for doc in documents}), 1)
             self.assertEqual(len({doc["generated_utc"] for doc in documents}), 1)
+            showdown_players = {row["name"]: row for row in documents[-1]["players"]}
+            self.assertEqual(showdown_players["Drake Maye"]["market_mean"], 19.5)
+            self.assertIsNone(showdown_players["Sam Darnold"]["market_mean"])
 
 
 if __name__ == "__main__":
