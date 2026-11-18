@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-18T22:01:59Z",
-  "snapshot_id": "2026-11-18T22:01:59Z",
+  "generated_utc": "2026-11-18T22:23:32Z",
+  "snapshot_id": "2026-11-18T22:23:32Z",
   "run_date": "2026-11-18",
   "top_n": 50,
   "positions": [
@@ -5828,20 +5828,6 @@
       },
       {
         "rank": 88,
-        "player": "Travis Hunter",
-        "team": "JAX",
-        "opponent": "NYG",
-        "fp": 2.58,
-        "salary": 10,
-        "fp_per_salary": 0.258,
-        "role": "reserve",
-        "role_slot": "WR RCB",
-        "depth": 6,
-        "kickoff_utc": "2026-11-22 21:25",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
-      },
-      {
-        "rank": 89,
         "player": "Van Jefferson",
         "team": "WAS",
         "opponent": "CIN",
@@ -5852,6 +5838,20 @@
         "role_slot": "WR LWR",
         "depth": 4,
         "kickoff_utc": "2026-11-24 01:15",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
+      },
+      {
+        "rank": 89,
+        "player": "Travis Hunter",
+        "team": "JAX",
+        "opponent": "NYG",
+        "fp": 2.54,
+        "salary": 10,
+        "fp_per_salary": 0.254,
+        "role": "reserve",
+        "role_slot": "WR RCB",
+        "depth": 6,
+        "kickoff_utc": "2026-11-22 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
@@ -6052,20 +6052,6 @@
       },
       {
         "rank": 104,
-        "player": "Devontez Walker",
-        "team": "BAL",
-        "opponent": "CAR",
-        "fp": 1.12,
-        "salary": 10,
-        "fp_per_salary": 0.112,
-        "role": "rotation",
-        "role_slot": "WR RWR",
-        "depth": 4,
-        "kickoff_utc": "2026-11-22 18:00",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
-      },
-      {
-        "rank": 105,
         "player": "Nick Westbrook-Ikhine",
         "team": "IND",
         "opponent": "HOU",
@@ -6079,7 +6065,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
-        "rank": 106,
+        "rank": 105,
         "player": "Ben Skowronek",
         "team": "PIT",
         "opponent": "PHI",
@@ -6093,7 +6079,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
-        "rank": 107,
+        "rank": 106,
         "player": "Brycen Tremayne",
         "team": "CAR",
         "opponent": "BAL",
@@ -6107,7 +6093,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
-        "rank": 108,
+        "rank": 107,
         "player": "Cody White",
         "team": "LV",
         "opponent": "DEN",
@@ -6121,7 +6107,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
-        "rank": 109,
+        "rank": 108,
         "player": "Brandin Cooks",
         "team": "SF",
         "opponent": "MIN",
@@ -6135,7 +6121,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
-        "rank": 110,
+        "rank": 109,
         "player": "KeAndre Lambert-Smith",
         "team": "LAC",
         "opponent": "NYJ",
@@ -6149,7 +6135,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
-        "rank": 111,
+        "rank": 110,
         "player": "Demarcus Robinson",
         "team": "SF",
         "opponent": "MIN",
@@ -6160,6 +6146,20 @@
         "role_slot": "WR LWR",
         "depth": 5,
         "kickoff_utc": "2026-11-23 01:20",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
+      },
+      {
+        "rank": 111,
+        "player": "Devontez Walker",
+        "team": "BAL",
+        "opponent": "CAR",
+        "fp": 0.62,
+        "salary": 10,
+        "fp_per_salary": 0.062,
+        "role": "rotation",
+        "role_slot": "WR RWR",
+        "depth": 4,
+        "kickoff_utc": "2026-11-22 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)"
       },
       {
@@ -8281,7 +8281,7 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)": 379
   },
   "log": [
-    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-18T22:01:59Z)",
+    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-18T22:23:32Z)",
     "  Sleeper: 2026 regular week 11 projections; player dump fetched 2026-11-18T03:06:55.112213+00:00.",
     "  ESPN: matched 414 of 418 projected players; blend weight 0.50.",
     "    ESPN: out: 6 -- Roman Wilson (PIT) S=2.72 E=6.15, Andrei Iosivas (CIN) S=4.52 E=3.44, Will Shipley (PHI) S=2.92 E=4.08, Jacory Croskey-Merritt (WAS) S=7.14 E=7.12, Jonathon Brooks (CAR) S=3.86 E=3.84, Michael Pittman Jr. (PIT) S=3.3 E=4.68",
