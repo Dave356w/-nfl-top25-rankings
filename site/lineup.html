@@ -253,6 +253,10 @@ details.panel>summary:hover{background:var(--panel-2)}
 .result-row:last-child{border-bottom:0}
 .result-row:hover{background:var(--panel-2)}
 .result-row .mean{font-family:var(--mono); font-size:13px; font-weight:640}
+.mkt.none{opacity:.45}
+.mkt.td{opacity:.7; font-style:italic}
+.mkt.dev{color:#b7791f; font-weight:650}
+.mkt-cell .props{display:block; font-size:10.5px; line-height:1.25; opacity:.65; white-space:normal; max-width:150px; margin-left:auto; text-align:right}
 .edit-actions{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:16px}
 .edit-actions .said{font-size:12.5px; color:var(--good)}
 .custom{background:var(--accent-soft); color:var(--accent-ink)}
@@ -387,6 +391,7 @@ footer{
             <th style="width:76px">Slot</th>
             <th>Player</th>
             <th class="num">Proj FP</th>
+            <th class="num" title="Market-implied points from Bovada and Underdog props. Display only; blank means the books do not price him.">Market</th>
             <th class="num">P25</th>
             <th class="num">P90</th>
             <th class="num">Depth</th>
@@ -408,6 +413,7 @@ footer{
             <th style="width:76px">Slot</th>
             <th>Player</th>
             <th class="num">Proj FP</th>
+            <th class="num" title="Market-implied points from Bovada and Underdog props. Display only; blank means the books do not price him.">Market</th>
             <th class="num">P25</th>
             <th class="num">P90</th>
             <th class="num">Depth</th>
@@ -975,6 +981,27 @@ footer{
   }
 
   /* ---------- rendering the lineup ---------- */
+  // Display only: the optimizer never reads market_mean. "—" = no prop lines
+  // this week; "~" = touchdown-only estimate; amber = at least 2.5 points and
+  // 25% away from the projection.
+  function marketCell(r) {
+    if (!num(r.market_mean)) {
+      return '<span class="mkt none" title="No market lines for this player">—</span>';
+    }
+    var gap = num(r.mean) ? r.market_mean - r.mean : 0;
+    var dev = num(r.mean) && Math.abs(gap) >= 2.5 && Math.abs(gap) >= 0.25 * Math.max(r.mean, 1);
+    var td = r.market_quality === "td-estimate";
+    var title = "Market " + fmt(r.market_mean) + " (" + escapeHtml(r.market_quality || "") + ")" +
+      (num(r.mean) ? ", " + (gap >= 0 ? "+" : "") + fmt(gap) + " vs projection" : "");
+    return '<span class="mkt' + (dev ? " dev" : "") + (td ? " td" : "") + '" title="' + title + '">' +
+      (td ? "~" : "") + fmt(r.market_mean) + "</span>";
+  }
+
+  // The posted lines behind market_mean, e.g. "Ru 56.5 · Rec 2.5 · TD 34%".
+  function propsLine(r) {
+    return r.market_props ? '<span class="props">' + escapeHtml(r.market_props) + "</span>" : "";
+  }
+
   function rowHtml(r, slot, top) {
     var src = source(r.source);
     var pct = top > 0 && num(r.mean) ? Math.max(3, (r.mean / top) * 100) : 0;
@@ -984,6 +1011,7 @@ footer{
     var meta = [
       '<span class="badge ' + src.cls + '">' + src.label + "</span>",
       "<span>P25 " + fmt(r.floor) + " · P90 " + fmt(r.ceiling) + "</span>",
+      "<span>Market " + marketCell(r) + (r.market_props ? " · " + escapeHtml(r.market_props) : "") + "</span>",
       "<span>Depth " + depthControl(r) + "</span>",
       kickoff ? "<span>" + escapeHtml(kickoff) + "</span>" : "",
       r.review && r.review !== "ok" ? "<span>" + escapeHtml(r.review) + "</span>" : ""
@@ -1000,6 +1028,7 @@ footer{
         (num(r.published_mean) && r.published_mean !== r.mean
           ? '<span class="was" title="Published projection">' + fmt(r.published_mean) + "</span>"
           : "") + "</span></td>" +
+      '<td class="num mono mkt-cell">' + marketCell(r) + propsLine(r) + "</td>" +
       '<td class="num mono">' + fmt(r.floor) + "</td>" +
       '<td class="num mono">' + fmt(r.ceiling) + "</td>" +
       '<td class="num mono">' + depthControl(r) + "</td>" +

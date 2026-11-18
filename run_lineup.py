@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import json
+import os
 import sys
 import traceback
 from datetime import datetime, timezone
@@ -36,6 +37,9 @@ from run_daily import _Tee, _clean
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "site" / "data" / "lineup"
 DEFAULT_ROSTER = ROOT / "lineup_roster.json"
+# Display-only market column. Off unless the workflow sets MARKET_DISPLAY=1, so
+# tests and local runs never touch the prop feeds.
+MARKET_ENV = "MARKET_DISPLAY"
 
 
 def _player_row(player: pd.Series, slot: str | None = None) -> dict:
@@ -60,6 +64,12 @@ def _player_row(player: pd.Series, slot: str | None = None) -> dict:
         "sleeper_mean": _clean(player.get("Sleeper_Raw_FP")),
         "espn_mean": _clean(player.get("ESPN_FP")),
         "cbs_mean": _clean(player.get("CBS_FP")),
+        # Market-implied points from player props, shown beside the mean and
+        # never used by the optimizer. Null means the books do not price him.
+        "market_mean": _clean(player.get("Market_FP")),
+        "market_quality": _clean(player.get("Market_Quality")),
+        # Compact posted lines behind market_mean, e.g. "Ru 56.5 · Rec 2.5 · TD 34%".
+        "market_props": _clean(player.get("Market_Props")),
         "injury": _clean(player.get("report_status")),
         # Set when Sleeper does not project him this week (ruled out, bye), or
         # null. The page benches on this; `injury` is display only.
@@ -234,6 +244,40 @@ def write_index(data_dir):
     return entries
 
 
+def attach_market(frames: list[pd.DataFrame], fetch=None) -> list[str]:
+    """Add Market_FP/Market_Quality/Market_Props to each frame in place; return run notes.
+
+    Display only. Any failure leaves the columns null and says so in the notes;
+    the lineup is never held up or changed by the prop feeds.
+    """
+    try:
+        if fetch is None:
+            from pipeline import market, sleeper
+            ref, notes = market.market_reference(sleeper.normalize_name, sleeper.normalize_team)
+        else:
+            ref, notes = fetch()
+    except Exception as exc:
+        ref, notes = None, [f"market unavailable ({type(exc).__name__}: {exc})"]
+    for frame in frames:
+        if frame is None or not len(frame):
+            continue
+        frame["Market_FP"], frame["Market_Quality"], frame["Market_Props"] = None, None, None
+        if ref is None or not len(ref):
+            continue
+        from pipeline.sleeper import normalize_team
+        keyed = ref.set_index(["Key", "Team"])
+        idx = pd.MultiIndex.from_arrays([frame["Key"], frame["Team"].map(normalize_team)])
+        hit = idx.isin(keyed.index)
+        if hit.any():
+            sub = keyed.reindex(idx[hit])
+            frame.loc[hit, "Market_FP"] = sub["Market_FP"].to_numpy()
+            frame.loc[hit, "Market_Quality"] = sub["Market_Quality"].to_numpy()
+            if "Market_Props" in sub:
+                frame.loc[hit, "Market_Props"] = sub["Market_Props"].to_numpy()
+    priced = 0 if ref is None else len(ref)
+    return [f"Market (display only): {priced} player(s) priced; " + "; ".join(notes)]
+
+
 def _finish_lineup(
     configured: list[dict],
     yahoo: pd.DataFrame,
@@ -281,6 +325,11 @@ def _finish_lineup(
         except Exception as exc:
             pool_note = f"Add pool unavailable ({exc}); the page can bench but not add."
             print(pool_note)
+
+    if os.environ.get(MARKET_ENV) == "1":
+        for note in attach_market([roster, starters, bench, pool]):
+            print(note)
+            context.setdefault("notes", []).append(note)
     return results, pool, pool_note
 
 
