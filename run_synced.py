@@ -137,6 +137,7 @@ def build_synced_payloads(
 
     if roster_path is None and run_lineup.DEFAULT_ROSTER.exists():
         roster_path = str(run_lineup.DEFAULT_ROSTER)
+    showdown_players = prepared["players"].copy()
     lineup_tee = run_daily._Tee(sys.stdout)
     with contextlib.redirect_stdout(lineup_tee):
         configured = lo.load_roster(roster_path)
@@ -152,6 +153,7 @@ def build_synced_payloads(
             objective=objective,
             no_pool=no_pool,
             previous=previous_lineup,
+            showdown_players=showdown_players,
         )
 
     rankings_payload = run_daily.build_payload(
@@ -178,7 +180,7 @@ def build_synced_payloads(
     with contextlib.redirect_stdout(showdown_tee):
         showdown_payloads, showdown_index = showdown.build_slate(
             cfg, optimize=showdown_optimize, max_games=showdown_max_games,
-            prepared_slate=prepared, generated_at=generated_at,
+            prepared_slate={**prepared, "players": showdown_players}, generated_at=generated_at,
             snapshot_id=snapshot_id,
         )
     showdown_index["log"] = ranking_tee.lines + showdown_tee.lines

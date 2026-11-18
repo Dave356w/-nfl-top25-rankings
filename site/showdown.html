@@ -127,7 +127,8 @@ details.advanced[open] summary{margin-bottom:10px}
 .progress i{display:block; height:100%; width:0; background:var(--accent); transition:width .15s linear}
 
 /* ---------- player pool ---------- */
-.pool-actions{display:flex; gap:8px; padding:10px 16px; border-bottom:1px solid var(--line-soft)}
+.pool-actions{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid var(--line-soft)}
+.pool-filter{display:inline-flex; align-items:center; gap:6px; font-size:13px}
 .pool{max-height:460px; overflow:auto}
 .player{
   display:grid; grid-template-columns:22px minmax(0,1fr) auto auto; gap:10px; align-items:center;
@@ -270,6 +271,10 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
         <div class="pool-actions">
           <button class="btn small" id="all" type="button">Include all</button>
           <button class="btn small" id="none" type="button">Clear</button>
+          <label class="pool-filter">
+            <input id="market-only" type="checkbox" disabled>
+            Market projections only
+          </label>
         </div>
         <div class="notice" id="depth-notice" hidden>
           <span id="depth-notice-text"></span>
@@ -468,10 +473,9 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
         (payload.salary_cap ? " · cap " + money(payload.salary_cap) : "");
       el("cap").value = state.caps[payload.game_id] || "";
       applyContestDefaults();
-      renderPool();
       startWorker();
+      renderPool();
       clearResults();
-      syncControls();
       setStatus("<strong>" + text(payload.matchup) + "</strong> ready · projections from " +
         text(localTime(payload.generated_utc)));
     }).catch(function (error) {
@@ -501,9 +505,12 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
 
   function syncControls() {
     var ready = !!state.payload;
+    var marketFilter = el("market-only");
+    marketFilter.disabled = !ready || !state.payload.players.some(hasMarketProjection);
+    marketFilter.title = ready && marketFilter.disabled ? "No market projections available for this game" : "";
     el("cap-field").hidden = !ready || !!state.published.salary_cap;
     el("run").disabled = !ready || state.running || !worker || capValue() === null ||
-      state.payload.players.length - state.excluded.size < 5;
+      includedPlayers().length < 5;
     el("run").textContent = state.running ? "Building…" : "Build lineups";
   }
 
@@ -535,9 +542,30 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
   }
 
   /* ---------- player pool ---------- */
+  function hasMarketProjection(player) {
+    return Number.isFinite(player.market_mean);
+  }
+
+  function visiblePlayers() {
+    var filter = el("market-only");
+    return state.payload.players.map(function (_, i) { return i; }).filter(function (i) {
+      return filter.disabled || !filter.checked || hasMarketProjection(state.payload.players[i]);
+    });
+  }
+
+  function includedPlayers() {
+    return visiblePlayers().filter(function (i) { return !state.excluded.has(i); });
+  }
+
+  el("market-only").addEventListener("change", function () {
+    if (!state.payload) return;
+    renderPool();
+    settingsChanged();
+  });
+
   function renderPool() {
     var players = state.payload.players;
-    var order = players.map(function (_, i) { return i; }).sort(function (a, b) {
+    var order = visiblePlayers().sort(function (a, b) {
       return players[a].team.localeCompare(players[b].team) ||
         POSITIONS.indexOf(players[a].pos) - POSITIONS.indexOf(players[b].pos) ||
         players[b].fp - players[a].fp;
@@ -551,7 +579,7 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
         '<span class="num">' + money(player.salary) + "<br>" + num(player.fp) + " FP</span>" +
         "<span>" + depthControl(player, i) + "</span></label>";
     }).join("");
-    el("pool-count").textContent = (players.length - state.excluded.size) + " of " + players.length + " in";
+    el("pool-count").textContent = includedPlayers().length + " of " + players.length + " in";
     var edits = Object.keys(state.depths).length;
     el("depth-notice").hidden = !edits;
     el("depth-notice-text").textContent = edits + (edits === 1 ? " depth change" : " depth changes") +
@@ -570,13 +598,13 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
   });
   el("all").addEventListener("click", function () {
     if (!state.payload) return;
-    state.excluded = new Set();
+    visiblePlayers().forEach(function (i) { state.excluded.delete(i); });
     renderPool();
     settingsChanged();
   });
   el("none").addEventListener("click", function () {
     if (!state.payload) return;
-    state.excluded = new Set(state.payload.players.map(function (_, i) { return i; }));
+    visiblePlayers().forEach(function (i) { state.excluded.add(i); });
     renderPool();
     settingsChanged();
   });
@@ -701,8 +729,7 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
 
   el("run").addEventListener("click", function () {
     if (el("run").disabled) return;
-    var included = state.payload.players.map(function (_, i) { return i; })
-      .filter(function (i) { return !state.excluded.has(i); });
+    var included = includedPlayers();
     state.running = true;
     clearResults();
     el("progress").hidden = false;

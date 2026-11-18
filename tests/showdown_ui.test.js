@@ -255,6 +255,38 @@ test("left-out players are not sent, and fewer than five cannot be solved", asyn
   assert.equal(p.node("run").disabled, true);
 });
 
+test("market-only filters the displayed pool and optimizer while preserving manual exclusions", async () => {
+  const game = payload("A");
+  game.players.forEach((player, i) => { player.market_mean = i === 2 ? null : i; });
+  const p = await page({ routes: { "A.json": () => game } });
+  const filter = p.node("market-only");
+  assert.equal(filter.disabled, false);
+  assert.equal(filter.checked, false);
+  p.toggle(2, false);
+  filter.checked = true;
+  filter.handlers.change();
+  assert.doesNotMatch(p.node("pool").innerHTML, /WR A2/);
+  assert.match(p.node("pool").innerHTML, /QB A/); // Zero is a valid market projection.
+  assert.match(p.node("pool-count").textContent, /5 of 6/);
+  assert.deepEqual(Array.from(p.run().request.included), [0, 1, 3, 4, 5]);
+  p.toggle(5, false);
+  assert.equal(p.node("run").disabled, true);
+  p.node("all").handlers.click();
+  filter.checked = false;
+  filter.handlers.change();
+  assert.match(p.node("pool").innerHTML, /data-index="2"><span><b>WR A2/);
+  assert.equal(p.node("run").disabled, false);
+
+  filter.checked = true;
+  filter.handlers.change();
+  p.choose("B"); await flush();
+  assert.equal(filter.disabled, true);
+  assert.match(p.node("pool-count").textContent, /6 of 6/);
+  p.choose("A"); await flush();
+  assert.equal(filter.disabled, false);
+  assert.match(p.node("pool-count").textContent, /5 of 6/);
+});
+
 test("a head-to-head result shows the summary, the limits and each entry", async () => {
   const p = await page();
   p.run();

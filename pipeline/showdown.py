@@ -45,7 +45,7 @@ SCHEMA = 3
 
 # Fields the page needs per player. Short keys: the payload is mostly numbers and
 # this is the difference between 7 KB and 11 KB per game.
-PLAYER_FIELDS = ("name", "team", "pos", "salary", "fp", "cv", "zero", "role", "slot", "depth", "source")
+PLAYER_FIELDS = ("name", "team", "pos", "salary", "fp", "cv", "zero", "role", "slot", "depth", "source", "market_mean")
 
 # Settings the page exposes as controls. Published with the payload so the page
 # starts from the same defaults the server-side reference run used, and so a
@@ -117,6 +117,7 @@ def player_rows(players, cv, zero):
             "slot": _clean(getattr(player, "Role_Slot", None)),
             "depth": int(player.Depth_Rank),
             "source": str(player.Projection_Source),
+            "market_mean": _clean(getattr(player, "Market_FP", None)),
         })
     return rows
 

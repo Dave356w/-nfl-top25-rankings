@@ -44,6 +44,8 @@ jobs:
           key: sleeper-players-${{ steps.day.outputs.utc }}
 
       - name: Build synchronized rankings, lineup and Showdown
+        env:
+          MARKET_DISPLAY: "1"
         run: |
           for attempt in 1 2 3; do
             python run_synced.py \
