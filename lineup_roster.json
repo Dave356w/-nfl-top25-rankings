@@ -22,15 +22,11 @@
       "Position": "WR"
     },
     {
-      "Name": "Mike Gesicki",
-      "Position": "TE"
-    },
-    {
       "Name": "Brandon Aubrey",
       "Position": "K"
     },
     {
-      "Name": "Los Angeles Rams",
+      "Name": "Denver Broncos",
       "Position": "DEF"
     },
     {
@@ -50,20 +46,24 @@
       "Position": "RB"
     },
     {
-      "Name": "Keenan Allen",
-      "Position": "WR"
-    },
-    {
       "Name": "Jaylen Waddle",
       "Position": "WR"
     },
     {
-      "Name": "Denver Broncos",
+      "Name": "Mike Gesicki",
+      "Position": "TE"
+    },
+    {
+      "Name": "Keenan Allen",
+      "Position": "WR"
+    },
+    {
+      "Name": "Los Angeles Rams",
       "Position": "DEF"
     },
     {
-      "Name": "Brenton Strange",
-      "Position": "TE"
+      "Name": "Cairo Santos",
+      "Position": "K"
     }
   ]
 }
