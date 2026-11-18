@@ -335,11 +335,20 @@ class SharedShowdownTests(unittest.TestCase):
             "Market_Quality": ["good", "good"],
             "Market_Kickoff": ["2026-09-13T17:00:00Z", "2026-09-20T17:00:00Z"],
         })
+        prepare_slate = nb.prepare_slate_pool
+
+        def prepare_in_ascending_projection_order(*args, **kwargs):
+            prepared = prepare_slate(*args, **kwargs)
+            prepared["players"] = (
+                prepared["players"].sort_values("Projected_FP").reset_index(drop=True)
+            )
+            return prepared
+
         with (
             tempfile.TemporaryDirectory() as directory,
             patch.dict("os.environ", {run_synced.run_lineup.MARKET_ENV: "1"}),
             patch.object(market, "market_reference", return_value=(market_rows, [])) as fetch_market,
-            patch.object(nb, "prepare_slate_pool", wraps=nb.prepare_slate_pool) as prepare,
+            patch.object(nb, "prepare_slate_pool", side_effect=prepare_in_ascending_projection_order) as prepare,
             patch.object(lo, "load_sleeper_context", return_value=_context()),
             patch.object(lo, "load_roster", return_value=configured),
             contextlib.redirect_stdout(io.StringIO()),
@@ -360,6 +369,10 @@ class SharedShowdownTests(unittest.TestCase):
             showdown_players = {row["name"]: row for row in documents[-1]["players"]}
             self.assertEqual(showdown_players["Drake Maye"]["market_mean"], 19.5)
             self.assertIsNone(showdown_players["Sam Darnold"]["market_mean"])
+            self.assertEqual(
+                [name for name, row in showdown_players.items() if row["market_mean"] is not None],
+                ["Drake Maye"],
+            )
 
 
 if __name__ == "__main__":

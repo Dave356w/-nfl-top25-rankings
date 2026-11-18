@@ -265,16 +265,20 @@ def attach_market(frames: list[pd.DataFrame], fetch=None) -> list[str]:
         frame["Market_FP"], frame["Market_Quality"], frame["Market_Props"] = None, None, None
         if ref is None or not len(ref):
             continue
-        from pipeline.sleeper import normalize_team
+        from pipeline.sleeper import normalize_name, normalize_team
         keyed = ref.set_index(["Key", "Team"])
-        idx = pd.MultiIndex.from_arrays([frame["Key"], frame["Team"].map(normalize_team)])
+        # The prepared Showdown frame uses Yahoo column names.
+        keys = frame["Key"] if "Key" in frame else frame["Name"].map(normalize_name)
+        idx = pd.MultiIndex.from_arrays([keys, frame["Team"].map(normalize_team)])
         hit = idx.isin(keyed.index)
         # Name+team alone would pin next week's props on a row for this week's
         # game (e.g. a kickoff-locked player): require the same kickoff, within
         # a few hours since books and Yahoo can list slightly different times.
         if hit.any() and "Market_Kickoff" in keyed:
-            game = pd.to_datetime(frame["Game_Time"], errors="coerce", utc=True) \
-                if "Game_Time" in frame else pd.Series(pd.NaT, index=frame.index)
+            kickoff = frame.get("Game_Time", frame.get("Game Time"))
+            if kickoff is None:
+                kickoff = pd.Series(pd.NaT, index=frame.index)
+            game = pd.to_datetime(kickoff, errors="coerce", utc=True)
             book = pd.to_datetime(keyed["Market_Kickoff"].reindex(idx).to_numpy(),
                                   errors="coerce", utc=True)
             same = (abs(pd.Series(book, index=frame.index) - game) <= MARKET_KICKOFF_TOLERANCE)
@@ -360,18 +364,15 @@ def build_from_prepared_slate(
     receives the same kickoff-matched market data as the lineup.
     """
     yahoo = lo.yahoo_from_prepared_slate(prepared_slate["players"])
-    results = _finish_lineup(
+    return _finish_lineup(
         configured,
         yahoo,
         list(excluded or []),
         objective,
         no_pool,
         previous,
-        market_pool=yahoo if showdown_players is not None else None,
+        market_pool=showdown_players,
     )
-    if showdown_players is not None and "Market_FP" in yahoo:
-        showdown_players["Market_FP"] = yahoo["Market_FP"]
-    return results
 
 
 def read_previous(data_dir: Path | None) -> dict | None:
