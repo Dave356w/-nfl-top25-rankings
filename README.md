@@ -66,6 +66,24 @@ Per-position source picks overfit and lost out of sample, so there are none.
 and writes `site/data/source_quality.json`; it uses archived pregame captures
 where they exist and marks refetched past weeks as unverified.
 
+### Market column (display only)
+
+With `MARKET_DISPLAY=1` (set in `daily.yml`) the lineup page shows a Market
+column beside Proj FP: market-implied half-PPR points from Bovada and Underdog
+player props (`pipeline/market.py`, the pre-`e4a6d21` engine restored
+unchanged), plus a compact line of the posted props, e.g.
+`Ru 56.5 · Rec 2.5 · RecYd 12.5 · TD 39%`. Lines are de-vigged, each stat's
+mean is fitted across main and alternate lines (Weibull for yards, Poisson for
+counts), and the means are summed with Yahoo weights. `~` marks a stat priced
+only by alternates or a TD-only estimate; amber marks a gap of at least 2.5
+points and 25% from the projection; `—` means the books do not price him.
+
+It never feeds the optimizer. On 2026 week 1 (142 player-weeks) adding it to
+the three-source mean changed MAE by +0.018 (95% CI -0.035 to +0.071): the
+market agrees with Sleeper and ESPN too closely to add information, though it
+had the smallest bias. Feed failures leave the column blank and are noted in
+the run log.
+
 ### Game-day reruns and kickoff locks
 
 `daily.yml` refreshes twice daily (14:23 and 21:37 UTC, each with a backup that runs only if the primary has not landed), and reruns after each kickoff window's inactive lists. A rerun reads

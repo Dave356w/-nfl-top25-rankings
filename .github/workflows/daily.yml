@@ -105,6 +105,8 @@ jobs:
       # failed attempt leaves the last good snapshot in place.
       - name: Build synchronized rankings, lineup and Showdown
         if: steps.gate.outputs.skip != 'true'
+        env:
+          MARKET_DISPLAY: "1"   # display-only prop projection on the lineup page
         run: |
           for attempt in 1 2 3; do
             python run_synced.py --top-n "${{ inputs.top_n || '50' }}" && exit 0
