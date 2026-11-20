@@ -300,6 +300,7 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
   <details class="panel">
     <summary>How this works</summary>
     <div class="panel-body">
+      <p>Built lineups are listed by projected points, highest first.</p>
       <h4>Rules for every entry</h4>
       <p>Every lineup fits the salary cap and Yahoo's roster rules, uses only the
         players you left in, and uses your depth edits. Tournament exposure defaults
@@ -839,7 +840,11 @@ details.panel summary{cursor:pointer; padding:14px 16px; font-weight:600}
     var players = state.payload.players;
     var reference = result.contest === "tournament" && state.published.reference
       ? new Set(state.published.reference.portfolio.map(lineupKey)) : new Set();
-    el("entries-list").innerHTML = result.entries.map(function (entry, i) {
+    // List by projected score, highest first (the solver returns them in pick order).
+    var ranked = result.entries.slice().sort(function (a, b) {
+      return (b.expected_fp - a.expected_fp) || ((b.win_chance || 0) - (a.win_chance || 0));
+    });
+    el("entries-list").innerHTML = ranked.map(function (entry, i) {
       var ids = entry.ids.slice().sort(function (a, b) {
         return (b === entry.superstar) - (a === entry.superstar) || players[b].fp - players[a].fp;
       });
