@@ -1,0 +1,17 @@
+slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,sleeper_mean,espn_mean,cbs_mean,market_mean,market_quality,market_props,injury,unavailable,locked,review
+QB,Dak Prescott,QB,DAL,TEN,2026-11-22 18:00,22.32,14.69,36.27,38.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),21.68,21.9,23.38,23.63,good,Pa 279 · PaTD 2.5 · INT 0.5 · Ru 7.5 · TD 16%,,,False,ok
+RB,James Cook III,RB,BUF,MIA,2026-11-22 18:00,18.62,10.2,33.86,40.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),18.46,20.18,17.22,16.59,good,Ru 91 · Rec 1.5 · RecYd 8.5 · TD 58%,,,False,ok
+RB,Emmett Johnson,RB,KC,ARI,2026-11-22 18:00,16.89,9.25,30.71,23.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),11.52,18.88,20.26,20.79,good,Ru 87.5 · Rec 3.5 · RecYd 27.5 · TD 62%,,,False,ok
+WR,Tee Higgins,WR,CIN,WAS,2026-11-24 01:15,14.38,6.89,27.81,36.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),15.92,13.77,13.45,15.19,good,Rec 5.5 · RecYd 75 · TD 47%,,,False,ok
+WR,Jameson Williams,WR,DET,TB,2026-11-22 18:00,9.99,4.79,19.32,24.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),10.37,9.36,10.24,10.48,good,Rec 3.5 · RecYd 50.5 · TD 33%,,,False,ok
+TE,Mike Gesicki,TE,CIN,WAS,2026-11-24 01:15,6.84,3.07,13.58,15.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),7.62,6.12,6.79,7.3,good,Rec 2.5 · RecYd 25 · TD 33%,,,False,ok
+K,Brandon Aubrey,K,DAL,TEN,2026-11-22 18:00,10.53,6.21,18.38,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),9.88,11.22,10.5,,,,,,False,ok
+DEF,Denver Broncos,DEF,DEN,LV,2026-11-22 21:25,8.46,3.57,17.14,18.0,1.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),8.66,6.47,10.24,,,,,,False,ok
+FLEX,Jaylen Warren,RB,PIT,PHI,2026-11-22 18:00,13.78,7.55,25.06,31.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),13.4,14.39,13.54,15.13,good,Ru 66 · Rec 2.5 · RecYd 22 · TD 42%,,,False,ok
+BENCH,C.J. Stroud,QB,HOU,IND,2026-11-20 01:15,20.96,13.79,34.06,37.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),20.5,21.84,20.54,,,,,,True,locked: game started
+BENCH,Ollie Gordon II,RB,MIA,BUF,2026-11-22 18:00,11.66,6.39,21.2,21.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),10.39,12.85,11.75,13.34,good,Ru 53.5 · Rec 2.5 · RecYd 14.5 · TD 44%,,,False,ok
+BENCH,Breece Hall,RB,NYJ,LAC,2026-11-22 21:05,11.59,6.35,21.08,25.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),12.1,11.58,11.1,12.8,good,Ru 49.5 · Rec 2.5 · RecYd 20.5 · TD 36%,,,False,ok
+BENCH,Jaylen Waddle,WR,DEN,LV,2026-11-22 21:25,9.66,5.19,17.73,19.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),9.15,10.34,9.49,9.79,good,Rec 3.5 · RecYd 42.5 · TD 33%,,,False,ok
+BENCH,Cairo Santos,K,CHI,NO,2026-11-22 18:00,9.17,5.41,16.0,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),8.12,9.82,9.58,,,,,,False,ok
+BENCH,Keenan Allen,WR,SF,MIN,2026-11-23 01:20,5.47,2.12,11.36,17.0,3.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),4.53,6.13,5.76,6.89,good,Rec 2.5 · RecYd 32.5 · TD 27%,,,False,depth 3
+BENCH,Los Angeles Rams,DEF,LA,,,0.0,,,,1.0,Sleeper projection order,No weekly projection; bye or unmatched player,,,,,,,,not projected this week,False,no weekly projection/bye
