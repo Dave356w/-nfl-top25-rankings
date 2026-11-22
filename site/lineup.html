@@ -361,7 +361,7 @@ footer{
         <div>
           <h4>Add a player</h4>
           <input class="search" id="search" type="search" autocomplete="off"
-                 placeholder="Search this week's players&hellip;"
+                 placeholder="Search players, including byes and IR&hellip;"
                  aria-label="Search this week's players">
           <div class="filters" id="filters"></div>
           <div class="results" id="results"></div>
@@ -908,10 +908,10 @@ footer{
 
   function renderFilters() {
     var positions = ["ALL"].concat(Object.keys(published.slots || {}).filter(
-      function (p) { return p !== "FLEX"; }));
+      function (p) { return p !== "FLEX"; })).concat(["OUT"]);
     el("filters").innerHTML = positions.map(function (p) {
       return '<button class="btn sm' + (p === filterPos ? " on" : "") +
-        '" type="button" data-pos="' + p + '">' + (p === "ALL" ? "All" : p) + "</button>";
+        '" type="button" data-pos="' + p + '">' + (p === "ALL" ? "All" : p === "OUT" ? "Bye / IR" : p) + "</button>";
     }).join("");
   }
 
@@ -921,7 +921,10 @@ footer{
     var needle = query.trim().toLowerCase();
     var rows = pool.filter(function (r) {
       if (rostered[r.key]) return false;
-      if (filterPos !== "ALL" && r.pos !== filterPos) return false;
+      // "Bye / IR": players this run does not project -- a bye, IR, ruled
+      // out. They add at zero and start on the bench, as the run would.
+      if (filterPos === "OUT") { if (!r.unavailable) return false; }
+      else if (filterPos !== "ALL" && r.pos !== filterPos) return false;
       if (!needle) return true;
       return String(r.player).toLowerCase().indexOf(needle) >= 0 ||
         String(r.team || "").toLowerCase().indexOf(needle) >= 0;
