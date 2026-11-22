@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-22T01:57:07Z",
-  "snapshot_id": "2026-11-22T01:57:07Z",
+  "generated_utc": "2026-11-22T02:11:14Z",
+  "snapshot_id": "2026-11-22T02:11:14Z",
   "run_date": "2026-11-22",
   "top_n": 50,
   "positions": [
@@ -8211,7 +8211,7 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)": 374
   },
   "log": [
-    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-22T01:57:07Z)",
+    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-22T02:11:14Z)",
     "  Sleeper: 2026 regular week 11 projections; player dump fetched 2026-11-22T01:32:31.676390+00:00.",
     "  ESPN: matched 408 of 411 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 3 -- Dawson Knox (BUF) S=2.81 E=6.07, Jackson Hawes (BUF) S=0.72 E=1.98, Keleki Latu (BUF) S=0.56 E=0.82",
