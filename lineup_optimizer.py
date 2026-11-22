@@ -60,6 +60,10 @@ AUTO_EXCLUDE_REPORTED_OUT = True  # bench anyone Sleeper does not project this w
 # How deep the page's add pool goes per position. Deep enough to cover a real
 # waiver claim, shallow enough that `pool.json` stays a small download.
 POOL_LIMITS = {"QB": 40, "RB": 70, "WR": 90, "TE": 45, "K": 32, "DEF": 32}
+# Players with no projection this week -- on a bye, on IR, ruled out -- still
+# belong on a fantasy roster, so the page can add them too. They project at
+# zero and are benched; these limits keep only the ones worth rostering.
+SIDELINED_POOL_LIMITS = {"QB": 15, "RB": 35, "WR": 45, "TE": 20, "K": 8, "DEF": 8}
 
 YAHOO_URL = "https://dfyql-ro.sports.yahoo.com/v2/external/playersFeed/nfl"
 # Sleeper projects a kicker's mean but there is no fitted kicker CV. This is the
@@ -373,23 +377,66 @@ def pool_entries(yahoo: pd.DataFrame, ctx: dict, limits: dict[str, int] | None =
     return entries
 
 
-def build_pool(yahoo: pd.DataFrame, ctx: dict, limits: dict[str, int] | None = None) -> pd.DataFrame:
+def sidelined_entries(yahoo: pd.DataFrame, ctx: dict,
+                      limits: dict[str, int] | None = None) -> list[dict]:
+    """Name the unprojected players worth adding: byes and IR/injured.
+
+    `pool_entries` ranks on this week's projection, so a player Sleeper does not
+    project never reaches it -- yet a bye-week starter or a stash on IR is
+    exactly who a fantasy manager adds and holds. A player counts here when
+    Sleeper gives him no projection and either his whole team is unprojected
+    (a bye) or he carries an injury designation (IR, Out, PUP, suspended...).
+    Free agents without a team are left out. Ranked by Sleeper's search rank,
+    then depth, so the stars come first.
+    """
+    limits = SIDELINED_POOL_LIMITS if limits is None else dict(limits)
+    ref = ctx.get("reference")
+    if not limits or ref is None or ref.empty:
+        return []
+    fp = pd.to_numeric(ref["Sleeper_FP"], errors="coerce").fillna(0)
+    team = ref["Team"].fillna("").astype(str)
+    playing = set(team[fp.gt(0)])
+    bye = team.ne("") & ~team.isin(playing)
+    injured = ref["Injury_Status"].notna() & ref["Injury_Status"].astype(str).str.strip().ne("")
+    rows = ref[fp.le(0) & team.ne("") & (bye | injured)].copy()
+    if "Key" in yahoo:
+        rows = rows[~rows["Key"].isin(set(yahoo["Key"]))]
+    rows["_rank"] = pd.to_numeric(rows.get("Search_Rank"), errors="coerce")
+    rows["_depth"] = pd.to_numeric(rows.get("Depth_Rank"), errors="coerce")
+    rows = rows.sort_values(["_rank", "_depth", "Key"], na_position="last")
+    entries: list[dict] = []
+    for position, limit in limits.items():
+        picked = rows[rows["Position"].eq(position)].drop_duplicates("Key").head(int(limit))
+        entries += [{"Name": str(name), "Position": position} for name in picked["Sleeper_Name"]]
+    return entries
+
+
+def build_pool(yahoo: pd.DataFrame, ctx: dict, limits: dict[str, int] | None = None,
+               sidelined_limits: dict[str, int] | None = None) -> pd.DataFrame:
     """Resolve the replacement pool the lineup page can add a player from.
 
     Same columns `build_roster` gives the roster, so a player swapped in on the
     page is scored by the numbers this run produced rather than by a stale
-    snapshot the browser kept.
+    snapshot the browser kept. Byes and IR (`sidelined_entries`) follow the
+    projected players, at zero.
     """
     limits = dict(limits or POOL_LIMITS)
     entries = pool_entries(yahoo, ctx, limits)
-    if not entries:
+    sidelined = sidelined_entries(yahoo, ctx, sidelined_limits)
+    if not entries and not sidelined:
         return pd.DataFrame()
-    pool = build_roster(entries, yahoo, ctx).drop_duplicates("Key")
-    pool = pool.sort_values("FP", ascending=False)
-    kept = [group.head(int(limits.get(position, 0)))
-            for position, group in pool.groupby("Position", sort=False)]
-    pool = pd.concat(kept) if kept else pool.iloc[:0]
-    return pool.sort_values("FP", ascending=False).reset_index(drop=True)
+    parts = []
+    if entries:
+        pool = build_roster(entries, yahoo, ctx).drop_duplicates("Key")
+        pool = pool.sort_values("FP", ascending=False)
+        kept = [group.head(int(limits.get(position, 0)))
+                for position, group in pool.groupby("Position", sort=False)]
+        if kept:
+            parts.append(pd.concat(kept).sort_values("FP", ascending=False))
+    if sidelined:
+        parts.append(build_roster(sidelined, yahoo, ctx))
+    pool = pd.concat(parts).drop_duplicates("Key")
+    return pool.reset_index(drop=True)
 
 
 def load_roster(path: str | None = None) -> list[dict]:

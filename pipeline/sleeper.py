@@ -208,6 +208,7 @@ def players_frame(raw: dict) -> pd.DataFrame:
         yahoo = pd.to_numeric(p.get("yahoo_id"), errors="coerce")
         espn_id = pd.to_numeric(p.get("espn_id"), errors="coerce")
         order = pd.to_numeric(p.get("depth_chart_order"), errors="coerce")
+        rank = pd.to_numeric(p.get("search_rank"), errors="coerce")
         rows.append({
             "player_id": str(p.get("player_id") or pid),
             "Sleeper_Name": name,
@@ -221,6 +222,9 @@ def players_frame(raw: dict) -> pd.DataFrame:
             "Practice_Status": p.get("practice_participation"),
             "Depth_Chart_Position": p.get("depth_chart_position"),
             "Depth_Chart_Order": int(order) if pd.notna(order) else pd.NA,
+            # Sleeper's own relevance order (lower is better). Used only to pick
+            # which unprojected players -- byes, IR -- the page may add.
+            "Search_Rank": float(rank) if pd.notna(rank) else np.nan,
         })
     frame = pd.DataFrame(rows)
     frame["Yahoo ID"] = frame["Yahoo ID"].astype("Int64")

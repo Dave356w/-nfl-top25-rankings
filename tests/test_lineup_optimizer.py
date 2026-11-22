@@ -351,12 +351,59 @@ class AddPoolTests(unittest.TestCase):
 
     def test_limits_are_applied_per_position_after_pricing(self):
         pool = lo.build_pool(self.yahoo, self.context,
-                             {"QB": 1, "RB": 1, "WR": 1, "TE": 1, "K": 1})
+                             {"QB": 1, "RB": 1, "WR": 1, "TE": 1, "K": 1},
+                             sidelined_limits={})
         counts = pool["Position"].value_counts().to_dict()
         self.assertEqual(counts, {"QB": 1, "RB": 1, "WR": 1, "TE": 1, "K": 1})
         # Ranked on the mean, so the WR that survives is the better one.
         self.assertEqual(pool[pool.Position.eq("WR")].iloc[0]["Name"], "Jaylen Waddle")
         self.assertTrue(pool["FP"].is_monotonic_decreasing)
+
+    def test_bye_week_players_can_be_added(self):
+        # Seattle has no projected player this week: a bye. Its starters still
+        # belong on a fantasy roster, so the page must be able to add them.
+        entries = lo.sidelined_entries(self.yahoo, self.context)
+        self.assertIn({"Name": "Bye Week Guy", "Position": "RB"}, entries)
+        self.assertIn({"Name": "Bye Kicker", "Position": "K"}, entries)
+
+    def test_injured_unprojected_players_can_be_added(self):
+        context = _context()
+        ref = context["reference"]
+        ref.loc[ref["Sleeper_Name"].eq("Monday Guy"), ["Sleeper_FP", "Injury_Status"]] = [np.nan, "IR"]
+        names = [e["Name"] for e in lo.sidelined_entries(self.yahoo, context)]
+        self.assertIn("Monday Guy", names)
+        # A healthy, projected player on a playing team is not "sidelined".
+        self.assertNotIn("Brandon Aubrey", names)
+        # Tee Higgins is Out, but already in the feed-ranked pool.
+        self.assertNotIn("Tee Higgins", names)
+
+    def test_free_agents_are_not_sidelined_adds(self):
+        context = _context()
+        ref = context["reference"]
+        ref.loc[ref["Sleeper_Name"].eq("Bye Week Guy"), "Team"] = ""
+        names = [e["Name"] for e in lo.sidelined_entries(self.yahoo, context)]
+        self.assertNotIn("Bye Week Guy", names)
+
+    def test_sidelined_players_join_the_pool_at_zero_and_benched(self):
+        pool = lo.build_pool(self.yahoo, self.context,
+                             {"QB": 5, "RB": 5, "WR": 5, "TE": 5, "K": 5})
+        row = pool[pool.Name.eq("Bye Week Guy")].iloc[0]
+        self.assertEqual(row["FP"], 0)
+        self.assertEqual(row["Team"], "SEA")
+        self.assertEqual(row["Unavailable_Reason"], "not projected this week")
+        # Projected players still lead the list.
+        self.assertTrue(pool["FP"].is_monotonic_decreasing)
+        self.assertEqual(pool["Key"].nunique(), len(pool))
+
+    def test_search_rank_orders_the_sidelined_adds(self):
+        context = _context()
+        ref = context["reference"]
+        extra = ref[ref["Sleeper_Name"].eq("Bye Week Guy")].copy()
+        extra["Sleeper_Name"], extra["Key"], extra["Search_Rank"] = "Star Back", "star back", 5.0
+        ref.loc[ref["Sleeper_Name"].eq("Bye Week Guy"), "Search_Rank"] = 400.0
+        context["reference"] = pd.concat([ref, extra], ignore_index=True)
+        entries = lo.sidelined_entries(self.yahoo, context, {"RB": 1})
+        self.assertEqual(entries, [{"Name": "Star Back", "Position": "RB"}])
 
     def test_an_empty_feed_gives_an_empty_pool_rather_than_raising(self):
         empty = self.yahoo.iloc[:0]
