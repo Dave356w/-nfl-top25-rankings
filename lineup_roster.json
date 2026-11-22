@@ -10,7 +10,7 @@
       "Position": "RB"
     },
     {
-      "Name": "Jaylen Warren",
+      "Name": "Emmett Johnson",
       "Position": "RB"
     },
     {
@@ -22,6 +22,10 @@
       "Position": "WR"
     },
     {
+      "Name": "Mike Gesicki",
+      "Position": "TE"
+    },
+    {
       "Name": "Brandon Aubrey",
       "Position": "K"
     },
@@ -30,7 +34,7 @@
       "Position": "DEF"
     },
     {
-      "Name": "Emmett Johnson",
+      "Name": "Jaylen Warren",
       "Position": "RB"
     },
     {
@@ -38,20 +42,12 @@
       "Position": "QB"
     },
     {
-      "Name": "Ollie Gordon II",
-      "Position": "RB"
-    },
-    {
-      "Name": "Breece Hall",
-      "Position": "RB"
-    },
-    {
       "Name": "Jaylen Waddle",
       "Position": "WR"
     },
     {
-      "Name": "Mike Gesicki",
-      "Position": "TE"
+      "Name": "Cairo Santos",
+      "Position": "K"
     },
     {
       "Name": "Keenan Allen",
@@ -62,8 +58,16 @@
       "Position": "DEF"
     },
     {
-      "Name": "Cairo Santos",
-      "Position": "K"
+      "Name": "Brenton Strange",
+      "Position": "TE"
+    },
+    {
+      "Name": "Bijan Robinson",
+      "Position": "RB"
+    },
+    {
+      "Name": "Terrance Ferguson",
+      "Position": "TE"
     }
   ]
 }
