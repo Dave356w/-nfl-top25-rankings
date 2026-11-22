@@ -5,11 +5,11 @@ RB,James Cook III,RB,BUF,MIA,2026-11-22 18:00,18.92,10.36,34.41,40.0,1.0,Sleeper
 WR,Jameson Williams,WR,DET,TB,2026-11-22 18:00,10.11,4.85,19.55,24.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),10.6,9.36,10.38,,,,,,True,locked: game started
 K,Brandon Aubrey,K,DAL,TEN,2026-11-22 18:00,10.57,6.24,18.45,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),9.81,11.22,10.68,,,,,,True,locked: game started
 FLEX,Jaylen Warren,RB,PIT,PHI,2026-11-22 18:00,14.03,7.68,25.51,31.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),14.22,14.37,13.5,,,,,,True,locked: game started
-WR,Tee Higgins,WR,CIN,WAS,2026-11-24 01:15,14.54,6.97,28.12,36.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),16.24,13.75,13.64,15.23,good,Rec 5.5 · RecYd 75.5 · TD 47%,,,False,ok
-TE,Brenton Strange,TE,JAC,NYG,2026-11-22 21:25,6.96,3.12,13.81,14.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),7.22,6.38,7.29,7.75,good,Rec 3 · RecYd 32 · TD 26%,,,False,ok
-DEF,Denver Broncos,DEF,DEN,LV,2026-11-22 21:25,8.48,3.58,17.18,18.0,1.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),8.79,6.46,10.2,,,,,,False,ok
+TE,Brenton Strange,TE,JAC,NYG,2026-11-22 21:25,6.95,3.12,13.79,14.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),7.19,6.38,7.29,,,,,,True,locked: game started
+DEF,Denver Broncos,DEF,DEN,LV,2026-11-22 21:25,8.48,3.58,17.18,18.0,1.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),8.79,6.46,10.2,,,,,,True,locked: game started
+WR,Tee Higgins,WR,CIN,WAS,2026-11-24 01:15,14.54,6.97,28.12,36.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),16.24,13.75,13.64,15.28,good,Rec 5.5 · RecYd 76 · TD 47%,,,False,ok
 BENCH,C.J. Stroud,QB,HOU,IND,2026-11-20 01:15,20.95,13.79,34.04,37.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),20.5,21.84,20.5,,,,,,True,locked: game started
-BENCH,Jaylen Waddle,WR,DEN,LV,2026-11-22 21:25,9.7,5.22,17.81,19.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),9.14,10.34,9.62,9.77,good,Rec 3.5 · RecYd 43.5 · TD 33%,,,False,ok
+BENCH,Jaylen Waddle,WR,DEN,LV,2026-11-22 21:25,9.7,5.22,17.81,19.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),9.14,10.34,9.62,,,,,,True,locked: game started
 BENCH,Cairo Santos,K,CHI,NO,2026-11-22 18:00,9.09,5.36,15.86,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),8.06,9.82,9.38,,,,,,True,locked: game started
 BENCH,Mike Gesicki,TE,CIN,WAS,2026-11-24 01:15,6.79,3.04,13.48,15.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),7.76,6.12,6.49,7.42,good,Rec 2.5 · RecYd 25.5 · TD 34%,,,False,ok
 BENCH,Keenan Allen,WR,SF,MIN,2026-11-23 01:20,5.47,2.12,11.36,17.0,3.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),4.49,6.13,5.79,7.07,good,Rec 2.5 · RecYd 26.5 · TD 27%,,,False,depth 3
