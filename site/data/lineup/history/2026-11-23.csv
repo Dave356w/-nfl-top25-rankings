@@ -12,7 +12,7 @@ BENCH,C.J. Stroud,QB,HOU,IND,2026-11-20 01:15,20.95,13.79,34.04,37.0,1.0,Sleeper
 BENCH,Jaylen Waddle,WR,DEN,LV,2026-11-22 21:25,9.7,5.22,17.81,19.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),9.14,10.34,9.62,,,,,,True,locked: game started
 BENCH,Cairo Santos,K,CHI,NO,2026-11-22 18:00,9.15,5.4,15.97,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),8.06,9.82,9.58,,,,,,True,locked: game started
 BENCH,Mike Gesicki,TE,CIN,WAS,2026-11-24 01:15,6.79,3.04,13.48,15.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),7.76,6.12,6.49,7.42,good,Rec 2.5 · RecYd 25.5 · TD 34%,,,False,ok
-BENCH,Keenan Allen,WR,SF,MIN,2026-11-23 01:20,5.48,2.13,11.39,17.0,3.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),4.48,6.13,5.84,7.04,good,Rec 2.5 · RecYd 26.5 · TD 27%,,,False,depth 3
+BENCH,Keenan Allen,WR,SF,MIN,2026-11-23 01:20,5.48,2.13,11.39,17.0,3.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),4.48,6.13,5.84,,,,,,True,depth 3; locked: game started
 BENCH,Los Angeles Rams,DEF,LA,,,0.0,,,,1.0,Sleeper projection order,No weekly projection; bye or unmatched player,,,,,,,,not projected this week,False,no weekly projection/bye
 BENCH,Bijan Robinson,RB,ATL,,,0.0,,,,1.0,Sleeper depth chart,No weekly projection; bye or unmatched player,,,,,,,,not projected this week,False,no weekly projection/bye
 BENCH,Terrance Ferguson,TE,LA,,,0.0,,,,6.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 11),,0.0,,,,,IR,not projected this week,False,no weekly projection/bye; injury IR; depth 6

@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-23T00:45:25Z",
-  "snapshot_id": "2026-11-23T00:45:25Z",
+  "generated_utc": "2026-11-23T01:57:19Z",
+  "snapshot_id": "2026-11-23T01:57:19Z",
   "run_date": "2026-11-23",
   "season": 2026,
   "week": 11,
@@ -23,7 +23,7 @@
     "  Ian Thomas (LV TE): S=0.83 E=3.29 C=1.31 -> 2.3 [CBS sides with Sleeper -- review]",
     "  Andrei Iosivas (CIN WR): S=4.53 E=0.0 C=4.64 -> 0.0 [CBS still projects him -- review]",
     "  Jacory Croskey-Merritt (WAS RB): S=7.19 E=7.12 C=7.6 -> 0.0 [CBS still projects him -- review]",
-    "Market (display only): 77 player(s) priced; bovada: 54 player-market records; underdog: 128 player-market records"
+    "Market (display only): 51 player(s) priced; bovada: 52 player-market records; underdog: 97 player-market records"
   ],
   "objective": "FP",
   "auto_exclude_out": true,
@@ -406,13 +406,13 @@
       "sleeper_mean": 4.48,
       "espn_mean": 6.13,
       "cbs_mean": 5.84,
-      "market_mean": 7.04,
-      "market_quality": "good",
-      "market_props": "Rec 2.5 \u00b7 RecYd 26.5 \u00b7 TD 27%",
+      "market_mean": null,
+      "market_quality": null,
+      "market_props": null,
       "injury": null,
       "unavailable": null,
-      "locked": false,
-      "review": "depth 3"
+      "locked": true,
+      "review": "depth 3; locked: game started"
     },
     {
       "player": "Los Angeles Rams",
@@ -602,7 +602,7 @@
     "week": 11
   },
   "log": [
-    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-23T00:45:25Z)",
+    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-23T01:57:19Z)",
     "  Sleeper: 2026 regular week 11 projections; player dump fetched 2026-11-23T00:45:25.628488+00:00.",
     "  ESPN: matched 393 of 395 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 2 -- Michael Mayer (LV) S=8.33 E=6.61, Ian Thomas (LV) S=0.83 E=3.29",
@@ -841,7 +841,7 @@
     "[26 rows x 12 columns]",
     "Ranking run time: 0.0s",
     "Roster: 17 player(s) from /home/runner/work/-nfl-top25-rankings/-nfl-top25-rankings/lineup_roster.json.",
-    "Projection snapshot: 2026-11-23T00:45:25Z (shared with position rankings).",
+    "Projection snapshot: 2026-11-23T01:57:19Z (shared with position rankings).",
     "Season 2026 week 11; Sleeper players fetched 2026-11-23T00:45:25.628488+00:00.",
     "ESPN: matched 393 of 395 projected players; blend weight 0.50.",
     "  ESPN only (starter out): 2 -- Michael Mayer (LV) S=8.33 E=6.61, Ian Thomas (LV) S=0.83 E=3.29",
@@ -859,8 +859,8 @@
     "  Andrei Iosivas (CIN WR): S=4.53 E=0.0 C=4.64 -> 0.0 [CBS still projects him -- review]",
     "  Jacory Croskey-Merritt (WAS RB): S=7.19 E=7.12 C=7.6 -> 0.0 [CBS still projects him -- review]",
     "Benched before optimizing: Los Angeles Rams, Bijan Robinson, Terrance Ferguson.",
-    "Locked after kickoff: brandon aubrey, brenton strange, cairo santos, cj stroud, dak prescott, denver broncos, emmett johnson, james cook, jameson williams, jaylen waddle, jaylen warren.",
+    "Locked after kickoff: brandon aubrey, brenton strange, cairo santos, cj stroud, dak prescott, denver broncos, emmett johnson, james cook, jameson williams, jaylen waddle, jaylen warren, keenan allen.",
     "Add pool: 412 player(s) resolved for the page's roster editor.",
-    "Market (display only): 77 player(s) priced; bovada: 54 player-market records; underdog: 128 player-market records"
+    "Market (display only): 51 player(s) priced; bovada: 52 player-market records; underdog: 97 player-market records"
   ]
 }
