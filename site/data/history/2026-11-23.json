@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-23T01:57:19Z",
-  "snapshot_id": "2026-11-23T01:57:19Z",
+  "generated_utc": "2026-11-23T03:43:04Z",
+  "snapshot_id": "2026-11-23T03:43:04Z",
   "run_date": "2026-11-23",
   "top_n": 50,
   "positions": [
@@ -2963,7 +2963,7 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 11)": 353
   },
   "log": [
-    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-23T01:57:19Z)",
+    "Yahoo slate: 13 game(s), 523 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-23T03:43:04Z)",
     "  Sleeper: 2026 regular week 11 projections; player dump fetched 2026-11-23T00:45:25.628488+00:00.",
     "  ESPN: matched 393 of 395 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 2 -- Michael Mayer (LV) S=8.33 E=6.61, Ian Thomas (LV) S=0.83 E=3.29",
