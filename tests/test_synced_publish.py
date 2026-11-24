@@ -149,6 +149,40 @@ class ActiveWeekSlateTests(unittest.TestCase):
                 now=datetime(2026, 9, 20, 16, 0, tzinfo=timezone.utc),
             )
 
+    @staticmethod
+    def _thanksgiving_eve_feed():
+        # 2026 week 11 ends with MNF Mon Nov 23; week 12 opens with GB @ LAR on
+        # Wed Nov 25 (5pm PT), then Thanksgiving Thu Nov 26 through Mon Nov 30.
+        def game(game_id, kickoff, team, name):
+            return {"Game ID": game_id, "Game Time": kickoff, "Team": team,
+                    "Name": name, "Position": "QB"}
+        return pd.DataFrame([
+            game("wk11-sun", "2026-11-22T18:00:00Z", "CHI", "Caleb Williams"),
+            game("wk11-mon", "2026-11-24T01:15:00Z", "WAS", "Jayden Daniels"),
+            game("wk12-wed", "2026-11-26T01:00:00Z", "GB", "Jordan Love"),
+            game("wk12-thu", "2026-11-26T18:00:00Z", "DET", "Jared Goff"),
+            game("wk12-sun", "2026-11-29T18:00:00Z", "BUF", "Josh Allen"),
+            game("wk12-mon", "2026-12-01T01:15:00Z", "NYG", "Jaxson Dart"),
+        ])
+
+    def test_wednesday_game_opens_the_next_week_not_the_ending_one(self):
+        # Monday afternoon, before MNF: week 11 only, without the Wednesday game.
+        selected, _ = nb.select_active_week_slate(
+            self._thanksgiving_eve_feed(), {},
+            now=datetime(2026, 11, 23, 19, 0, tzinfo=timezone.utc),
+        )
+        self.assertEqual(set(selected["Game ID"]), {"wk11-sun", "wk11-mon"})
+
+    def test_wednesday_game_shares_a_slate_with_thanksgiving_through_monday(self):
+        # Tuesday, after MNF grace: the whole of week 12, Wednesday included.
+        selected, _ = nb.select_active_week_slate(
+            self._thanksgiving_eve_feed(), {},
+            now=datetime(2026, 11, 24, 17, 40, tzinfo=timezone.utc),
+        )
+        self.assertEqual(
+            set(selected["Game ID"]),
+            {"wk12-wed", "wk12-thu", "wk12-sun", "wk12-mon"},
+        )
 
     def test_normalization_filters_next_week_before_repairing_misfiled_rows(self):
         def row(name, position, team, salary, game_id, kickoff, home, away):

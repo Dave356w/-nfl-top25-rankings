@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "note": "Archived snapshots kept for provenance but never graded. Snapshot files stay immutable; exclusions live here.",
+  "excluded": {
+    "2026-11-23T19:06:57Z": "Thursday week anchor mixed week 11's slate with Wednesday's GB @ LAR and projected it with week 12 numbers; CIN @ WAS (week 11 MNF) would otherwise be graded on a week 12 forecast."
+  }
+}

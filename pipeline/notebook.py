@@ -381,14 +381,16 @@ def validate_single_game_assignments(players):
 def select_active_week_slate(
     players, cap_map, now=None, validate_assignments=True
 ):
-    """Keep exactly one NFL Thursday-Monday week before role/projection fitting.
+    """Keep exactly one NFL Tuesday-Monday week before role/projection fitting.
 
     Yahoo can expose the ending week and the next week in one response. Letting
     both weeks share one frame makes the same player compete with his next-week
     copy for team-position depth rank, which changes the fitted projection and
     causes the rankings, lineup editor and Showdown pages to disagree.
 
-    Week blocks are anchored on Thursday in US Pacific time. The oldest block
+    Week blocks are anchored on Tuesday in US Pacific time, the day after
+    Monday night. A Thursday anchor filed the Wednesday Thanksgiving Eve game
+    (GB @ LAR, 2026 week 12) with the previous week's games. The oldest block
     whose final kickoff is no more than six hours old is considered active; once
     that grace expires the selector rolls to the next block. The grace prevents
     a Monday-night slate from switching to next week immediately after kickoff.
@@ -405,8 +407,8 @@ def select_active_week_slate(
         )
 
     local = kickoff.dt.tz_convert("America/Los_Angeles")
-    days_since_thursday = (local.dt.weekday - 3) % 7
-    week_start = local.dt.normalize() - pd.to_timedelta(days_since_thursday, unit="D")
+    days_since_tuesday = (local.dt.weekday - 1) % 7
+    week_start = local.dt.normalize() - pd.to_timedelta(days_since_tuesday, unit="D")
     game_rows = (
         out.assign(_kickoff=kickoff, _week_start=week_start)
         [["Game ID", "_kickoff", "_week_start"]]

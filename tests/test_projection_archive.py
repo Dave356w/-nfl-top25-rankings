@@ -60,3 +60,19 @@ class ProjectionArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'after kickoff'):
             archive.evaluate([snapshot()],actual)
 
+
+    def test_excluded_snapshot_falls_back_to_the_earlier_pregame_forecast(self):
+        early=snapshot(mean=11);bad=snapshot('2026-09-13T16:30:00Z',40)
+        early['snapshot_id'],bad['snapshot_id']='early','bad'
+        report=archive.evaluate([early,bad],self.actuals(),excluded={'bad':'wrong week'})
+        self.assertEqual(report['overall']['mae'],1)
+        self.assertEqual(report['excluded_snapshots'],['bad'])
+
+    def test_committed_exclusions_name_the_mixed_week_snapshot(self):
+        path=Path(__file__).resolve().parents[1]/'site/data/projection_archive/excluded_snapshots.json'
+        excluded=archive.load_exclusions(path)
+        self.assertIn('2026-11-23T19:06:57Z',excluded)
+        self.assertEqual(archive.load_exclusions(path.with_name('missing.json')),{})
+        ids={json.loads(gzip.decompress(p.read_bytes()))['snapshot_id']
+             for p in (path.parent/'snapshots').glob('*.json.gz')}
+        self.assertLessEqual(set(excluded),ids)  # no typo'd IDs silently excluding nothing
