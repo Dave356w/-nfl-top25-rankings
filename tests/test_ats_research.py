@@ -144,8 +144,8 @@ class PayloadTests(unittest.TestCase):
         self.assertEqual(new, [])
 
     def test_page_map_is_fixed_whatever_the_history(self):
-        self.assertEqual(ats.fit_map(), [3.0, 5.0, 7.0, 10.0])
-        self.assertEqual(ats.fit_map(history(value=40.0), 2026, 9), [3.0, 5.0, 7.0, 10.0])
+        self.assertEqual(ats.fit_map(), [3.0, 5.0, 7.0, 13.0])
+        self.assertEqual(ats.fit_map(history(value=40.0), 2026, 9), [3.0, 5.0, 7.0, 13.0])
         payload, _ = ats.build_payload(self.slate(), self.sched(), MODEL, history(seasons=(2025,)),
                                        now="2026-11-25T12:00:00Z")
         self.assertEqual(payload["method"]["map"]["type"], "fixed")

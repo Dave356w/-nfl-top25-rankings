@@ -15,11 +15,12 @@ Steps, all from the shared projection snapshot:
    points = const + b_off * offense + b_def * opponent DEF + b_home * home.
    The raw margin is home points minus away points (+ = home favoured).
 3. Fixed median map: bands of |raw| (<3, 3-7, 7-10, 10+) map to 3, 5, 7 and
-   10 points, the key margins. Mapped margin = sign(raw) * band value. It
-   was chosen over a weekly-refit map (2026-11-24): the refit moved most
-   weeks without covering more often (2023-2026 and 2001-2026 replays), and
-   a fixed rule cannot produce out-of-order bands. fit_weekly_map keeps the
-   refit for research.
+   13 points. Mapped margin = sign(raw) * band value. It replaced a weekly-
+   refit map (2026-11-24): the refit moved most weeks without covering more
+   often in replays, and a fixed rule cannot produce out-of-order bands. The
+   10+ value moved from 10 to 13 the same day, so big favourites on lines of
+   10-13 are taken rather than faded. Both values were chosen after seeing
+   replays. fit_weekly_map keeps the refit for research.
 4. Model side: mapped margin vs the nflverse market line; zero edge goes to
    the favourite.
 5. A game's row freezes at the last publish before its kickoff. Frozen rows
@@ -49,7 +50,7 @@ SCHEMA = 1
 TAKE = {"QB": 1, "RB": 2, "WR": 3, "TE": 1}
 BANDS = (3.0, 7.0, 10.0)
 BAND_LABELS = ("under 3", "3 to 7", "7 to 10", "10 or more")
-FIXED_RULE = (3.0, 5.0, 7.0, 10.0)
+FIXED_RULE = (3.0, 5.0, 7.0, 13.0)
 MAP_HALF_LIFE_WEEKS = 8          # research only: fit_weekly_map
 WEEKS_PER_SEASON = 19
 MIN_SEASONS = 2
@@ -109,7 +110,7 @@ def weighted_median(values, weights) -> float:
 
 
 def fit_map(history=None, season=None, week=None):
-    """The page's map: the fixed 3/5/7/10 rule, whatever the history."""
+    """The page's map: the fixed 3/5/7/13 rule, whatever the history."""
     return list(FIXED_RULE)
 
 
