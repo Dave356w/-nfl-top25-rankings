@@ -175,6 +175,11 @@ advice**; the page leads with that and with its record.
 - The page shows backtests for last season and this one only (projection +
   map 51.4% over 2025-2026), plus one line with the map's long-run record on
   the spread alone (50.2%, 2001-2026). Break-even at -110 is 52.4%.
+- Below the backtest, the season is listed week by week (newest first) with
+  every game's projection, line, model side, final score and result, and one
+  pooled season record. Weeks before the page went live come from the
+  walk-forward replay (`model/ats_research/season_replay.json`); live weeks use
+  the frozen ledger rows. Each week is tagged replay or live.
 - A failure in this step leaves only this page stale.
 
 The Tuesday workflow (`source_quality.yml`) refits it each week after Monday

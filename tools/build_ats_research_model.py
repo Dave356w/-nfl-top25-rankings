@@ -120,6 +120,26 @@ def backtest(frame, first_season):
             "first_season": int(min(by_season)) if by_season else None}
 
 
+def season_replay(history, season):
+    """Every replayed game of `season`: the weekly map's side, graded, with scores."""
+    games = []
+    for week, group in history[history.season.eq(season)].groupby("week", sort=True):
+        rule = ats.fit_map(history, season, int(week))
+        for g in group.sort_values("game_id").itertuples(index=False):
+            row = {"week": int(week), "game_id": g.game_id, "home": g.home, "away": g.away,
+                   "raw_margin": round(float(g.raw), 2), "line": float(g.line),
+                   "home_score": int(g.home_score), "away_score": int(g.away_score),
+                   "mapped_margin": None, "model_side": None, "result": None}
+            if rule is not None and g.raw != 0:
+                mapped = ats.mapped_margin(g.raw, rule)
+                side = ats.model_side(mapped, g.line)
+                if side:
+                    row.update(mapped_margin=mapped, model_side=g.home if side > 0 else g.away,
+                               result=ats.grade(side, g.actual, g.line))
+            games.append(row)
+    return games
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -171,6 +191,9 @@ def main(argv=None):
     ats.MODEL_DIR.mkdir(parents=True, exist_ok=True)
     history[["season", "week", "game_id", "home", "away", "raw", "line", "actual"]].to_csv(
         ats.HISTORY_PATH, index=False)
+    replay = season_replay(history, args.season)
+    ats.REPLAY_PATH.write_text(json.dumps({"season": args.season, "games": replay},
+                                          indent=1, allow_nan=False) + "\n")
     model = {
         "schema": ats.SCHEMA,
         "built_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),

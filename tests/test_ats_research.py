@@ -167,6 +167,32 @@ class PayloadTests(unittest.TestCase):
             ats.fit_map = original
         self.assertEqual(seen["rows"], len(h))
 
+    def test_season_by_week_prefers_live_rows_and_pools_the_record(self):
+        replay = {"season": 2026, "games": [
+            dict(week=1, home="DET", away="CHI", line=-2.5, result="W"),
+            dict(week=1, home="BUF", away="KC", line=2.5, result="L"),
+            dict(week=2, home="DET", away="CHI", line=1.0, result="L")]}
+        live = [dict(season=2026, week=2, home="DET", away="CHI", line=1.0, result="W"),
+                dict(season=2025, week=2, home="X", away="Y", line=1.0, result="W")]
+        weeks = ats.season_results(2026, replay, live)
+        self.assertEqual([(w["week"], w["source"]) for w in weeks], [(2, "forward"), (1, "replay")])
+        self.assertEqual(weeks[0]["games"][0]["result"], "W")
+        pooled = ats.season_record(weeks)
+        self.assertEqual((pooled["wins"], pooled["losses"]), (2, 1))
+
+    def test_payload_carries_the_season(self):
+        replay = {"season": 2026, "games": [dict(week=11, home="DET", away="CHI", line=-2.5,
+                                                 home_score=31, away_score=21, result="W")]}
+        payload, _ = ats.build_payload(self.slate(), self.sched(), MODEL, history(),
+                                       now="2026-11-25T12:00:00Z", replay=replay)
+        self.assertEqual(payload["season_results"][0]["week"], 11)
+        self.assertEqual(payload["season_record"]["wins"], 1)
+
+    def test_committed_season_replay_loads(self):
+        replay = ats.load_replay()
+        self.assertTrue(replay["games"])
+        self.assertTrue({"week", "home", "away", "line", "home_score", "result"} <= set(replay["games"][0]))
+
     def test_committed_artifacts_load(self):
         model = ats.load_model()
         self.assertEqual(set(model["coefficients"]), {"const", "off", "opp_def", "home"})

@@ -41,6 +41,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "model" / "ats_research"
 MODEL_PATH = MODEL_DIR / "model.json"
 HISTORY_PATH = MODEL_DIR / "margin_history.csv"
+REPLAY_PATH = MODEL_DIR / "season_replay.json"
 
 SCHEMA = 1
 TAKE = {"QB": 1, "RB": 2, "WR": 3, "TE": 1}
@@ -215,7 +216,7 @@ def append_ledger(path, rows) -> None:
 
 # ---------------------------------------------------------------- payload
 def build_payload(players, schedule, model, history, previous=None, ledger=(),
-                  now=None, snapshot_id=None):
+                  now=None, snapshot_id=None, replay=None):
     """Return (payload, rows to append to the ledger).
 
     `players` is the shared prepared slate (Name, Position, Team, Projected_FP,
@@ -330,6 +331,8 @@ def build_payload(players, schedule, model, history, previous=None, ledger=(),
         },
         "games": current,
         "forward_record": record(r["result"] for r in graded_all if r.get("result")),
+        "season_results": (weeks := season_results(season, replay or {}, graded_all)),
+        "season_record": season_record(weeks),
         "backtest": model.get("backtest"),
     }
     json.dumps(payload, allow_nan=False)
@@ -341,16 +344,51 @@ def _grade_ledger(ledger, schedule):
     for row in schedule.itertuples(index=False):
         home_score, away_score = _finite(row.home_score), _finite(row.away_score)
         if home_score is not None and away_score is not None:
-            finals[str(row.game_id)] = home_score - away_score
+            finals[str(row.game_id)] = (home_score, away_score)
     out = []
     for row in ledger:
         row = dict(row)
-        margin = finals.get(str(row.get("nflverse_game_id")))
-        if margin is not None and row.get("model_side_sign") and row.get("line") is not None:
-            row["home_margin"] = margin
-            row["result"] = grade(row["model_side_sign"], margin, row["line"])
+        final = finals.get(str(row.get("nflverse_game_id")))
+        if final is not None and row.get("model_side_sign") and row.get("line") is not None:
+            row["home_score"], row["away_score"] = int(final[0]), int(final[1])
+            row["home_margin"] = final[0] - final[1]
+            row["result"] = grade(row["model_side_sign"], row["home_margin"], row["line"])
         out.append(row)
     return out
+
+
+def load_replay(path=REPLAY_PATH) -> dict:
+    path = Path(path)
+    return json.loads(path.read_text()) if path.exists() else {"season": None, "games": []}
+
+
+def season_record(weeks) -> dict:
+    """Every graded game of the season pooled, replayed and live weeks together."""
+    return record(g["result"] for w in weeks for g in w["games"] if g.get("result"))
+
+
+def season_results(season, replay, forward_rows) -> list[dict]:
+    """The season by week, newest first. A week the page published live uses its
+    frozen ledger rows; earlier weeks use the walk-forward replay."""
+    keep = ("week", "home", "away", "raw_margin", "line", "mapped_margin", "model_side",
+            "home_score", "away_score", "result")
+    forward = {}
+    for row in forward_rows:
+        if row.get("season") == season:
+            forward.setdefault(int(row["week"]), []).append({k: row.get(k) for k in keep})
+    replayed = {}
+    if replay.get("season") == season:
+        for row in replay.get("games", []):
+            replayed.setdefault(int(row["week"]), []).append({k: row.get(k) for k in keep})
+    weeks = []
+    for week in sorted(set(forward) | set(replayed), reverse=True):
+        live = week in forward
+        games = sorted(forward[week] if live else replayed[week],
+                       key=lambda g: (g["away"] or "", g["home"] or ""))
+        weeks.append({"week": week, "source": "forward" if live else "replay",
+                      "record": record(g["result"] for g in games if g.get("result")),
+                      "games": games})
+    return weeks
 
 
 def write_outputs(payload, new_ledger, directory) -> None:
