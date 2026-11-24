@@ -1,0 +1,154 @@
+from datetime import date
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+import numpy as np
+import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from pipeline import ats_research as ats  # noqa: E402
+
+MODEL = {"schema": 1, "coefficients": {"const": 24.0, "off": 0.17, "opp_def": -2.0, "home": 0.86},
+         "backtest": {"note": "test"}}
+
+
+def history(seasons=(2024, 2025), per_week=20, value=6.0):
+    """Synthetic map history: every band well populated, signed margin `value`."""
+    rows = []
+    raws = [1.5, 5.0, 8.5, 12.0]
+    for season in seasons:
+        for week in range(1, 19):
+            for i in range(per_week):
+                raw = raws[i % 4] * (1 if i % 2 else -1)
+                rows.append(dict(season=season, week=week, raw=raw, line=raw,
+                                 actual=np.sign(raw) * value))
+    return pd.DataFrame(rows)
+
+
+def players(rows):
+    out = []
+    for game_id, kickoff, home, away, strengths in rows:
+        for team, (off, dfn) in strengths.items():
+            out += [dict(Name=f"{team} QB", Position="QB", Team=team, Projected_FP=off,
+                         **{"Game ID": game_id, "Game Time": kickoff, "Home Team": home, "Away Team": away}),
+                    dict(Name=f"{team} DEF", Position="DEF", Team=team, Projected_FP=dfn,
+                         **{"Game ID": game_id, "Game Time": kickoff, "Home Team": home, "Away Team": away})]
+    return pd.DataFrame(out)
+
+
+def schedule(rows):
+    return pd.DataFrame([dict(game_id=gid, season=2026, week=12, home_team=h, away_team=a,
+                              game_date=d, spread_line=line, total_line=44.0, location="Home",
+                              home_score=hs, away_score=as_)
+                         for gid, h, a, d, line, hs, as_ in rows])
+
+
+class MapTests(unittest.TestCase):
+    def test_bands_split_at_3_7_10(self):
+        self.assertEqual([ats.band_of(x) for x in (2.9, 3.0, -6.9, 7.0, 9.99, 10.0)],
+                         [0, 1, 1, 2, 2, 3])
+
+    def test_rule_needs_two_seasons_and_thirty_per_band(self):
+        self.assertIsNone(ats.fit_map(history(seasons=(2025,)), 2026, 1))
+        self.assertIsNone(ats.fit_map(history(per_week=1), 2026, 1))
+        self.assertEqual(ats.fit_map(history(), 2026, 1), [6.0, 6.0, 6.0, 6.0])
+
+    def test_rule_uses_only_earlier_weeks(self):
+        h = history()
+        late = h.assign(season=2026, actual=np.sign(h.raw) * 40)
+        rule = ats.fit_map(pd.concat([h, late[late.week >= 5]]), 2026, 5)
+        self.assertEqual(rule, [6.0, 6.0, 6.0, 6.0])
+
+    def test_weighted_median_and_mapped_margin(self):
+        self.assertEqual(ats.weighted_median([1, 2, 10], [1, 1, 5]), 10.0)
+        self.assertEqual(ats.mapped_margin(-8.0, [3, 5, 8, 10]), -8.0)
+
+    def test_zero_edge_takes_the_favourite_and_grades_from_the_side(self):
+        self.assertEqual(ats.model_side(3.0, 3.0), 1)
+        self.assertEqual(ats.model_side(-3.0, -3.0), -1)
+        self.assertEqual(ats.model_side(5.0, 2.5), 1)
+        self.assertEqual(ats.model_side(5.0, 6.5), -1)
+        self.assertEqual(ats.grade(-1, 2.0, 6.5), "W")     # away +6.5, lost by 2
+        self.assertEqual(ats.grade(1, 3.0, 3.0), "P")
+        self.assertEqual(ats.record(["W", "L", "P"])["cover_rate"], 0.5)
+
+
+class PayloadTests(unittest.TestCase):
+    KICK_A = "2026-11-26T18:00:00Z"   # Thursday
+    KICK_B = "2026-11-29T18:00:00Z"   # Sunday
+
+    def slate(self):
+        return players([
+            ("y1", self.KICK_A, "DET", "CHI", {"DET": (60, 8), "CHI": (55, 6)}),
+            ("y2", self.KICK_B, "BUF", "KC", {"BUF": (50, 7), "KC": (58, 9)}),
+        ])
+
+    def sched(self, final=False):
+        return schedule([
+            ("g1", "DET", "CHI", date(2026, 11, 26), -2.5, 31.0 if final else None, 21.0 if final else None),
+            ("g2", "BUF", "KC", date(2026, 11, 29), 2.5, None, None),
+        ])
+
+    def test_rows_use_the_points_model_and_the_nflverse_line(self):
+        payload, new = ats.build_payload(self.slate(), self.sched(), MODEL, history(),
+                                         now="2026-11-25T12:00:00Z", snapshot_id="s1")
+        det = next(g for g in payload["games"] if g["home"] == "DET")
+        self.assertAlmostEqual(det["home_points"], round(24 + .17 * 60 - 2 * 6 + .86, 1))
+        self.assertEqual(det["line"], -2.5)
+        self.assertEqual(det["mapped_margin"], 6.0)
+        self.assertEqual(det["model_side"], "DET")
+        self.assertFalse(det["locked"])
+        self.assertEqual(new, [])
+        self.assertIn("No demonstrated edge", payload["disclaimer"])
+
+    def test_started_games_freeze_and_are_logged_once(self):
+        first, _ = ats.build_payload(self.slate(), self.sched(), MODEL, history(),
+                                     now="2026-11-25T12:00:00Z", snapshot_id="s1")
+        # Thursday game kicked off and Yahoo dropped it from the slate.
+        later_slate = self.slate()[lambda f: f["Game ID"].eq("y2")]
+        second, new = ats.build_payload(later_slate, self.sched(), MODEL, history(),
+                                        previous=first, now="2026-11-27T12:00:00Z", snapshot_id="s2")
+        det = next(g for g in second["games"] if g["home"] == "DET")
+        self.assertTrue(det["locked"])
+        self.assertEqual(det["snapshot_id"], "s1")
+        self.assertEqual([r["game_id"] for r in new], ["y1"])
+        third, again = ats.build_payload(later_slate, self.sched(final=True), MODEL, history(),
+                                         previous=second, ledger=new,
+                                         now="2026-11-28T12:00:00Z", snapshot_id="s3")
+        self.assertEqual(again, [])
+        det = next(g for g in third["games"] if g["home"] == "DET")
+        self.assertEqual((det["result"], third["forward_record"]["wins"]), ("W", 1))
+
+    def test_a_game_first_seen_after_kickoff_gets_no_row(self):
+        payload, new = ats.build_payload(self.slate(), self.sched(), MODEL, history(),
+                                         now="2026-11-27T12:00:00Z", snapshot_id="s1")
+        self.assertEqual([g["home"] for g in payload["games"]], ["BUF"])
+        self.assertEqual(new, [])
+
+    def test_no_rule_means_no_side(self):
+        payload, _ = ats.build_payload(self.slate(), self.sched(), MODEL, history(seasons=(2025,)),
+                                       now="2026-11-25T12:00:00Z")
+        self.assertTrue(all(g["model_side"] is None for g in payload["games"]))
+
+    def test_outputs_append_the_ledger(self):
+        first, _ = ats.build_payload(self.slate(), self.sched(), MODEL, history(),
+                                     now="2026-11-25T12:00:00Z", snapshot_id="s1")
+        second, new = ats.build_payload(self.slate(), self.sched(), MODEL, history(),
+                                        previous=first, now="2026-11-27T12:00:00Z")
+        with tempfile.TemporaryDirectory() as directory:
+            ats.write_outputs(second, new, directory)
+            ats.write_outputs(second, [], directory)
+            self.assertEqual(len(ats.read_ledger(Path(directory) / "ledger.jsonl")), 1)
+            self.assertTrue((Path(directory) / "latest.csv").exists())
+
+    def test_committed_artifacts_load(self):
+        model = ats.load_model()
+        self.assertEqual(set(model["coefficients"]), {"const", "off", "opp_def", "home"})
+        self.assertLess(model["coefficients"]["opp_def"], 0)
+        self.assertGreater(len(ats.load_history()), 300)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model Margin Research</title>
+<meta name="description" content="Experimental research: game margins implied by this site's fantasy projections, compared with the market line. No demonstrated edge; not betting advice.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
+<style>
+:root{
+  color-scheme: light dark;
+  --bg:#f6f7f9; --panel:#ffffff; --panel-2:#fbfbfd; --line:#e3e6ec; --line-soft:#eef0f4;
+  --ink:#12151c; --ink-2:#525a6b; --ink-3:#858d9e;
+  --accent:#1f5fd8; --accent-soft:#e8f0ff; --accent-ink:#1a4fb4;
+  --good:#0f7a4f; --good-soft:#e3f5ec;
+  --warn:#9a6207; --warn-soft:#fdf2dc;
+  --mute-soft:#eef0f4;
+  --bar:#c9d9f7; --bar-top:#1f5fd8;
+  --shadow:0 1px 2px rgba(18,21,28,.06), 0 8px 24px -12px rgba(18,21,28,.18);
+  --radius:14px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1017; --panel:#151922; --panel-2:#1a1f2a; --line:#262c39; --line-soft:#1f2430;
+    --ink:#eef1f6; --ink-2:#a3acbd; --ink-3:#79839a;
+    --accent:#6d9bff; --accent-soft:#1b2740; --accent-ink:#9dbcff;
+    --good:#4ecb8f; --good-soft:#12301f;
+    --warn:#e6b662; --warn-soft:#332612;
+    --mute-soft:#1f2430;
+    --bar:#26355a; --bar-top:#6d9bff;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1017; --panel:#151922; --panel-2:#1a1f2a; --line:#262c39; --line-soft:#1f2430;
+  --ink:#eef1f6; --ink-2:#a3acbd; --ink-3:#79839a;
+  --accent:#6d9bff; --accent-soft:#1b2740; --accent-ink:#9dbcff;
+  --good:#4ecb8f; --good-soft:#12301f;
+  --warn:#e6b662; --warn-soft:#332612;
+  --mute-soft:#1f2430;
+  --bar:#26355a; --bar-top:#6d9bff;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+/* A `display` rule on a class beats the user-agent [hidden] rule, so the stat
+   grid and the panels would still lay out while empty. */
+[hidden]{display:none !important}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1040px; margin:0 auto; padding:24px 20px 72px}
+a{color:var(--accent)}
+
+/* ---------- header ---------- */
+.top{display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:20px}
+.brand{flex:1 1 320px; min-width:0}
+h1{
+  font-size:clamp(24px,3.4vw,34px); line-height:1.15; margin:0 0 6px;
+  letter-spacing:-.02em; font-weight:680;
+}
+.sub{color:var(--ink-2); font-size:14.5px; margin:0}
+.top-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+
+.btn{
+  display:inline-flex; align-items:center; gap:7px; height:36px; padding:0 13px;
+  border:1px solid var(--line); border-radius:9px; background:var(--panel);
+  color:var(--ink); font:inherit; font-size:13.5px; font-weight:520;
+  cursor:pointer; text-decoration:none; white-space:nowrap;
+  transition:background .12s ease, border-color .12s ease, transform .06s ease;
+}
+.btn:hover{background:var(--panel-2); border-color:var(--ink-3)}
+.btn:active{transform:translateY(1px)}
+.btn[hidden]{display:none}
+.btn svg{width:15px; height:15px; flex:none}
+
+/* ---------- status bar ---------- */
+.status{
+  display:flex; align-items:baseline; gap:10px;
+  padding:11px 14px; margin-bottom:18px;
+  background:var(--panel); border:1px solid var(--line); border-radius:11px;
+  font-size:13.5px; color:var(--ink-2); box-shadow:var(--shadow);
+}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--good);
+     flex:none; align-self:center; box-shadow:0 0 0 3px var(--good-soft)}
+#status-text{min-width:0}
+.status .sep{color:var(--ink-3)}
+.status strong{color:var(--ink); font-weight:600}
+
+/* ---------- stat cards ---------- */
+.stats{
+  display:grid; gap:10px; margin-bottom:22px;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+}
+.stat{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  padding:14px 16px; box-shadow:var(--shadow);
+}
+.stat .k{font-size:11.5px; text-transform:uppercase; letter-spacing:.07em;
+         color:var(--ink-3); font-weight:600; margin-bottom:5px}
+.stat .v{font-size:23px; font-weight:660; letter-spacing:-.02em; line-height:1.15}
+.stat .n{font-size:12.5px; color:var(--ink-2); margin-top:3px}
+
+/* ---------- section heads + tables ---------- */
+h2{
+  font-size:12px; text-transform:uppercase; letter-spacing:.08em; font-weight:660;
+  color:var(--ink-3); margin:26px 0 9px; display:flex; align-items:baseline; gap:9px;
+}
+h2 .note{text-transform:none; letter-spacing:0; font-weight:500; font-size:12.5px;
+         color:var(--ink-3)}
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.scroll{overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:14px}
+thead th{
+  background:var(--panel-2); color:var(--ink-3);
+  font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:650;
+  text-align:left; padding:11px 14px; white-space:nowrap;
+  border-bottom:1px solid var(--line);
+}
+th.num,td.num{text-align:right}
+tbody td{padding:11px 14px; border-bottom:1px solid var(--line-soft); vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--panel-2)}
+tbody tr.out{opacity:.62}
+
+
+.notice{
+  padding:13px 16px; margin-bottom:18px; border-radius:11px;
+  background:var(--warn-soft); color:var(--ink); border:1px solid var(--line);
+  font-size:14px;
+}
+.notice b{color:var(--warn)}
+.pill{display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px;
+      font-weight:600; background:var(--mute-soft); color:var(--ink-2); white-space:nowrap}
+.pill.W{background:var(--good-soft); color:var(--good)}
+.pill.L{background:var(--warn-soft); color:var(--warn)}
+.pill.open{background:var(--accent-soft); color:var(--accent-ink)}
+.muted{color:var(--ink-3)}
+.mono{font-family:var(--mono); font-size:13px}
+#games td, #backtest td, #rule-row td{white-space:nowrap}
+h2{flex-wrap:wrap}
+.method{padding:14px 18px; font-size:14px; color:var(--ink-2)}
+.method ol{margin:6px 0 0 18px; padding:0}
+.method li{margin:4px 0}
+details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px 16px}
+@media (max-width:640px){
+  .wrap{padding:18px 16px 56px}
+  tbody td, thead th{padding:9px 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1>Model margin vs market</h1>
+      <p class="sub">Research: the game margin this site's projections imply, next to the market line.</p>
+    </div>
+    <nav class="top-actions">
+      <a class="btn" href="index.html">Rankings</a>
+      <a class="btn" href="lineup.html">My lineup</a>
+      <a class="btn" href="showdown.html">Showdown lab</a>
+      <a class="btn" id="csv" href="data/ats/latest.csv" download hidden>CSV</a>
+      <button class="btn" id="theme" type="button" aria-label="Switch colour theme">Theme</button>
+    </nav>
+  </header>
+
+  <p class="notice" id="notice"><b>Experimental model research.</b> No demonstrated edge: in backtests this method covered about as often as a coin flip, below the 52.4% needed to break even. Not betting advice.</p>
+
+  <div class="status" role="status" aria-live="polite">
+    <span class="dot" id="dot"></span>
+    <span id="status-text">Loading…</span>
+  </div>
+
+  <section class="stats" id="stats" hidden></section>
+
+  <h2>This week <span class="note" id="week-note"></span></h2>
+  <div class="card"><div class="scroll">
+    <table>
+      <thead><tr>
+        <th>Kickoff</th><th>Game</th><th class="num">Projected score</th><th>Projection</th>
+        <th>Market line</th><th>Band</th><th class="num">Mapped</th><th>Model side</th><th>Status</th>
+      </tr></thead>
+      <tbody id="games"><tr><td colspan="9" class="muted">Loading…</td></tr></tbody>
+    </table>
+  </div></div>
+
+  <h2>This week's map <span class="note">weighted median final margin of the projected favourite, by band</span></h2>
+  <div class="card"><div class="scroll">
+    <table><thead><tr id="rule-head"></tr></thead><tbody><tr id="rule-row"></tr></tbody></table>
+  </div></div>
+
+  <h2>Backtest, last season and this season <span class="note">walk-forward replays at closing lines, assumed −110</span></h2>
+  <div class="card"><div class="scroll">
+    <table>
+      <thead><tr><th>Season</th><th class="num">Projection + map</th><th class="num">Cover</th>
+        <th class="num">Spread + map (control)</th><th class="num">Cover</th></tr></thead>
+      <tbody id="backtest"></tbody>
+    </table>
+  </div></div>
+  <p class="muted" id="backtest-note" style="font-size:13px"></p>
+
+  <h2>Method</h2>
+  <div class="card method">
+    <ol>
+      <li><b>Team strength</b> from the same projection snapshot as the rankings: starters' projected half-PPR points (QB1, RB1–2, WR1–3, TE1) and the team's DEF projection.</li>
+      <li><b>Points model</b>, fitted on 2021 onward: <span class="mono" id="formula"></span>. The projected margin is home points minus away points.</li>
+      <li><b>Median map</b>, refit before each week from earlier games only (8-week half-life): bands of |margin| under 3, 3–7, 7–10 and 10+, each replaced by the weighted median final margin of the side the projection favoured.</li>
+      <li><b>Model side</b>: the mapped margin against the nflverse market line; a tie goes to the favourite.</li>
+      <li><b>Freezing</b>: each game's row freezes at the last update before kickoff and is graded from nflverse final scores.</li>
+    </ol>
+    <p>Lines: <a href="https://github.com/nflverse/nflverse-data">nflverse</a> schedules (open data). nflverse does not record when a line was set, so a line can lag the market. Projections: Sleeper, ESPN and CBS (see the <a href="index.html">rankings</a>).</p>
+  </div>
+
+</div>
+<script>
+(function () {
+  "use strict";
+  var THEME_KEY = "nfl-top25-theme";
+  var root = document.documentElement;
+  try {
+    var saved = localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "dark") root.setAttribute("data-theme", saved);
+  } catch (e) {}
+  document.getElementById("theme").addEventListener("click", function () {
+    var now = root.getAttribute("data-theme");
+    var dark = now === "dark" ||
+      (now !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  function el(id) { return document.getElementById(id); }
+  function num(v) { return typeof v === "number" && isFinite(v); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) {
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+  function pct(v) { return num(v) ? (100 * v).toFixed(1) + "%" : "—"; }
+  function signed(v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1); }
+  function rec(r) { return r ? r.wins + "-" + r.losses + "-" + r.pushes : "—"; }
+  function kick(iso) {
+    var d = new Date(iso);
+    return d.toLocaleString(undefined, {weekday: "short", hour: "numeric", minute: "2-digit"});
+  }
+  // line: + means home favoured by that many points (nflverse spread_line)
+  function lineText(g) {
+    if (!num(g.line)) return "—";
+    if (g.line === 0) return "Pick'em";
+    return (g.line > 0 ? g.home : g.away) + " −" + Math.abs(g.line);
+  }
+  function favText(margin, g) {
+    if (!num(margin)) return "—";
+    if (margin === 0) return "Even";
+    return (margin > 0 ? g.home : g.away) + " by " + Math.abs(margin).toFixed(1);
+  }
+  function sideText(g) {
+    if (!g.model_side) return "—";
+    var home = g.model_side === g.home;
+    var h = home ? -g.line : g.line;
+    return g.model_side + " " + (h === 0 ? "PK" : (h > 0 ? "+" : "−") + Math.abs(h));
+  }
+  function status(g) {
+    if (g.result) return '<span class="pill ' + g.result + '">' + {W: "Covered", L: "Missed", P: "Push"}[g.result] + "</span>";
+    if (g.locked) return '<span class="pill">Frozen</span>';
+    return '<span class="pill open">Open</span>';
+  }
+
+  fetch("data/ats/latest.json?nc=" + Date.now()).then(function (r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(render).catch(function (e) {
+    el("dot").style.background = "var(--warn)";
+    el("status-text").textContent = "No research data published yet (" + e.message + ").";
+    el("games").innerHTML = '<tr><td colspan="9" class="muted">Nothing to show.</td></tr>';
+  });
+
+  function render(d) {
+    el("notice").innerHTML = "<b>Experimental model research.</b> " + esc(d.disclaimer.replace(/^Experimental model research\.\s*/, ""));
+    el("csv").hidden = false;
+    el("status-text").innerHTML = "<strong>Week " + d.week + ", " + d.season + "</strong>" +
+      ' <span class="sep">·</span> updated ' + new Date(d.generated_utc).toLocaleString() +
+      ' <span class="sep">·</span> lines from nflverse';
+    var bt = d.backtest || {}, pm = (bt.projection_map || {}).all;
+    var lr = (bt.spread_map_control || {}).long_run;
+    var span = bt.shown_from ? bt.shown_from + "–" + d.season : "";
+    var f = d.forward_record || {};
+    var cards = [
+      ["Forward record", rec(f), f.wins + f.losses ? "cover " + pct(f.cover_rate) + " since launch" : "no finished games yet"],
+      ["Backtest " + span + ": projection + map", pm ? pct(pm.cover_rate) : "—", pm ? rec(pm) + ", ±" + pct(pm.cover_rate_ci95) : ""],
+      ["Map alone, long run", lr ? pct(lr.cover_rate) : "—", lr ? rec(lr) + ", " + lr.first_season + "–" + lr.last_season : ""],
+      ["Break-even at −110", "52.4%", "needed just to not lose"]
+    ];
+    el("stats").innerHTML = cards.map(function (c) {
+      return '<div class="stat"><div class="k">' + esc(c[0]) + '</div><div class="v">' + esc(c[1]) +
+        '</div><div class="n">' + esc(c[2]) + "</div></div>";
+    }).join("");
+    el("stats").hidden = false;
+
+    var games = d.games || [];
+    el("week-note").textContent = games.length + " game(s); frozen rows show their pre-kickoff values";
+    el("games").innerHTML = games.length ? games.map(function (g) {
+      return "<tr><td>" + esc(kick(g.kickoff_utc)) + "</td><td><b>" + esc(g.away) + " @ " + esc(g.home) + "</b></td>" +
+        '<td class="num">' + esc(g.away + " " + g.away_points.toFixed(1) + " – " + g.home + " " + g.home_points.toFixed(1)) + "</td>" +
+        "<td>" + esc(favText(g.raw_margin, g)) + "</td><td>" + esc(lineText(g)) + "</td>" +
+        '<td class="muted">' + esc(g.band) + '</td><td class="num">' + (num(g.mapped_margin) ? esc(favText(g.mapped_margin, g)) : "—") + "</td>" +
+        "<td><b>" + esc(sideText(g)) + "</b></td><td>" + status(g) + "</td></tr>";
+    }).join("") : '<tr><td colspan="9" class="muted">No games on the current slate.</td></tr>';
+
+    var map = (d.method || {}).map || {};
+    el("rule-head").innerHTML = (map.band_labels || []).map(function (b) { return '<th class="num">' + esc(b) + "</th>"; }).join("");
+    el("rule-row").innerHTML = map.rule ? map.rule.map(function (v) { return '<td class="num">' + v.toFixed(1) + "</td>"; }).join("")
+      : '<td class="muted" colspan="4">Not enough history for a rule: no model sides this week.</td>';
+
+    var c = (d.method || {}).points_model || {};
+    if (num(c.const)) el("formula").textContent = "points = " + c.const.toFixed(2) + " + " + c.off.toFixed(3) +
+      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP + " + c.home.toFixed(2) + " (home)";
+
+    var ps = (bt.projection_map || {}).seasons || {}, cs = (bt.spread_map_control || {}).seasons || {};
+    var seasons = Object.keys(cs).concat(Object.keys(ps)).filter(function (s, i, a) { return a.indexOf(s) === i; })
+      .sort(function (a, b) { return b - a; });
+    el("backtest").innerHTML = seasons.map(function (s) {
+      var p = ps[s], q = cs[s];
+      return "<tr><td>" + s + '</td><td class="num">' + (p ? rec(p) : '<span class="muted">—</span>') + '</td><td class="num">' + (p ? pct(p.cover_rate) : "") +
+        '</td><td class="num">' + (q ? rec(q) : "—") + '</td><td class="num">' + (q ? pct(q.cover_rate) : "") + "</td></tr>";
+    }).join("");
+    el("backtest-note").textContent = (bt.note || "") + (lr ? " Over " + lr.first_season + "–" + lr.last_season +
+      " the map applied to the spread alone covered " + pct(lr.cover_rate) + " (" + rec(lr) + "), so short runs like these are mostly noise." : "");
+  }
+})();
+</script>
+</body>
+</html>

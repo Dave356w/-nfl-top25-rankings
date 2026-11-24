@@ -157,6 +157,32 @@ browser, are tied to one published snapshot, and never change what the workflow
 publishes. Manual overrides and players the run already removed (Out, injured
 reserve, unconfirmed backup QBs) cannot be changed or brought back there.
 
+### Model margin research page (`ats.html`)
+
+An experimental page compares the game margin the projections imply with the
+nflverse market line. **It has no demonstrated edge and is not betting
+advice**; the page leads with that and with its record.
+
+- Team strength: starters' projected points (QB1, RB1-2, WR1-3, TE1) and the
+  DEF projection, from the same snapshot as every other page.
+- Points model: `points = const + b*offense - c*opponent DEF + d*home`, fitted
+  by `tools/build_ats_research_model.py` on Sleeper weekly projections and
+  nflverse scores from 2021 (`model/ats_research/`).
+- Weekly median map (bands 3/7/10, 8-week half-life, earlier games only), then
+  the mapped margin against nflverse's `spread_line`.
+- Each game's row freezes at the last publish before kickoff and is appended
+  once to `site/data/ats/ledger.jsonl`; graded rows extend the map's history.
+- The page shows backtests for last season and this one only (projection +
+  map 51.4% over 2025-2026), plus one line with the map's long-run record on
+  the spread alone (50.2%, 2001-2026). Break-even at -110 is 52.4%.
+- A failure in this step leaves only this page stale.
+
+Refresh the model after a week completes:
+
+```bash
+python tools/build_ats_research_model.py
+```
+
 ## Setup (one time)
 
 1. **Enable Pages.** Settings → Pages → *Build and deployment* → Source:

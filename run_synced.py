@@ -20,6 +20,7 @@ import lineup_optimizer as lo
 from pipeline import notebook as nb
 from pipeline import showdown
 from pipeline import projection_archive
+from pipeline import ats_research
 import run_daily
 import run_lineup
 import run_showdown
@@ -204,6 +205,7 @@ def build_synced_payloads(
         showdown_payloads, showdown_index,
     )
     return {
+        "prepared_players": prepared["players"],
         "projection_archive": projection_archive.capture(prepared, cfg, snapshot_id, showdown_payloads),
         "generated_at": generated_at,
         "snapshot_id": snapshot_id,
@@ -282,8 +284,37 @@ def main(argv=None):
         f"{built['compared']} cross-page projections verified; "
         f"{len(ranking_entries)} ranking and {len(lineup_entries)} lineup run(s) archived."
     )
+    _publish_ats_research(built, site / "data" / "ats")
     _write_conflict_summary(built["lineup"])
     return 0
+
+
+def _publish_ats_research(built: dict, directory: Path) -> None:
+    """Optional research page. A failure here leaves only that page stale."""
+    try:
+        previous_path = directory / "latest.json"
+        previous = json.loads(previous_path.read_text()) if previous_path.exists() else None
+        ledger = ats_research.read_ledger(directory / "ledger.jsonl")
+        players = built["prepared_players"]
+        season = nb.infer_season(players["Game Time"].iloc[0]) if len(players) else None
+        seasons = {int(season)} if season else {built["generated_at"].year}
+        seasons |= {int(row["season"]) for row in ledger}
+        payload, new_rows = ats_research.build_payload(
+            players,
+            ats_research.load_schedule(seasons),
+            ats_research.load_model(),
+            ats_research.load_history(),
+            previous=previous,
+            ledger=ledger,
+            now=built["generated_at"],
+            snapshot_id=built["snapshot_id"],
+        )
+        ats_research.write_outputs(payload, new_rows, directory)
+        print(f"ATS research page: {len(payload['games'])} game(s), "
+              f"{len(new_rows)} newly locked row(s) logged.")
+    except Exception:  # never blocks the rankings, lineup or Showdown pages
+        traceback.print_exc()
+        print("ATS research page skipped; its previous files stay live.", file=sys.stderr)
 
 
 def _write_conflict_summary(lineup_payload: dict) -> None:
