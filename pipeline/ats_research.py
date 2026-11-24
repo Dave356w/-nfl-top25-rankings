@@ -14,10 +14,12 @@ Steps, all from the shared projection snapshot:
    2021+ Sleeper weekly projections and nflverse scores):
    points = const + b_off * offense + b_def * opponent DEF + b_home * home.
    The raw margin is home points minus away points (+ = home favoured).
-3. Weekly median map: bands of |raw| (<3, 3-7, 7-10, 10+); each band's value
-   is the weighted median final margin of the side the raw margin favoured,
-   over earlier games only, with an 8-week half-life (19 weeks per season
-   boundary). Mapped margin = sign(raw) * band value.
+3. Fixed median map: bands of |raw| (<3, 3-7, 7-10, 10+) map to 3, 5, 7 and
+   10 points, the key margins. Mapped margin = sign(raw) * band value. It
+   was chosen over a weekly-refit map (2026-11-24): the refit moved most
+   weeks without covering more often (2023-2026 and 2001-2026 replays), and
+   a fixed rule cannot produce out-of-order bands. fit_weekly_map keeps the
+   refit for research.
 4. Model side: mapped margin vs the nflverse market line; zero edge goes to
    the favourite.
 5. A game's row freezes at the last publish before its kickoff. Frozen rows
@@ -47,7 +49,8 @@ SCHEMA = 1
 TAKE = {"QB": 1, "RB": 2, "WR": 3, "TE": 1}
 BANDS = (3.0, 7.0, 10.0)
 BAND_LABELS = ("under 3", "3 to 7", "7 to 10", "10 or more")
-MAP_HALF_LIFE_WEEKS = 8
+FIXED_RULE = (3.0, 5.0, 7.0, 10.0)
+MAP_HALF_LIFE_WEEKS = 8          # research only: fit_weekly_map
 WEEKS_PER_SEASON = 19
 MIN_SEASONS = 2
 MIN_GAMES = 300
@@ -105,8 +108,13 @@ def weighted_median(values, weights) -> float:
     return float(values[np.searchsorted(cumulative, cumulative[-1] / 2)])
 
 
-def fit_map(history: pd.DataFrame, season: int, week: int):
-    """Band values from games strictly before (season, week); None if too thin.
+def fit_map(history=None, season=None, week=None):
+    """The page's map: the fixed 3/5/7/10 rule, whatever the history."""
+    return list(FIXED_RULE)
+
+
+def fit_weekly_map(history: pd.DataFrame, season: int, week: int):
+    """Research: band values from games strictly before (season, week); None if too thin.
 
     `history` needs season, week, raw and actual (home margin)."""
     prior = history[(history.season < season)
@@ -118,12 +126,38 @@ def fit_map(history: pd.DataFrame, season: int, week: int):
     weight = np.power(2.0, -age.to_numpy(float))
     bands = prior.raw.map(band_of).to_numpy()
     signed = (np.sign(prior.raw) * prior.actual).to_numpy(float)
-    rule = []
-    for band in range(len(BANDS) + 1):
-        mask = bands == band
-        if mask.sum() < MIN_PER_BAND:
-            return None
-        rule.append(weighted_median(signed[mask], weight[mask]))
+    if any((bands == band).sum() < MIN_PER_BAND for band in range(len(BANDS) + 1)):
+        return None
+    return monotone_band_medians(signed, weight, bands, len(BANDS) + 1)
+
+
+def monotone_band_medians(signed, weight, bands, count):
+    """Weighted median per band, never decreasing with the band.
+
+    A bigger projected margin must not map to a smaller one. Thin, noisy top
+    bands broke that (2026 week 8: 3/5/11/6 sent a 13-point favourite to 6), so
+    any band whose median falls below the band beneath it is pooled with it and
+    the pooled games' median is used for both (pool-adjacent-violators)."""
+    blocks = [[band] for band in range(count)]
+
+    def median(members):
+        mask = np.isin(bands, members)
+        return weighted_median(signed[mask], weight[mask])
+
+    values = [median(block) for block in blocks]
+    i = 0
+    while i < len(blocks) - 1:
+        if values[i + 1] < values[i]:
+            blocks[i] = blocks[i] + blocks.pop(i + 1)
+            values.pop(i + 1)
+            values[i] = median(blocks[i])
+            i = max(i - 1, 0)
+        else:
+            i += 1
+    rule = [None] * count
+    for block, value in zip(blocks, values):
+        for band in block:
+            rule[band] = value
     return rule
 
 
@@ -323,9 +357,7 @@ def build_payload(players, schedule, model, history, previous=None, ledger=(),
             "team_strength": "starters' projected half-PPR points: QB1, RB1-2, WR1-3, TE1; DEF projection",
             "points_model": coef, "points_model_fit": model.get("fit"),
             "map": {"bands": list(BANDS), "band_labels": list(BAND_LABELS),
-                    "half_life_weeks": MAP_HALF_LIFE_WEEKS,
-                    "minimum": {"seasons": MIN_SEASONS, "games": MIN_GAMES, "per_band": MIN_PER_BAND},
-                    "rule": rule},
+                    "type": "fixed", "rule": rule},
             "line_source": "nflverse schedules spread_line (open data); no capture time from source",
             "lock": "a game's row freezes at the last publish before kickoff",
         },

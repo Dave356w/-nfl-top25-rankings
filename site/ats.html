@@ -199,7 +199,7 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     </table>
   </div></div>
 
-  <h2>This week's map <span class="note">weighted median final margin of the projected favourite, by band</span></h2>
+  <h2>The map <span class="note">fixed: each band of projected margin maps to a key margin</span></h2>
   <div class="card"><div class="scroll">
     <table><thead><tr id="rule-head"></tr></thead><tbody><tr id="rule-row"></tr></tbody></table>
   </div></div>
@@ -223,7 +223,7 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     <ol>
       <li><b>Team strength</b> from the same projection snapshot as the rankings: starters' projected half-PPR points (QB1, RB1–2, WR1–3, TE1) and the team's DEF projection.</li>
       <li><b>Points model</b>: <span class="mono" id="formula"></span>. <span id="fit-note"></span> The projected margin is home points minus away points.</li>
-      <li><b>Median map</b>, refit before each week from earlier games only (8-week half-life): bands of |margin| under 3, 3–7, 7–10 and 10+, each replaced by the weighted median final margin of the side the projection favoured. Its history is Sleeper-only walk-forward margins from 2021, since only Sleeper has that much history; the replayed weeks below use the same.</li>
+      <li><b>Map</b> (fixed): a projected margin under 3 maps to 3, 3–7 to 5, 7–10 to 7 and 10 or more to 10, keeping the projected favourite. It replaced a weekly-refit median map on 24 Nov 2026: the refit changed most weeks without covering more often in replays. The fixed rule was itself chosen after looking at those replays, so its backtest is not independent evidence. The backtest and the replayed weeks below use the fixed map too.</li>
       <li><b>Model side</b>: the mapped margin against the nflverse market line; a tie goes to the favourite.</li>
       <li><b>Freezing</b>: each game's row freezes at the last update before kickoff and is graded from nflverse final scores.</li>
     </ol>
@@ -364,7 +364,7 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     var map = (d.method || {}).map || {};
     el("rule-head").innerHTML = (map.band_labels || []).map(function (b) { return '<th class="num">' + esc(b) + "</th>"; }).join("");
     el("rule-row").innerHTML = map.rule ? map.rule.map(function (v) { return '<td class="num">' + v.toFixed(1) + "</td>"; }).join("")
-      : '<td class="muted" colspan="4">Not enough history for a rule: no model sides this week.</td>';
+      : '<td class="muted" colspan="4">No map published.</td>';
 
     var c = (d.method || {}).points_model || {};
     if (num(c.const)) el("formula").textContent = "points = " + c.const.toFixed(2) + " + " + c.off.toFixed(3) +

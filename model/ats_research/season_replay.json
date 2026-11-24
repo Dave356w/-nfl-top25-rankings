@@ -10,7 +10,7 @@
    "line": 8.5,
    "home_score": 14,
    "away_score": 26,
-   "mapped_margin": 13.0,
+   "mapped_margin": 10.0,
    "model_side": "LAC",
    "result": "L"
   },
@@ -23,7 +23,7 @@
    "line": 6.5,
    "home_score": 20,
    "away_score": 13,
-   "mapped_margin": 17.0,
+   "mapped_margin": 7.0,
    "model_side": "PIT",
    "result": "W"
   },
@@ -49,7 +49,7 @@
    "line": -1.5,
    "home_score": 31,
    "away_score": 36,
-   "mapped_margin": 2.0,
+   "mapped_margin": 3.0,
    "model_side": "HOU",
    "result": "L"
   },
@@ -62,9 +62,9 @@
    "line": -3.0,
    "home_score": 37,
    "away_score": 59,
-   "mapped_margin": -2.0,
-   "model_side": "CAR",
-   "result": "L"
+   "mapped_margin": -3.0,
+   "model_side": "CHI",
+   "result": "W"
   },
   {
    "week": 1,
@@ -75,7 +75,7 @@
    "line": 8.5,
    "home_score": 34,
    "away_score": 10,
-   "mapped_margin": 13.0,
+   "mapped_margin": 10.0,
    "model_side": "JAX",
    "result": "W"
   },
@@ -88,9 +88,9 @@
    "line": -3.0,
    "home_score": 28,
    "away_score": 20,
-   "mapped_margin": -2.0,
-   "model_side": "NYG",
-   "result": "W"
+   "mapped_margin": -3.0,
+   "model_side": "DAL",
+   "result": "L"
   },
   {
    "week": 1,
@@ -101,9 +101,9 @@
    "line": 2.5,
    "home_score": 31,
    "away_score": 10,
-   "mapped_margin": 2.0,
-   "model_side": "DEN",
-   "result": "L"
+   "mapped_margin": 3.0,
+   "model_side": "KC",
+   "result": "W"
   },
   {
    "week": 1,
@@ -127,7 +127,7 @@
    "line": 3.0,
    "home_score": 27,
    "away_score": 13,
-   "mapped_margin": 17.0,
+   "mapped_margin": 7.0,
    "model_side": "LV",
    "result": "W"
   },
@@ -153,7 +153,7 @@
    "line": 7.0,
    "home_score": 31,
    "away_score": 30,
-   "mapped_margin": 13.0,
+   "mapped_margin": 10.0,
    "model_side": "DET",
    "result": "L"
   },
@@ -166,7 +166,7 @@
    "line": 1.5,
    "home_score": 10,
    "away_score": 23,
-   "mapped_margin": 2.0,
+   "mapped_margin": 3.0,
    "model_side": "TEN",
    "result": "L"
   },
@@ -205,7 +205,7 @@
    "line": 6.0,
    "home_score": 24,
    "away_score": 22,
-   "mapped_margin": 13.0,
+   "mapped_margin": 10.0,
    "model_side": "PHI",
    "result": "L"
   },
@@ -218,9 +218,9 @@
    "line": -2.5,
    "home_score": 3,
    "away_score": 34,
-   "mapped_margin": -2.0,
-   "model_side": "ATL",
-   "result": "L"
+   "mapped_margin": -3.0,
+   "model_side": "CAR",
+   "result": "W"
   },
   {
    "week": 2,
@@ -231,9 +231,9 @@
    "line": 3.0,
    "home_score": 6,
    "away_score": 20,
-   "mapped_margin": 2.0,
-   "model_side": "CIN",
-   "result": "W"
+   "mapped_margin": 3.0,
+   "model_side": "HOU",
+   "result": "L"
   },
   {
    "week": 2,
@@ -244,7 +244,7 @@
    "line": 8.5,
    "home_score": 19,
    "away_score": 23,
-   "mapped_margin": 12.0,
+   "mapped_margin": 10.0,
    "model_side": "TB",
    "result": "L"
   },
@@ -257,9 +257,9 @@
    "line": 5.5,
    "home_score": 41,
    "away_score": 31,
-   "mapped_margin": 6.0,
-   "model_side": "BUF",
-   "result": "W"
+   "mapped_margin": 5.0,
+   "model_side": "DET",
+   "result": "L"
   },
   {
    "week": 2,
@@ -270,7 +270,7 @@
    "line": -3.5,
    "home_score": 17,
    "away_score": 20,
-   "mapped_margin": -16.0,
+   "mapped_margin": -7.0,
    "model_side": "GB",
    "result": "L"
   },
@@ -283,7 +283,7 @@
    "line": 6.0,
    "home_score": 33,
    "away_score": 30,
-   "mapped_margin": 16.0,
+   "mapped_margin": 7.0,
    "model_side": "KC",
    "result": "L"
   },
@@ -296,9 +296,9 @@
    "line": 2.5,
    "home_score": 20,
    "away_score": 13,
-   "mapped_margin": 2.0,
-   "model_side": "JAX",
-   "result": "L"
+   "mapped_margin": 3.0,
+   "model_side": "DEN",
+   "result": "W"
   },
   {
    "week": 2,
@@ -309,7 +309,7 @@
    "line": 6.5,
    "home_score": 14,
    "away_score": 26,
-   "mapped_margin": 12.0,
+   "mapped_margin": 10.0,
    "model_side": "LAC",
    "result": "L"
   },
@@ -322,7 +322,7 @@
    "line": 12.5,
    "home_score": 35,
    "away_score": 13,
-   "mapped_margin": 12.0,
+   "mapped_margin": 10.0,
    "model_side": "MIA",
    "result": "L"
   },
@@ -335,7 +335,7 @@
    "line": 4.5,
    "home_score": 3,
    "away_score": 9,
-   "mapped_margin": 2.0,
+   "mapped_margin": 3.0,
    "model_side": "MIN",
    "result": "W"
   },
@@ -348,7 +348,7 @@
    "line": 8.5,
    "home_score": 17,
    "away_score": 24,
-   "mapped_margin": 12.0,
+   "mapped_margin": 10.0,
    "model_side": "BAL",
    "result": "L"
   },
@@ -361,7 +361,7 @@
    "line": 6.5,
    "home_score": 28,
    "away_score": 6,
-   "mapped_margin": 12.0,
+   "mapped_margin": 10.0,
    "model_side": "LAR",
    "result": "W"
   },
@@ -374,7 +374,7 @@
    "line": -7.0,
    "home_score": 20,
    "away_score": 24,
-   "mapped_margin": -12.0,
+   "mapped_margin": -10.0,
    "model_side": "PHI",
    "result": "L"
   },
@@ -387,7 +387,7 @@
    "line": 4.5,
    "home_score": 20,
    "away_score": 3,
-   "mapped_margin": 6.0,
+   "mapped_margin": 5.0,
    "model_side": "NE",
    "result": "W"
   },
@@ -400,7 +400,7 @@
    "line": -3.5,
    "home_score": 7,
    "away_score": 31,
-   "mapped_margin": -16.0,
+   "mapped_margin": -7.0,
    "model_side": "SEA",
    "result": "W"
   },
@@ -413,7 +413,7 @@
    "line": 3.5,
    "home_score": 37,
    "away_score": 20,
-   "mapped_margin": 6.0,
+   "mapped_margin": 5.0,
    "model_side": "DAL",
    "result": "W"
   },
@@ -426,9 +426,9 @@
    "line": 7.5,
    "home_score": 36,
    "away_score": 30,
-   "mapped_margin": 6.0,
-   "model_side": "ARI",
-   "result": "W"
+   "mapped_margin": 10.0,
+   "model_side": "SF",
+   "result": "L"
   },
   {
    "week": 3,
@@ -439,7 +439,7 @@
    "line": 4.5,
    "home_score": 14,
    "away_score": 35,
-   "mapped_margin": 16.0,
+   "mapped_margin": 7.0,
    "model_side": "GB",
    "result": "L"
   },
@@ -452,7 +452,7 @@
    "line": -3.0,
    "home_score": 31,
    "away_score": 34,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "BAL",
    "result": "P"
   },
@@ -465,7 +465,7 @@
    "line": -2.5,
    "home_score": 21,
    "away_score": 18,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "CAR",
    "result": "L"
   },
@@ -478,7 +478,7 @@
    "line": -3.5,
    "home_score": 30,
    "away_score": 27,
-   "mapped_margin": -2.0,
+   "mapped_margin": -3.0,
    "model_side": "PIT",
    "result": "W"
   },
@@ -491,7 +491,7 @@
    "line": -1.5,
    "home_score": 19,
    "away_score": 17,
-   "mapped_margin": -2.0,
+   "mapped_margin": -3.0,
    "model_side": "HOU",
    "result": "L"
   },
@@ -504,9 +504,9 @@
    "line": -10.0,
    "home_score": 10,
    "away_score": 24,
-   "mapped_margin": -6.0,
-   "model_side": "MIA",
-   "result": "L"
+   "mapped_margin": -10.0,
+   "model_side": "KC",
+   "result": "W"
   },
   {
    "week": 3,
@@ -517,7 +517,7 @@
    "line": 7.0,
    "home_score": 24,
    "away_score": 16,
-   "mapped_margin": 16.0,
+   "mapped_margin": 7.0,
    "model_side": "BUF",
    "result": "W"
   },
@@ -530,7 +530,7 @@
    "line": 1.5,
    "home_score": 30,
    "away_score": 26,
-   "mapped_margin": 2.0,
+   "mapped_margin": 3.0,
    "model_side": "DEN",
    "result": "W"
   },
@@ -543,7 +543,7 @@
    "line": 3.5,
    "home_score": 27,
    "away_score": 35,
-   "mapped_margin": 16.0,
+   "mapped_margin": 7.0,
    "model_side": "NO",
    "result": "L"
   },
@@ -556,7 +556,7 @@
    "line": -1.5,
    "home_score": 16,
    "away_score": 23,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "MIN",
    "result": "W"
   },
@@ -569,9 +569,9 @@
    "line": 3.0,
    "home_score": 35,
    "away_score": 6,
-   "mapped_margin": 2.0,
-   "model_side": "NE",
-   "result": "L"
+   "mapped_margin": 3.0,
+   "model_side": "JAX",
+   "result": "W"
   },
   {
    "week": 3,
@@ -582,8 +582,8 @@
    "line": 7.0,
    "home_score": 31,
    "away_score": 24,
-   "mapped_margin": 6.0,
-   "model_side": "NYJ",
+   "mapped_margin": 10.0,
+   "model_side": "DET",
    "result": "P"
   },
   {
@@ -595,7 +595,7 @@
    "line": -3.5,
    "home_score": 27,
    "away_score": 7,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "PHI",
    "result": "L"
   },
@@ -608,9 +608,9 @@
    "line": -8.5,
    "home_score": 33,
    "away_score": 31,
-   "mapped_margin": -6.0,
-   "model_side": "WAS",
-   "result": "W"
+   "mapped_margin": -10.0,
+   "model_side": "SEA",
+   "result": "L"
   },
   {
    "week": 3,
@@ -621,7 +621,7 @@
    "line": 2.5,
    "home_score": 12,
    "away_score": 7,
-   "mapped_margin": 6.0,
+   "mapped_margin": 5.0,
    "model_side": "NYG",
    "result": "W"
   },
@@ -634,9 +634,9 @@
    "line": -2.5,
    "home_score": 36,
    "away_score": 24,
-   "mapped_margin": -2.0,
-   "model_side": "NYG",
-   "result": "W"
+   "mapped_margin": -3.0,
+   "model_side": "ARI",
+   "result": "L"
   },
   {
    "week": 4,
@@ -647,7 +647,7 @@
    "line": 1.5,
    "home_score": 24,
    "away_score": 45,
-   "mapped_margin": 2.0,
+   "mapped_margin": 3.0,
    "model_side": "NO",
    "result": "L"
   },
@@ -660,9 +660,9 @@
    "line": 3.0,
    "home_score": 30,
    "away_score": 34,
-   "mapped_margin": 2.0,
-   "model_side": "DAL",
-   "result": "W"
+   "mapped_margin": 3.0,
+   "model_side": "HOU",
+   "result": "L"
   },
   {
    "week": 4,
@@ -673,7 +673,7 @@
    "line": 3.0,
    "home_score": 24,
    "away_score": 14,
-   "mapped_margin": 6.0,
+   "mapped_margin": 5.0,
    "model_side": "SF",
    "result": "W"
   },
@@ -686,7 +686,7 @@
    "line": -4.5,
    "home_score": 32,
    "away_score": 26,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "DET",
    "result": "L"
   },
@@ -699,8 +699,8 @@
    "line": -3.0,
    "home_score": 14,
    "away_score": 17,
-   "mapped_margin": -2.0,
-   "model_side": "TB",
+   "mapped_margin": -3.0,
+   "model_side": "GB",
    "result": "P"
   },
   {
@@ -712,7 +712,7 @@
    "line": -4.5,
    "home_score": 13,
    "away_score": 30,
-   "mapped_margin": -11.0,
+   "mapped_margin": -7.0,
    "model_side": "IND",
    "result": "W"
   },
@@ -725,7 +725,7 @@
    "line": 2.5,
    "home_score": 17,
    "away_score": 22,
-   "mapped_margin": -2.0,
+   "mapped_margin": -3.0,
    "model_side": "JAX",
    "result": "W"
   },
@@ -738,7 +738,7 @@
    "line": -4.5,
    "home_score": 27,
    "away_score": 30,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "KC",
    "result": "L"
   },
@@ -751,8 +751,8 @@
    "line": 7.0,
    "home_score": 30,
    "away_score": 23,
-   "mapped_margin": 6.0,
-   "model_side": "LAC",
+   "mapped_margin": 10.0,
+   "model_side": "SEA",
    "result": "P"
   },
   {
@@ -764,7 +764,7 @@
    "line": -3.5,
    "home_score": 20,
    "away_score": 24,
-   "mapped_margin": -11.0,
+   "mapped_margin": -7.0,
    "model_side": "LAR",
    "result": "W"
   },
@@ -777,9 +777,9 @@
    "line": 10.0,
    "home_score": 15,
    "away_score": 10,
-   "mapped_margin": 6.0,
-   "model_side": "MIA",
-   "result": "W"
+   "mapped_margin": 10.0,
+   "model_side": "MIN",
+   "result": "L"
   },
   {
    "week": 4,
@@ -790,7 +790,7 @@
    "line": 7.0,
    "home_score": 26,
    "away_score": 29,
-   "mapped_margin": 11.0,
+   "mapped_margin": 7.0,
    "model_side": "BUF",
    "result": "L"
   },
@@ -803,7 +803,7 @@
    "line": 3.5,
    "home_score": 23,
    "away_score": 12,
-   "mapped_margin": 11.0,
+   "mapped_margin": 7.0,
    "model_side": "CHI",
    "result": "W"
   },
@@ -816,9 +816,9 @@
    "line": -2.5,
    "home_score": 27,
    "away_score": 24,
-   "mapped_margin": -2.0,
-   "model_side": "CLE",
-   "result": "W"
+   "mapped_margin": -3.0,
+   "model_side": "PIT",
+   "result": "L"
   },
   {
    "week": 4,
@@ -829,7 +829,7 @@
    "line": 11.5,
    "home_score": 24,
    "away_score": 18,
-   "mapped_margin": 6.0,
+   "mapped_margin": 10.0,
    "model_side": "TEN",
    "result": "W"
   },
@@ -868,7 +868,7 @@
    "line": -1.5,
    "home_score": 31,
    "away_score": 7,
-   "mapped_margin": 1.0,
+   "mapped_margin": 3.0,
    "model_side": "GB",
    "result": "W"
   },
@@ -881,8 +881,8 @@
    "line": -7.0,
    "home_score": 24,
    "away_score": 31,
-   "mapped_margin": -6.0,
-   "model_side": "MIA",
+   "mapped_margin": -10.0,
+   "model_side": "CIN",
    "result": "P"
   },
   {
@@ -894,9 +894,9 @@
    "line": 2.5,
    "home_score": 17,
    "away_score": 12,
-   "mapped_margin": 1.0,
-   "model_side": "CLE",
-   "result": "L"
+   "mapped_margin": 3.0,
+   "model_side": "NYJ",
+   "result": "W"
   },
   {
    "week": 5,
@@ -920,7 +920,7 @@
    "line": -5.5,
    "home_score": 21,
    "away_score": 45,
-   "mapped_margin": -11.0,
+   "mapped_margin": -7.0,
    "model_side": "DET",
    "result": "W"
   },
@@ -933,7 +933,7 @@
    "line": -6.5,
    "home_score": 3,
    "away_score": 26,
-   "mapped_margin": -11.0,
+   "mapped_margin": -7.0,
    "model_side": "HOU",
    "result": "W"
   },
@@ -959,7 +959,7 @@
    "line": 3.5,
    "home_score": 45,
    "away_score": 17,
-   "mapped_margin": 11.0,
+   "mapped_margin": 7.0,
    "model_side": "NE",
    "result": "W"
   },
@@ -972,9 +972,9 @@
    "line": -2.5,
    "home_score": 13,
    "away_score": 23,
-   "mapped_margin": -1.0,
-   "model_side": "NO",
-   "result": "L"
+   "mapped_margin": -3.0,
+   "model_side": "MIN",
+   "result": "W"
   },
   {
    "week": 5,
@@ -998,9 +998,9 @@
    "line": 7.5,
    "home_score": 19,
    "away_score": 17,
-   "mapped_margin": 11.0,
-   "model_side": "JAX",
-   "result": "L"
+   "mapped_margin": 7.0,
+   "model_side": "PHI",
+   "result": "W"
   },
   {
    "week": 5,
@@ -1011,9 +1011,9 @@
    "line": 3.0,
    "home_score": 29,
    "away_score": 32,
-   "mapped_margin": 1.0,
-   "model_side": "SF",
-   "result": "W"
+   "mapped_margin": 3.0,
+   "model_side": "SEA",
+   "result": "L"
   },
   {
    "week": 5,
@@ -1024,9 +1024,9 @@
    "line": 9.5,
    "home_score": 16,
    "away_score": 24,
-   "mapped_margin": 6.0,
-   "model_side": "TB",
-   "result": "W"
+   "mapped_margin": 10.0,
+   "model_side": "DAL",
+   "result": "L"
   },
   {
    "week": 6,
@@ -1037,7 +1037,7 @@
    "line": 12.5,
    "home_score": 16,
    "away_score": 18,
-   "mapped_margin": 6.0,
+   "mapped_margin": 10.0,
    "model_side": "ARI",
    "result": "W"
   },
@@ -1089,7 +1089,7 @@
    "line": -1.5,
    "home_score": 23,
    "away_score": 31,
-   "mapped_margin": 2.0,
+   "mapped_margin": 3.0,
    "model_side": "ATL",
    "result": "L"
   },
@@ -1102,7 +1102,7 @@
    "line": -1.5,
    "home_score": 23,
    "away_score": 13,
-   "mapped_margin": 2.0,
+   "mapped_margin": 3.0,
    "model_side": "GB",
    "result": "W"
   },
@@ -1128,9 +1128,9 @@
    "line": 7.5,
    "home_score": 22,
    "away_score": 6,
-   "mapped_margin": 6.0,
-   "model_side": "LAC",
-   "result": "L"
+   "mapped_margin": 10.0,
+   "model_side": "KC",
+   "result": "W"
   },
   {
    "week": 6,
@@ -1141,7 +1141,7 @@
    "line": -1.5,
    "home_score": 27,
    "away_score": 34,
-   "mapped_margin": -2.0,
+   "mapped_margin": -3.0,
    "model_side": "NO",
    "result": "W"
   },
@@ -1154,9 +1154,9 @@
    "line": 7.5,
    "home_score": 26,
    "away_score": 19,
-   "mapped_margin": 6.0,
-   "model_side": "NYJ",
-   "result": "W"
+   "mapped_margin": 10.0,
+   "model_side": "NE",
+   "result": "L"
   },
   {
    "week": 6,
@@ -1167,9 +1167,9 @@
    "line": -2.5,
    "home_score": 19,
    "away_score": 26,
-   "mapped_margin": -2.0,
-   "model_side": "TB",
-   "result": "L"
+   "mapped_margin": -3.0,
+   "model_side": "PIT",
+   "result": "W"
   },
   {
    "week": 6,
@@ -1193,7 +1193,7 @@
    "line": 6.5,
    "home_score": 20,
    "away_score": 26,
-   "mapped_margin": 11.0,
+   "mapped_margin": 7.0,
    "model_side": "IND",
    "result": "L"
   },
@@ -1206,9 +1206,9 @@
    "line": 7.5,
    "home_score": 23,
    "away_score": 17,
-   "mapped_margin": 6.0,
-   "model_side": "WAS",
-   "result": "W"
+   "mapped_margin": 10.0,
+   "model_side": "SF",
+   "result": "L"
   },
   {
    "week": 7,
@@ -1245,9 +1245,9 @@
    "line": -4.5,
    "home_score": 21,
    "away_score": 38,
-   "mapped_margin": -4.0,
-   "model_side": "PHI",
-   "result": "L"
+   "mapped_margin": -5.0,
+   "model_side": "DAL",
+   "result": "W"
   },
   {
    "week": 7,
@@ -1258,9 +1258,9 @@
    "line": -4.5,
    "home_score": 16,
    "away_score": 30,
-   "mapped_margin": -4.0,
-   "model_side": "ARI",
-   "result": "L"
+   "mapped_margin": -5.0,
+   "model_side": "DEN",
+   "result": "W"
   },
   {
    "week": 7,
@@ -1271,7 +1271,7 @@
    "line": 3.5,
    "home_score": 20,
    "away_score": 17,
-   "mapped_margin": 4.0,
+   "mapped_margin": 5.0,
    "model_side": "DET",
    "result": "L"
   },
@@ -1284,9 +1284,9 @@
    "line": 6.5,
    "home_score": 16,
    "away_score": 10,
-   "mapped_margin": 6.0,
-   "model_side": "IND",
-   "result": "W"
+   "mapped_margin": 10.0,
+   "model_side": "MIN",
+   "result": "L"
   },
   {
    "week": 7,
@@ -1297,7 +1297,7 @@
    "line": 3.0,
    "home_score": 20,
    "away_score": 3,
-   "mapped_margin": 4.0,
+   "mapped_margin": 5.0,
    "model_side": "SEA",
    "result": "W"
   },
@@ -1310,7 +1310,7 @@
    "line": -3.5,
    "home_score": 21,
    "away_score": 35,
-   "mapped_margin": -4.0,
+   "mapped_margin": -5.0,
    "model_side": "LAR",
    "result": "W"
   },
@@ -1323,7 +1323,7 @@
    "line": 3.5,
    "home_score": 25,
    "away_score": 28,
-   "mapped_margin": 11.0,
+   "mapped_margin": 7.0,
    "model_side": "NYJ",
    "result": "L"
   },
@@ -1349,9 +1349,9 @@
    "line": 10.0,
    "home_score": 21,
    "away_score": 27,
-   "mapped_margin": 6.0,
-   "model_side": "NYG",
-   "result": "W"
+   "mapped_margin": 10.0,
+   "model_side": "HOU",
+   "result": "L"
   },
   {
    "week": 7,
@@ -1362,7 +1362,7 @@
    "line": -3.0,
    "home_score": 10,
    "away_score": 16,
-   "mapped_margin": -4.0,
+   "mapped_margin": -5.0,
    "model_side": "PIT",
    "result": "W"
   },
@@ -1388,7 +1388,7 @@
    "line": 3.0,
    "home_score": 13,
    "away_score": 43,
-   "mapped_margin": 4.0,
+   "mapped_margin": 5.0,
    "model_side": "CAR",
    "result": "L"
   },
@@ -1401,9 +1401,9 @@
    "line": 7.0,
    "home_score": 30,
    "away_score": 33,
-   "mapped_margin": 6.0,
-   "model_side": "ARI",
-   "result": "W"
+   "mapped_margin": 10.0,
+   "model_side": "DAL",
+   "result": "L"
   },
   {
    "week": 8,
@@ -1466,7 +1466,7 @@
    "line": 3.5,
    "home_score": 27,
    "away_score": 6,
-   "mapped_margin": 11.0,
+   "mapped_margin": 7.0,
    "model_side": "PIT",
    "result": "W"
   },
@@ -1479,9 +1479,9 @@
    "line": 10.0,
    "home_score": 42,
    "away_score": 7,
-   "mapped_margin": 6.0,
-   "model_side": "IND",
-   "result": "L"
+   "mapped_margin": 10.0,
+   "model_side": "JAX",
+   "result": "W"
   },
   {
    "week": 8,
@@ -1505,9 +1505,9 @@
    "line": 6.5,
    "home_score": 24,
    "away_score": 9,
-   "mapped_margin": 6.0,
-   "model_side": "LAC",
-   "result": "L"
+   "mapped_margin": 10.0,
+   "model_side": "LAR",
+   "result": "W"
   },
   {
    "week": 8,
@@ -1544,9 +1544,9 @@
    "line": -7.0,
    "home_score": 19,
    "away_score": 24,
-   "mapped_margin": -6.0,
-   "model_side": "MIA",
-   "result": "W"
+   "mapped_margin": -10.0,
+   "model_side": "NE",
+   "result": "L"
   },
   {
    "week": 8,
@@ -1557,7 +1557,7 @@
    "line": 6.0,
    "home_score": 27,
    "away_score": 10,
-   "mapped_margin": 11.0,
+   "mapped_margin": 7.0,
    "model_side": "WAS",
    "result": "W"
   },
@@ -1570,7 +1570,7 @@
    "line": 13.5,
    "home_score": 43,
    "away_score": 36,
-   "mapped_margin": 6.0,
+   "mapped_margin": 10.0,
    "model_side": "TEN",
    "result": "W"
   },
@@ -1583,9 +1583,9 @@
    "line": 8.5,
    "home_score": 17,
    "away_score": 3,
-   "mapped_margin": 6.0,
-   "model_side": "ARI",
-   "result": "L"
+   "mapped_margin": 10.0,
+   "model_side": "SEA",
+   "result": "W"
   },
   {
    "week": 9,
@@ -1622,7 +1622,7 @@
    "line": 4.5,
    "home_score": 23,
    "away_score": 22,
-   "mapped_margin": 6.0,
+   "mapped_margin": 5.0,
    "model_side": "NO",
    "result": "L"
   },
@@ -1635,7 +1635,7 @@
    "line": -4.5,
    "home_score": 23,
    "away_score": 27,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "DAL",
    "result": "L"
   },
@@ -1661,9 +1661,9 @@
    "line": -6.5,
    "home_score": 9,
    "away_score": 19,
-   "mapped_margin": -6.0,
-   "model_side": "MIA",
-   "result": "L"
+   "mapped_margin": -10.0,
+   "model_side": "DET",
+   "result": "W"
   },
   {
    "week": 9,
@@ -1687,7 +1687,7 @@
    "line": -5.5,
    "home_score": 22,
    "away_score": 44,
-   "mapped_margin": -13.0,
+   "mapped_margin": -7.0,
    "model_side": "HOU",
    "result": "W"
   },
@@ -1700,7 +1700,7 @@
    "line": -8.5,
    "home_score": 10,
    "away_score": 33,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "BAL",
    "result": "L"
   },
@@ -1713,7 +1713,7 @@
    "line": -4.5,
    "home_score": 13,
    "away_score": 20,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "LAR",
    "result": "W"
   },
@@ -1726,9 +1726,9 @@
    "line": 8.5,
    "home_score": 38,
    "away_score": 17,
-   "mapped_margin": 6.0,
-   "model_side": "LV",
-   "result": "L"
+   "mapped_margin": 10.0,
+   "model_side": "SF",
+   "result": "W"
   },
   {
    "week": 9,
@@ -1752,9 +1752,9 @@
    "line": 9.5,
    "home_score": 35,
    "away_score": 12,
-   "mapped_margin": 6.0,
-   "model_side": "NYJ",
-   "result": "L"
+   "mapped_margin": 10.0,
+   "model_side": "KC",
+   "result": "W"
   },
   {
    "week": 9,
@@ -1765,7 +1765,7 @@
    "line": 6.5,
    "home_score": 27,
    "away_score": 24,
-   "mapped_margin": 13.0,
+   "mapped_margin": 7.0,
    "model_side": "CHI",
    "result": "L"
   },
@@ -1778,9 +1778,9 @@
    "line": -8.5,
    "home_score": 12,
    "away_score": 31,
-   "mapped_margin": -13.0,
-   "model_side": "BUF",
-   "result": "W"
+   "mapped_margin": -7.0,
+   "model_side": "NYJ",
+   "result": "L"
   },
   {
    "week": 10,
@@ -1804,7 +1804,7 @@
    "line": -4.5,
    "home_score": 27,
    "away_score": 24,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "HOU",
    "result": "L"
   },
@@ -1817,7 +1817,7 @@
    "line": -10.5,
    "home_score": 23,
    "away_score": 40,
-   "mapped_margin": -7.0,
+   "mapped_margin": -10.0,
    "model_side": "TEN",
    "result": "L"
   },
@@ -1843,7 +1843,7 @@
    "line": 4.5,
    "home_score": 20,
    "away_score": 23,
-   "mapped_margin": 13.0,
+   "mapped_margin": 7.0,
    "model_side": "BAL",
    "result": "L"
   },
@@ -1856,9 +1856,9 @@
    "line": -10.0,
    "home_score": 6,
    "away_score": 34,
-   "mapped_margin": -7.0,
-   "model_side": "ARI",
-   "result": "L"
+   "mapped_margin": -10.0,
+   "model_side": "LAR",
+   "result": "W"
   },
   {
    "week": 10,
@@ -1869,7 +1869,7 @@
    "line": 4.5,
    "home_score": 24,
    "away_score": 22,
-   "mapped_margin": 13.0,
+   "mapped_margin": 7.0,
    "model_side": "IND",
    "result": "L"
   },
@@ -1882,7 +1882,7 @@
    "line": 2.5,
    "home_score": 10,
    "away_score": 30,
-   "mapped_margin": 6.0,
+   "mapped_margin": 5.0,
    "model_side": "GB",
    "result": "L"
   },
@@ -1908,7 +1908,7 @@
    "line": 4.5,
    "home_score": 38,
    "away_score": 18,
-   "mapped_margin": 6.0,
+   "mapped_margin": 5.0,
    "model_side": "CIN",
    "result": "W"
   },
@@ -1921,7 +1921,7 @@
    "line": -6.5,
    "home_score": 13,
    "away_score": 21,
-   "mapped_margin": -13.0,
+   "mapped_margin": -7.0,
    "model_side": "SEA",
    "result": "W"
   },
@@ -1934,7 +1934,7 @@
    "line": -3.5,
    "home_score": 40,
    "away_score": 46,
-   "mapped_margin": -6.0,
+   "mapped_margin": -5.0,
    "model_side": "SF",
    "result": "W"
   },
@@ -1947,7 +1947,7 @@
    "line": 1.5,
    "home_score": 21,
    "away_score": 24,
-   "mapped_margin": 6.0,
+   "mapped_margin": 5.0,
    "model_side": "NYG",
    "result": "L"
   },
@@ -1960,7 +1960,7 @@
    "line": 15.5,
    "home_score": 34,
    "away_score": 7,
-   "mapped_margin": 7.0,
+   "mapped_margin": 10.0,
    "model_side": "ARI",
    "result": "L"
   },
@@ -1986,7 +1986,7 @@
    "line": -6.0,
    "home_score": 22,
    "away_score": 20,
-   "mapped_margin": -10.0,
+   "mapped_margin": -7.0,
    "model_side": "CIN",
    "result": "L"
   },
@@ -1999,7 +1999,7 @@
    "line": 12.5,
    "home_score": 26,
    "away_score": 3,
-   "mapped_margin": 7.0,
+   "mapped_margin": 10.0,
    "model_side": "IND",
    "result": "L"
   },
@@ -2025,7 +2025,7 @@
    "line": 11.5,
    "home_score": 38,
    "away_score": 24,
-   "mapped_margin": 7.0,
+   "mapped_margin": 10.0,
    "model_side": "LV",
    "result": "L"
   },
@@ -2038,7 +2038,7 @@
    "line": 16.5,
    "home_score": 26,
    "away_score": 9,
-   "mapped_margin": 7.0,
+   "mapped_margin": 10.0,
    "model_side": "MIA",
    "result": "L"
   },
@@ -2064,7 +2064,7 @@
    "line": 11.5,
    "home_score": 21,
    "away_score": 13,
-   "mapped_margin": 7.0,
+   "mapped_margin": 10.0,
    "model_side": "NO",
    "result": "W"
   },
@@ -2116,9 +2116,9 @@
    "line": 7.5,
    "home_score": 51,
    "away_score": 30,
-   "mapped_margin": 7.0,
-   "model_side": "TEN",
-   "result": "L"
+   "mapped_margin": 10.0,
+   "model_side": "DAL",
+   "result": "W"
   }
  ]
 }
