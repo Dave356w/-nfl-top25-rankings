@@ -37,8 +37,8 @@ URL = ("https://api.sleeper.com/projections/nfl/{season}/{week}?season_type=regu
 FIRST_SEASON = 2021
 
 
-def weekly_projections(season, week, refresh=False):
-    """Slim Sleeper projection rows for one week, cached once the week is past."""
+def weekly_projections(season, week, refresh=False, cache=True):
+    """Slim Sleeper projection rows for one week; cached only once the week is final."""
     path = CACHE / f"{season}_{week:02d}.json"
     if path.exists() and not refresh:
         return json.loads(path.read_text())
@@ -48,8 +48,9 @@ def weekly_projections(season, week, refresh=False):
         rows = json.loads(response.read())
     slim = [{"team": r.get("team"), "pos": (r.get("player") or {}).get("position"),
              "fp": (r.get("stats") or {}).get("pts_half_ppr")} for r in rows]
-    CACHE.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(slim))
+    if cache:
+        CACHE.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(slim))
     time.sleep(0.4)
     return slim
 
@@ -59,11 +60,12 @@ def team_games(schedule, seasons):
     out = []
     for season in seasons:
         for week in sorted(schedule.loc[schedule.season.eq(season), "week"].unique()):
-            games = schedule[schedule.season.eq(season) & schedule.week.eq(week)
-                             & schedule.home_score.notna()]
+            week_games = schedule[schedule.season.eq(season) & schedule.week.eq(week)]
+            games = week_games[week_games.home_score.notna()]
             if games.empty:
                 continue
-            rows = pd.DataFrame(weekly_projections(season, int(week)))
+            complete = len(games) == len(week_games)
+            rows = pd.DataFrame(weekly_projections(season, int(week), cache=complete))
             if rows.empty:
                 continue
             strength = ats.team_strength(rows.dropna(subset=["team"]))
@@ -121,7 +123,9 @@ def backtest(frame, first_season):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--season", type=int, default=datetime.now(timezone.utc).year)
+    now = datetime.now(timezone.utc)
+    # NFL seasons are named for the year they start; January-February belong to the previous one.
+    parser.add_argument("--season", type=int, default=now.year if now.month >= 3 else now.year - 1)
     parser.add_argument("--refresh", action="store_true", help="refetch cached weeks")
     args = parser.parse_args(argv)
     seasons = list(range(FIRST_SEASON, args.season + 1))

@@ -143,6 +143,30 @@ class PayloadTests(unittest.TestCase):
             self.assertEqual(len(ats.read_ledger(Path(directory) / "ledger.jsonl")), 1)
             self.assertTrue((Path(directory) / "latest.csv").exists())
 
+    def test_a_ledger_game_replaces_its_history_row_in_the_map(self):
+        h = history().assign(game_id=lambda f: [f"h{i}" for i in range(len(f))])
+        # The refit history and the ledger both hold game h0; only one may count.
+        dup = {"game_id": "x", "nflverse_game_id": "h0", "season": 2025, "week": 1,
+               "raw_margin": float(h.raw.iloc[0]), "line": float(h.line.iloc[0]),
+               "model_side_sign": 1}
+        sched = self.sched()
+        sched = pd.concat([sched, pd.DataFrame([dict(game_id="h0", season=2025, week=1,
+                          home_team="X", away_team="Y", game_date=date(2025, 9, 7),
+                          spread_line=0, total_line=0, location="Home",
+                          home_score=99.0, away_score=0.0)])], ignore_index=True)
+        seen = {}
+        original = ats.fit_map
+        def spy(train, season, week):
+            seen["rows"] = len(train)
+            return original(train, season, week)
+        ats.fit_map = spy
+        try:
+            ats.build_payload(self.slate(), sched, MODEL, h, ledger=[dup],
+                              now="2026-11-25T12:00:00Z")
+        finally:
+            ats.fit_map = original
+        self.assertEqual(seen["rows"], len(h))
+
     def test_committed_artifacts_load(self):
         model = ats.load_model()
         self.assertEqual(set(model["coefficients"]), {"const", "off", "opp_def", "home"})

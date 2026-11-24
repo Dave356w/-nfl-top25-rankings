@@ -192,8 +192,8 @@ def load_model(path=MODEL_PATH) -> dict:
 
 
 def load_history(path=HISTORY_PATH) -> pd.DataFrame:
-    history = pd.read_csv(path)
-    return history[["season", "week", "raw", "line", "actual"]]
+    history = pd.read_csv(path, dtype={"game_id": str})
+    return history[["season", "week", "game_id", "raw", "line", "actual"]]
 
 
 def read_ledger(path) -> list[dict]:
@@ -234,10 +234,14 @@ def build_payload(players, schedule, model, history, previous=None, ledger=(),
     ledger = list(ledger)
     graded = _grade_ledger(ledger, schedule)
     forward_history = pd.DataFrame([
-        {"season": r["season"], "week": r["week"], "raw": r["raw_margin"],
-         "line": r["line"], "actual": r["home_margin"]}
+        {"season": r["season"], "week": r["week"], "game_id": str(r.get("nflverse_game_id")),
+         "raw": r["raw_margin"], "line": r["line"], "actual": r["home_margin"]}
         for r in graded if r.get("home_margin") is not None
-    ], columns=["season", "week", "raw", "line", "actual"])
+    ], columns=["season", "week", "game_id", "raw", "line", "actual"])
+    # The weekly refit's history and the ledger can both hold a game; the
+    # ledger's margin is the one this page published, so it wins.
+    if "game_id" in history:
+        history = history[~history["game_id"].astype(str).isin(set(forward_history["game_id"]))]
     train = pd.concat([history, forward_history], ignore_index=True)
 
     rows = {}

@@ -177,7 +177,9 @@ advice**; the page leads with that and with its record.
   the spread alone (50.2%, 2001-2026). Break-even at -110 is 52.4%.
 - A failure in this step leaves only this page stale.
 
-Refresh the model after a week completes:
+The Tuesday workflow (`source_quality.yml`) refits it each week after Monday
+night and commits `model/ats_research/`; a failed refit keeps last week's
+model. To refit by hand:
 
 ```bash
 python tools/build_ats_research_model.py
