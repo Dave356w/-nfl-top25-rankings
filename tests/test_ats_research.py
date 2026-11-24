@@ -61,6 +61,22 @@ class MapTests(unittest.TestCase):
         rule = ats.fit_map(pd.concat([h, late[late.week >= 5]]), 2026, 5)
         self.assertEqual(rule, [6.0, 6.0, 6.0, 6.0])
 
+    def test_band_values_never_decrease(self):
+        # Week-8-2026 shape: the 10+ band's median (6) sat below 7-10's (11).
+        signed = np.array([3.0] * 5 + [5.0] * 5 + [11.0] * 5 + [6.0] * 5)
+        bands = np.repeat(np.arange(4), 5)
+        rule = ats.monotone_band_medians(signed, np.ones(20), bands, 4)
+        self.assertEqual(rule[:2], [3.0, 5.0])
+        self.assertEqual(rule[2], rule[3])
+        self.assertTrue(all(a <= b for a, b in zip(rule, rule[1:])))
+        self.assertGreaterEqual(ats.mapped_margin(13.4, rule), ats.mapped_margin(8.0, rule))
+
+    def test_committed_history_maps_monotonically_every_week(self):
+        h = ats.load_history()
+        for week in range(1, 12):
+            rule = ats.fit_map(h, 2026, week)
+            self.assertTrue(all(a <= b for a, b in zip(rule, rule[1:])), (week, rule))
+
     def test_weighted_median_and_mapped_margin(self):
         self.assertEqual(ats.weighted_median([1, 2, 10], [1, 1, 5]), 10.0)
         self.assertEqual(ats.mapped_margin(-8.0, [3, 5, 8, 10]), -8.0)

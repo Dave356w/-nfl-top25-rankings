@@ -223,7 +223,7 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     <ol>
       <li><b>Team strength</b> from the same projection snapshot as the rankings: starters' projected half-PPR points (QB1, RB1–2, WR1–3, TE1) and the team's DEF projection.</li>
       <li><b>Points model</b>: <span class="mono" id="formula"></span>. <span id="fit-note"></span> The projected margin is home points minus away points.</li>
-      <li><b>Median map</b>, refit before each week from earlier games only (8-week half-life): bands of |margin| under 3, 3–7, 7–10 and 10+, each replaced by the weighted median final margin of the side the projection favoured. Its history is Sleeper-only walk-forward margins from 2021, since only Sleeper has that much history; the replayed weeks below use the same.</li>
+      <li><b>Median map</b>, refit before each week from earlier games only (8-week half-life): bands of |margin| under 3, 3–7, 7–10 and 10+, each replaced by the weighted median final margin of the side the projection favoured; a band's value is never below the band beneath it (thin bands are pooled with their neighbour). Its history is Sleeper-only walk-forward margins from 2021, since only Sleeper has that much history; the replayed weeks below use the same.</li>
       <li><b>Model side</b>: the mapped margin against the nflverse market line; a tie goes to the favourite.</li>
       <li><b>Freezing</b>: each game's row freezes at the last update before kickoff and is graded from nflverse final scores.</li>
     </ol>

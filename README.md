@@ -173,7 +173,8 @@ advice**; the page leads with that and with its record.
   weekly projections from 2021 (`model/ats_research/`).
 - The median map's history and the replayed weeks stay Sleeper-only walk-forward
   margins from 2021: only Sleeper has that much history.
-- Weekly median map (bands 3/7/10, 8-week half-life, earlier games only), then
+- Weekly median map (bands 3/7/10, 8-week half-life, earlier games only; band
+  values never decrease, pooling a band with the one below when needed), then
   the mapped margin against nflverse's `spread_line`.
 - Each game's row freezes at the last publish before kickoff and is appended
   once to `site/data/ats/ledger.jsonl`; graded rows extend the map's history.
