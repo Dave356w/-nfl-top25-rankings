@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-24T23:26:46Z",
-  "snapshot_id": "2026-11-24T23:26:46Z",
+  "generated_utc": "2026-11-24T23:30:02Z",
+  "snapshot_id": "2026-11-24T23:30:02Z",
   "run_date": "2026-11-24",
   "top_n": 50,
   "positions": [
@@ -4797,6 +4797,20 @@
       },
       {
         "rank": 87,
+        "player": "Dylan Laube",
+        "team": "LV",
+        "opponent": "CLE",
+        "fp": 0.41,
+        "salary": 10,
+        "fp_per_salary": 0.041,
+        "role": "reserve",
+        "role_slot": "RB RB",
+        "depth": 4,
+        "kickoff_utc": "2026-11-30 01:20",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
+      },
+      {
+        "rank": 88,
         "player": "Gregory Desrosiers Jr.",
         "team": "NYG",
         "opponent": "IND",
@@ -4810,7 +4824,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 88,
+        "rank": 89,
         "player": "Lew Nichols",
         "team": "PIT",
         "opponent": "DEN",
@@ -4824,7 +4838,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 89,
+        "rank": 90,
         "player": "Evan Hull",
         "team": "ARI",
         "opponent": "WAS",
@@ -4838,7 +4852,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 90,
+        "rank": 91,
         "player": "Tahj Brooks",
         "team": "CIN",
         "opponent": "NO",
@@ -4849,20 +4863,6 @@
         "role_slot": "RB RB",
         "depth": 3,
         "kickoff_utc": "2026-11-29 18:00",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
-      },
-      {
-        "rank": 91,
-        "player": "Trevor Etienne",
-        "team": "CAR",
-        "opponent": "TB",
-        "fp": 0.35,
-        "salary": 10,
-        "fp_per_salary": 0.035,
-        "role": "rotation",
-        "role_slot": "RB RB",
-        "depth": 2,
-        "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
@@ -4895,20 +4895,6 @@
       },
       {
         "rank": 94,
-        "player": "Dylan Laube",
-        "team": "LV",
-        "opponent": "CLE",
-        "fp": 0.31,
-        "salary": 10,
-        "fp_per_salary": 0.031,
-        "role": "reserve",
-        "role_slot": "RB RB",
-        "depth": 4,
-        "kickoff_utc": "2026-11-30 01:20",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
-      },
-      {
-        "rank": 95,
         "player": "Max Bredeson",
         "team": "MIN",
         "opponent": "ATL",
@@ -4919,6 +4905,20 @@
         "role_slot": "RB RB",
         "depth": 4,
         "kickoff_utc": "2026-11-29 18:00",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
+      },
+      {
+        "rank": 95,
+        "player": "Trevor Etienne",
+        "team": "CAR",
+        "opponent": "TB",
+        "fp": 0.22,
+        "salary": 10,
+        "fp_per_salary": 0.022,
+        "role": "rotation",
+        "role_slot": "RB RB",
+        "depth": 2,
+        "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
@@ -9506,7 +9506,7 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)": 453
   },
   "log": [
-    "Yahoo slate: 16 game(s), 643 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-24T23:26:46Z)",
+    "Yahoo slate: 16 game(s), 643 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-24T23:30:02Z)",
     "  Sleeper: 2026 regular week 12 projections; player dump fetched 2026-11-24T01:42:50.603344+00:00.",
     "  ESPN: matched 492 of 497 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 3 -- Mack Hollins (NE) S=3.35 E=6.75, Kyle Williams (NE) S=2.5 E=4.11, Efton Chism III (NE) S=2.7 E=3.91",

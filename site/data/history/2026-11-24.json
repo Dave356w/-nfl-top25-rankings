@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-24T23:26:46Z",
-  "snapshot_id": "2026-11-24T23:26:46Z",
+  "generated_utc": "2026-11-24T23:30:02Z",
+  "snapshot_id": "2026-11-24T23:30:02Z",
   "run_date": "2026-11-24",
   "top_n": 50,
   "positions": [
@@ -3152,7 +3152,7 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)": 453
   },
   "log": [
-    "Yahoo slate: 16 game(s), 643 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-24T23:26:46Z)",
+    "Yahoo slate: 16 game(s), 643 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-24T23:30:02Z)",
     "  Sleeper: 2026 regular week 12 projections; player dump fetched 2026-11-24T01:42:50.603344+00:00.",
     "  ESPN: matched 492 of 497 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 3 -- Mack Hollins (NE) S=3.35 E=6.75, Kyle Williams (NE) S=2.5 E=4.11, Efton Chism III (NE) S=2.7 E=3.91",
