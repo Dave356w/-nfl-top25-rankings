@@ -828,13 +828,21 @@ Snapshots are captured conservatively after feed/role preparation; any captured
 at or after kickoff is excluded from evaluation. Existing daily summaries cannot
 reconstruct missing historical inputs; this archive starts with the new publisher.
 
-Grade forecasts using:
+Build the actuals from nflverse (Yahoo scoring; defenses from play-by-play;
+games are graded once kickoff is 5 hours past), then grade:
 
 ```bash
+python tools/build_actuals.py --output model/actual_results_2026.csv
 python tools/evaluate_projection_archive.py \
-  --actuals actual_results.csv \
+  --actuals model/actual_results_2026.csv \
   --output model/projection_evaluation.json
 ```
+
+The committed `model/actual_results_2026.csv` and
+`model/projection_evaluation.json` cover 2026 weeks 1-11 (163 games, 2,750
+graded player-games). Players without an nflverse weekly stat row (mostly
+inactive) are omitted, not scored as zero, so the graded population leans
+toward players who played.
 
 Actuals require `game_id`, `player_key`, `actual_fp`, `realized_at_utc`. Use the
 archived keys (Yahoo IDs where present); name matching is not guessed. The grader
