@@ -2,17 +2,17 @@ slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_
 QB,C.J. Stroud,QB,HOU,BAL,2026-11-29 18:00,21.0,13.99,33.83,38.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),21.17,21.4,20.42,19.9,good,Pa 260.5 · PaTD 1.5 · INT 0.5 · Ru 11.5 · TD 20%,,,False,ok
 RB,Bijan Robinson,RB,ATL,MIN,2026-11-29 18:00,16.42,9.03,29.79,37.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.83,16.05,16.38,15.01,good,Ru 69.5 · Rec 3.5 · RecYd 22.5 · TD 45%,,,False,ok
 RB,James Cook III,RB,BUF,KC,2026-11-27 01:20,14.84,8.16,26.93,39.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.38,13.55,14.59,14.78,good,Ru 85.5 · Rec 1.5 · RecYd 8 · TD 49%,,,False,ok
-WR,Tee Higgins,WR,CIN,NO,2026-11-29 18:00,14.01,6.76,27.02,36.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.66,13.16,14.2,,partial,RecYd 70.5 · TD 49%,,,False,ok
+WR,Tee Higgins,WR,CIN,NO,2026-11-29 18:00,14.01,6.76,27.02,36.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.66,13.16,14.2,14.24,good,Rec 5.5 · RecYd 70.5 · TD 49%,,,False,ok
 WR,Jameson Williams,WR,DET,CHI,2026-11-26 18:00,10.95,5.29,21.12,26.0,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.73,10.33,10.78,11.04,good,Rec 3.5 · RecYd 57 · TD 33%,,,False,ok
 TE,Brenton Strange,TE,JAC,TEN,2026-11-29 18:00,7.96,3.63,15.7,13.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.27,6.87,8.73,6.97,good,Rec 2.5 · RecYd 31.5 · TD 29%,,,False,ok
 K,Brandon Aubrey,K,DAL,PHI,2026-11-26 21:30,10.02,5.91,17.49,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.1,10.41,10.55,,,,,,False,ok
 DEF,Denver Broncos,DEF,DEN,PIT,2026-11-27 20:00,7.87,3.27,16.02,19.0,1.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.29,6.18,9.13,,,,,,False,ok
 FLEX,Jaylen Warren,RB,PIT,DEN,2026-11-27 20:00,12.99,7.15,23.57,28.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.62,13.4,12.96,13.32,good,Ru 61 · Rec 2.5 · RecYd 17 · TD 34%,,,False,ok
 BENCH,Dak Prescott,QB,DAL,PHI,2026-11-26 21:30,20.57,13.7,33.13,40.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),20.65,19.52,21.55,21.7,good,Pa 261.5 · PaTD 2.5 · INT 0.5 · Ru 9 · TD 19%,,,False,ok
-BENCH,Emmett Johnson,RB,KC,BUF,2026-11-27 01:20,9.78,5.38,17.74,28.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.62,6.53,17.19,17.68,td-estimate,TD 58%,,,False,ok
+BENCH,Emmett Johnson,RB,KC,BUF,2026-11-27 01:20,9.78,5.38,17.74,28.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.62,6.53,17.19,17.55,td-estimate,TD 58%,,,False,ok
 BENCH,Jaylen Waddle,WR,DEN,PIT,2026-11-27 20:00,8.24,4.35,15.27,18.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.07,8.13,7.51,9.12,good,Rec 3.5 · RecYd 44.5 · TD 23%,,,False,ok
 BENCH,Cairo Santos,K,CHI,DET,2026-11-26 18:00,8.2,4.84,14.31,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.52,8.86,7.23,,,,,,False,ok
 BENCH,Los Angeles Rams,DEF,LA,GB,2026-11-26 01:00,7.31,3.04,14.88,17.0,1.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.49,7.69,6.75,,,,,,False,ok
-BENCH,Mike Gesicki,TE,CIN,NO,2026-11-29 18:00,7.0,3.19,13.81,15.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.04,6.36,7.59,10.54,td-estimate,TD 36%,,,False,ok
+BENCH,Mike Gesicki,TE,CIN,NO,2026-11-29 18:00,7.0,3.19,13.81,15.0,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.04,6.36,7.59,7.27,good,Rec 2.5 · RecYd 29.5 · TD 36%,,,False,ok
 BENCH,Keenan Allen,WR,SF,SEA,2026-11-29 21:25,5.43,1.79,11.72,16.0,3.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.01,5.5,5.78,6.02,good,Rec 2.5 · RecYd 27.5 · TD 22%,,,False,depth 3
 BENCH,Terrance Ferguson,TE,LA,GB,2026-11-26 01:00,0.0,,,,6.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,0.0,,,,,IR,not projected this week,False,no weekly projection/bye; injury IR; depth 6

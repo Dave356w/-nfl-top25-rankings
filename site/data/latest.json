@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-24T20:31:42Z",
-  "snapshot_id": "2026-11-24T20:31:42Z",
+  "generated_utc": "2026-11-24T20:50:54Z",
+  "snapshot_id": "2026-11-24T20:50:54Z",
   "run_date": "2026-11-24",
   "top_n": 50,
   "positions": [
@@ -4797,20 +4797,6 @@
       },
       {
         "rank": 87,
-        "player": "Ameer Abdullah",
-        "team": "JAX",
-        "opponent": "TEN",
-        "fp": 0.43,
-        "salary": 10,
-        "fp_per_salary": 0.043,
-        "role": "backup",
-        "role_slot": "RB RB",
-        "depth": 3,
-        "kickoff_utc": "2026-11-29 18:00",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
-      },
-      {
-        "rank": 88,
         "player": "Dylan Laube",
         "team": "LV",
         "opponent": "CLE",
@@ -4824,7 +4810,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 89,
+        "rank": 88,
         "player": "Gregory Desrosiers Jr.",
         "team": "NYG",
         "opponent": "IND",
@@ -4838,7 +4824,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 90,
+        "rank": 89,
         "player": "Evan Hull",
         "team": "ARI",
         "opponent": "WAS",
@@ -4852,7 +4838,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 91,
+        "rank": 90,
         "player": "Lew Nichols",
         "team": "PIT",
         "opponent": "DEN",
@@ -4866,7 +4852,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 92,
+        "rank": 91,
         "player": "Tahj Brooks",
         "team": "CIN",
         "opponent": "NO",
@@ -4880,7 +4866,35 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
+        "rank": 92,
+        "player": "Trevor Etienne",
+        "team": "CAR",
+        "opponent": "TB",
+        "fp": 0.35,
+        "salary": 10,
+        "fp_per_salary": 0.035,
+        "role": "rotation",
+        "role_slot": "RB RB",
+        "depth": 2,
+        "kickoff_utc": "2026-12-01 01:15",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
+      },
+      {
         "rank": 93,
+        "player": "Nicholas Singleton",
+        "team": "TEN",
+        "opponent": "JAX",
+        "fp": 0.34,
+        "salary": 10,
+        "fp_per_salary": 0.034,
+        "role": "backup",
+        "role_slot": "RB RB",
+        "depth": 3,
+        "kickoff_utc": "2026-11-29 18:00",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
+      },
+      {
+        "rank": 94,
         "player": "Kene Nwangwu",
         "team": "NYJ",
         "opponent": "MIA",
@@ -4894,7 +4908,21 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 94,
+        "rank": 95,
+        "player": "Ameer Abdullah",
+        "team": "JAX",
+        "opponent": "TEN",
+        "fp": 0.31,
+        "salary": 10,
+        "fp_per_salary": 0.031,
+        "role": "backup",
+        "role_slot": "RB RB",
+        "depth": 3,
+        "kickoff_utc": "2026-11-29 18:00",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
+      },
+      {
+        "rank": 96,
         "player": "Max Bredeson",
         "team": "MIN",
         "opponent": "ATL",
@@ -4905,34 +4933,6 @@
         "role_slot": "RB RB",
         "depth": 4,
         "kickoff_utc": "2026-11-29 18:00",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
-      },
-      {
-        "rank": 95,
-        "player": "Nicholas Singleton",
-        "team": "TEN",
-        "opponent": "JAX",
-        "fp": 0.22,
-        "salary": 10,
-        "fp_per_salary": 0.022,
-        "role": "backup",
-        "role_slot": "RB RB",
-        "depth": 3,
-        "kickoff_utc": "2026-11-29 18:00",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
-      },
-      {
-        "rank": 96,
-        "player": "Trevor Etienne",
-        "team": "CAR",
-        "opponent": "TB",
-        "fp": 0.22,
-        "salary": 10,
-        "fp_per_salary": 0.022,
-        "role": "rotation",
-        "role_slot": "RB RB",
-        "depth": 2,
-        "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
@@ -8497,6 +8497,20 @@
       },
       {
         "rank": 71,
+        "player": "Eli Stowers",
+        "team": "PHI",
+        "opponent": "DAL",
+        "fp": 1.14,
+        "salary": 10,
+        "fp_per_salary": 0.114,
+        "role": "rotation",
+        "role_slot": "TE TE",
+        "depth": 2,
+        "kickoff_utc": "2026-11-26 21:30",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
+      },
+      {
+        "rank": 72,
         "player": "Marlin Klein",
         "team": "HOU",
         "opponent": "BAL",
@@ -8510,7 +8524,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 72,
+        "rank": 73,
         "player": "Jonnu Smith",
         "team": "GB",
         "opponent": "LAR",
@@ -8524,7 +8538,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 73,
+        "rank": 74,
         "player": "Oscar Delp",
         "team": "NO",
         "opponent": "CIN",
@@ -8535,20 +8549,6 @@
         "role_slot": "TE TE",
         "depth": 3,
         "kickoff_utc": "2026-11-29 18:00",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
-      },
-      {
-        "rank": 74,
-        "player": "Eli Stowers",
-        "team": "PHI",
-        "opponent": "DAL",
-        "fp": 1.02,
-        "salary": 10,
-        "fp_per_salary": 0.102,
-        "role": "rotation",
-        "role_slot": "TE TE",
-        "depth": 2,
-        "kickoff_utc": "2026-11-26 21:30",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
@@ -8763,6 +8763,20 @@
       },
       {
         "rank": 90,
+        "player": "Grant Calcaterra",
+        "team": "PHI",
+        "opponent": "DAL",
+        "fp": 0.6,
+        "salary": 10,
+        "fp_per_salary": 0.06,
+        "role": "backup",
+        "role_slot": "TE TE",
+        "depth": 3,
+        "kickoff_utc": "2026-11-26 21:30",
+        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
+      },
+      {
+        "rank": 91,
         "player": "Cade Stover",
         "team": "HOU",
         "opponent": "BAL",
@@ -8776,7 +8790,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 91,
+        "rank": 92,
         "player": "Johnny Mundt",
         "team": "PHI",
         "opponent": "DAL",
@@ -8790,7 +8804,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 92,
+        "rank": 93,
         "player": "Payne Durham",
         "team": "TB",
         "opponent": "CAR",
@@ -8804,7 +8818,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
-        "rank": 93,
+        "rank": 94,
         "player": "Brevin Jordan",
         "team": "HOU",
         "opponent": "BAL",
@@ -8815,20 +8829,6 @@
         "role_slot": "TE TE",
         "depth": 5,
         "kickoff_utc": "2026-11-29 18:00",
-        "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
-      },
-      {
-        "rank": 94,
-        "player": "Grant Calcaterra",
-        "team": "PHI",
-        "opponent": "DAL",
-        "fp": 0.48,
-        "salary": 10,
-        "fp_per_salary": 0.048,
-        "role": "backup",
-        "role_slot": "TE TE",
-        "depth": 3,
-        "kickoff_utc": "2026-11-26 21:30",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)"
       },
       {
@@ -9534,14 +9534,14 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)": 455
   },
   "log": [
-    "Yahoo slate: 16 game(s), 643 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-24T20:31:42Z)",
+    "Yahoo slate: 16 game(s), 643 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-24T20:50:54Z)",
     "  Sleeper: 2026 regular week 12 projections; player dump fetched 2026-11-24T01:42:50.603344+00:00.",
     "  ESPN: matched 493 of 498 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 3 -- Mack Hollins (NE) S=3.32 E=6.75, Kyle Williams (NE) S=2.47 E=4.11, Efton Chism III (NE) S=2.67 E=3.91",
     "    ESPN: out: 4 -- Tyler Badie (DEN) S=2.27 E=0.0, Andrei Iosivas (CIN) S=4.04 E=3.64, Jonathon Brooks (CAR) S=4.34 E=3.77, Raheim Sanders (CLE) S=1.05 E=0.0",
     "    ESPN only: 6 -- J. Michael Sturdivant (GB) S=nan E=2.12, Jameis Winston (NYG) S=nan E=1.67, Will Mallory (IND) S=nan E=1.0, Ryan Izzo () S=nan E=0.88, Brevin Jordan (HOU) S=nan E=0.5, LaJohntay Wester (BAL) S=nan E=0.1",
     "    sources disagree: 12 -- Jacory Croskey-Merritt (WAS) S=6.44 E=10.77, Austin Ekeler (WAS) S=3.98 E=8.02, Jauan Jennings (MIN) S=3.79 E=6.94, Darius Cooper (PHI) S=2.52 E=7.09, Marvin Harrison Jr. (HOU) S=2.89 E=5.97, Baltimore Ravens (BAL) S=5.57 E=2.99, Rachaad White (WAS) S=7.02 E=1.46, Elijah Higgins (ARI) S=5.68 E=2.7, Jaylen Wright (MIA) S=2.3 E=5.51, Harrison Wallace III (ARI) S=1.72 E=6.09, Darnell Mooney (NYG) S=2.48 E=5.28, Noah Fant (NO) S=5.1 E=2.41",
-    "  Three-source mean: 492 projected players (354 on all three, 120 on two, 18 on one). CBS review: 19 flagged player(s), 15 found on CBS; CBS scaled to Sleeper DEF x0.74, K x0.95, QB x0.87, RB x1.02, TE x0.95, WR x0.96.",
+    "  Three-source mean: 492 projected players (355 on all three, 119 on two, 18 on one). CBS review: 19 flagged player(s), 15 found on CBS; CBS scaled to Sleeper DEF x0.74, K x0.95, QB x0.87, RB x1.02, TE x0.95, WR x0.96.",
     "    Jacory Croskey-Merritt (WAS RB): S=6.44 E=10.77 C=9.74 -> 8.98 [CBS sides with ESPN]",
     "    Mack Hollins (NE WR): S=3.32 E=6.75 C=6.06 -> 6.4 [CBS confirms the promotion]",
     "    Austin Ekeler (WAS RB): S=3.98 E=8.02 C=4.54 -> 5.51 [CBS sides with Sleeper]",
