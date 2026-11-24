@@ -51,14 +51,14 @@ class MapTests(unittest.TestCase):
                          [0, 1, 1, 2, 2, 3])
 
     def test_rule_needs_two_seasons_and_thirty_per_band(self):
-        self.assertIsNone(ats.fit_map(history(seasons=(2025,)), 2026, 1))
-        self.assertIsNone(ats.fit_map(history(per_week=1), 2026, 1))
-        self.assertEqual(ats.fit_map(history(), 2026, 1), [6.0, 6.0, 6.0, 6.0])
+        self.assertIsNone(ats.fit_weekly_map(history(seasons=(2025,)), 2026, 1))
+        self.assertIsNone(ats.fit_weekly_map(history(per_week=1), 2026, 1))
+        self.assertEqual(ats.fit_weekly_map(history(), 2026, 1), [6.0, 6.0, 6.0, 6.0])
 
     def test_rule_uses_only_earlier_weeks(self):
         h = history()
         late = h.assign(season=2026, actual=np.sign(h.raw) * 40)
-        rule = ats.fit_map(pd.concat([h, late[late.week >= 5]]), 2026, 5)
+        rule = ats.fit_weekly_map(pd.concat([h, late[late.week >= 5]]), 2026, 5)
         self.assertEqual(rule, [6.0, 6.0, 6.0, 6.0])
 
     def test_band_values_never_decrease(self):
@@ -74,7 +74,7 @@ class MapTests(unittest.TestCase):
     def test_committed_history_maps_monotonically_every_week(self):
         h = ats.load_history()
         for week in range(1, 12):
-            rule = ats.fit_map(h, 2026, week)
+            rule = ats.fit_weekly_map(h, 2026, week)
             self.assertTrue(all(a <= b for a, b in zip(rule, rule[1:])), (week, rule))
 
     def test_weighted_median_and_mapped_margin(self):
@@ -113,7 +113,7 @@ class PayloadTests(unittest.TestCase):
         det = next(g for g in payload["games"] if g["home"] == "DET")
         self.assertAlmostEqual(det["home_points"], round(24 + .17 * 60 - 2 * 6 + .86, 1))
         self.assertEqual(det["line"], -2.5)
-        self.assertEqual(det["mapped_margin"], 6.0)
+        self.assertEqual(det["mapped_margin"], 5.0)   # raw 5.7: the 3-7 band
         self.assertEqual(det["model_side"], "DET")
         self.assertFalse(det["locked"])
         self.assertEqual(new, [])
@@ -143,10 +143,13 @@ class PayloadTests(unittest.TestCase):
         self.assertEqual([g["home"] for g in payload["games"]], ["BUF"])
         self.assertEqual(new, [])
 
-    def test_no_rule_means_no_side(self):
+    def test_page_map_is_fixed_whatever_the_history(self):
+        self.assertEqual(ats.fit_map(), [3.0, 5.0, 7.0, 10.0])
+        self.assertEqual(ats.fit_map(history(value=40.0), 2026, 9), [3.0, 5.0, 7.0, 10.0])
         payload, _ = ats.build_payload(self.slate(), self.sched(), MODEL, history(seasons=(2025,)),
                                        now="2026-11-25T12:00:00Z")
-        self.assertTrue(all(g["model_side"] is None for g in payload["games"]))
+        self.assertEqual(payload["method"]["map"]["type"], "fixed")
+        self.assertTrue(all(g["model_side"] for g in payload["games"]))
 
     def test_outputs_append_the_ledger(self):
         first, _ = ats.build_payload(self.slate(), self.sched(), MODEL, history(),

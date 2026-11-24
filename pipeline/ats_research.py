@@ -14,12 +14,12 @@ Steps, all from the shared projection snapshot:
    2021+ Sleeper weekly projections and nflverse scores):
    points = const + b_off * offense + b_def * opponent DEF + b_home * home.
    The raw margin is home points minus away points (+ = home favoured).
-3. Weekly median map: bands of |raw| (<3, 3-7, 7-10, 10+); each band's value
-   is the weighted median final margin of the side the raw margin favoured,
-   over earlier games only, with an 8-week half-life (19 weeks per season
-   boundary). Band values never decrease with the band: a band whose median
-   falls below the one beneath is pooled with it. Mapped margin =
-   sign(raw) * band value.
+3. Fixed median map: bands of |raw| (<3, 3-7, 7-10, 10+) map to 3, 5, 7 and
+   10 points, the key margins. Mapped margin = sign(raw) * band value. It
+   was chosen over a weekly-refit map (2026-11-24): the refit moved most
+   weeks without covering more often (2023-2026 and 2001-2026 replays), and
+   a fixed rule cannot produce out-of-order bands. fit_weekly_map keeps the
+   refit for research.
 4. Model side: mapped margin vs the nflverse market line; zero edge goes to
    the favourite.
 5. A game's row freezes at the last publish before its kickoff. Frozen rows
@@ -49,7 +49,8 @@ SCHEMA = 1
 TAKE = {"QB": 1, "RB": 2, "WR": 3, "TE": 1}
 BANDS = (3.0, 7.0, 10.0)
 BAND_LABELS = ("under 3", "3 to 7", "7 to 10", "10 or more")
-MAP_HALF_LIFE_WEEKS = 8
+FIXED_RULE = (3.0, 5.0, 7.0, 10.0)
+MAP_HALF_LIFE_WEEKS = 8          # research only: fit_weekly_map
 WEEKS_PER_SEASON = 19
 MIN_SEASONS = 2
 MIN_GAMES = 300
@@ -107,8 +108,13 @@ def weighted_median(values, weights) -> float:
     return float(values[np.searchsorted(cumulative, cumulative[-1] / 2)])
 
 
-def fit_map(history: pd.DataFrame, season: int, week: int):
-    """Band values from games strictly before (season, week); None if too thin.
+def fit_map(history=None, season=None, week=None):
+    """The page's map: the fixed 3/5/7/10 rule, whatever the history."""
+    return list(FIXED_RULE)
+
+
+def fit_weekly_map(history: pd.DataFrame, season: int, week: int):
+    """Research: band values from games strictly before (season, week); None if too thin.
 
     `history` needs season, week, raw and actual (home margin)."""
     prior = history[(history.season < season)
@@ -351,9 +357,7 @@ def build_payload(players, schedule, model, history, previous=None, ledger=(),
             "team_strength": "starters' projected half-PPR points: QB1, RB1-2, WR1-3, TE1; DEF projection",
             "points_model": coef, "points_model_fit": model.get("fit"),
             "map": {"bands": list(BANDS), "band_labels": list(BAND_LABELS),
-                    "half_life_weeks": MAP_HALF_LIFE_WEEKS,
-                    "minimum": {"seasons": MIN_SEASONS, "games": MIN_GAMES, "per_band": MIN_PER_BAND},
-                    "rule": rule},
+                    "type": "fixed", "rule": rule},
             "line_source": "nflverse schedules spread_line (open data); no capture time from source",
             "lock": "a game's row freezes at the last publish before kickoff",
         },

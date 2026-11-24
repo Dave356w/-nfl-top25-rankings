@@ -173,11 +173,13 @@ advice**; the page leads with that and with its record.
   weekly projections from 2021 (`model/ats_research/`).
 - The median map's history and the replayed weeks stay Sleeper-only walk-forward
   margins from 2021: only Sleeper has that much history.
-- Weekly median map (bands 3/7/10, 8-week half-life, earlier games only; band
-  values never decrease, pooling a band with the one below when needed), then
-  the mapped margin against nflverse's `spread_line`.
+- Fixed map: projected margins under 3, 3-7, 7-10 and 10+ map to 3, 5, 7 and
+  10 (keeping the favourite), then the mapped margin is compared with
+  nflverse's `spread_line`. It replaced a weekly-refit median map, which
+  moved most weeks without covering more often; `fit_weekly_map` keeps that
+  refit for research.
 - Each game's row freezes at the last publish before kickoff and is appended
-  once to `site/data/ats/ledger.jsonl`; graded rows extend the map's history.
+  once to `site/data/ats/ledger.jsonl` and graded from nflverse final scores.
 - The page shows backtests for last season and this one only (projection +
   map 51.4% over 2025-2026), plus one line with the map's long-run record on
   the spread alone (50.2%, 2001-2026). Break-even at -110 is 52.4%.
