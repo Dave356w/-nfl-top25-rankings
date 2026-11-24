@@ -215,6 +215,15 @@ class BuildRosterTests(unittest.TestCase):
         wide = lo.CALIBRATED_CV["WR"][3]
         self.assertGreater(wide, waddle["Projection_CV"])
 
+    def test_lineup_band_uses_the_calibrated_cv_every_other_view_uses(self):
+        from pipeline import notebook as nb
+        self.assertIs(lo.CALIBRATED_CV, nb.CALIBRATED_CV)
+        exported = json.loads((Path(__file__).resolve().parents[1]
+                               / "site/data/depth_model.json").read_text())["cv"]
+        for position, buckets in lo.CALIBRATED_CV.items():
+            for depth, cv in buckets.items():
+                self.assertAlmostEqual(exported[position][str(depth)], cv, 12)
+
     def test_the_injury_status_reaches_the_review_column(self):
         row = self.roster.loc["Tee Higgins"]
         self.assertEqual(row["report_status"], "Out")

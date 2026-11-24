@@ -71,13 +71,11 @@ YAHOO_URL = "https://dfyql-ro.sports.yahoo.com/v2/external/playersFeed/nfl"
 KICKER_CV = 0.60
 SLEEPER_CACHE_DIR = "sleeper_cache"
 
-CALIBRATED_CV = {
-    "QB": {1: .488, 2: .922, 3: .922, 4: .922},
-    "RB": {1: .676, 2: .921, 3: 1.154, 4: 1.207},
-    "WR": {1: .695, 2: .814, 3: 1.042, 4: 1.323},
-    "TE": {1: .885, 2: 1.324, 3: 1.658, 4: 1.658},
-    "DEF": {1: .950, 2: .950, 3: .950, 4: .950},
-}
+# The same calibrated CV table the simulator, the projection archive and the
+# in-browser depth editor (site/data/depth_model.json) use. A private copy of the
+# pre-calibration values used to live here, so the lineup page's floor and
+# ceiling disagreed with every other view for backup roles.
+from pipeline.notebook import CALIBRATED_CV  # noqa: E402
 TEAM_MAP = {"JAX": "JAC", "LAR": "LA", "STL": "LA", "WSH": "WAS", "OAK": "LV", "SD": "LAC"}
 
 
