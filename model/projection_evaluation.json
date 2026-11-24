@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "selection": "latest captured before kickoff; unique game/player",
+  "excluded_snapshots": [
+    "2026-11-23T19:06:57Z"
+  ],
+  "rejected_postkickoff_or_manual": 23362,
+  "unmatched_predictions": 2360,
+  "overall": {
+    "n": 2750,
+    "mae": 4.071843145848058,
+    "rmse": 5.595161508227355,
+    "bias": -0.016264732839726827,
+    "below_p25": 0.32545454545454544,
+    "below_p90": 0.8632727272727273,
+    "zero_or_negative_rate": 0.15454545454545454,
+    "baseline_n": 2197,
+    "baseline_mae": 4.021936876518945,
+    "paired_model_mae": 4.017436926873463
+  },
+  "by_position": {
+    "DEF": {
+      "n": 326,
+      "mae": 4.027799403654044,
+      "rmse": 5.122566816216539,
+      "bias": 0.42690613846474035,
+      "below_p25": 0.26993865030674846,
+      "below_p90": 0.9141104294478528,
+      "zero_or_negative_rate": 0.10429447852760736,
+      "baseline_n": 264,
+      "baseline_mae": 3.9414852472089317,
+      "paired_model_mae": 3.9414852472089317
+    },
+    "QB": {
+      "n": 289,
+      "mae": 5.866030208047483,
+      "rmse": 7.301513637437516,
+      "bias": 0.0024544494970014535,
+      "below_p25": 0.2179930795847751,
+      "below_p90": 0.916955017301038,
+      "zero_or_negative_rate": 0.006920415224913495,
+      "baseline_n": 237,
+      "baseline_mae": 5.686507783529872,
+      "paired_model_mae": 5.672447257383967
+    },
+    "RB": {
+      "n": 614,
+      "mae": 4.215012761779418,
+      "rmse": 5.864490297584146,
+      "bias": 0.040548366348375275,
+      "below_p25": 0.3469055374592834,
+      "below_p90": 0.8631921824104235,
+      "zero_or_negative_rate": 0.13355048859934854,
+      "baseline_n": 484,
+      "baseline_mae": 4.236265428226519,
+      "paired_model_mae": 4.235819372601175
+    },
+    "TE": {
+      "n": 571,
+      "mae": 3.204994025599964,
+      "rmse": 4.509032989449382,
+      "bias": -0.2962233261543551,
+      "below_p25": 0.3204903677758319,
+      "below_p90": 0.8178633975481612,
+      "zero_or_negative_rate": 0.1978984238178634,
+      "baseline_n": 458,
+      "baseline_mae": 3.2059143057382724,
+      "paired_model_mae": 3.1959897028509796
+    },
+    "WR": {
+      "n": 950,
+      "mae": 3.969635674752713,
+      "rmse": 5.563349983715989,
+      "bias": -0.04248624216542445,
+      "below_p25": 0.3663157894736842,
+      "below_p90": 0.8568421052631578,
+      "zero_or_negative_rate": 0.20421052631578948,
+      "baseline_n": 754,
+      "baseline_mae": 3.884986271170584,
+      "paired_model_mae": 3.8826087040227115
+    }
+  },
+  "limitations": [
+    "Empirical evaluation of archived forecasts; does not refit weights.",
+    "Nominal below-P25/P90 rates are 25%/90%; discrete scores can produce ties."
+  ]
+}
