@@ -145,6 +145,13 @@ tbody tr.out{opacity:.62}
 .mono{font-family:var(--mono); font-size:13px}
 #games td, #backtest td, #rule-row td{white-space:nowrap}
 h2{flex-wrap:wrap}
+details.week{margin-bottom:8px}
+details.week summary{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; font-weight:600; color:var(--ink)}
+details.week summary .note{font-weight:500; color:var(--ink-3); font-size:13px}
+details.week[open] summary{border-bottom:1px solid var(--line)}
+.pill.replay{background:var(--mute-soft); color:var(--ink-2)}
+.pill.forward{background:var(--accent-soft); color:var(--accent-ink)}
+#season-weeks td{white-space:nowrap}
 .method{padding:14px 18px; font-size:14px; color:var(--ink-2)}
 .method ol{margin:6px 0 0 18px; padding:0}
 .method li{margin:4px 0}
@@ -207,12 +214,16 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
   </div></div>
   <p class="muted" id="backtest-note" style="font-size:13px"></p>
 
+  <h2 id="season-head">Season, week by week <span class="note">replay weeks are walk-forward reconstructions; live weeks are the rows frozen before kickoff</span></h2>
+  <section class="stats" id="season-stats" hidden></section>
+  <div id="season-weeks"><p class="muted">Loading…</p></div>
+
   <h2>Method</h2>
   <div class="card method">
     <ol>
       <li><b>Team strength</b> from the same projection snapshot as the rankings: starters' projected half-PPR points (QB1, RB1–2, WR1–3, TE1) and the team's DEF projection.</li>
-      <li><b>Points model</b>, fitted on 2021 onward: <span class="mono" id="formula"></span>. The projected margin is home points minus away points.</li>
-      <li><b>Median map</b>, refit before each week from earlier games only (8-week half-life): bands of |margin| under 3, 3–7, 7–10 and 10+, each replaced by the weighted median final margin of the side the projection favoured.</li>
+      <li><b>Points model</b>: <span class="mono" id="formula"></span>. <span id="fit-note"></span> The projected margin is home points minus away points.</li>
+      <li><b>Median map</b>, refit before each week from earlier games only (8-week half-life): bands of |margin| under 3, 3–7, 7–10 and 10+, each replaced by the weighted median final margin of the side the projection favoured. Its history is Sleeper-only walk-forward margins from 2021, since only Sleeper has that much history; the replayed weeks below use the same.</li>
       <li><b>Model side</b>: the mapped margin against the nflverse market line; a tie goes to the favourite.</li>
       <li><b>Freezing</b>: each game's row freezes at the last update before kickoff and is graded from nflverse final scores.</li>
     </ol>
@@ -281,6 +292,43 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     el("games").innerHTML = '<tr><td colspan="9" class="muted">Nothing to show.</td></tr>';
   });
 
+  function score(g) {
+    if (!num(g.home_score) || !num(g.away_score)) return "—";
+    return g.away + " " + g.away_score + " – " + g.home + " " + g.home_score;
+  }
+  function resultPill(r) {
+    return r ? '<span class="pill ' + r + '">' + {W: "Covered", L: "Missed", P: "Push"}[r] + "</span>"
+      : '<span class="pill">Pending</span>';
+  }
+  function renderSeason(d) {
+    var weeks = d.season_results || [], sr = d.season_record;
+    el("season-head").firstChild.textContent = d.season + " season, week by week ";
+    if (sr) {
+      var cards = [
+        [d.season + " season", sr.wins + sr.losses ? pct(sr.cover_rate) : "—", rec(sr) + " across every week below"],
+        ["Break-even at −110", "52.4%", "needed just to not lose"]
+      ];
+      el("season-stats").innerHTML = cards.map(function (c) {
+        return '<div class="stat"><div class="k">' + esc(c[0]) + '</div><div class="v">' + esc(c[1]) +
+          '</div><div class="n">' + esc(c[2]) + "</div></div>";
+      }).join("");
+      el("season-stats").hidden = false;
+    }
+    el("season-weeks").innerHTML = weeks.length ? weeks.map(function (w, i) {
+      var rows = w.games.map(function (g) {
+        return "<tr><td><b>" + esc(g.away + " @ " + g.home) + "</b></td><td>" + esc(favText(g.raw_margin, g)) +
+          "</td><td>" + esc(lineText(g)) + '</td><td class="num">' + (num(g.mapped_margin) ? esc(favText(g.mapped_margin, g)) : "—") +
+          "</td><td><b>" + esc(sideText(g)) + '</b></td><td class="num">' + esc(score(g)) + "</td><td>" + resultPill(g.result) + "</td></tr>";
+      }).join("");
+      var r = w.record;
+      return '<details class="card week"' + (i === 0 ? " open" : "") + "><summary>Week " + w.week +
+        ' <span class="pill ' + w.source + '">' + (w.source === "forward" ? "live" : "replay") + "</span>" +
+        ' <span class="note">' + esc(rec(r)) + (r.wins + r.losses ? " · cover " + pct(r.cover_rate) : "") + "</span></summary>" +
+        '<div class="scroll"><table><thead><tr><th>Game</th><th>Projection</th><th>Line</th><th class="num">Mapped</th>' +
+        '<th>Model side</th><th class="num">Final</th><th>Result</th></tr></thead><tbody>' + rows + "</tbody></table></div></details>";
+    }).join("") : '<p class="muted">No games this season yet.</p>';
+  }
+
   function render(d) {
     el("notice").innerHTML = "<b>Experimental model research.</b> " + esc(d.disclaimer.replace(/^Experimental model research\.\s*/, ""));
     el("csv").hidden = false;
@@ -320,7 +368,12 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
 
     var c = (d.method || {}).points_model || {};
     if (num(c.const)) el("formula").textContent = "points = " + c.const.toFixed(2) + " + " + c.off.toFixed(3) +
-      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP + " + c.home.toFixed(2) + " (home)";
+      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP " + (c.home < 0 ? "− " : "+ ") +
+      Math.abs(c.home).toFixed(2) + " (home)";
+    var fit = (d.method || {}).points_model_fit;
+    if (fit) el("fit-note").textContent = "Fitted on " + fit.team_games + " team-games (" +
+      (fit.seasons[0] === fit.seasons[1] ? fit.seasons[0] : fit.seasons[0] + "–" + fit.seasons[1]) +
+      " through week " + fit.through_week + "): " + fit.source + ".";
 
     var ps = (bt.projection_map || {}).seasons || {}, cs = (bt.spread_map_control || {}).seasons || {};
     var seasons = Object.keys(cs).concat(Object.keys(ps)).filter(function (s, i, a) { return a.indexOf(s) === i; })
@@ -330,6 +383,7 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
       return "<tr><td>" + s + '</td><td class="num">' + (p ? rec(p) : '<span class="muted">—</span>') + '</td><td class="num">' + (p ? pct(p.cover_rate) : "") +
         '</td><td class="num">' + (q ? rec(q) : "—") + '</td><td class="num">' + (q ? pct(q.cover_rate) : "") + "</td></tr>";
     }).join("");
+    renderSeason(d);
     el("backtest-note").textContent = (bt.note || "") + (lr ? " Over " + lr.first_season + "–" + lr.last_season +
       " the map applied to the spread alone covered " + pct(lr.cover_rate) + " (" + rec(lr) + "), so short runs like these are mostly noise." : "");
   }

@@ -308,6 +308,7 @@ def _publish_ats_research(built: dict, directory: Path) -> None:
             ledger=ledger,
             now=built["generated_at"],
             snapshot_id=built["snapshot_id"],
+            replay=ats_research.load_replay(),
         )
         ats_research.write_outputs(payload, new_rows, directory)
         print(f"ATS research page: {len(payload['games'])} game(s), "

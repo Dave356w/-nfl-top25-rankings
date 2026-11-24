@@ -166,8 +166,13 @@ advice**; the page leads with that and with its record.
 - Team strength: starters' projected points (QB1, RB1-2, WR1-3, TE1) and the
   DEF projection, from the same snapshot as every other page.
 - Points model: `points = const + b*offense - c*opponent DEF + d*home`, fitted
-  by `tools/build_ats_research_model.py` on Sleeper weekly projections and
-  nflverse scores from 2021 (`model/ats_research/`).
+  by `tools/build_ats_research_model.py` on this season's completed weeks of the
+  site's own blend (each player the mean of Sleeper, ESPN and CBS, CBS rescaled
+  as the site does) and nflverse scores, so it is fitted on the same inputs the
+  page applies it to. Until 100 blend games exist it falls back to Sleeper
+  weekly projections from 2021 (`model/ats_research/`).
+- The median map's history and the replayed weeks stay Sleeper-only walk-forward
+  margins from 2021: only Sleeper has that much history.
 - Weekly median map (bands 3/7/10, 8-week half-life, earlier games only), then
   the mapped margin against nflverse's `spread_line`.
 - Each game's row freezes at the last publish before kickoff and is appended
@@ -175,6 +180,11 @@ advice**; the page leads with that and with its record.
 - The page shows backtests for last season and this one only (projection +
   map 51.4% over 2025-2026), plus one line with the map's long-run record on
   the spread alone (50.2%, 2001-2026). Break-even at -110 is 52.4%.
+- Below the backtest, the season is listed week by week (newest first) with
+  every game's projection, line, model side, final score and result, and one
+  pooled season record. Weeks before the page went live come from the
+  walk-forward replay (`model/ats_research/season_replay.json`); live weeks use
+  the frozen ledger rows. Each week is tagged replay or live.
 - A failure in this step leaves only this page stale.
 
 The Tuesday workflow (`source_quality.yml`) refits it each week after Monday
