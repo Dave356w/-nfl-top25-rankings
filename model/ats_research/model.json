@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "built_utc": "2026-11-24T23:01:45+00:00",
+  "built_utc": "2026-11-24T23:20:04+00:00",
   "coefficients": {
     "const": 21.82530439379179,
     "off": 0.2052587616654379,
@@ -21,29 +21,29 @@
     "projection_map": {
       "seasons": {
         "2025": {
-          "wins": 141,
-          "losses": 130,
+          "wins": 143,
+          "losses": 128,
           "pushes": 1,
-          "cover_rate": 0.5202952029520295,
-          "cover_rate_ci95": 0.05948169935181129,
-          "roi_at_minus_110": -0.006684491978609606
+          "cover_rate": 0.5276752767527675,
+          "cover_rate_ci95": 0.059439498779381705,
+          "roi_at_minus_110": 0.007352941176470588
         },
         "2026": {
-          "wins": 83,
-          "losses": 74,
+          "wins": 84,
+          "losses": 73,
           "pushes": 6,
-          "cover_rate": 0.5286624203821656,
-          "cover_rate_ci95": 0.07808390039624098,
-          "roi_at_minus_110": 0.008923591745677627
+          "cover_rate": 0.535031847133758,
+          "cover_rate_ci95": 0.0780203089691307,
+          "roi_at_minus_110": 0.020635805911879506
         }
       },
       "all": {
-        "wins": 224,
-        "losses": 204,
+        "wins": 227,
+        "losses": 201,
         "pushes": 7,
-        "cover_rate": 0.5233644859813084,
-        "cover_rate_ci95": 0.0473183411124991,
-        "roi_at_minus_110": -0.0008359456635318942
+        "cover_rate": 0.530373831775701,
+        "cover_rate_ci95": 0.04728260276586576,
+        "roi_at_minus_110": 0.012330198537095112
       },
       "first_season": 2025,
       "label": "Projection margin through the weekly median map, closing lines"
@@ -51,38 +51,38 @@
     "spread_map_control": {
       "seasons": {
         "2025": {
-          "wins": 136,
-          "losses": 135,
+          "wins": 144,
+          "losses": 127,
           "pushes": 1,
-          "cover_rate": 0.5018450184501845,
-          "cover_rate_ci95": 0.059530355146737914,
-          "roi_at_minus_110": -0.04177807486631015
+          "cover_rate": 0.5313653136531366,
+          "cover_rate_ci95": 0.05941351429779926,
+          "roi_at_minus_110": 0.014371657754010685
         },
         "2026": {
-          "wins": 80,
-          "losses": 77,
+          "wins": 81,
+          "losses": 76,
           "pushes": 6,
-          "cover_rate": 0.5095541401273885,
-          "cover_rate_ci95": 0.0781982346482497,
-          "roi_at_minus_110": -0.026213050752928013
+          "cover_rate": 0.5159235668789809,
+          "cover_rate_ci95": 0.07817284148809056,
+          "roi_at_minus_110": -0.014500836586726134
         }
       },
       "all": {
-        "wins": 216,
-        "losses": 212,
+        "wins": 225,
+        "losses": 203,
         "pushes": 7,
-        "cover_rate": 0.5046728971962616,
-        "cover_rate_ci95": 0.04736801917459308,
-        "roi_at_minus_110": -0.035945663531870405
+        "cover_rate": 0.5257009345794392,
+        "cover_rate_ci95": 0.04730746708245491,
+        "roi_at_minus_110": 0.0035527690700104197
       },
       "first_season": 2025,
       "long_run": {
-        "wins": 3237,
-        "losses": 3197,
+        "wins": 3243,
+        "losses": 3191,
         "pushes": 179,
-        "cover_rate": 0.5031084861672366,
-        "cover_rate_ci95": 0.012217353902261127,
-        "roi_at_minus_110": -0.03845043509341108,
+        "cover_rate": 0.5040410320174076,
+        "cover_rate_ci95": 0.012217190982486454,
+        "roi_at_minus_110": -0.036718309665534854,
         "first_season": 2001,
         "last_season": 2026
       },

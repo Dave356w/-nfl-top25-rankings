@@ -174,10 +174,11 @@ advice**; the page leads with that and with its record.
 - The median map's history and the replayed weeks stay Sleeper-only walk-forward
   margins from 2021: only Sleeper has that much history.
 - Fixed map: projected margins under 3, 3-7, 7-10 and 10+ map to 3, 5, 7 and
-  10 (keeping the favourite), then the mapped margin is compared with
+  13 (keeping the favourite), then the mapped margin is compared with
   nflverse's `spread_line`. It replaced a weekly-refit median map, which
   moved most weeks without covering more often; `fit_weekly_map` keeps that
-  refit for research.
+  refit for research. The 10+ value is 13 (was 10), so favourites on lines of
+  10-13 are taken rather than faded.
 - Each game's row freezes at the last publish before kickoff and is appended
   once to `site/data/ats/ledger.jsonl` and graded from nflverse final scores.
 - The page shows backtests for last season and this one only (projection +
