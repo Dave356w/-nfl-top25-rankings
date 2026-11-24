@@ -840,6 +840,9 @@ Actuals require `game_id`, `player_key`, `actual_fp`, `realized_at_utc`. Use the
 archived keys (Yahoo IDs where present); name matching is not guessed. The grader
 uses one latest pregame forecast per game/player, rejects duplicate outcomes,
 excludes manual overrides, and never converts an unmatched actual into zero.
+Snapshots listed in `site/data/projection_archive/excluded_snapshots.json` (with
+a reason) are never graded; the earlier valid forecast is graded instead. The
+snapshot files themselves stay immutable.
 It reports MAE, RMSE, bias, paired fallback comparison, P25/P90 coverage and the
 observed zero/negative-score rate.
 

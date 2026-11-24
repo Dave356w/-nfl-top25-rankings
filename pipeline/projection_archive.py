@@ -93,12 +93,27 @@ def write(snapshot, directory):
     return path
 
 
-def evaluate(snapshots, actuals):
+def load_exclusions(path):
+    """Snapshot IDs that must never be graded, mapped to the reason (missing file: none)."""
+    path=Path(path)
+    if not path.exists(): return {}
+    excluded=json.loads(path.read_text()).get('excluded') or {}
+    if not isinstance(excluded,dict) or not all(str(r).strip() for r in excluded.values()):
+        raise ValueError(f'{path}: "excluded" must map snapshot IDs to non-empty reasons')
+    return {str(k):str(v) for k,v in excluded.items()}
+
+
+def evaluate(snapshots, actuals, excluded=None):
     """One latest pregame forecast per game/player; no repeated-run pseudo-samples.
 
     Actuals need game_id, player_key, actual_fp, realized_at_utc. Identity matching
-    is explicit; missing actuals never become zero. Manual overrides are excluded.
+    is explicit; missing actuals never become zero. Manual overrides are excluded,
+    as is every snapshot whose ID is in ``excluded``: its forecasts are dropped
+    before selection, so an earlier valid forecast is graded in its place.
     """
+    excluded=set(excluded or ())
+    skipped=sorted({s['snapshot_id'] for s in snapshots if s.get('snapshot_id') in excluded})
+    snapshots=[s for s in snapshots if s.get('snapshot_id') not in excluded]
     required={'game_id','player_key','actual_fp','realized_at_utc'}
     if not required <= set(actuals.columns):
         raise ValueError('Actuals need '+', '.join(sorted(required)))
@@ -143,7 +158,7 @@ def evaluate(snapshots, actuals):
             result['paired_model_mae']=float(np.mean([abs(row['expected_fp']-v) for row,v in matched]))
         return result
     return dict(schema=1,selection='latest captured before kickoff; unique game/player',
-        rejected_postkickoff_or_manual=rejected,unmatched_predictions=len(latest)-len(pairs),
+        excluded_snapshots=skipped,rejected_postkickoff_or_manual=rejected,unmatched_predictions=len(latest)-len(pairs),
         overall=metrics(pairs),by_position={p:metrics([(r,v) for r,v in pairs if r['position']==p])
             for p in sorted({r['position'] for r,_ in pairs})},
         limitations=['Empirical evaluation of archived forecasts; does not refit weights.',
