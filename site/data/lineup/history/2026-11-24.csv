@@ -1,18 +1,18 @@
 slot,player,pos,team,opponent,kickoff_utc,mean,floor,ceiling,salary,depth,depth_source,source,sleeper_mean,espn_mean,cbs_mean,market_mean,market_quality,market_props,injury,unavailable,locked,review
-QB,C.J. Stroud,QB,HOU,,,20.94,13.78,34.03,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),20.9,21.38,20.54,,,,,,True,locked: game started
-RB,James Cook III,RB,BUF,,,14.56,7.97,26.48,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),15.2,13.86,14.62,,,,,,True,locked: game started
-WR,Tee Higgins,WR,CIN,,,14.43,6.92,27.91,,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.67,14.32,14.3,,,,,,True,locked: game started
-WR,Jameson Williams,WR,DET,,,10.97,5.26,21.22,,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.73,10.32,10.86,,,,,,True,locked: game started
-TE,Brenton Strange,TE,JAC,,,8.03,3.6,15.94,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.29,6.87,8.93,,,,,,True,locked: game started
-K,Brandon Aubrey,K,DAL,,,9.99,5.89,17.43,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.1,10.4,10.46,,,,,,True,locked: game started
+QB,C.J. Stroud,QB,HOU,,,20.99,13.81,34.11,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),20.9,21.38,20.68,,,,,,True,locked: game started
+RB,James Cook III,RB,BUF,,,14.48,7.93,26.33,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),15.15,13.86,14.43,,,,,,True,locked: game started
+WR,Tee Higgins,WR,CIN,,,14.42,6.91,27.89,,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.56,14.32,14.39,,,,,,True,locked: game started
+WR,Jameson Williams,WR,DET,,,10.99,5.27,21.25,,2.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.73,10.32,10.93,,,,,,True,locked: game started
+TE,Brenton Strange,TE,JAC,,,8.02,3.6,15.92,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.27,6.87,8.92,,,,,,True,locked: game started
+K,Brandon Aubrey,K,DAL,,,10.02,5.91,17.49,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.1,10.4,10.55,,,,,,True,locked: game started
 DEF,Denver Broncos,DEF,DEN,,,7.84,3.31,15.89,,1.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.29,6.18,9.05,,,,,,True,locked: game started
-FLEX,Jaylen Warren,RB,PIT,,,13.0,7.12,23.64,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.61,13.4,12.98,,,,,,True,locked: game started
-RB,Bijan Robinson,RB,ATL,,,16.42,8.99,29.86,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.83,16.04,16.4,,,,,,False,ok
-BENCH,Dak Prescott,QB,DAL,,,20.63,13.57,33.52,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),20.71,19.5,21.67,,,,,,True,locked: game started
-BENCH,Emmett Johnson,RB,KC,,,9.87,5.41,17.95,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.7,6.7,17.22,,,,,,True,locked: game started
-BENCH,Jaylen Waddle,WR,DEN,,,8.25,4.44,15.15,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.08,8.12,7.56,,,,,,True,locked: game started
-BENCH,Cairo Santos,K,CHI,,,8.18,4.83,14.28,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.52,8.85,7.16,,,,,,True,locked: game started
+FLEX,Jaylen Warren,RB,PIT,,,12.94,7.09,23.53,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.62,13.4,12.81,,,,,,True,locked: game started
+RB,Bijan Robinson,RB,ATL,,,16.35,8.96,29.73,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.83,16.04,16.19,,,,,,False,ok
+BENCH,Dak Prescott,QB,DAL,,,20.68,13.61,33.6,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),20.71,19.5,21.82,,,,,,True,locked: game started
+BENCH,Emmett Johnson,RB,KC,,,9.79,5.36,17.8,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.68,6.7,17.0,,,,,,True,locked: game started
+BENCH,Jaylen Waddle,WR,DEN,,,8.27,4.45,15.18,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.07,8.12,7.61,,,,,,True,locked: game started
+BENCH,Cairo Santos,K,CHI,,,8.2,4.84,14.31,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.52,8.85,7.23,,,,,,True,locked: game started
 BENCH,Los Angeles Rams,DEF,LA,GB,2026-11-26 01:00,7.32,3.09,14.83,17.0,1.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.49,7.77,6.69,,,,,,False,ok
-BENCH,Mike Gesicki,TE,CIN,,,7.06,3.17,14.01,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.05,6.36,7.77,,,,,,True,locked: game started
-BENCH,Keenan Allen,WR,SF,,,5.46,2.12,11.34,,3.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.07,5.5,5.82,,,,,,True,depth 3; locked: game started
+BENCH,Mike Gesicki,TE,CIN,,,7.04,3.16,13.97,,1.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.0,6.36,7.75,,,,,,True,locked: game started
+BENCH,Keenan Allen,WR,SF,,,5.46,2.12,11.34,,3.0,Sleeper depth chart,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.02,5.5,5.85,,,,,,True,depth 3; locked: game started
 BENCH,Terrance Ferguson,TE,LA,GB,2026-11-26 01:00,0.0,,,,6.0,Sleeper projection order,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,0.0,,,,,IR,not projected this week,False,no weekly projection/bye; injury IR; depth 6
