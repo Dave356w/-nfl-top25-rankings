@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "built_utc": "2026-11-24T20:26:48+00:00",
+  "coefficients": {
+    "const": 24.02729248578753,
+    "off": 0.1713060375733216,
+    "opp_def": -1.999103462743643,
+    "home": 0.8610305887153736
+  },
+  "fit": {
+    "team_games": 3044,
+    "seasons": [
+      2021,
+      2026
+    ],
+    "through_week": 11,
+    "source": "Sleeper weekly half-PPR projections + nflverse final scores"
+  },
+  "backtest": {
+    "projection_map": {
+      "seasons": {
+        "2025": {
+          "wins": 140,
+          "losses": 131,
+          "pushes": 1,
+          "cover_rate": 0.5166051660516605,
+          "cover_rate_ci95": 0.059497922371164295,
+          "roi_at_minus_110": -0.013703208556149756
+        },
+        "2026": {
+          "wins": 80,
+          "losses": 77,
+          "pushes": 6,
+          "cover_rate": 0.5095541401273885,
+          "cover_rate_ci95": 0.0781982346482497,
+          "roi_at_minus_110": -0.026213050752928013
+        }
+      },
+      "all": {
+        "wins": 220,
+        "losses": 208,
+        "pushes": 7,
+        "cover_rate": 0.514018691588785,
+        "cover_rate_ci95": 0.04735146561155934,
+        "roi_at_minus_110": -0.01839080459770115
+      },
+      "first_season": 2025,
+      "label": "Projection margin through the weekly median map, closing lines"
+    },
+    "spread_map_control": {
+      "seasons": {
+        "2025": {
+          "wins": 146,
+          "losses": 125,
+          "pushes": 1,
+          "cover_rate": 0.5387453874538746,
+          "cover_rate_ci95": 0.05935175556066272,
+          "roi_at_minus_110": 0.02840909090909088
+        },
+        "2026": {
+          "wins": 83,
+          "losses": 74,
+          "pushes": 6,
+          "cover_rate": 0.5286624203821656,
+          "cover_rate_ci95": 0.07808390039624098,
+          "roi_at_minus_110": 0.008923591745677627
+        }
+      },
+      "all": {
+        "wins": 229,
+        "losses": 199,
+        "pushes": 7,
+        "cover_rate": 0.5350467289719626,
+        "cover_rate_ci95": 0.04725357786063692,
+        "roi_at_minus_110": 0.02110762800417974
+      },
+      "first_season": 2025,
+      "long_run": {
+        "wins": 3233,
+        "losses": 3201,
+        "pushes": 179,
+        "cover_rate": 0.5024867889337893,
+        "cover_rate_ci95": 0.012217438903020253,
+        "roi_at_minus_110": -0.039605185378661874,
+        "first_season": 2001,
+        "last_season": 2026
+      },
+      "label": "Closing spread through the same map (no projections)"
+    },
+    "break_even": 0.5238095238095238,
+    "shown_from": 2025,
+    "note": "Walk-forward replays graded at an assumed -110. Design choices were made after looking at recent results, so these are diagnostics, not forward evidence."
+  }
+}
