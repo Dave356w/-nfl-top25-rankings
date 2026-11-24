@@ -222,8 +222,8 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
   <div class="card method">
     <ol>
       <li><b>Team strength</b> from the same projection snapshot as the rankings: starters' projected half-PPR points (QB1, RB1–2, WR1–3, TE1) and the team's DEF projection.</li>
-      <li><b>Points model</b>, fitted on 2021 onward: <span class="mono" id="formula"></span>. The projected margin is home points minus away points.</li>
-      <li><b>Median map</b>, refit before each week from earlier games only (8-week half-life): bands of |margin| under 3, 3–7, 7–10 and 10+, each replaced by the weighted median final margin of the side the projection favoured.</li>
+      <li><b>Points model</b>: <span class="mono" id="formula"></span>. <span id="fit-note"></span> The projected margin is home points minus away points.</li>
+      <li><b>Median map</b>, refit before each week from earlier games only (8-week half-life): bands of |margin| under 3, 3–7, 7–10 and 10+, each replaced by the weighted median final margin of the side the projection favoured. Its history is Sleeper-only walk-forward margins from 2021, since only Sleeper has that much history; the replayed weeks below use the same.</li>
       <li><b>Model side</b>: the mapped margin against the nflverse market line; a tie goes to the favourite.</li>
       <li><b>Freezing</b>: each game's row freezes at the last update before kickoff and is graded from nflverse final scores.</li>
     </ol>
@@ -368,7 +368,12 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
 
     var c = (d.method || {}).points_model || {};
     if (num(c.const)) el("formula").textContent = "points = " + c.const.toFixed(2) + " + " + c.off.toFixed(3) +
-      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP + " + c.home.toFixed(2) + " (home)";
+      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP " + (c.home < 0 ? "− " : "+ ") +
+      Math.abs(c.home).toFixed(2) + " (home)";
+    var fit = (d.method || {}).points_model_fit;
+    if (fit) el("fit-note").textContent = "Fitted on " + fit.team_games + " team-games (" +
+      (fit.seasons[0] === fit.seasons[1] ? fit.seasons[0] : fit.seasons[0] + "–" + fit.seasons[1]) +
+      " through week " + fit.through_week + "): " + fit.source + ".";
 
     var ps = (bt.projection_map || {}).seasons || {}, cs = (bt.spread_map_control || {}).seasons || {};
     var seasons = Object.keys(cs).concat(Object.keys(ps)).filter(function (s, i, a) { return a.indexOf(s) === i; })

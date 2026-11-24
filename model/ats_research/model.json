@@ -1,21 +1,22 @@
 {
   "schema": 1,
-  "built_utc": "2026-11-24T20:34:57+00:00",
+  "built_utc": "2026-11-24T20:45:04+00:00",
   "coefficients": {
-    "const": 24.02729248578753,
-    "off": 0.1713060375733216,
-    "opp_def": -1.999103462743643,
-    "home": 0.8610305887153736
+    "const": 21.82530439379179,
+    "off": 0.2052587616654379,
+    "opp_def": -2.083079896971662,
+    "home": -0.30076168898222116
   },
   "fit": {
-    "team_games": 3044,
+    "team_games": 326,
     "seasons": [
-      2021,
+      2026,
       2026
     ],
     "through_week": 11,
-    "source": "Sleeper weekly half-PPR projections + nflverse final scores"
+    "source": "Sleeper + ESPN + CBS mean (the site's blend) + nflverse final scores"
   },
+  "map_history": "Sleeper-only walk-forward margins from 2021 (the blend has no history)",
   "backtest": {
     "projection_map": {
       "seasons": {

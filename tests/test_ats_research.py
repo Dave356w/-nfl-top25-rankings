@@ -193,6 +193,16 @@ class PayloadTests(unittest.TestCase):
         self.assertTrue(replay["games"])
         self.assertTrue({"week", "home", "away", "line", "home_score", "result"} <= set(replay["games"][0]))
 
+    def test_blend_fit_is_only_for_the_season_evaluate_sources_covers(self):
+        from tools import build_ats_research_model as tool
+        from tools import evaluate_sources as ev
+        self.assertTrue(tool.blend_team_games(pd.DataFrame(), ev.SEASON - 1).empty)
+
+    def test_committed_model_records_what_it_was_fitted_on(self):
+        fit = ats.load_model()["fit"]
+        self.assertIn("source", fit)
+        self.assertGreaterEqual(fit["team_games"], 2 * 100 if "blend" in fit["source"] else 1)
+
     def test_committed_artifacts_load(self):
         model = ats.load_model()
         self.assertEqual(set(model["coefficients"]), {"const", "off", "opp_def", "home"})
