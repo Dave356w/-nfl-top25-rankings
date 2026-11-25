@@ -282,6 +282,36 @@ class OptimizeTests(unittest.TestCase):
         self.assertIn(flex["Position"], lo.FLEX_ELIGIBLE)
         self.assertEqual(flex["Name"], "WR3")   # 12.0 beats RB3 and TE2
 
+    def test_the_flex_is_held_by_the_latest_kickoff_at_its_position(self):
+        # WR3 is the flex on means; WR1 plays Sunday night, after everyone. The
+        # same nine start, but WR1 moves to the flex so it locks last.
+        roster = self.roster.copy()
+        roster["Game_Time"] = pd.Timestamp("2026-11-29T18:00:00Z")
+        roster.loc[roster.Name.eq("WR1"), "Game_Time"] = pd.Timestamp("2026-11-30T01:20:00Z")
+        roster.loc[roster.Name.eq("WR3"), "Game_Time"] = pd.Timestamp("2026-11-26T18:00:00Z")
+        before = set(lo.optimize(self.roster, [])[0]["Name"])
+        starters, _ = lo.optimize(roster, [])
+        slots = starters.set_index("Name")["Slot"]
+        self.assertEqual(set(starters["Name"]), before)
+        self.assertEqual(slots["WR1"], "FLEX")
+        self.assertEqual(slots["WR3"], "WR")
+
+    def test_a_later_game_at_another_position_does_not_move_the_flex(self):
+        # A WR flex cannot trade places with an RB: the RB slot would go empty.
+        roster = self.roster.copy()
+        roster["Game_Time"] = pd.Timestamp("2026-11-26T18:00:00Z")
+        roster.loc[roster.Name.eq("RB1"), "Game_Time"] = pd.Timestamp("2026-11-30T01:20:00Z")
+        slots = lo.optimize(roster, [])[0].set_index("Name")["Slot"]
+        self.assertEqual(slots["WR3"], "FLEX")
+        self.assertEqual(slots["RB1"], "RB")
+
+    def test_a_locked_starter_is_never_re_seated(self):
+        roster = self.roster.copy()
+        roster["Game_Time"] = pd.Timestamp("2026-11-29T18:00:00Z")
+        roster.loc[roster.Name.eq("WR1"), "Game_Time"] = pd.Timestamp("2026-11-30T01:20:00Z")
+        slots = lo.optimize(roster, [], locks={"wr1": "WR"})[0].set_index("Name")["Slot"]
+        self.assertEqual(slots["WR1"], "WR")
+
     def test_a_quarterback_can_never_take_the_flex(self):
         starters, _ = lo.optimize(self.roster, ["RB3", "WR3", "TE2"])
         self.assertEqual(starters[starters.Slot.eq("FLEX")].empty, True)

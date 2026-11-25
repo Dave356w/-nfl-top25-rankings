@@ -147,6 +147,16 @@ class PickerAgreementTests(unittest.TestCase):
         self.assertNotIn("K", [row["slot"] for row in picked["starters"]])
         self._assert_same([], "FP")
 
+    def test_the_flex_goes_to_the_same_late_kickoff_in_both(self):
+        # Waddle plays the late game, so he takes the flex and Nacua his WR
+        # slot. The browser has to make the same re-seat from `kickoff_utc`.
+        late = pd.Timestamp("2026-09-14T00:20:00Z")
+        self.roster.loc[self.roster.Name.eq("Jaylen Waddle"), "Game_Time"] = late
+        self.rows = _rows(self.roster)
+        starters, _ = self._python([], "FP")
+        self.assertIn(("Jaylen Waddle", "FLEX"), starters)
+        self._assert_same([], "FP")
+
     def test_totals_match_the_published_arithmetic(self):
         # `run_lineup._total`: a starter with no band contributes his mean to
         # both ends rather than voiding the range. Bye Week Guy has no band.

@@ -1063,9 +1063,14 @@ footer{
   function renderStats(d, view) {
     var t = view.totals || {};
     var m = d.projection || {};
-    var band = num(t.floor) && num(t.ceiling)
-      ? "P25 " + fmt(t.floor, 1) + " → P90 " + fmt(t.ceiling, 1)
-      : "range unavailable";
+    // The simulated band describes the published nine only; after an edit the
+    // page falls back to the summed per-player band, labelled as a sum.
+    var sim = !view.custom && d.lineup_band;
+    var band = sim && num(sim.floor) && num(sim.ceiling)
+      ? "Lineup P25 " + fmt(sim.floor, 1) + " → P90 " + fmt(sim.ceiling, 1) + " (simulated)"
+      : num(t.floor) && num(t.ceiling)
+        ? "Sum of player P25 " + fmt(t.floor, 1) + " → P90 " + fmt(t.ceiling, 1)
+        : "range unavailable";
     var slots = Object.keys(d.slots || {}).map(function (k) {
       return d.slots[k] + " " + k;
     }).join(" · ");

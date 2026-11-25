@@ -66,6 +66,7 @@ var LineupPicker = (function () {
     fill(slots.FLEX || 0, function (r) {
       return eligible.indexOf(r.pos) >= 0;
     }, "FLEX");
+    seatLatestInFlex(starters);
 
     return {
       starters: starters,
@@ -73,6 +74,23 @@ var LineupPicker = (function () {
         .map(function (r) { return Object.assign({}, r); })
         .sort(function (a, b) { return (b.mean || 0) - (a.mean || 0); })
     };
+  }
+
+  /* `lineup_optimizer._seat_latest_in_flex`: the flex goes to the same-position
+   * starter whose game kicks off last, so the one slot that can still take any
+   * RB, WR or TE late in the week is not locked on Thursday. Same nine players,
+   * same total. `kickoff_utc` is "YYYY-MM-DD HH:MM" UTC, so string order is
+   * time order. Locked players and rows without a kickoff never move. */
+  function seatLatestInFlex(starters) {
+    starters.forEach(function (flex) {
+      if (flex.slot !== "FLEX" || flex.locked || !flex.kickoff_utc) return;
+      var best = null, bestTime = flex.kickoff_utc;
+      starters.forEach(function (row) {
+        if (row.slot === "FLEX" || row.slot !== flex.pos || row.locked || !row.kickoff_utc) return;
+        if (row.kickoff_utc > bestTime) { best = row; bestTime = row.kickoff_utc; }
+      });
+      if (best) { flex.slot = best.slot; best.slot = "FLEX"; }
+    });
   }
 
   /* `run_lineup._total`: a starter with no fitted band contributes his mean to

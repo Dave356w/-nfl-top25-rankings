@@ -79,6 +79,21 @@ class PayloadTests(unittest.TestCase):
         self.assertEqual(self.payload["projection"]["method"], "Sleeper half-PPR projection")
         self.assertEqual(self.payload["projection"]["week"], 2)
 
+    def test_the_simulated_band_sits_inside_the_summed_one(self):
+        # Nine players do not all bust or boom together, so the total's own
+        # P25/P90 is narrower than the sum of the players' P25s and P90s.
+        band, totals = self.payload["lineup_band"], self.payload["totals"]
+        self.assertIsNotNone(band)
+        self.assertLess(band["floor"], totals["mean"])
+        self.assertGreater(band["ceiling"], totals["mean"])
+        self.assertGreater(band["floor"], totals["floor"])
+        self.assertLess(band["ceiling"], totals["ceiling"])
+        # Mean-preserving marginals: the simulated mean lands on the sum.
+        self.assertAlmostEqual(band["mean"], totals["mean"], delta=0.02 * totals["mean"])
+
+    def test_no_starters_gives_no_band(self):
+        self.assertIsNone(lo.simulate_lineup_band(pd.DataFrame()))
+
     def test_roster_fingerprint_tracks_committed_configuration_not_projection_order(self):
         roster = _results()["roster"]
         expected = "|".join(

@@ -529,8 +529,104 @@ def optimize(roster: pd.DataFrame, excluded: list[str], objective: str = LINEUP_
     flex = available[available.Position.isin(FLEX_ELIGIBLE)].nlargest(open_slots.get("FLEX", 0), "Selection_Score")
     ids += flex.index.tolist()
     slots.update({i: "FLEX" for i in flex.index})
+    _seat_latest_in_flex(work, ids, slots)
     starters = work.loc[ids].copy(); starters["Slot"] = [slots[i] for i in ids]
     return starters, work.drop(ids)
+
+
+def _kickoff_minute(value):
+    """Kickoff to the minute, as the page's `kickoff_utc` string carries it."""
+    t = pd.to_datetime(value, errors="coerce", utc=True)
+    return None if pd.isna(t) else t.floor("min")
+
+
+def _seat_latest_in_flex(work: pd.DataFrame, ids: list, slots: dict) -> None:
+    """Give the flex to the same-position starter whose game kicks off last.
+
+    The chosen nine and their total are unchanged; only who sits where moves.
+    A season-long league locks each player at his own kickoff, so the flex is
+    the one slot that can still take any RB, WR or TE late in the week -- it
+    should be held by the starter whose game is last, not by a Thursday player
+    whose slot locks first. Only a same-position swap keeps every fixed slot
+    legal. Locked players, and anyone without a kickoff, never move. Mirrored
+    by `site/lineup-picker.js`; `tests/test_lineup_picker.py` pins the two.
+    """
+    if "Game_Time" not in work:
+        return
+    locked = work["Locked"] if "Locked" in work else pd.Series(False, index=work.index)
+    for f in [i for i in ids if slots[i] == "FLEX"]:
+        if bool(locked.get(f, False)):
+            continue
+        best, best_time = None, _kickoff_minute(work.at[f, "Game_Time"])
+        if best_time is None:
+            continue
+        for i in ids:
+            if (slots[i] == "FLEX" or slots[i] != work.at[f, "Position"]
+                    or bool(locked.get(i, False))):
+                continue
+            t = _kickoff_minute(work.at[i, "Game_Time"])
+            if t is not None and t > best_time:
+                best, best_time = i, t
+        if best is not None:
+            slots[f], slots[best] = slots[best], "FLEX"
+
+
+def simulate_lineup_band(starters: pd.DataFrame, simulations: int = 20_000,
+                         seed: int = 356, quantiles=(0.25, 0.90)) -> dict | None:
+    """P25/P90 of the lineup *total*, from one correlated simulation.
+
+    `totals.floor`/`ceiling` add the starters' own P25s and P90s. That is the
+    right additive score for the optimizer and the browser re-pick, but it is
+    not the lineup's P25 or P90: nine players do not all have a bad week at
+    once, so the summed band is far wider than the total's real one.
+
+    Marginals and pair correlations are the calibrated ones the Showdown
+    simulator uses (`pipeline.notebook`): zero-hurdle lognormals at each row's
+    mean and fitted CV, and fitted score correlations for players in the same
+    game. Players in different games are independent. Kickers carry
+    `KICKER_CV` with no zero atom and no fitted correlation. A starter with no
+    band contributes his mean, as in `run_lineup._total`. Returns None when
+    there is nothing to simulate.
+    """
+    from pipeline import notebook as nb
+    if starters is None or not len(starters):
+        return None
+    fp = pd.to_numeric(starters["FP"], errors="coerce").fillna(0.0).to_numpy(float)
+    cv = pd.to_numeric(starters.get("Projection_CV"), errors="coerce").to_numpy(float)
+    live = (fp > 0) & np.isfinite(cv) & (cv > 0)
+    fixed = float(fp[~live].sum())
+    if not live.any():
+        return None
+    rows = starters[live].copy()
+    rows["Depth_Rank"] = pd.to_numeric(rows["Depth_Rank"], errors="coerce").fillna(1)
+    zero = np.array([
+        nb.ZERO_RATE[r.Position][nb._depth_bucket(r.Depth_Rank)] if r.Position in nb.ZERO_RATE else 0.0
+        for r in rows.itertuples()
+    ])
+    records = [rows.iloc[k] for k in range(len(rows))]
+    n = len(records)
+    target = np.eye(n)
+    for a in range(n):
+        for b in range(a + 1, n):
+            pa, pb = records[a], records[b]
+            same_game = pa["Team"] == pb["Team"] or pa["Team"] == pb.get("Opponent")
+            if not same_game or "K" in (pa["Position"], pb["Position"]):
+                continue
+            target[a, b] = target[b, a] = float(nb.target_score_correlation(pa, pb))
+    latent = nb.repair_correlation_matrix(
+        nb.score_to_hurdle_latent(target, cv[live], zero))
+    root = nb.latent_root(latent)
+    draws = np.random.default_rng(seed).normal(size=(int(simulations), n)) @ root.T
+    totals = nb.hurdle_transform(draws, fp[live], cv[live], zero).sum(axis=1) + fixed
+    lo_q, hi_q = quantiles
+    return {
+        "floor": round(float(np.quantile(totals, lo_q)), 2),
+        "ceiling": round(float(np.quantile(totals, hi_q)), 2),
+        "mean": round(float(totals.mean()), 2),
+        "simulations": int(simulations),
+        "method": "correlated simulation of the lineup total (same-game pairs fitted, "
+                  "other games independent)",
+    }
 
 
 def review(p: pd.Series) -> str:
