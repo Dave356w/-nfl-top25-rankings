@@ -107,6 +107,15 @@ def _total(frame: pd.DataFrame, column: str) -> float | None:
     return round(float(values.round(2).sum()), 2)
 
 
+def _lineup_band(starters: pd.DataFrame) -> dict | None:
+    """Simulated band of the lineup total; a failure costs the band, not the run."""
+    try:
+        return lo.simulate_lineup_band(starters)
+    except Exception as exc:
+        print(f"Lineup band unavailable ({type(exc).__name__}: {exc}).")
+        return None
+
+
 def build_payload(
     results: dict,
     objective: str,
@@ -148,6 +157,10 @@ def build_payload(
             "floor": _total(starters, "Floor_P25"),
             "ceiling": _total(starters, "Ceiling_P90"),
         },
+        # The total's own P25/P90. `totals` sums per-player bands (the additive
+        # score the optimizer and browser use), which overstates the spread.
+        # Only valid for the published lineup; the page drops it after an edit.
+        "lineup_band": _lineup_band(starters),
         "counts": {
             "roster": int(len(roster)),
             "projected": int(roster["Projection_Available"].sum()),
