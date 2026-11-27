@@ -204,9 +204,17 @@ def build_synced_payloads(
         rankings_payload, lineup_payload, pool_payload,
         showdown_payloads, showdown_index,
     )
+    # The market columns live on the Showdown copy (the frame attach_market
+    # priced); carry them onto the archived rows by index. The archive keeps
+    # every other column from the unmodified prepared frame.
+    archived_players = prepared["players"].copy()
+    for column in ("Market_FP", "Market_Quality"):
+        if column in showdown_players:
+            archived_players[column] = showdown_players[column].reindex(archived_players.index)
     return {
         "prepared_players": prepared["players"],
-        "projection_archive": projection_archive.capture(prepared, cfg, snapshot_id, showdown_payloads),
+        "projection_archive": projection_archive.capture(
+            {**prepared, "players": archived_players}, cfg, snapshot_id, showdown_payloads),
         "generated_at": generated_at,
         "snapshot_id": snapshot_id,
         "rankings": rankings_payload,

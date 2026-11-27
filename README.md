@@ -81,8 +81,17 @@ points and 25% from the projection; `—` means the books do not price him.
 It never feeds the optimizer. On 2026 week 1 (142 player-weeks) adding it to
 the three-source mean changed MAE by +0.018 (95% CI -0.035 to +0.071): the
 market agrees with Sleeper and ESPN too closely to add information, though it
-had the smallest bias. Feed failures leave the column blank and are noted in
-the run log.
+had the smallest bias. On week 11 (196 graded player-games, recovered from git
+history) the market's MAE was 3.51 against the blend's 3.28 on the same
+players, and a 50/50 mix was worse than the blend (95% CI of the change +0.01
+to +0.17). Feed failures leave the column blank and are noted in the run log.
+
+Each archived pregame snapshot keeps every player's `market_fp` and
+`market_quality`, so the market is graded with the blend every time the
+archive is evaluated (the `market` block of `model/projection_evaluation.json`).
+Runs from before that change were recovered from the committed page files by
+`tools/backfill_market_archive.py` into `model/market_backfill_2026.csv`
+(week 11 onward; week 1 only exists as the archived raw prop feeds).
 
 ### Game-day reruns and kickoff locks
 
@@ -895,4 +904,18 @@ a reason) are never graded; the earlier valid forecast is graded instead. The
 snapshot files themselves stay immutable.
 It reports MAE, RMSE, bias, paired fallback comparison, P25/P90 coverage and the
 observed zero/negative-score rate.
+
+It also grades the display-only market the same way: the latest pregame
+`market_fp` per game/player (from snapshots, plus `--market-backfill` rows,
+default `model/market_backfill_2026.csv`, for runs archived before snapshots
+carried it), paired with the graded blend forecast. The `market` block reports
+market and blend MAE and bias on the same players, a diagnostic 50/50 mix with a
+bootstrap interval, and the slope of (actual - blend) on (market - blend),
+overall, by position and by market quality. Rebuild the backfill (needs full
+git history) with:
+
+```bash
+python tools/backfill_market_archive.py --since 2026-11-17 \
+  --output model/market_backfill_2026.csv
+```
 

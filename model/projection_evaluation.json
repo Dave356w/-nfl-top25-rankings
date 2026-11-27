@@ -4,8 +4,8 @@
   "excluded_snapshots": [
     "2026-11-23T19:06:57Z"
   ],
-  "rejected_postkickoff_or_manual": 23362,
-  "unmatched_predictions": 2360,
+  "rejected_postkickoff_or_manual": 23790,
+  "unmatched_predictions": 2367,
   "overall": {
     "n": 2750,
     "mae": 4.071843145848058,
@@ -80,8 +80,136 @@
       "paired_model_mae": 3.8826087040227115
     }
   },
+  "market": {
+    "backfill_rows": 14193,
+    "overall": {
+      "n": 196,
+      "from_backfill": 196,
+      "market_mae": 3.5126530612244897,
+      "market_bias": 0.5676530612244898,
+      "blend_mae": 3.2818367346938775,
+      "blend_bias": 0.3275510204081631,
+      "half_market_mae": 3.3691836734693874,
+      "market_blend_corr": 0.9782804385314627,
+      "gap_residual_slope": -0.1503687682034897,
+      "half_minus_blend_mae_ci95": [
+        0.005043367346938144,
+        0.16860459183673462
+      ]
+    },
+    "by_position": {
+      "QB": {
+        "n": 22,
+        "from_backfill": 22,
+        "market_mae": 4.572272727272727,
+        "market_bias": 0.8395454545454545,
+        "blend_mae": 4.51,
+        "blend_bias": 0.2899999999999997,
+        "half_market_mae": 4.4979545454545455,
+        "market_blend_corr": 0.9316551411604685,
+        "gap_residual_slope": 0.5183153513779609,
+        "half_minus_blend_mae_ci95": [
+          -0.32434659090909174,
+          0.30821022727272573
+        ]
+      },
+      "RB": {
+        "n": 50,
+        "from_backfill": 50,
+        "market_mae": 3.2741999999999996,
+        "market_bias": 0.7213999999999998,
+        "blend_mae": 3.0024000000000006,
+        "blend_bias": 0.6899999999999998,
+        "half_market_mae": 3.0981,
+        "market_blend_corr": 0.9704948119368997,
+        "gap_residual_slope": -0.07746650534879163,
+        "half_minus_blend_mae_ci95": [
+          -0.08002749999999964,
+          0.2795024999999992
+        ]
+      },
+      "TE": {
+        "n": 47,
+        "from_backfill": 47,
+        "market_mae": 2.6836170212765955,
+        "market_bias": 0.43936170212765946,
+        "blend_mae": 2.5244680851063825,
+        "blend_bias": 0.2525531914893617,
+        "half_market_mae": 2.5702127659574465,
+        "market_blend_corr": 0.9439674636916375,
+        "gap_residual_slope": -0.2783396584373039,
+        "half_minus_blend_mae_ci95": [
+          -0.08490159574468023,
+          0.18086170212766006
+        ]
+      },
+      "WR": {
+        "n": 77,
+        "from_backfill": 77,
+        "market_mae": 3.87077922077922,
+        "market_bias": 0.4684415584415583,
+        "blend_mae": 3.574675324675325,
+        "blend_bias": 0.14870129870129864,
+        "half_market_mae": 3.710389610389611,
+        "market_blend_corr": 0.9736714933546421,
+        "gap_residual_slope": -0.6402049997966426,
+        "half_minus_blend_mae_ci95": [
+          0.02165097402597455,
+          0.25701298701298647
+        ]
+      }
+    },
+    "by_quality": {
+      "good": {
+        "n": 150,
+        "from_backfill": 150,
+        "market_mae": 3.9310666666666663,
+        "market_bias": 0.5509333333333334,
+        "blend_mae": 3.8565333333333336,
+        "blend_bias": 0.5105333333333332,
+        "half_market_mae": 3.8728000000000007,
+        "market_blend_corr": 0.9791512707633792,
+        "gap_residual_slope": -0.1258569396353393,
+        "half_minus_blend_mae_ci95": [
+          -0.06510500000000015,
+          0.09916833333333372
+        ]
+      },
+      "td-estimate": {
+        "n": 13,
+        "from_backfill": 13,
+        "market_mae": 2.8423076923076924,
+        "market_bias": 1.53,
+        "blend_mae": 1.7692307692307692,
+        "blend_bias": 0.4553846153846154,
+        "half_market_mae": 2.171923076923077,
+        "market_blend_corr": 0.8526481148601975,
+        "gap_residual_slope": -0.7131603743196441,
+        "half_minus_blend_mae_ci95": [
+          -0.020807692307691975,
+          0.8739326923076913
+        ]
+      },
+      "unknown": {
+        "n": 33,
+        "from_backfill": 33,
+        "market_mae": 1.8748484848484848,
+        "market_bias": 0.2645454545454545,
+        "blend_mae": 1.2654545454545454,
+        "blend_bias": -0.5545454545454546,
+        "half_market_mae": 1.5516666666666665,
+        "market_blend_corr": 0.1655288493259311,
+        "gap_residual_slope": -0.31328729423303536,
+        "half_minus_blend_mae_ci95": [
+          0.09359848484848451,
+          0.4959393939393933
+        ]
+      }
+    }
+  },
   "limitations": [
     "Empirical evaluation of archived forecasts; does not refit weights.",
-    "Nominal below-P25/P90 rates are 25%/90%; discrete scores can produce ties."
+    "Nominal below-P25/P90 rates are 25%/90%; discrete scores can produce ties.",
+    "Market rows are display-only prop prices paired with the graded blend; half_market is a diagnostic 50/50 mix, not a live model. Players in one game share outcomes, so the bootstrap interval is optimistic."
   ]
 }

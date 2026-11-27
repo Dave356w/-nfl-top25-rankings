@@ -27,6 +27,45 @@ class ProjectionArchiveTests(unittest.TestCase):
         self.assertEqual(got['role_filters'],dict(backup_qbs_removed=['Backup'],excluded=['Bench']))
         self.assertIn('sleeper_players',got['raw_inputs'])
 
+    def test_capture_keeps_market_value_and_nulls_missing_ones(self):
+        base=dict(Team='KC',Position='WR',Depth_Rank=1,Projected_FP=10.,Projection_Source='Sleeper',
+                  Salary=20.,**{'Game ID':'g','Game Time':'2026-09-13T17:00:00Z'})
+        players=pd.DataFrame([dict(base,Name='Priced',**{'Yahoo ID':1},Market_FP=11.5,Market_Quality='good'),
+                              dict(base,Name='Unpriced',**{'Yahoo ID':2},Market_FP=None,Market_Quality=None)])
+        rows=archive.capture(dict(players=players),nb.CFG,'test',[])['predictions']
+        self.assertEqual((rows[0]['market_fp'],rows[0]['market_quality']),(11.5,'good'))
+        self.assertEqual((rows[1]['market_fp'],rows[1]['market_quality']),(None,None))
+        legacy=archive.capture(dict(players=players.drop(columns=['Market_FP','Market_Quality'])),nb.CFG,'t',[])
+        self.assertIsNone(legacy['predictions'][0]['market_fp'])
+
+    def test_market_is_graded_from_latest_pregame_value(self):
+        early=snapshot(mean=10);late=snapshot('2026-09-13T16:30:00Z',10)
+        early['predictions'][0].update(market_fp=20,market_quality='good')
+        late['predictions'][0].update(market_fp=14,market_quality='good')
+        after=snapshot('2026-09-13T18:00:00Z',10);after['predictions'][0]['market_fp']=12
+        market=archive.evaluate([early,late,after],self.actuals())['market']
+        self.assertEqual(market['overall']['n'],1)
+        self.assertEqual(market['overall']['market_mae'],2)
+        self.assertEqual(market['overall']['blend_mae'],2)
+        self.assertEqual(market['overall']['from_backfill'],0)
+        self.assertEqual(set(market['by_quality']),{'good'})
+
+    def test_market_backfill_fills_older_snapshots_but_never_post_kickoff_or_excluded(self):
+        def row(captured,value,snapshot_id='run'):
+            return dict(snapshot_id=snapshot_id,captured_utc=captured,game_id='g',player_key='yahoo:1',
+                        kickoff_utc='2026-09-13T17:00:00Z',market_fp=value,market_quality=None)
+        backfill=pd.DataFrame([row('2026-09-13T16:00:00Z',13),row('2026-09-13T17:30:00Z',40),
+                               row('2026-09-13T16:45:00Z',50,'bad')])
+        market=archive.evaluate([snapshot()],self.actuals(),excluded={'bad':'wrong'},
+                                market_backfill=backfill)['market']
+        self.assertEqual(market['backfill_rows'],2)
+        self.assertEqual(market['overall']['market_mae'],1)
+        self.assertEqual(market['overall']['from_backfill'],1)
+        self.assertEqual(set(market['by_quality']),{'unknown'})
+
+    def test_no_market_values_grade_as_empty(self):
+        self.assertEqual(archive.evaluate([snapshot()],self.actuals())['market']['overall'],{'n':0})
+
     def actuals(self):
         return pd.DataFrame([dict(game_id='g',player_key='yahoo:1',actual_fp=12,
             realized_at_utc='2026-09-13T21:00:00Z')])

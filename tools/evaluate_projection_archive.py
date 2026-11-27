@@ -17,14 +17,21 @@ def main():
     parser.add_argument('--output',required=True)
     parser.add_argument('--exclusions',default='site/data/projection_archive/excluded_snapshots.json',
                         help='JSON of snapshot IDs never to grade (see that file)')
+    parser.add_argument('--market-backfill',default='model/market_backfill_2026.csv',
+                        help='CSV of market values recovered for runs archived before snapshots carried them '
+                             '(tools/backfill_market_archive.py); skipped if missing')
     args=parser.parse_args()
     snapshots=[json.loads(gzip.decompress(p.read_bytes())) for p in Path(args.archive).glob('*.json.gz')]
     if not snapshots: raise ValueError('No archived snapshots found')
     actuals=pd.read_csv(args.actuals,dtype={'game_id':str,'player_key':str})
-    report=evaluate(snapshots,actuals,load_exclusions(args.exclusions))
+    backfill=None
+    if args.market_backfill and Path(args.market_backfill).exists():
+        backfill=pd.read_csv(args.market_backfill,dtype={'game_id':str,'player_key':str,'snapshot_id':str})
+    report=evaluate(snapshots,actuals,load_exclusions(args.exclusions),backfill)
     target=Path(args.output);target.parent.mkdir(parents=True,exist_ok=True)
     target.write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
     print(json.dumps(report['overall'],indent=2))
+    print(json.dumps(report['market']['overall'],indent=2))
 
 if __name__=='__main__':main()
 

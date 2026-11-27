@@ -407,6 +407,14 @@ class SharedShowdownTests(unittest.TestCase):
                 [name for name, row in showdown_players.items() if row["market_mean"] is not None],
                 ["Drake Maye"],
             )
+            # The archived pregame snapshot keeps the same market value per player.
+            import gzip
+            (snapshot_path,) = (root / "projection_archive/snapshots").glob("*.json.gz")
+            archived = {row["player"]: row for row in
+                        json.loads(gzip.decompress(snapshot_path.read_bytes()))["predictions"]}
+            self.assertEqual(archived["Drake Maye"]["market_fp"], 19.5)
+            self.assertEqual(archived["Drake Maye"]["market_quality"], "good")
+            self.assertIsNone(archived["Sam Darnold"]["market_fp"])
 
 
 if __name__ == "__main__":
