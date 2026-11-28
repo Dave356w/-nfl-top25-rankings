@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Model Margin Research</title>
-<meta name="description" content="Experimental research: game margins implied by this site's fantasy projections, compared with the market line. No demonstrated edge; not betting advice.">
+<meta name="description" content="Experimental research: game margins implied by the NFL box-score composite, compared with the market line. No demonstrated edge; not betting advice.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
 <style>
 :root{
@@ -168,7 +168,7 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
   <header class="top">
     <div class="brand">
       <h1>Model margin vs market</h1>
-      <p class="sub">Research: the game margin this site's projections imply, next to the market line.</p>
+      <p class="sub">Research: the game margin the box-score composite implies, next to the market line.</p>
     </div>
     <nav class="top-actions">
       <a class="btn" href="index.html">Rankings</a>
@@ -192,42 +192,46 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
   <div class="card"><div class="scroll">
     <table>
       <thead><tr>
-        <th>Kickoff</th><th>Game</th><th class="num">Projected score</th><th>Projection</th>
+        <th>Kickoff</th><th>Game</th><th class="num">Home win: model · market</th><th>Model margin</th>
         <th>Market line</th><th>Band</th><th class="num">Mapped</th><th>Model side</th><th>Status</th>
       </tr></thead>
       <tbody id="games"><tr><td colspan="9" class="muted">Loading…</td></tr></tbody>
     </table>
   </div></div>
 
-  <h2>The map <span class="note">fixed: each band of projected margin maps to a key margin</span></h2>
+  <h2>The map <span class="note">fixed: each band of model margin maps to a key margin</span></h2>
   <div class="card"><div class="scroll">
     <table><thead><tr id="rule-head"></tr></thead><tbody><tr id="rule-row"></tr></tbody></table>
   </div></div>
 
-  <h2>Backtest, last season and this season <span class="note">walk-forward replays at closing lines, assumed −110</span></h2>
+  <h2>Backtest <span class="note">held-out seasons and this season's earlier weeks, at closing lines, assumed −110</span></h2>
   <div class="card"><div class="scroll">
     <table>
-      <thead><tr><th>Season</th><th class="num">Projection + map</th><th class="num">Cover</th>
+      <thead><tr><th>Season</th><th class="num">Composite + map</th><th class="num">Cover</th>
+        <th class="num">Composite, no map</th><th class="num">Cover</th>
         <th class="num">Spread + map (control)</th><th class="num">Cover</th></tr></thead>
       <tbody id="backtest"></tbody>
     </table>
   </div></div>
   <p class="muted" id="backtest-note" style="font-size:13px"></p>
 
-  <h2 id="season-head">Season, week by week <span class="note">replay weeks are walk-forward reconstructions; live weeks are the rows frozen before kickoff</span></h2>
+  <h2 id="season-head">Season, week by week <span class="note">replay rows are the composite's walk-forward predictions; live rows were frozen on this page before kickoff</span></h2>
   <section class="stats" id="season-stats" hidden></section>
   <div id="season-weeks"><p class="muted">Loading…</p></div>
 
   <h2>Method</h2>
   <div class="card method">
     <ol>
-      <li><b>Team strength</b> from the same projection snapshot as the rankings: starters' projected half-PPR points (QB1, RB1–2, WR1–3, TE1) and the team's DEF projection.</li>
-      <li><b>Points model</b>: <span class="mono" id="formula"></span>. <span id="fit-note"></span> The projected margin is home points minus away points.</li>
-      <li><b>Map</b> (fixed): a projected margin under 3 maps to 3, 3–7 to 5, 7–10 to 7 and 10 or more to 13, keeping the projected favourite. It replaced a weekly-refit median map on 24 Nov 2026: the refit changed most weeks without covering more often in replays. The fixed rule was itself chosen after looking at those replays, so its backtest is not independent evidence. The backtest and the replayed weeks below use the fixed map too.</li>
+      <li><b>Team profiles</b> from earlier games only: eight box-score rates rebuilt from nflverse play-by-play (plays per game, net yards per dropback, yards per rush, first downs per 100 plays, fumbles lost, interception %, sack %, penalty yards), for each offense and as allowed by each defense, decayed by games played and shrunk toward the league.</li>
+      <li><b>Availability</b> from information published before kickoff: the projected QB against the team's recent QB mix, and each unit's recent snaps lost to the final injury report or roster moves.</li>
+      <li><b>Composite</b>: a ridge logistic regression of home win on the home-minus-away differences, refit every week on earlier games. <span id="fit-note"></span></li>
+      <li><b>Margin</b>: the home win probability p becomes a margin on the spread's scale, 12.37 × probit(p), the inverse of the market conversion the composite is benchmarked against.</li>
+      <li><b>Map</b> (fixed): a model margin under 3 maps to 3, 3–7 to 5, 7–10 to 7 and 10 or more to 13, keeping the favourite. These values were chosen on replays of the Sleeper projection model this page used until 28 Nov 2026, not on this model.</li>
       <li><b>Model side</b>: the mapped margin against the nflverse market line; a tie goes to the favourite.</li>
       <li><b>Freezing</b>: each game's row freezes at the last update before kickoff and is graded from nflverse final scores.</li>
     </ol>
-    <p>Lines: <a href="https://github.com/nflverse/nflverse-data">nflverse</a> schedules (open data). nflverse does not record when a line was set, so a line can lag the market. Projections: Sleeper, ESPN and CBS (see the <a href="index.html">rankings</a>).</p>
+    <p id="scorecard-note"></p>
+    <p>Data: <a href="https://github.com/nflverse/nflverse-data">nflverse</a> play-by-play, injury reports, weekly rosters, snap counts and schedules (open data). nflverse does not record when a line was set, so a line can lag the market. Until 28 Nov 2026 this page used a points model built on Sleeper, ESPN and CBS fantasy projections; its live rows are kept in <a href="data/ats/ledger_sleeper_points_2026.jsonl">its own ledger</a>.</p>
   </div>
 
 </div>
@@ -278,9 +282,8 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     return g.model_side + " " + (h === 0 ? "PK" : (h > 0 ? "+" : "−") + Math.abs(h));
   }
   function status(g) {
-    var re = g.rescored_utc ? '<sup class="muted" title="Rescored after kickoff: ' + esc(g.rescore_note || "") + '">*</sup>' : "";
-    if (g.result) return '<span class="pill ' + g.result + '">' + {W: "Covered", L: "Missed", P: "Push"}[g.result] + "</span>" + re;
-    if (g.locked) return '<span class="pill">Frozen</span>' + re;
+    if (g.result) return '<span class="pill ' + g.result + '">' + {W: "Covered", L: "Missed", P: "Push"}[g.result] + "</span>";
+    if (g.locked) return '<span class="pill">Frozen</span>';
     return '<span class="pill open">Open</span>';
   }
 
@@ -323,9 +326,9 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
       }).join("");
       var r = w.record;
       return '<details class="card week"' + (i === 0 ? " open" : "") + "><summary>Week " + w.week +
-        ' <span class="pill ' + w.source + '">' + (w.source === "forward" ? "live" : "replay") + "</span>" +
+        ' <span class="pill ' + (w.source === "forward" ? "forward" : "replay") + '">' + ({forward: "live", replay: "replay", mixed: "live + replay"}[w.source] || w.source) + "</span>" +
         ' <span class="note">' + esc(rec(r)) + (r.wins + r.losses ? " · cover " + pct(r.cover_rate) : "") + "</span></summary>" +
-        '<div class="scroll"><table><thead><tr><th>Game</th><th>Projection</th><th>Line</th><th class="num">Mapped</th>' +
+        '<div class="scroll"><table><thead><tr><th>Game</th><th>Model margin</th><th>Line</th><th class="num">Mapped</th>' +
         '<th>Model side</th><th class="num">Final</th><th>Result</th></tr></thead><tbody>' + rows + "</tbody></table></div></details>";
     }).join("") : '<p class="muted">No games this season yet.</p>';
   }
@@ -340,11 +343,9 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     var lr = (bt.spread_map_control || {}).long_run;
     var span = bt.shown_from ? bt.shown_from + "–" + d.season : "";
     var f = d.forward_record || {};
-    var rescored = (d.games || []).filter(function (g) { return g.rescored_utc; }).length;
     var cards = [
-      ["Forward record", rec(f), (f.wins + f.losses ? "cover " + pct(f.cover_rate) + " since launch" : "no finished games yet") +
-        (rescored ? "; " + rescored + " row(s) rescored after kickoff" : "")],
-      ["Backtest " + span + ": projection + map", pm ? pct(pm.cover_rate) : "—", pm ? rec(pm) + ", ±" + pct(pm.cover_rate_ci95) : ""],
+      ["Forward record", rec(f), f.wins + f.losses ? "cover " + pct(f.cover_rate) + " since 28 Nov 2026" : "no finished live games yet"],
+      ["Backtest " + span + ": composite + map", pm ? pct(pm.cover_rate) : "—", pm ? rec(pm) + ", ±" + pct(pm.cover_rate_ci95) : ""],
       ["Map alone, long run", lr ? pct(lr.cover_rate) : "—", lr ? rec(lr) + ", " + lr.first_season + "–" + lr.last_season : ""],
       ["Break-even at −110", "52.4%", "needed just to not lose"]
     ];
@@ -355,11 +356,10 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     el("stats").hidden = false;
 
     var games = d.games || [];
-    el("week-note").textContent = games.length + " game(s); frozen rows show their pre-kickoff values" +
-      (rescored ? ", except " + rescored + " marked * (rescored after kickoff with the current points model)" : "");
+    el("week-note").textContent = games.length + " game(s) published live; frozen rows show their pre-kickoff values";
     el("games").innerHTML = games.length ? games.map(function (g) {
       return "<tr><td>" + esc(kick(g.kickoff_utc)) + "</td><td><b>" + esc(g.away) + " @ " + esc(g.home) + "</b></td>" +
-        '<td class="num">' + esc(g.away + " " + g.away_points.toFixed(1) + " – " + g.home + " " + g.home_points.toFixed(1)) + "</td>" +
+        '<td class="num">' + pct(g.model_wp) + " · " + pct(g.market_wp) + "</td>" +
         "<td>" + esc(favText(g.raw_margin, g)) + "</td><td>" + esc(lineText(g)) + "</td>" +
         '<td class="muted">' + esc(g.band) + '</td><td class="num">' + (num(g.mapped_margin) ? esc(favText(g.mapped_margin, g)) : "—") + "</td>" +
         "<td><b>" + esc(sideText(g)) + "</b></td><td>" + status(g) + "</td></tr>";
@@ -370,21 +370,25 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     el("rule-row").innerHTML = map.rule ? map.rule.map(function (v) { return '<td class="num">' + v.toFixed(1) + "</td>"; }).join("")
       : '<td class="muted" colspan="4">No map published.</td>';
 
-    var c = (d.method || {}).points_model || {};
-    if (num(c.const)) el("formula").textContent = "points = " + c.const.toFixed(2) + " + " + c.off.toFixed(3) +
-      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP" +
-      (num(c.home) ? " " + (c.home < 0 ? "− " : "+ ") + Math.abs(c.home).toFixed(2) + " (home)" : "");
-    var fit = (d.method || {}).points_model_fit;
-    if (fit) el("fit-note").textContent = "Fitted on " + fit.team_games + " team-games (" +
-      (fit.seasons[0] === fit.seasons[1] ? fit.seasons[0] : fit.seasons[0] + "–" + fit.seasons[1]) +
-      " through week " + fit.through_week + "): " + fit.source + ".";
+    var m = d.method || {}, fit = m.fit || {}, r = m.recipe || {};
+    if (num(fit.training_games)) el("fit-note").textContent = "Frozen 2026 recipe: " + r.family + ", half-life " + r.half_life +
+      " games, ridge " + r.ridge + "; this week's fit used " + fit.training_games + " games through " +
+      fit.training_max_season + " week " + fit.training_max_week_in_latest_season + " (" + (m.revision || "") + ").";
+    var oc = (m.outer_scorecard || []).reduce(function (o, x) { o[x.source] = x; return o; }, {});
+    var mc = oc["box-score composite"], mk = oc["raw spread-derived market"];
+    if (mc && mk) el("scorecard-note").textContent = "Picking winners on held-out seasons, the composite was right " +
+      mc["picked winner %"].toFixed(1) + "% of the time against " + mk["picked winner %"].toFixed(1) +
+      "% for the spread, with worse log loss (" + mc["log loss"].toFixed(3) + " vs " + mk["log loss"].toFixed(3) + "). " +
+      (m.market_blend_verdict || "");
 
-    var ps = (bt.projection_map || {}).seasons || {}, cs = (bt.spread_map_control || {}).seasons || {};
+    var ps = (bt.projection_map || {}).seasons || {}, rs = (bt.raw_margin || {}).seasons || {},
+      cs = (bt.spread_map_control || {}).seasons || {};
     var seasons = Object.keys(cs).concat(Object.keys(ps)).filter(function (s, i, a) { return a.indexOf(s) === i; })
       .sort(function (a, b) { return b - a; });
     el("backtest").innerHTML = seasons.map(function (s) {
-      var p = ps[s], q = cs[s];
+      var p = ps[s], x = rs[s], q = cs[s];
       return "<tr><td>" + s + '</td><td class="num">' + (p ? rec(p) : '<span class="muted">—</span>') + '</td><td class="num">' + (p ? pct(p.cover_rate) : "") +
+        '</td><td class="num">' + (x ? rec(x) : "—") + '</td><td class="num">' + (x ? pct(x.cover_rate) : "") +
         '</td><td class="num">' + (q ? rec(q) : "—") + '</td><td class="num">' + (q ? pct(q.cover_rate) : "") + "</td></tr>";
     }).join("");
     renderSeason(d);
