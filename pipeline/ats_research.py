@@ -1,36 +1,30 @@
-"""Research page: projection-implied game margins against the market line.
+"""Research page: the box-score composite's game margin against the market line.
 
-This is model research, not betting advice. Over 2023-2026 walk-forward the
-projection margin through the median map covered about 51% of decided games
-against closing lines, below the 52.4% break-even at -110; the map on the
-spread alone covered 50.2% over 2001-2026. The page shows that record as
+This is model research, not betting advice. The page shows its record as
 prominently as this week's numbers.
 
-Steps, all from the shared projection snapshot:
+Model (replaced the Sleeper projection points model on 2026-11-28): the NFL
+box-score composite v1.7, pipeline/boxscore_composite.py, run by
+tools/build_boxscore_composite.py, which exports site/data/boxscore/latest.json.
 
-1. Team strength: starters' projected half-PPR points (QB1, RB1-2, WR1-3,
-   TE1) and the team's DEF projection.
-2. Points model (fitted offline by tools/build_ats_research_model.py on
-   2021+ Sleeper weekly projections and nflverse scores):
-   points = const + b_off * offense + b_def * opponent DEF.
-   The raw margin is home points minus away points (+ = home favoured), so the
-   constant cancels. There is no home-field term (dropped 2026-11-28): the
-   projections already price venue, the fitted edge was small (+0.5 to +1.1
-   on Sleeper history, -0.3 on this season's blend) and dropping it left margin
-   error unchanged in walk-forward replays.
-3. Fixed median map: bands of |raw| (<3, 3-7, 7-10, 10+) map to 3, 5, 7 and
-   13 points. Mapped margin = sign(raw) * band value. It replaced a weekly-
-   refit map (2026-11-24): the refit moved most weeks without covering more
-   often in replays, and a fixed rule cannot produce out-of-order bands. The
-   10+ value moved from 10 to 13 the same day, so big favourites on lines of
-   10-13 are taken rather than faded. Both values were chosen after seeing
-   replays. fit_weekly_map keeps the refit for research.
+1. The composite is a weekly-refit ridge logistic regression of home W/L on
+   home-minus-away team profiles built only from earlier games: eight decayed
+   box-score rates for offense and the same eight allowed by the defense, plus
+   player availability (projected QB vs the recent QB mix, and each unit's
+   snaps lost to injury reports or roster moves). Its recipe (feature family,
+   half-life, ridge) was frozen for 2026 from 2021-2025 walk-forward results.
+2. Its home win probability p becomes a margin on the spread's scale:
+   margin = 12.37 * probit(p), the inverse of the market conversion
+   P(home) = Phi(spread_line / 12.37) the composite uses as its benchmark.
+3. Fixed map: bands of |margin| (<3, 3-7, 7-10, 10+) map to 3, 5, 7 and 13
+   points, keeping the sign. These values were chosen on replays of the
+   earlier Sleeper model, before this model was attached.
 4. Model side: mapped margin vs the nflverse market line; zero edge goes to
    the favourite.
 5. A game's row freezes at the last publish before its kickoff. Frozen rows
    are appended once to an append-only ledger and graded from nflverse
-   final scores. The one exception: tools/rescore_ats_ledger.py rescores
-   frozen rows after a model change and stamps each changed row.
+   final scores. Weeks or games the page did not publish live come from the
+   composite's own walk-forward predictions and are tagged replay.
 """
 from __future__ import annotations
 
@@ -39,6 +33,8 @@ import json
 import math
 from datetime import datetime, timezone
 from pathlib import Path
+from statistics import NormalDist
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
@@ -46,131 +42,45 @@ import pandas as pd
 from pipeline.showdown_archive_backtest import _pandas, _team
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_DIR = ROOT / "model" / "ats_research"
-MODEL_PATH = MODEL_DIR / "model.json"
-HISTORY_PATH = MODEL_DIR / "margin_history.csv"
-REPLAY_PATH = MODEL_DIR / "season_replay.json"
+COMPOSITE_PATH = ROOT / "site" / "data" / "boxscore" / "latest.json"
 
-SCHEMA = 1
-TAKE = {"QB": 1, "RB": 2, "WR": 3, "TE": 1}
+SCHEMA = 2
+MODEL_NAME = "NFL box-score composite"
+MARKET_SIGMA = 12.37
 BANDS = (3.0, 7.0, 10.0)
 BAND_LABELS = ("under 3", "3 to 7", "7 to 10", "10 or more")
 FIXED_RULE = (3.0, 5.0, 7.0, 13.0)
-MAP_HALF_LIFE_WEEKS = 8          # research only: fit_weekly_map
-WEEKS_PER_SEASON = 19
-MIN_SEASONS = 2
-MIN_GAMES = 300
-MIN_PER_BAND = 30
 BREAK_EVEN = 110 / 210
 DISCLAIMER = (
-    "Experimental model research. No demonstrated edge: in backtests this "
-    "method covered about as often as a coin flip, below the 52.4% needed to "
-    "break even. Not betting advice."
+    "Experimental model research. No demonstrated edge: the box-score composite "
+    "predicts winners less accurately than the point spread, and its record "
+    "against the spread is within coin-flip noise of the 52.4% needed to break "
+    "even. Not betting advice."
 )
+_NORMAL = NormalDist()
 
 
-# ---------------------------------------------------------------- strength
-def team_strength(players: pd.DataFrame, team_col="team", pos_col="pos", fp_col="fp"):
-    """{team: {"off": starters' FP, "def": DEF FP, ...}} from one projection set."""
-    frame = players[[team_col, pos_col, fp_col]].copy()
-    frame.columns = ["team", "pos", "fp"]
-    frame["team"] = frame["team"].map(_team)
-    frame["fp"] = pd.to_numeric(frame["fp"], errors="coerce")
-    frame = frame[frame["fp"].notna() & frame["fp"].gt(0)]
-    out = {}
-    for team, group in frame.groupby("team"):
-        row = {}
-        for pos, count in TAKE.items():
-            row[pos] = float(group.loc[group.pos.eq(pos), "fp"].nlargest(count).sum())
-        row["off"] = float(sum(row[pos] for pos in TAKE))
-        row["def"] = float(group.loc[group.pos.eq("DEF"), "fp"].sum())
-        out[team] = row
-    return out
+# ---------------------------------------------------------------- margin
+def implied_margin(home_wp: float, sigma: float = MARKET_SIGMA) -> float:
+    """Home margin on the spread's scale: sigma * probit(p)."""
+    p = min(max(float(home_wp), 1e-6), 1 - 1e-6)
+    return sigma * _NORMAL.inv_cdf(p)
 
 
-FEATURES = ("off", "opp_def")
+def market_wp(line: float, sigma: float = MARKET_SIGMA) -> float:
+    return _NORMAL.cdf(float(line) / sigma)
 
 
-def fit_points_model(team_games: pd.DataFrame, ridge: float = 1.0) -> dict:
-    """Ridge fit of team points on own offense and opponent DEF (no home field)."""
-    x = np.column_stack([np.ones(len(team_games)), team_games[list(FEATURES)]])
-    penalty = np.eye(len(FEATURES) + 1) * ridge
-    penalty[0, 0] = 0.0
-    beta = np.linalg.solve(x.T @ x + penalty, x.T @ team_games["pts"].to_numpy(float))
-    return dict(zip(("const",) + FEATURES, map(float, beta)))
-
-
-def predict_points(coef: dict, off: float, opp_def: float) -> float:
-    return coef["const"] + coef["off"] * off + coef["opp_def"] * opp_def
-
-
-# ---------------------------------------------------------------- median map
 def band_of(raw: float) -> int:
     return int(np.searchsorted(BANDS, abs(raw), side="right"))
 
 
-def weighted_median(values, weights) -> float:
-    values, weights = np.asarray(values, float), np.asarray(weights, float)
-    order = np.argsort(values)
-    values, weights = values[order], weights[order]
-    cumulative = np.cumsum(weights)
-    return float(values[np.searchsorted(cumulative, cumulative[-1] / 2)])
-
-
-def fit_map(history=None, season=None, week=None):
-    """The page's map: the fixed 3/5/7/13 rule, whatever the history."""
+def fit_map(*_args, **_kwargs):
+    """The page's map: the fixed 3/5/7/13 rule."""
     return list(FIXED_RULE)
 
 
-def fit_weekly_map(history: pd.DataFrame, season: int, week: int):
-    """Research: band values from games strictly before (season, week); None if too thin.
-
-    `history` needs season, week, raw and actual (home margin)."""
-    prior = history[(history.season < season)
-                    | ((history.season == season) & (history.week < week))]
-    prior = prior[prior.raw.ne(0) & prior.actual.notna()]
-    if prior.season.nunique() < MIN_SEASONS or len(prior) < MIN_GAMES:
-        return None
-    age = ((season - prior.season) * WEEKS_PER_SEASON + (week - prior.week)) / MAP_HALF_LIFE_WEEKS
-    weight = np.power(2.0, -age.to_numpy(float))
-    bands = prior.raw.map(band_of).to_numpy()
-    signed = (np.sign(prior.raw) * prior.actual).to_numpy(float)
-    if any((bands == band).sum() < MIN_PER_BAND for band in range(len(BANDS) + 1)):
-        return None
-    return monotone_band_medians(signed, weight, bands, len(BANDS) + 1)
-
-
-def monotone_band_medians(signed, weight, bands, count):
-    """Weighted median per band, never decreasing with the band.
-
-    A bigger projected margin must not map to a smaller one. Thin, noisy top
-    bands broke that (2026 week 8: 3/5/11/6 sent a 13-point favourite to 6), so
-    any band whose median falls below the band beneath it is pooled with it and
-    the pooled games' median is used for both (pool-adjacent-violators)."""
-    blocks = [[band] for band in range(count)]
-
-    def median(members):
-        mask = np.isin(bands, members)
-        return weighted_median(signed[mask], weight[mask])
-
-    values = [median(block) for block in blocks]
-    i = 0
-    while i < len(blocks) - 1:
-        if values[i + 1] < values[i]:
-            blocks[i] = blocks[i] + blocks.pop(i + 1)
-            values.pop(i + 1)
-            values[i] = median(blocks[i])
-            i = max(i - 1, 0)
-        else:
-            i += 1
-    rule = [None] * count
-    for block, value in zip(blocks, values):
-        for band in block:
-            rule[band] = value
-    return rule
-
-
-def mapped_margin(raw: float, rule) -> float:
+def mapped_margin(raw: float, rule=FIXED_RULE) -> float:
     return float(np.sign(raw) * rule[band_of(raw)])
 
 
@@ -200,25 +110,6 @@ def record(results) -> dict:
     }
 
 
-# ---------------------------------------------------------------- lines
-def load_schedule(seasons) -> pd.DataFrame:
-    """nflverse regular-season schedule with canonical team codes."""
-    import nflreadpy as nfl
-    schedule = _pandas(nfl.load_schedules(sorted(set(int(s) for s in seasons))))
-    schedule = schedule[schedule["game_type"].eq("REG")].copy()
-    for column in ("home_team", "away_team"):
-        schedule[column] = schedule[column].map(_team)
-    schedule["game_date"] = pd.to_datetime(schedule["gameday"]).dt.date
-    return schedule
-
-
-def _match(schedule: pd.DataFrame, home: str, away: str, kickoff: pd.Timestamp):
-    rows = schedule[schedule.home_team.eq(home) & schedule.away_team.eq(away)]
-    day = kickoff.tz_convert("America/New_York").date()
-    rows = rows[rows.game_date.map(lambda d: abs((d - day).days) <= 1)]
-    return rows.iloc[0] if len(rows) == 1 else None
-
-
 def _finite(value):
     try:
         value = float(value)
@@ -227,17 +118,31 @@ def _finite(value):
     return value if math.isfinite(value) else None
 
 
-# ---------------------------------------------------------------- artifacts
-def load_model(path=MODEL_PATH) -> dict:
-    model = json.loads(Path(path).read_text())
-    if model.get("schema") != SCHEMA:
-        raise ValueError("Unsupported ATS research model artifact")
-    return model
+# ---------------------------------------------------------------- inputs
+def load_schedule(seasons) -> pd.DataFrame:
+    """nflverse regular-season schedule with canonical team codes."""
+    import nflreadpy as nfl
+    schedule = _pandas(nfl.load_schedules(sorted(set(int(s) for s in seasons))))
+    schedule = schedule[schedule["game_type"].eq("REG")].copy()
+    for column in ("home_team", "away_team"):
+        schedule[column] = schedule[column].map(_team)
+    return schedule
 
 
-def load_history(path=HISTORY_PATH) -> pd.DataFrame:
-    history = pd.read_csv(path, dtype={"game_id": str})
-    return history[["season", "week", "game_id", "raw", "line", "actual"]]
+def load_composite(path=COMPOSITE_PATH) -> dict:
+    composite = json.loads(Path(path).read_text())
+    if composite.get("schema") != 1:
+        raise ValueError("Unsupported box-score composite export")
+    return composite
+
+
+def kickoff_utc(gameday, gametime):
+    """nflverse gameday/gametime are US Eastern."""
+    try:
+        naive = datetime.fromisoformat(f"{gameday}T{gametime}")
+    except (TypeError, ValueError):
+        return None
+    return pd.Timestamp(naive.replace(tzinfo=ZoneInfo("America/New_York"))).tz_convert("UTC")
 
 
 def read_ledger(path) -> list[dict]:
@@ -257,90 +162,139 @@ def append_ledger(path, rows) -> None:
             handle.write(json.dumps(row, sort_keys=True, allow_nan=False) + "\n")
 
 
+# ---------------------------------------------------------------- replay
+def pick(raw: float, line):
+    """(mapped margin, side) for a raw margin against a line; side 0 without a line."""
+    mapped = mapped_margin(raw)
+    if line is None:
+        return mapped, 0
+    return mapped, model_side(mapped, line)
+
+
+def replay_row(game: dict) -> dict:
+    """One walk-forward composite prediction as a page row, graded when final."""
+    line, wp = _finite(game.get("spread_line")), _finite(game.get("model_wp"))
+    row = {"week": int(game["week"]), "game_id": game["game_id"], "home": game["home"],
+           "away": game["away"], "model_wp": wp, "line": line, "raw_margin": None,
+           "mapped_margin": None, "model_side": None, "result": None,
+           "home_score": game.get("home_score"), "away_score": game.get("away_score")}
+    if wp is None or not game.get("ready", True):
+        return row
+    raw = implied_margin(wp)
+    mapped, side = pick(raw, line)
+    row.update(raw_margin=round(raw, 2), mapped_margin=mapped,
+               model_side=(game["home"] if side > 0 else game["away"]) if side else None)
+    margin = _finite(game.get("result"))
+    if side and margin is not None:
+        row["result"] = grade(side, margin, line)
+    return row
+
+
+def _season_of(rows):
+    out = {}
+    for game in rows:
+        out.setdefault(int(game["season"]), []).append(game)
+    return out
+
+
+def backtest(composite: dict, long_run: dict | None = None) -> dict:
+    """Held-out seasons (recipe chosen on earlier seasons) plus this season's
+    earlier weeks: the composite through the map, the composite's raw margin,
+    and the spread through the same map (control)."""
+    games = list(composite.get("outer_predictions", []))
+    current = [g for g in composite.get("season_predictions", [])
+               if g.get("result") is not None]
+    games += current
+    out = {"projection_map": {}, "raw_margin": {}, "spread_map_control": {}}
+    per = {k: {} for k in out}
+    for season, rows in sorted(_season_of(games).items()):
+        for g in rows:
+            line, margin, wp = (_finite(g.get("spread_line")), _finite(g.get("result")),
+                                _finite(g.get("model_wp")))
+            if line is None or margin is None:
+                continue
+            per["spread_map_control"].setdefault(season, []).append(
+                grade(pick(line, line)[1], margin, line))
+            if wp is None or not g.get("ready", True):
+                continue
+            raw = implied_margin(wp)
+            per["projection_map"].setdefault(season, []).append(grade(pick(raw, line)[1], margin, line))
+            per["raw_margin"].setdefault(season, []).append(grade(model_side(raw, line), margin, line))
+    for key, seasons in per.items():
+        out[key] = {"seasons": {str(s): record(r) for s, r in sorted(seasons.items())},
+                    "all": record(r for rs in seasons.values() for r in rs),
+                    "first_season": min(seasons) if seasons else None}
+    out["projection_map"]["label"] = "Composite margin through the fixed map, closing lines"
+    out["raw_margin"]["label"] = "Composite margin vs the line, no map"
+    out["spread_map_control"]["label"] = "Closing spread through the same map (no model)"
+    if long_run:
+        out["spread_map_control"]["long_run"] = long_run
+    out["break_even"] = BREAK_EVEN
+    out["shown_from"] = out["projection_map"]["first_season"]
+    out["note"] = ("Held-out seasons use the recipe chosen on earlier seasons; this season "
+                   "uses the frozen recipe with coefficients refit weekly. Graded at closing "
+                   "lines, assumed -110. The map was tuned on the earlier Sleeper model's "
+                   "replays, not this model's; these are diagnostics, not forward evidence.")
+    return out
+
+
 # ---------------------------------------------------------------- payload
-def build_payload(players, schedule, model, history, previous=None, ledger=(),
-                  now=None, snapshot_id=None, replay=None):
+def build_payload(composite, schedule, previous=None, ledger=(), now=None, snapshot_id=None):
     """Return (payload, rows to append to the ledger).
 
-    `players` is the shared prepared slate (Name, Position, Team, Projected_FP,
-    Game ID, Game Time, Home Team, Away Team). Rows of `previous` whose kickoff
-    has passed are kept unchanged: they froze at the last publish before
-    kickoff. Every frozen row not yet in `ledger` is returned for appending.
+    Rows of `previous` whose kickoff has passed are kept unchanged: they froze
+    at the last publish before kickoff. A game first seen after kickoff gets no
+    live row. Every frozen row not yet in `ledger` is returned for appending.
     """
     now = pd.Timestamp(now or datetime.now(timezone.utc))
     now = now.tz_localize("UTC") if now.tzinfo is None else now.tz_convert("UTC")
-    coef = model["coefficients"]
-    strength = team_strength(players, "Team", "Position", "Projected_FP")
-    games = (players[["Game ID", "Game Time", "Home Team", "Away Team"]]
-             .drop_duplicates("Game ID"))
-
-    # Graded forward rows extend the map's training history week by week.
+    by_id = schedule.set_index(schedule["game_id"].astype(str))
     ledger = list(ledger)
-    graded = _grade_ledger(ledger, schedule)
-    forward_history = pd.DataFrame([
-        {"season": r["season"], "week": r["week"], "game_id": str(r.get("nflverse_game_id")),
-         "raw": r["raw_margin"], "line": r["line"], "actual": r["home_margin"]}
-        for r in graded if r.get("home_margin") is not None
-    ], columns=["season", "week", "game_id", "raw", "line", "actual"])
-    # The weekly refit's history and the ledger can both hold a game; the
-    # ledger's margin is the one this page published, so it wins.
-    if "game_id" in history:
-        history = history[~history["game_id"].astype(str).isin(set(forward_history["game_id"]))]
-    train = pd.concat([history, forward_history], ignore_index=True)
 
     rows = {}
-    previous_rows = {r["game_id"]: r for r in (previous or {}).get("games", [])}
+    previous_rows = {r["game_id"]: r for r in (previous or {}).get("games", [])
+                     if r.get("model") == MODEL_NAME}
     for game_id, row in previous_rows.items():
         if pd.Timestamp(row["kickoff_utc"]) <= now:
             rows[game_id] = dict(row, locked=True)
 
-    season = week = None
-    rule = None
-    for game in games.itertuples(index=False):
-        game_id = str(game[0])
-        kickoff = pd.Timestamp(pd.to_datetime(game[1], utc=True))
-        home, away = _team(game[2]), _team(game[3])
-        if game_id in rows:
+    season, week = int(composite["season"]), int(composite["week"])
+    for game in composite.get("board", []):
+        game_id = str(game["game_id"])
+        if game_id in rows or game_id not in by_id.index:
             continue
-        if kickoff <= now:
+        match = by_id.loc[game_id]
+        kickoff = kickoff_utc(match.get("gameday"), match.get("gametime"))
+        if kickoff is None or kickoff <= now:
             continue  # started with no pregame row: no model side, never repaired
-        match = _match(schedule, home, away, kickoff)
-        if match is None or home not in strength or away not in strength:
-            continue
         line = _finite(match.get("spread_line"))
-        if season is None:
-            season, week = int(match["season"]), int(match["week"])
-            rule = fit_map(train, season, week)
-        h, a = strength[home], strength[away]
-        home_pts = predict_points(coef, h["off"], a["def"])
-        away_pts = predict_points(coef, a["off"], h["def"])
-        raw = home_pts - away_pts
+        wp = _finite(game.get("model_wp"))
         entry = {
-            "game_id": game_id, "nflverse_game_id": str(match["game_id"]),
-            "season": int(match["season"]), "week": int(match["week"]),
-            "kickoff_utc": kickoff.isoformat(), "home": home, "away": away,
-            "home_offense_fp": round(h["off"], 2), "away_offense_fp": round(a["off"], 2),
-            "home_def_fp": round(h["def"], 2), "away_def_fp": round(a["def"], 2),
-            "home_points": round(home_pts, 1), "away_points": round(away_pts, 1),
-            "raw_margin": round(raw, 2), "projected_total": round(home_pts + away_pts, 1),
+            "game_id": game_id, "nflverse_game_id": game_id, "model": MODEL_NAME,
+            "season": int(game["season"]), "week": int(game["week"]),
+            "kickoff_utc": kickoff.isoformat(), "home": match["home_team"], "away": match["away_team"],
+            "model_wp": round(wp, 4) if wp is not None else None,
+            "homefield_wp": _finite(game.get("homefield_wp")),
+            "market_wp": round(market_wp(line), 4) if line is not None else None,
+            "ready": bool(game.get("ready", True)),
+            "raw_margin": None, "band": None,
             "line": line, "total_line": _finite(match.get("total_line")),
             "line_source": "nflverse schedules (spread_line)",
             "line_captured_utc": now.isoformat(),
-            "band": BAND_LABELS[band_of(raw)],
             "mapped_margin": None, "model_side": None, "edge": None,
+            "composite_generated_utc": composite.get("generated_utc"),
             "snapshot_id": snapshot_id, "locked": False,
         }
-        if rule is not None and line is not None:
-            mapped = mapped_margin(raw, rule)
-            side = model_side(mapped, line)
-            entry.update(mapped_margin=mapped, edge=round(mapped - line, 2),
-                         model_side=(home if side > 0 else away) if side else None,
-                         model_side_sign=side)
+        if wp is not None and entry["ready"]:
+            raw = implied_margin(wp)
+            entry.update(raw_margin=round(raw, 2), band=BAND_LABELS[band_of(raw)])
+            if line is not None:
+                mapped, side = pick(raw, line)
+                entry.update(mapped_margin=mapped, edge=round(mapped - line, 2),
+                             model_side=(entry["home"] if side > 0 else entry["away"]) if side else None,
+                             model_side_sign=side)
         rows[game_id] = entry
 
-    if season is None and rows:
-        any_row = next(iter(rows.values()))
-        season, week = any_row["season"], any_row["week"]
     current = sorted((r for r in rows.values() if (r["season"], r["week"]) == (season, week)),
                      key=lambda r: (r["kickoff_utc"], r["home"]))
 
@@ -351,29 +305,37 @@ def build_payload(players, schedule, model, history, previous=None, ledger=(),
         and r.get("model_side_sign")
     ]
     graded_all = _grade_ledger(ledger + new_ledger, schedule)
-    by_id = {r["game_id"]: r for r in graded_all}
+    graded = {r["game_id"]: r for r in graded_all}
     for r in current:
-        if r["game_id"] in by_id:
-            r["result"] = by_id[r["game_id"]].get("result")
-            r["home_margin"] = by_id[r["game_id"]].get("home_margin")
+        if r["game_id"] in graded:
+            r["result"] = graded[r["game_id"]].get("result")
+            r["home_margin"] = graded[r["game_id"]].get("home_margin")
 
+    weeks = season_results(season, composite.get("season_predictions", []), graded_all)
     payload = {
         "schema": SCHEMA, "snapshot_id": snapshot_id,
         "generated_utc": now.isoformat(), "season": season, "week": week,
         "disclaimer": DISCLAIMER,
         "method": {
-            "team_strength": "starters' projected half-PPR points: QB1, RB1-2, WR1-3, TE1; DEF projection",
-            "points_model": coef, "points_model_fit": model.get("fit"),
+            "model": MODEL_NAME, "revision": composite.get("revision"),
+            "recipe": composite.get("recipe"), "fit": composite.get("fit"),
+            "coefficients": composite.get("coefficients"),
+            "composite_generated_utc": composite.get("generated_utc"),
+            "market_sigma": MARKET_SIGMA,
+            "margin": "12.37 x probit(model home win probability)",
+            "outer_scorecard": composite.get("outer_scorecard"),
+            "outer_scorecard_by_season": composite.get("outer_scorecard_by_season"),
+            "market_blend_verdict": composite.get("market_blend_verdict"),
             "map": {"bands": list(BANDS), "band_labels": list(BAND_LABELS),
-                    "type": "fixed", "rule": rule},
+                    "type": "fixed", "rule": list(FIXED_RULE)},
             "line_source": "nflverse schedules spread_line (open data); no capture time from source",
             "lock": "a game's row freezes at the last publish before kickoff",
         },
         "games": current,
         "forward_record": record(r["result"] for r in graded_all if r.get("result")),
-        "season_results": (weeks := season_results(season, replay or {}, graded_all)),
+        "season_results": weeks,
         "season_record": season_record(weeks),
-        "backtest": model.get("backtest"),
+        "backtest": backtest(composite, composite.get("control_long_run")),
     }
     json.dumps(payload, allow_nan=False)
     return payload, new_ledger
@@ -397,37 +359,35 @@ def _grade_ledger(ledger, schedule):
     return out
 
 
-def load_replay(path=REPLAY_PATH) -> dict:
-    path = Path(path)
-    return json.loads(path.read_text()) if path.exists() else {"season": None, "games": []}
-
-
 def season_record(weeks) -> dict:
-    """Every graded game of the season pooled, replayed and live weeks together."""
+    """Every graded game of the season pooled, replayed and live games together."""
     return record(g["result"] for w in weeks for g in w["games"] if g.get("result"))
 
 
-def season_results(season, replay, forward_rows) -> list[dict]:
-    """The season by week, newest first. A week the page published live uses its
-    frozen ledger rows; earlier weeks use the walk-forward replay."""
+def season_results(season, predictions, forward_rows) -> list[dict]:
+    """The season by week, newest first. A game the page published live uses its
+    frozen ledger row; every other game uses the composite's walk-forward
+    prediction (replay). Only games already final or locked are listed."""
     keep = ("week", "home", "away", "raw_margin", "line", "mapped_margin", "model_side",
-            "home_score", "away_score", "result")
-    forward = {}
+            "home_score", "away_score", "result", "model_wp")
+    games = {}
+    for game in predictions:
+        if int(game.get("season", season)) != season or game.get("result") is None:
+            continue
+        row = replay_row(game)
+        games[str(game["game_id"])] = dict({k: row.get(k) for k in keep}, source="replay")
     for row in forward_rows:
         if row.get("season") == season:
-            forward.setdefault(int(row["week"]), []).append({k: row.get(k) for k in keep})
-    replayed = {}
-    if replay.get("season") == season:
-        for row in replay.get("games", []):
-            replayed.setdefault(int(row["week"]), []).append({k: row.get(k) for k in keep})
+            games[str(row.get("nflverse_game_id"))] = dict({k: row.get(k) for k in keep}, source="forward")
     weeks = []
-    for week in sorted(set(forward) | set(replayed), reverse=True):
-        live = week in forward
-        games = sorted(forward[week] if live else replayed[week],
-                       key=lambda g: (g["away"] or "", g["home"] or ""))
-        weeks.append({"week": week, "source": "forward" if live else "replay",
-                      "record": record(g["result"] for g in games if g.get("result")),
-                      "games": games})
+    for week in sorted({g["week"] for g in games.values()}, reverse=True):
+        rows = sorted((g for g in games.values() if g["week"] == week),
+                      key=lambda g: (g["away"] or "", g["home"] or ""))
+        sources = {g["source"] for g in rows}
+        weeks.append({"week": week,
+                      "source": "forward" if sources == {"forward"} else "replay" if sources == {"replay"} else "mixed",
+                      "record": record(g["result"] for g in rows if g.get("result")),
+                      "games": rows})
     return weeks
 
 
@@ -437,7 +397,7 @@ def write_outputs(payload, new_ledger, directory) -> None:
     append_ledger(directory / "ledger.jsonl", new_ledger)
     (directory / "latest.json").write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n")
     with (directory / "latest.csv").open("w", newline="") as handle:
-        fields = ["kickoff_utc", "away", "home", "away_points", "home_points", "raw_margin",
+        fields = ["kickoff_utc", "away", "home", "model_wp", "market_wp", "raw_margin",
                   "line", "band", "mapped_margin", "edge", "model_side", "locked", "result"]
         writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()

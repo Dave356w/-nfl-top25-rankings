@@ -16,3 +16,6 @@ yahoo_showdown_export*/
 # Offline calibration downloads (tools/calibrate_*.py)
 tools/.nflverse_calibration_cache/
 source_eval_cache/
+
+# Box-score composite caches and run folders (tools/build_boxscore_composite.py)
+boxscore_cache/

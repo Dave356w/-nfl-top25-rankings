@@ -303,20 +303,15 @@ def _publish_ats_research(built: dict, directory: Path) -> None:
         previous_path = directory / "latest.json"
         previous = json.loads(previous_path.read_text()) if previous_path.exists() else None
         ledger = ats_research.read_ledger(directory / "ledger.jsonl")
-        players = built["prepared_players"]
-        season = nb.infer_season(players["Game Time"].iloc[0]) if len(players) else None
-        seasons = {int(season)} if season else {built["generated_at"].year}
-        seasons |= {int(row["season"]) for row in ledger}
+        composite = ats_research.load_composite()
+        seasons = {int(composite["season"])} | {int(row["season"]) for row in ledger}
         payload, new_rows = ats_research.build_payload(
-            players,
+            composite,
             ats_research.load_schedule(seasons),
-            ats_research.load_model(),
-            ats_research.load_history(),
             previous=previous,
             ledger=ledger,
             now=built["generated_at"],
             snapshot_id=built["snapshot_id"],
-            replay=ats_research.load_replay(),
         )
         ats_research.write_outputs(payload, new_rows, directory)
         print(f"ATS research page: {len(payload['games'])} game(s), "

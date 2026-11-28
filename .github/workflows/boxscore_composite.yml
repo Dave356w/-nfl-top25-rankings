@@ -1,0 +1,74 @@
+name: Box-score composite
+
+# Runs the NFL box-score composite (pipeline/boxscore_composite.py) and commits
+# its export to site/data/boxscore/. The margin research page (ats.html) reads
+# that export at every daily publish, so each run here lands on the page with
+# the next snapshot. A failed run leaves the previous export in place.
+#
+# Timing: the composite uses final injury reports (Wednesday-Friday) and the
+# weekly rosters, so it runs each morning before the daily publish and again
+# after Friday's final reports and before each game window.
+on:
+  schedule:
+    - cron: "41 12 * * *"   # daily, before the 14:23 UTC publish
+    - cron: "17 21 * * 5"   # Fri: after final injury reports, before the 21:37 publish
+    - cron: "29 15 * * 0"   # Sun: before the 1:00 ET games and the 16:38 publish
+    - cron: "9 22 * * 4"    # Thu: before the Thursday game and the 23:47 publish
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: boxscore-composite
+  cancel-in-progress: false
+
+jobs:
+  composite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # Completed seasons' box scores, availability features and the
+      # walk-forward grid are cached by content hash inside the folder; the
+      # current season is rebuilt every run.
+      - uses: actions/cache@v4
+        with:
+          path: boxscore_cache
+          key: boxscore-${{ github.run_id }}
+          restore-keys: boxscore-
+
+      - name: Run the composite
+        run: |
+          for attempt in 1 2 3; do
+            python tools/build_boxscore_composite.py && exit 0
+            echo "::warning::build_boxscore_composite attempt $attempt failed"
+            sleep $((attempt * 60))
+          done
+          echo "::error::the composite failed 3 times; the previous export stays live"
+          exit 1
+
+      # Only this workflow writes site/data/boxscore/, so a rebase cannot
+      # conflict; it is retried only to ride out a concurrent data commit.
+      - name: Commit the export
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/data/boxscore
+          git diff --cached --quiet && exit 0
+          git commit -m "data: box-score composite $(date -u +%Y-%m-%dT%H:%MZ)"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 20))
+          done
+          exit 1

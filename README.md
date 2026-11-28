@@ -165,58 +165,60 @@ reserve, unconfirmed backup QBs) cannot be changed or brought back there.
 
 ### Model margin research page (`ats.html`)
 
-An experimental page compares the game margin the projections imply with the
-nflverse market line. **It has no demonstrated edge and is not betting
-advice**; the page leads with that and with its record.
+An experimental page compares the game margin the **NFL box-score composite**
+implies with the nflverse market line. **It has no demonstrated edge and is not
+betting advice**; the page leads with that and with its record.
 
-- Team strength: starters' projected points (QB1, RB1-2, WR1-3, TE1) and the
-  DEF projection, from the same snapshot as every other page.
-- Points model: `points = const + b*offense - c*opponent DEF`, fitted
-  by `tools/build_ats_research_model.py` on this season's completed weeks of the
-  site's own blend (each player the mean of Sleeper, ESPN and CBS, CBS rescaled
-  as the site does) and nflverse scores, so it is fitted on the same inputs the
-  page applies it to. Until 100 blend games exist it falls back to Sleeper
-  weekly projections from 2021 (`model/ats_research/`). There is no home-field
-  term (removed 2026-11-28): the fitted edge was small (+0.5 to +1.1 points on
-  Sleeper history, -0.3 on this season's blend), the projections already price
-  venue, and dropping it left walk-forward margin error unchanged. Its cover
-  rate through the fixed map fell about 1.4 points on 2022-2026 Sleeper
-  replays, within noise; the margin history, replay and backtest were rebuilt
-  with the new model.
-- The median map's history and the replayed weeks stay Sleeper-only walk-forward
-  margins from 2021: only Sleeper has that much history.
-- Fixed map: projected margins under 3, 3-7, 7-10 and 10+ map to 3, 5, 7 and
-  13 (keeping the favourite), then the mapped margin is compared with
-  nflverse's `spread_line`. It replaced a weekly-refit median map, which
-  moved most weeks without covering more often; `fit_weekly_map` keeps that
-  refit for research. The 10+ value is 13 (was 10), so favourites on lines of
-  10-13 are taken rather than faded.
+- Model: the box-score composite v1.7 (`pipeline/boxscore_composite.py`),
+  ported from the `NFL_C_B_MODEL.ipynb` Colab notebook on 2026-11-28 after the
+  NFL-MODEL repository was disabled; the model code is unchanged. It is a
+  weekly-refit ridge logistic regression of home W/L on home-minus-away team
+  profiles from earlier games only: eight decayed box-score rates rebuilt from
+  nflverse play-by-play, for each offense and as allowed by each defense, plus
+  player availability (projected QB vs the recent QB mix; each unit's snaps
+  lost to final injury reports or roster moves). The 2026 recipe
+  (`rates_core_avail_cs`, half-life 8 games, ridge 0.1) was frozen from
+  2021-2025 walk-forward results and is committed in
+  `site/data/boxscore/frozen_recipe_2026.json`.
+- Margin: the home win probability p becomes `12.37 * probit(p)`, the inverse
+  of the market conversion `P(home) = Phi(spread_line / 12.37)` the composite
+  is benchmarked against.
+- Fixed map: margins under 3, 3-7, 7-10 and 10+ map to 3, 5, 7 and 13
+  (keeping the favourite), then the mapped margin is compared with nflverse's
+  `spread_line`; a tie goes to the favourite. These values were chosen on
+  replays of the Sleeper projection model the page used before, not this one.
+- `tools/build_boxscore_composite.py` runs the composite and exports
+  `site/data/boxscore/latest.json` (this week's board, this season's
+  walk-forward predictions, held-out 2023+ predictions, scorecards and the
+  spread-through-map control since 2001). The composite's frozen recipe and
+  its own first-pregame ledger (`forward_predictions.jsonl`) live beside it;
+  caches and full run folders stay in `boxscore_cache/` (git-ignored).
+- The **Box-score composite** workflow (`boxscore_composite.yml`) runs it every
+  morning, after Friday's final injury reports, and before the Thursday and
+  Sunday games, and commits `site/data/boxscore/`. Every daily publish then
+  rebuilds the page from the latest export; a failed composite run leaves the
+  previous export in place.
 - Each game's row freezes at the last publish before kickoff and is appended
   once to `site/data/ats/ledger.jsonl` and graded from nflverse final scores.
-- When the points model changes, `tools/rescore_ats_ledger.py --season <year>
-  --note "<why>"` rescores the season's frozen rows from their stored team
-  strength and line, regrades them and refreshes `latest.json`/`latest.csv`.
-  Changed rows carry `rescored_utc` and `rescore_note`, and the page marks
-  them `*`. Done once, on 2026-11-28, for the home-field removal: of week 12's
-  five frozen rows only PHI @ DAL changed side (raw margin 9.90 -> 10.03 crossed
-  into the 10+ band; PHI, a win, became DAL, a loss), so the forward record
-  went from 3-1-1 to 2-2-1.
-- The page shows backtests for last season and this one only (projection +
-  map 51.4% over 2025-2026), plus one line with the map's long-run record on
-  the spread alone (50.2%, 2001-2026). Break-even at -110 is 52.4%.
-- Below the backtest, the season is listed week by week (newest first) with
-  every game's projection, line, model side, final score and result, and one
-  pooled season record. Weeks before the page went live come from the
-  walk-forward replay (`model/ats_research/season_replay.json`); live weeks use
-  the frozen ledger rows. Each week is tagged replay or live.
+  The rows the retired Sleeper points model published (week 12 of 2026) are
+  kept in `site/data/ats/ledger_sleeper_points_2026.jsonl`.
+- The backtest covers the composite's held-out seasons (2023-2025, recipe
+  chosen on earlier seasons) and this season's earlier weeks: the composite
+  through the map, the composite against the line with no map, and the spread
+  through the map as a control, plus the control's 2001+ record. Break-even at
+  -110 is 52.4%.
+- Below it the season is listed week by week, every final game with the
+  model's margin, line, side, score and result. Games the page published live
+  use their frozen rows; the rest use the composite's walk-forward predictions
+  and are tagged replay.
 - A failure in this step leaves only this page stale.
 
-The Tuesday workflow (`source_quality.yml`) refits it each week after Monday
-night and commits `model/ats_research/`; a failed refit keeps last week's
-model. To refit by hand:
+To run the composite by hand (the first run downloads play-by-play, injury,
+roster and snap data from 2019 and takes a while; later runs reuse the cache):
 
 ```bash
-python tools/build_ats_research_model.py
+python tools/build_boxscore_composite.py
+python pipeline/boxscore_composite.py --self-test   # the notebook's offline checks
 ```
 
 ## Setup (one time)
