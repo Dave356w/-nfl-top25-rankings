@@ -1,188 +1,188 @@
 Position,Rank,Player,Team,Opponent,Estimated FP,Salary,FP / salary,Role,Role slot,Depth,Kickoff UTC,Projection method,Market FP,Market quality,Market props
-QB,1,Joe Burrow,CIN,NO,24.13,43,0.561,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),23.55,good,Pa 283.5 · PaTD 2.5 · INT 0.5 · Ru 7 · TD 24%
+QB,1,Joe Burrow,CIN,NO,24.15,43,0.562,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),23.55,good,Pa 283.5 · PaTD 2.5 · INT 0.5 · Ru 7 · TD 24%
 QB,2,Trevor Lawrence,JAX,TEN,23.08,35,0.659,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),22.07,good,Pa 254 · PaTD 2.5 · INT 0.5 · Ru 9 · TD 28%
-QB,3,Jayden Daniels,WAS,ARI,22.02,36,0.612,starter,QB QB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),20.99,good,Pa 223.5 · PaTD 1.5 · INT 0.5 · Ru 31.5 · TD 24%
+QB,3,Jayden Daniels,WAS,ARI,22.02,36,0.612,starter,QB QB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),20.98,good,Pa 223.5 · PaTD 1.5 · INT 0.5 · Ru 31.5 · TD 24%
 QB,4,C.J. Stroud,HOU,BAL,21.13,38,0.556,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),21.28,good,Pa 258 · PaTD 2.5 · INT 0.5 · Ru 11 · TD 16%
 QB,5,Dak Prescott,DAL,PHI,20.73,40,0.518,starter,QB QB,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 QB,6,Josh Allen,BUF,KC,19.58,41,0.478,starter,QB QB,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-QB,7,Deshaun Watson,CLE,LV,18.88,32,0.59,starter,QB QB,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),18.14,good,Pa 210.5 · PaTD 1.5 · INT 0.5 · Ru 25.5 · TD 25%
+QB,7,Deshaun Watson,CLE,LV,18.81,32,0.588,starter,QB QB,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),18.2,good,Pa 211 · PaTD 1.5 · INT 0.5 · Ru 25.5 · TD 25%
 QB,8,Jared Goff,DET,CHI,18.69,35,0.534,starter,QB QB,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 QB,9,Caleb Williams,CHI,DET,18.24,34,0.536,starter,QB QB,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 QB,10,Patrick Mahomes,KC,BUF,17.45,39,0.447,starter,QB QB,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 QB,11,Geno Smith,NYJ,MIA,17.21,25,0.688,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.78,good,Pa 202.5 · PaTD 1.5 · INT 0.5 · Ru 3.5 · TD 18%
-QB,12,Tyler Shough,NO,CIN,16.83,29,0.58,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.28,good,Pa 230.5 · PaTD 1.5 · INT 0.5 · Ru 20.5 · TD 23%
-QB,13,J.J. McCarthy,NYG,IND,16.77,24,0.699,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.71,good,Pa 215.5 · PaTD 1.5 · INT 0.5 · Ru 16.5 · TD 23%
+QB,12,Tyler Shough,NO,CIN,16.84,29,0.581,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.28,good,Pa 230.5 · PaTD 1.5 · INT 0.5 · Ru 20.5 · TD 23%
+QB,13,J.J. McCarthy,NYG,IND,16.77,24,0.699,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.66,good,Pa 215.5 · PaTD 1.5 · INT 0.5 · Ru 16.5 · TD 23%
 QB,14,Kirk Cousins,MIN,ATL,16.34,28,0.584,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.47,good,Pa 242.5 · PaTD 1.5 · INT 0.5 · Ru 0.5 · TD 6%
 QB,15,Joe Milton,PHI,DAL,15.86,20,0.793,starter,QB QB,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 QB,16,Matthew Stafford,LAR,GB,15.74,31,0.508,starter,QB QB,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 QB,17,Jordan Love,GB,LAR,15.68,37,0.424,starter,QB QB,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 QB,18,Baker Mayfield,TB,CAR,15.0,24,0.625,starter,QB QB,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.0,good,Pa 201.5 · PaTD 1.5 · INT 0.5 · Ru 15.5 · TD 20%
 QB,19,Bryce Young,CAR,TB,14.96,29,0.516,starter,QB QB,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.71,good,Pa 234.5 · PaTD 1.5 · INT 0.5 · Ru 5.5 · TD 19%
-QB,20,Fernando Mendoza,LV,CLE,14.96,22,0.68,starter,QB QB,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.73,good,Pa 191.5 · PaTD 0.5 · INT 0.5 · Ru 15.5 · TD 20%
-QB,21,Anthony Richardson Sr.,IND,NYG,14.63,21,0.697,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),15.35,good,Pa 164.5 · PaTD 0.5 · INT 0.5 · Ru 38 · TD 27%
-QB,22,Sam Darnold,SEA,SF,14.62,26,0.562,starter,QB QB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.75,good,Pa 226 · PaTD 1.5 · INT 0.5 · Ru 4.5 · TD 9%
+QB,20,Fernando Mendoza,LV,CLE,14.89,22,0.677,starter,QB QB,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.79,good,Pa 192.5 · PaTD 0.5 · INT 0.5 · Ru 15.5 · TD 20%
+QB,21,Sam Darnold,SEA,SF,14.64,26,0.563,starter,QB QB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.6,good,Pa 224.5 · PaTD 1.5 · INT 0.5 · Ru 4.5 · TD 7%
+QB,22,Anthony Richardson Sr.,IND,NYG,14.63,21,0.697,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),15.26,good,Pa 164.5 · PaTD 0.5 · INT 0.5 · Ru 37.5 · TD 26%
 QB,23,Kyle McCord,MIA,NYJ,14.18,20,0.709,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.13,good,Pa 170 · PaTD 0.5 · INT 0.5 · Ru 7.5 · TD 17%
 QB,24,Bo Nix,DEN,PIT,13.94,28,0.498,starter,QB QB,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-QB,25,Tommy DeVito,NE,LAC,13.79,20,0.69,starter,QB QB,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.84,good,Pa 176 · PaTD 0.5 · INT 0.5 · Ru 21 · TD 22%
+QB,25,Tommy DeVito,NE,LAC,13.79,20,0.69,starter,QB QB,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.82,good,Pa 176 · PaTD 0.5 · INT 0.5 · Ru 21 · TD 22%
 QB,26,Jacoby Brissett,BAL,HOU,13.03,25,0.521,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),15.67,good,Pa 235.5 · PaTD 1.5 · INT 0.5 · Ru 4 · TD 19%
 QB,27,Josh Johnson,ARI,WAS,12.94,20,0.647,starter,QB QB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.27,good,Pa 167.5 · PaTD 0.5 · INT 0.5 · Ru 13.5 · TD 21%
 QB,28,Cam Ward,TEN,JAX,12.83,26,0.493,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.26,good,Pa 208.5 · PaTD 1.5 · INT 0.5 · Ru 8.5 · TD 13%
 QB,29,Mason Rudolph,PIT,DEN,12.75,20,0.638,starter,QB QB,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-QB,30,DJ Uiagalelei,LAC,NE,12.07,20,0.604,starter,QB QB,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.17,good,Pa 148.5 · PaTD 0.5 · INT 0.5 · Ru 11.5 · TD 22%
+QB,30,DJ Uiagalelei,LAC,NE,12.07,20,0.604,starter,QB QB,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.16,good,Pa 148.5 · PaTD 0.5 · INT 0.5 · Ru 11.5 · TD 22%
 QB,31,Michael Penix Jr.,ATL,MIN,11.28,22,0.513,starter,QB QB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.51,good,Pa 197.5 · PaTD 0.5 · INT 0.5 · Ru 7.5 · TD 8%
-QB,32,Mac Jones,SF,SEA,8.75,20,0.438,starter,QB QB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),15.34,good,Pa 212.5 · PaTD 1.5 · INT 0.5 · Ru 8 · TD 20%
-RB,1,Jahmyr Gibbs,DET,CHI,23.84,44,0.542,starter,RB RB,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-RB,2,Bucky Irving,TB,CAR,18.65,35,0.533,starter,RB RB,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.45,good,Ru 81.5 · Rec 2.5 · RecYd 18.5 · TD 51%
+QB,32,Mac Jones,SF,SEA,8.77,20,0.438,starter,QB QB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),15.34,good,Pa 212.5 · PaTD 1.5 · INT 0.5 · Ru 8 · TD 20%
+RB,1,Jahmyr Gibbs,DET,CHI,23.83,44,0.542,starter,RB RB,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+RB,2,Bucky Irving,TB,CAR,18.64,35,0.533,starter,RB RB,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.45,good,Ru 81.5 · Rec 2.5 · RecYd 18.5 · TD 51%
 RB,3,Emmett Johnson,KC,BUF,17.18,28,0.614,starter,RB RB,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 RB,4,Bijan Robinson,ATL,MIN,16.96,37,0.458,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.79,good,Ru 75.5 · Rec 2.5 · RecYd 21 · TD 48%
-RB,5,Javonte Williams,DAL,PHI,16.55,35,0.473,starter,RB RB,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-RB,6,Christian McCaffrey,SF,SEA,15.96,41,0.389,starter,RB RB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.15,good,Ru 57 · Rec 3.5 · RecYd 31 · TD 56%
+RB,5,Javonte Williams,DAL,PHI,16.54,35,0.473,starter,RB RB,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+RB,6,Christian McCaffrey,SF,SEA,15.94,41,0.389,starter,RB RB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.99,good,Ru 56 · Rec 3.5 · RecYd 31 · TD 55%
 RB,7,Chris Rodriguez Jr.,JAX,TEN,15.91,15,1.061,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.61,good,Ru 77 · Rec 1.5 · RecYd 9 · TD 59%
-RB,8,Jonah Coleman,DEN,PIT,15.68,29,0.541,starter,RB RB,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+RB,8,Jonah Coleman,DEN,PIT,15.67,29,0.54,starter,RB RB,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 RB,9,James Cook III,BUF,KC,15.16,39,0.389,starter,RB RB,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-RB,10,Chuba Hubbard,CAR,TB,14.95,38,0.393,starter,RB RB,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),15.4,good,Ru 63.5 · Rec 2.5 · RecYd 19 · TD 50%
-RB,11,Cam Skattebo,NYG,IND,14.95,25,0.598,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.25,good,Ru 74 · Rec 2.5 · RecYd 15.5 · TD 53%
+RB,10,Cam Skattebo,NYG,IND,14.95,25,0.598,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.25,good,Ru 74 · Rec 2.5 · RecYd 15.5 · TD 53%
+RB,11,Chuba Hubbard,CAR,TB,14.94,38,0.393,starter,RB RB,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),15.4,good,Ru 63.5 · Rec 2.5 · RecYd 19 · TD 50%
 RB,12,Kyren Williams,LAR,GB,14.65,31,0.473,starter,RB RB,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-RB,13,Jonathan Taylor,IND,NYG,14.37,27,0.532,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.97,good,Ru 70.5 · Rec 2.5 · RecYd 13.5 · TD 47%
+RB,13,Jonathan Taylor,IND,NYG,14.36,27,0.532,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.89,good,Ru 70.5 · Rec 2.5 · RecYd 13.5 · TD 47%
 RB,14,Saquon Barkley,PHI,DAL,14.34,23,0.623,starter,RB RB,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-RB,15,Chase Brown,CIN,NO,13.72,27,0.508,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.2,good,Ru 40.5 · Rec 4.5 · RecYd 24.5 · TD 48%
-RB,16,Derrick Henry,BAL,HOU,13.6,34,0.4,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.0,good,Ru 55.5 · Rec 2 · RecYd 8.5 · TD 55%
-RB,17,Quinshon Judkins,CLE,LV,13.43,19,0.707,starter,RB RB,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.35,good,Ru 60 · Rec 1.5 · RecYd 7 · TD 43%
+RB,15,Chase Brown,CIN,NO,13.7,27,0.507,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.2,good,Ru 40.5 · Rec 4.5 · RecYd 24.5 · TD 48%
+RB,16,Derrick Henry,BAL,HOU,13.59,34,0.4,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.0,good,Ru 55.5 · Rec 2 · RecYd 8.5 · TD 55%
+RB,17,Quinshon Judkins,CLE,LV,13.41,19,0.706,starter,RB RB,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.45,good,Ru 60 · Rec 1.5 · RecYd 7 · TD 44%
 RB,18,D'Andre Swift,CHI,DET,13.35,32,0.417,starter,RB RB,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-RB,19,Tony Pollard,TEN,JAX,12.99,30,0.433,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.27,good,Ru 53 · Rec 2.5 · RecYd 14.5 · TD 43%
+RB,19,Tony Pollard,TEN,JAX,12.98,30,0.433,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.27,good,Ru 53 · Rec 2.5 · RecYd 14.5 · TD 43%
 RB,20,Jaylen Warren,PIT,DEN,12.76,28,0.456,starter,RB RB,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 RB,21,Breece Hall,NYJ,MIA,12.51,27,0.463,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.32,good,Ru 59.5 · Rec 2.5 · RecYd 20.5 · TD 42%
-RB,22,Ashton Jeanty,LV,CLE,12.46,27,0.461,starter,RB RB,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.48,good,Ru 44.5 · Rec 3.5 · RecYd 29.5 · TD 36%
-RB,23,Rhamondre Stevenson,NE,LAC,11.92,24,0.497,starter,RB RB,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.3,good,Ru 49 · Rec 2.5 · RecYd 14 · TD 42%
-RB,24,Ollie Gordon II,MIA,NYJ,11.65,20,0.582,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.28,good,Ru 68 · Rec 2.5 · RecYd 11 · TD 43%
+RB,22,Ashton Jeanty,LV,CLE,12.42,27,0.46,starter,RB RB,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.48,good,Ru 44.5 · Rec 3.5 · RecYd 30 · TD 36%
+RB,23,Rhamondre Stevenson,NE,LAC,11.91,24,0.496,starter,RB RB,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.38,good,Ru 49 · Rec 2.5 · RecYd 14.5 · TD 43%
+RB,24,Ollie Gordon II,MIA,NYJ,11.64,20,0.582,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.28,good,Ru 68 · Rec 2.5 · RecYd 11 · TD 43%
 RB,25,Blake Corum,LAR,GB,11.39,25,0.456,rotation,RB RB,2,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 RB,26,Omarion Hampton,LAC,NE,10.6,18,0.589,starter,RB RB,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.7,good,Ru 64 · Rec 1.5 · RecYd 7.5 · TD 39%
-RB,27,Travis Etienne Jr.,NO,CIN,10.55,18,0.586,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.57,good,Ru 48 · Rec 2.5 · RecYd 13 · TD 37%
+RB,27,Travis Etienne Jr.,NO,CIN,10.53,18,0.585,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.57,good,Ru 48 · Rec 2.5 · RecYd 13 · TD 37%
 RB,28,Jacory Croskey-Merritt,WAS,ARI,9.71,17,0.571,starter,RB RB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.46,good,Ru 53.5 · Rec 1.5 · RecYd 5.5 · TD 41%
 RB,29,Jordan Mason,MIN,ATL,9.66,15,0.644,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.18,good,Ru 57.5 · Rec 0.5 · RecYd 2.5 · TD 30%
-RB,30,David Montgomery,HOU,BAL,9.54,20,0.477,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.67,good,Ru 45 · Rec 1.5 · RecYd 8.5 · TD 46%
-RB,31,Zach Charbonnet,SEA,SF,9.44,19,0.497,starter,RB RB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.36,good,Ru 57.5 · Rec 1.5 · RecYd 8 · TD 42%
-RB,32,Aaron Jones Sr.,MIN,ATL,9.39,21,0.447,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.92,good,Ru 37 · Rec 1.5 · RecYd 8 · TD 38%
-RB,33,Braelon Allen,NYJ,MIA,8.84,19,0.465,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.23,good,Ru 44 · Rec 1.5 · RecYd 8.5 · TD 35%
-RB,34,Dylan Sampson,CLE,LV,8.69,12,0.724,rotation,RB RB,2,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.8,good,Ru 18.5 · Rec 2.5 · RecYd 23 · TD 23%
-RB,35,Tyler Allgeier,ARI,WAS,8.01,14,0.572,starter,RB RB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.82,good,Ru 27 · Rec 1.5 · RecYd 5.5 · TD 31%
-RB,36,Woody Marks,HOU,BAL,8.0,16,0.5,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.64,good,Ru 29 · Rec 1.5 · RecYd 8.5 · TD 31%
-RB,37,Samaje Perine,CIN,NO,7.9,13,0.608,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.1,good,Ru 29.5 · Rec 1.5 · RecYd 9 · TD 36%
+RB,30,David Montgomery,HOU,BAL,9.53,20,0.476,starter,RB RB,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.67,good,Ru 45 · Rec 1.5 · RecYd 8.5 · TD 46%
+RB,31,Zach Charbonnet,SEA,SF,9.43,19,0.496,starter,RB RB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.45,good,Ru 57.5 · Rec 1.5 · RecYd 7.5 · TD 42%
+RB,32,Aaron Jones Sr.,MIN,ATL,9.38,21,0.447,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.92,good,Ru 37 · Rec 1.5 · RecYd 8 · TD 38%
+RB,33,Braelon Allen,NYJ,MIA,8.83,19,0.465,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.23,good,Ru 44 · Rec 1.5 · RecYd 8.5 · TD 35%
+RB,34,Dylan Sampson,CLE,LV,8.67,12,0.722,rotation,RB RB,2,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.81,good,Ru 18.5 · Rec 2.5 · RecYd 23 · TD 23%
+RB,35,Tyler Allgeier,ARI,WAS,8.01,14,0.572,starter,RB RB,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.81,good,Ru 27 · Rec 1.5 · RecYd 5.5 · TD 31%
+RB,36,Woody Marks,HOU,BAL,7.99,16,0.499,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.64,good,Ru 29 · Rec 1.5 · RecYd 8.5 · TD 31%
+RB,37,Samaje Perine,CIN,NO,7.89,13,0.607,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.1,good,Ru 29.5 · Rec 1.5 · RecYd 9 · TD 36%
 RB,38,Justice Hill,BAL,HOU,7.65,17,0.45,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.0,good,Ru 12.5 · Rec 3.5 · RecYd 19 · TD 24%
 RB,39,Rico Dowdle,PIT,DEN,7.59,17,0.446,rotation,RB RB,2,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-RB,40,Kyle Monangai,CHI,DET,7.36,16,0.46,rotation,RB RB,2,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-RB,41,Jadarian Price,SEA,SF,7.02,18,0.39,rotation,RB RB,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.51,good,Ru 25 · Rec 1.5 · RecYd 10 · TD 29%
+RB,40,Kyle Monangai,CHI,DET,7.35,16,0.459,rotation,RB RB,2,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+RB,41,Jadarian Price,SEA,SF,7.01,18,0.389,rotation,RB RB,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.53,good,Ru 25 · Rec 1.5 · RecYd 10 · TD 29%
 RB,42,Kenny Gainwell,TB,CAR,6.7,18,0.372,rotation,RB RB,2,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.92,good,Ru 22.5 · Rec 2.5 · RecYd 15.5 · TD 24%
-RB,43,Kimani Vidal,LAC,NE,6.54,12,0.545,rotation,RB RB,2,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.54,good,Ru 21.5 · Rec 1.5 · RecYd 8 · TD 22%
+RB,43,Kimani Vidal,LAC,NE,6.54,12,0.545,rotation,RB RB,2,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.59,good,Ru 21.5 · Rec 1.5 · RecYd 8 · TD 22%
 RB,44,Corey Kiner,NE,LAC,6.51,10,0.651,rotation,RB RB,2,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,partial,Ru 27 · TD 27%
 RB,45,Austin Ekeler,WAS,ARI,6.25,14,0.446,rotation,RB RB,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.7,good,Ru 23 · Rec 1.5 · RecYd 9 · TD 25%
-RB,46,Mike Washington Jr.,LV,CLE,5.91,10,0.591,rotation,RB RB,2,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.83,good,Ru 33.5 · Rec 0.5 · RecYd 0.5 · TD 24%
+RB,46,Mike Washington Jr.,LV,CLE,5.89,10,0.589,rotation,RB RB,2,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.74,good,Ru 33.5 · Rec 0.5 · RecYd 0.5 · TD 23%
 RB,47,Kaleb Johnson,GB,LAR,5.72,12,0.477,starter,RB RB,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-RB,48,Kaelon Black,SF,SEA,5.03,14,0.359,rotation,RB RB,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),4.56,good,Ru 21 · Rec 0.5 · RecYd 0.5 · TD 22%
+RB,48,Kaelon Black,SF,SEA,5.03,14,0.359,rotation,RB RB,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),4.58,good,Ru 21 · Rec 0.5 · RecYd 0.5 · TD 23%
 RB,49,MarShawn Lloyd,GB,LAR,5.01,11,0.455,rotation,RB RB,2,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 RB,50,Devin Singletary,NYG,IND,4.86,13,0.374,rotation,RB RB,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),3.95,good,Ru 12 · Rec 0.5 · RecYd 2.5 · TD 21%
-WR,1,Jaxon Smith-Njigba,SEA,SF,18.95,43,0.441,starter,WR LWR,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.76,good,Rec 7.5 · RecYd 97 · TD 43%
-WR,2,Ja'Marr Chase,CIN,NO,17.75,44,0.403,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),18.71,good,Rec 7.5 · RecYd 91 · TD 55%
-WR,3,CeeDee Lamb,DAL,PHI,16.95,40,0.424,starter,WR LWR,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,4,Amon-Ra St. Brown,DET,CHI,15.66,37,0.423,starter,WR SWR,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,5,Justin Jefferson,MIN,ATL,14.91,29,0.514,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.72,good,Rec 6.5 · RecYd 85 · TD 47%
-WR,6,Nico Collins,HOU,BAL,13.83,30,0.461,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.77,good,Rec 4.5 · RecYd 62.5 · TD 41%
-WR,7,Tee Higgins,CIN,NO,13.67,36,0.38,starter,WR RWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.78,good,Rec 4.5 · RecYd 68.5 · TD 45%
-WR,8,Matthew Golden,GB,LAR,13.14,29,0.453,starter,WR RWR,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,9,Malik Nabers,NYG,IND,13.02,28,0.465,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.05,good,Rec 5.5 · RecYd 65.5 · TD 38%
-WR,10,George Pickens,DAL,PHI,12.92,34,0.38,starter,WR RWR,2,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,11,Christian Watson,GB,LAR,12.85,30,0.428,starter,WR LWR,2,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,12,Chris Olave,NO,CIN,12.68,28,0.453,starter,WR RWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.09,good,Rec 5.5 · RecYd 70 · TD 31%
-WR,13,Garrett Wilson,NYJ,MIA,11.93,25,0.477,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.75,good,Rec 4.5 · RecYd 57 · TD 36%
-WR,14,Zay Flowers,BAL,HOU,11.89,28,0.425,starter,WR SWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.65,good,Rec 6.5 · RecYd 74 · TD 32%
-WR,15,DeVonta Smith,PHI,DAL,11.84,25,0.474,starter,WR LWR,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,16,Luther Burden III,CHI,DET,11.7,27,0.433,starter,WR RWR,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,17,Jakobi Meyers,JAX,TEN,11.4,17,0.671,starter,WR RWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.04,good,Rec 4.5 · RecYd 70.5 · TD 43%
-WR,18,Drake London,ATL,MIN,11.19,29,0.386,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.12,good,Rec 5.5 · RecYd 71.5 · TD 31%
-WR,19,Jameson Williams,DET,CHI,10.98,26,0.422,starter,WR RWR,2,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,20,Tetairoa McMillan,CAR,TB,10.89,27,0.403,starter,WR LWR,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.32,good,Rec 4.5 · RecYd 54.5 · TD 35%
-WR,21,Stefon Diggs,WAS,ARI,10.65,26,0.41,starter,WR SWR,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.37,good,Rec 4.5 · RecYd 43.5 · TD 38%
-WR,22,Mike Evans,SF,SEA,10.31,28,0.368,starter,WR LWR,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.96,good,Rec 4.5 · RecYd 56.5 · TD 30%
-WR,23,DJ Moore,BUF,KC,9.52,27,0.353,starter,WR LWR,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,24,KC Concepcion Jr.,CLE,LV,9.3,19,0.489,starter,WR SWR,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.05,good,Rec 4.5 · RecYd 52 · TD 35%
-WR,25,Rashee Rice,KC,BUF,9.26,24,0.386,starter,WR SWR,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,26,Rome Odunze,CHI,DET,9.24,19,0.486,starter,WR LWR,2,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,27,Ladd McConkey,LAC,NE,9.19,21,0.438,starter,WR SWR,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,partial,Rec 3.5 · RecYd 34.5 · TD 23%
-WR,28,Carnell Tate,TEN,JAX,9.19,19,0.484,starter,WR RWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.73,good,Rec 4.5 · RecYd 53 · TD 30%
-WR,29,Caleb Douglas,MIA,NYJ,8.92,16,0.558,starter,WR RWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.39,good,Rec 3.5 · RecYd 44 · TD 28%
-WR,30,Antonio Williams,WAS,ARI,8.84,18,0.491,starter,WR LWR,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.04,good,Rec 3.5 · RecYd 41 · TD 28%
-WR,31,Jordyn Tyson,NO,CIN,8.66,14,0.619,starter,WR LWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.79,good,Rec 4.5 · RecYd 43.5 · TD 31%
-WR,32,Emeka Egbuka,TB,CAR,8.22,20,0.411,starter,WR LWR,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.14,good,Rec 3.5 · RecYd 37.5 · TD 34%
-WR,33,Adonai Mitchell,NYJ,MIA,8.14,13,0.626,starter,WR RWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.58,good,Rec 2.5 · RecYd 38 · TD 30%
-WR,34,Jalen Coker,CAR,TB,8.1,16,0.506,starter,WR SWR,2,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.35,good,Rec 3.5 · RecYd 44.5 · TD 29%
-WR,35,Josh Cameron,JAX,TEN,8.1,10,0.81,starter,WR SWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.55,good,Rec 3.5 · RecYd 43 · TD 33%
-WR,36,Jaylen Waddle,DEN,PIT,7.91,18,0.439,starter,WR RWR,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,37,Malik Washington,MIA,NYJ,7.5,17,0.441,starter,WR SWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.1,good,Rec 3.5 · RecYd 27 · TD 25%
-WR,38,Tank Dell,HOU,BAL,7.48,14,0.534,starter,WR RWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.66,good,Rec 2.5 · RecYd 29.5 · TD 30%
-WR,39,Deebo Samuel Sr.,SF,SEA,7.46,21,0.355,starter,WR SWR,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.42,good,Ru 8.5 · Rec 2.5 · RecYd 21 · TD 24%
-WR,40,Xavier Hutchinson,HOU,BAL,7.31,13,0.562,starter,WR SWR,3,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.04,good,Rec 3 · RecYd 30.5 · TD 31%
-WR,41,Khalil Shakir,BUF,KC,7.21,18,0.401,starter,WR SWR,2,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,42,Brian Thomas Jr.,JAX,TEN,7.21,11,0.655,starter,WR LWR,3,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.96,good,Rec 2.5 · RecYd 31.5 · TD 30%
-WR,43,DK Metcalf,PIT,DEN,7.0,17,0.412,starter,WR LWR,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,44,Konata Mumpfield,LAR,GB,6.83,13,0.525,starter,WR SWR,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,45,Ryan Flournoy,DAL,PHI,6.81,17,0.401,starter,WR SWR,3,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,46,Josh Downs,KC,BUF,6.78,18,0.377,starter,WR LWR,2,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-WR,47,Tre Tucker,LV,CLE,6.77,16,0.423,starter,WR LWR,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.89,good,Rec 2.5 · RecYd 30 · TD 23%
-WR,48,DeMario Douglas,NE,LAC,6.69,17,0.394,starter,WR SWR,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.59,good,Rec 2.5 · RecYd 24.5 · TD 23%
-WR,49,Mack Hollins,NE,LAC,6.65,15,0.443,starter,WR RWR,2,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.8,good,Rec 2.5 · RecYd 27 · TD 23%
-WR,50,Marvin Harrison Jr.,HOU,BAL,6.39,15,0.426,rotation,WR LWR,4,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.03,good,Rec 2.5 · RecYd 28.5 · TD 26%
+WR,1,Jaxon Smith-Njigba,SEA,SF,19.01,43,0.442,starter,WR LWR,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),17.74,good,Rec 7.5 · RecYd 97 · TD 43%
+WR,2,Ja'Marr Chase,CIN,NO,17.8,44,0.405,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),18.71,good,Rec 7.5 · RecYd 91 · TD 55%
+WR,3,CeeDee Lamb,DAL,PHI,16.98,40,0.424,starter,WR LWR,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,4,Amon-Ra St. Brown,DET,CHI,15.68,37,0.424,starter,WR SWR,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,5,Justin Jefferson,MIN,ATL,14.93,29,0.515,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),16.72,good,Rec 6.5 · RecYd 85 · TD 47%
+WR,6,Nico Collins,HOU,BAL,13.85,30,0.462,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.77,good,Rec 4.5 · RecYd 62.5 · TD 41%
+WR,7,Tee Higgins,CIN,NO,13.71,36,0.381,starter,WR RWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.77,good,Rec 4.5 · RecYd 68.5 · TD 45%
+WR,8,Matthew Golden,GB,LAR,13.16,29,0.454,starter,WR RWR,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,9,Malik Nabers,NYG,IND,13.04,28,0.466,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.05,good,Rec 5.5 · RecYd 65.5 · TD 38%
+WR,10,George Pickens,DAL,PHI,12.94,34,0.381,starter,WR RWR,2,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,11,Christian Watson,GB,LAR,12.88,30,0.429,starter,WR LWR,2,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,12,Chris Olave,NO,CIN,12.72,28,0.454,starter,WR RWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.09,good,Rec 5.5 · RecYd 70 · TD 31%
+WR,13,Garrett Wilson,NYJ,MIA,11.95,25,0.478,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.75,good,Rec 4.5 · RecYd 57 · TD 36%
+WR,14,Zay Flowers,BAL,HOU,11.91,28,0.425,starter,WR SWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.65,good,Rec 6.5 · RecYd 74 · TD 32%
+WR,15,DeVonta Smith,PHI,DAL,11.86,25,0.474,starter,WR LWR,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,16,Luther Burden III,CHI,DET,11.72,27,0.434,starter,WR RWR,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,17,Jakobi Meyers,JAX,TEN,11.41,17,0.671,starter,WR RWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),14.04,good,Rec 4.5 · RecYd 70.5 · TD 43%
+WR,18,Drake London,ATL,MIN,11.2,29,0.386,starter,WR LWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),13.12,good,Rec 5.5 · RecYd 71.5 · TD 31%
+WR,19,Jameson Williams,DET,CHI,11.0,26,0.423,starter,WR RWR,2,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,20,Tetairoa McMillan,CAR,TB,10.91,27,0.404,starter,WR LWR,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.32,good,Rec 4.5 · RecYd 54.5 · TD 35%
+WR,21,Stefon Diggs,WAS,ARI,10.67,26,0.41,starter,WR SWR,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.37,good,Rec 4.5 · RecYd 43.5 · TD 38%
+WR,22,Mike Evans,SF,SEA,10.34,28,0.369,starter,WR LWR,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.96,good,Rec 4.5 · RecYd 56.5 · TD 30%
+WR,23,DJ Moore,BUF,KC,9.53,27,0.353,starter,WR LWR,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,24,KC Concepcion Jr.,CLE,LV,9.29,19,0.489,starter,WR SWR,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.08,good,Rec 4.5 · RecYd 52 · TD 35%
+WR,25,Rashee Rice,KC,BUF,9.28,24,0.387,starter,WR SWR,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,26,Rome Odunze,CHI,DET,9.26,19,0.487,starter,WR LWR,2,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,27,Ladd McConkey,LAC,NE,9.2,21,0.438,starter,WR SWR,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,partial,Rec 3.5 · RecYd 34.5 · TD 23%
+WR,28,Carnell Tate,TEN,JAX,9.2,19,0.484,starter,WR RWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.73,good,Rec 4.5 · RecYd 53 · TD 30%
+WR,29,Caleb Douglas,MIA,NYJ,8.93,16,0.558,starter,WR RWR,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.39,good,Rec 3.5 · RecYd 44 · TD 28%
+WR,30,Antonio Williams,WAS,ARI,8.85,18,0.492,starter,WR LWR,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.04,good,Rec 3.5 · RecYd 41 · TD 28%
+WR,31,Jordyn Tyson,NO,CIN,8.69,14,0.621,starter,WR LWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.79,good,Rec 4.5 · RecYd 43.5 · TD 31%
+WR,32,Emeka Egbuka,TB,CAR,8.23,20,0.412,starter,WR LWR,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.14,good,Rec 3.5 · RecYd 37.5 · TD 34%
+WR,33,Adonai Mitchell,NYJ,MIA,8.15,13,0.627,starter,WR RWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.58,good,Rec 2.5 · RecYd 38 · TD 30%
+WR,34,Jalen Coker,CAR,TB,8.12,16,0.507,starter,WR SWR,2,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.35,good,Rec 3.5 · RecYd 44.5 · TD 29%
+WR,35,Josh Cameron,JAX,TEN,8.11,10,0.811,starter,WR SWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.55,good,Rec 3.5 · RecYd 43 · TD 33%
+WR,36,Jaylen Waddle,DEN,PIT,7.92,18,0.44,starter,WR RWR,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,37,Malik Washington,MIA,NYJ,7.51,17,0.442,starter,WR SWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.09,good,Rec 3.5 · RecYd 27 · TD 25%
+WR,38,Tank Dell,HOU,BAL,7.49,14,0.535,starter,WR RWR,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.65,good,Rec 2.5 · RecYd 29.5 · TD 30%
+WR,39,Deebo Samuel Sr.,SF,SEA,7.48,21,0.356,starter,WR SWR,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.42,good,Ru 8.5 · Rec 2.5 · RecYd 21 · TD 24%
+WR,40,Xavier Hutchinson,HOU,BAL,7.32,13,0.563,starter,WR SWR,3,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),8.04,good,Rec 3 · RecYd 30.5 · TD 31%
+WR,41,Khalil Shakir,BUF,KC,7.22,18,0.401,starter,WR SWR,2,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,42,Brian Thomas Jr.,JAX,TEN,7.22,11,0.656,starter,WR LWR,3,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.96,good,Rec 2.5 · RecYd 31.5 · TD 30%
+WR,43,DK Metcalf,PIT,DEN,7.01,17,0.412,starter,WR LWR,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,44,Konata Mumpfield,LAR,GB,6.84,13,0.526,starter,WR SWR,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,45,Ryan Flournoy,DAL,PHI,6.82,17,0.401,starter,WR SWR,3,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,46,Josh Downs,KC,BUF,6.79,18,0.377,starter,WR LWR,2,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+WR,47,Tre Tucker,LV,CLE,6.76,16,0.422,starter,WR LWR,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.87,good,Rec 2.5 · RecYd 30 · TD 23%
+WR,48,DeMario Douglas,NE,LAC,6.7,17,0.394,starter,WR SWR,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.6,good,Rec 2.5 · RecYd 24.5 · TD 23%
+WR,49,Mack Hollins,NE,LAC,6.66,15,0.444,starter,WR RWR,2,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.78,good,Rec 2.5 · RecYd 27 · TD 23%
+WR,50,Marvin Harrison Jr.,HOU,BAL,6.4,15,0.427,rotation,WR LWR,4,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.03,good,Rec 2.5 · RecYd 28.5 · TD 26%
 TE,1,Trey McBride,ARI,WAS,12.11,25,0.484,starter,TE TE,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),12.7,good,Rec 7 · RecYd 61.5 · TD 31%
-TE,2,Brock Bowers,LV,CLE,11.76,27,0.436,starter,TE TE,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.68,good,Rec 4.5 · RecYd 55.5 · TD 31%
-TE,3,Isaiah Likely,NYG,IND,10.84,23,0.471,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.88,good,Rec 4.5 · RecYd 50.5 · TD 33%
-TE,4,Harold Fannin Jr.,CLE,LV,9.87,21,0.47,starter,TE TE,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.0,good,Rec 4.5 · RecYd 50 · TD 35%
-TE,5,George Kittle,SF,SEA,9.19,23,0.4,starter,TE TE,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.96,good,Rec 4.5 · RecYd 44.5 · TD 32%
+TE,2,Brock Bowers,LV,CLE,11.71,27,0.434,starter,TE TE,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.73,good,Rec 4.5 · RecYd 55.5 · TD 32%
+TE,3,Isaiah Likely,NYG,IND,10.83,23,0.471,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.87,good,Rec 4.5 · RecYd 50.5 · TD 33%
+TE,4,Harold Fannin Jr.,CLE,LV,9.83,21,0.468,starter,TE TE,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),11.01,good,Rec 4.5 · RecYd 50 · TD 35%
+TE,5,George Kittle,SF,SEA,9.21,23,0.4,starter,TE TE,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.96,good,Rec 4.5 · RecYd 44.5 · TD 32%
 TE,6,Sam LaPorta,DET,CHI,9.12,18,0.507,starter,TE TE,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 TE,7,Travis Kelce,KC,BUF,8.73,20,0.436,starter,TE TE,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 TE,8,Colston Loveland,CHI,DET,8.62,19,0.454,starter,TE TE,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 TE,9,Brenton Strange,JAX,TEN,8.49,13,0.653,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.39,good,Rec 3.5 · RecYd 39.5 · TD 34%
-TE,10,T.J. Hockenson,MIN,ATL,8.17,17,0.481,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.48,good,Rec 4.5 · RecYd 44.5 · TD 35%
+TE,10,T.J. Hockenson,MIN,ATL,8.16,17,0.48,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),10.48,good,Rec 4.5 · RecYd 44.5 · TD 35%
 TE,11,Dallas Goedert,PHI,DAL,8.08,17,0.475,starter,TE TE,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 TE,12,Chig Okonkwo,WAS,ARI,7.78,14,0.556,starter,TE TE,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),9.03,good,Rec 3.5 · RecYd 38 · TD 31%
 TE,13,Tucker Kraft,GB,LAR,7.75,16,0.484,starter,TE TE,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-TE,14,Tyler Warren,IND,NYG,7.61,14,0.544,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.93,good,Rec 3.5 · RecYd 30.5 · TD 26%
+TE,14,Tyler Warren,IND,NYG,7.61,14,0.544,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.97,good,Rec 3.5 · RecYd 30.5 · TD 26%
 TE,15,Mike Gesicki,CIN,NO,6.76,15,0.451,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.51,good,Rec 2.5 · RecYd 24 · TD 37%
 TE,16,Dalton Kincaid,BUF,KC,6.61,18,0.367,starter,TE TE,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-TE,17,Hunter Henry,NE,LAC,6.56,14,0.469,starter,TE TE,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.53,good,Rec 2.5 · RecYd 23.5 · TD 24%
+TE,17,Hunter Henry,NE,LAC,6.56,14,0.469,starter,TE TE,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.56,good,Rec 2.5 · RecYd 23.5 · TD 24%
 TE,18,Darren Waller,CAR,TB,6.35,13,0.488,starter,TE TE,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.89,good,Rec 2.5 · RecYd 26.5 · TD 26%
 TE,19,Kyle Pitts Sr.,ATL,MIN,6.25,15,0.417,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.78,good,Rec 3.5 · RecYd 30.5 · TD 27%
 TE,20,Dalton Schultz,HOU,BAL,6.25,12,0.521,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.19,good,Rec 2.5 · RecYd 26 · TD 28%
 TE,21,Tyler Higbee,LAR,GB,6.22,11,0.565,rotation,TE TE,2,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-TE,22,Greg Dulcich,MIA,NYJ,5.99,10,0.599,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.55,good,Rec 2.5 · RecYd 23.5 · TD 24%
+TE,22,Greg Dulcich,MIA,NYJ,6.0,10,0.6,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.55,good,Rec 2.5 · RecYd 23.5 · TD 24%
 TE,23,Pat Freiermuth,PIT,DEN,5.79,14,0.414,starter,TE TE,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-TE,24,AJ Barner,SEA,SF,5.66,13,0.435,starter,TE TE,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.86,good,Rec 3 · RecYd 23.5 · TD 26%
+TE,24,AJ Barner,SEA,SF,5.67,13,0.436,starter,TE TE,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.86,good,Rec 3 · RecYd 23.5 · TD 26%
 TE,25,Mason Taylor,NYJ,MIA,5.46,11,0.496,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.6,good,Rec 2.5 · RecYd 17 · TD 24%
 TE,26,Mark Andrews,BAL,HOU,5.35,12,0.446,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.62,good,Rec 2.5 · RecYd 24.5 · TD 23%
 TE,27,Noah Fant,NO,CIN,5.34,10,0.534,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.95,good,Rec 2.5 · RecYd 20 · TD 22%
 TE,28,Cade Otton,TB,CAR,5.19,10,0.519,starter,TE TE,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),7.32,good,Rec 3 · RecYd 28.5 · TD 25%
 TE,29,Colby Parkinson,LAR,GB,5.18,10,0.518,starter,TE TE,1,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-TE,30,Eli Raridon,NE,LAC,4.78,10,0.478,rotation,TE TE,2,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.1,good,Rec 1.5 · RecYd 16.5 · TD 20%
+TE,30,Eli Raridon,NE,LAC,4.78,10,0.478,rotation,TE TE,2,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.12,good,Rec 1.5 · RecYd 17 · TD 20%
 TE,31,Kenyon Sadiq,NYJ,MIA,4.75,10,0.475,rotation,TE TE,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.87,good,Rec 2 · RecYd 20.5 · TD 23%
-TE,32,Michael Mayer,LV,CLE,4.65,11,0.423,rotation,TE TE,2,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.66,td-estimate,TD 22%
+TE,32,Michael Mayer,LV,CLE,4.64,11,0.422,rotation,TE TE,2,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.02,td-estimate,TD 23%
 TE,33,Evan Engram,DEN,PIT,4.5,10,0.45,starter,TE TE,1,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 TE,34,Darnell Washington,PIT,DEN,4.45,11,0.405,rotation,TE TE,2,2026-11-27 20:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 TE,35,Tommy Tremble,CAR,TB,4.29,10,0.429,rotation,TE TE,2,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),5.84,good,Rec 2.5 · RecYd 18.5 · TD 24%
-TE,36,Gunnar Helm,TEN,JAX,4.01,10,0.401,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.46,good,Rec 3 · RecYd 22 · TD 23%
+TE,36,Gunnar Helm,TEN,JAX,4.01,10,0.401,starter,TE TE,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),6.52,good,Rec 3 · RecYd 22 · TD 23%
 TE,37,Elijah Higgins,ARI,WAS,3.79,10,0.379,rotation,TE TE,2,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),2.97,good,Rec 1.5 · RecYd 11 · TD 12%
-TE,38,David Njoku,LAC,NE,3.55,10,0.355,rotation,TE TE,2,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),3.58,td-estimate,TD 17%
+TE,38,David Njoku,LAC,NE,3.55,10,0.355,rotation,TE TE,2,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),3.5,td-estimate,TD 17%
 TE,39,Davis Allen,LAR,GB,3.4,10,0.34,backup,TE TE,3,2026-11-26 01:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 TE,40,Brevyn Spann-Ford,DAL,PHI,3.32,10,0.332,starter,TE TE,1,2026-11-26 21:30,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 TE,41,Nate Boerkircher,JAX,TEN,3.31,10,0.331,rotation,TE TE,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),3.76,good,Rec 1.5 · RecYd 10.5 · TD 25%
-TE,42,Oronde Gadsden,LAC,NE,3.3,10,0.33,starter,TE TE,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),0.79,td-estimate,TD 9%
+TE,42,Oronde Gadsden,LAC,NE,3.3,10,0.33,starter,TE TE,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),0.68,td-estimate,TD 9%
 TE,43,Drew Sample,CIN,NO,2.93,11,0.266,rotation,TE TE,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),2.71,good,Rec 1.5 · RecYd 6.5 · TD 19%
-TE,44,Charlie Kolar,LAC,NE,2.85,10,0.285,backup,TE TE,3,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),2.03,td-estimate,TD 9%
+TE,44,Charlie Kolar,LAC,NE,2.85,10,0.285,backup,TE TE,3,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),2.07,td-estimate,TD 9%
 TE,45,Jack Endries,CIN,NO,2.82,10,0.282,backup,TE TE,3,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),3.31,good,Rec 1.5 · RecYd 9.5 · TD 19%
-TE,46,Austin Hooper,ATL,MIN,2.7,10,0.27,rotation,TE TE,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),0.33,td-estimate,TD 5%
+TE,46,Austin Hooper,ATL,MIN,2.7,10,0.27,rotation,TE TE,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),0.46,td-estimate,TD 7%
 TE,47,Foster Moreau,HOU,BAL,2.57,10,0.257,rotation,TE TE,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),2.06,good,Rec 0.5 · RecYd 3.5 · TD 18%
 TE,48,Gavin Bartholomew,MIN,ATL,2.57,10,0.257,rotation,TE TE,2,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),0.47,td-estimate,TD 8%
 TE,49,Dawson Knox,BUF,KC,2.55,10,0.255,rotation,TE TE,2,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 TE,50,Mitchell Evans,CAR,TB,2.52,10,0.252,backup,TE TE,3,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),2.89,good,Rec 1.5 · RecYd 10 · TD 14%
-DEF,1,Cleveland Browns,CLE,LV,8.61,14,0.615,starter,,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-DEF,2,Washington Commanders,WAS,ARI,8.61,13,0.662,starter,,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+DEF,1,Washington Commanders,WAS,ARI,8.61,13,0.662,starter,,1,2026-11-29 21:25,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+DEF,2,Cleveland Browns,CLE,LV,8.59,14,0.614,starter,,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 DEF,3,Minnesota Vikings,MIN,ATL,8.51,18,0.473,starter,,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 DEF,4,New England Patriots,NE,LAC,8.26,12,0.688,starter,,1,2026-11-29 21:05,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 DEF,5,Jacksonville Jaguars,JAX,TEN,8.16,16,0.51,starter,,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
@@ -201,7 +201,7 @@ DEF,17,Seattle Seahawks,SEA,SF,6.36,18,0.353,starter,,1,2026-11-29 21:25,Sleeper
 DEF,18,Atlanta Falcons,ATL,MIN,5.89,10,0.589,starter,,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 DEF,19,Indianapolis Colts,IND,NYG,5.82,11,0.529,starter,,1,2026-11-29 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 DEF,20,Carolina Panthers,CAR,TB,5.69,13,0.438,starter,,1,2026-12-01 01:15,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
-DEF,21,Las Vegas Raiders,LV,CLE,5.55,10,0.555,starter,,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
+DEF,21,Las Vegas Raiders,LV,CLE,5.53,10,0.553,starter,,1,2026-11-30 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 DEF,22,Kansas City Chiefs,KC,BUF,5.46,17,0.321,starter,,1,2026-11-27 01:20,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 DEF,23,Detroit Lions,DET,CHI,5.4,14,0.386,starter,,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
 DEF,24,Chicago Bears,CHI,DET,5.02,18,0.279,starter,,1,2026-11-26 18:00,Sleeper + ESPN + CBS half-PPR mean (2026 week 12),,,
