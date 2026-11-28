@@ -180,9 +180,16 @@ betting advice**; the page leads with that and with its record.
   (`rates_core_avail_cs`, half-life 8 games, ridge 0.1) was frozen from
   2021-2025 walk-forward results and is committed in
   `site/data/boxscore/frozen_recipe_2026.json`.
-- Margin: the home win probability p becomes `12.37 * probit(p)`, the inverse
-  of the market conversion `P(home) = Phi(spread_line / 12.37)` the composite
-  is benchmarked against.
+- Home field removed from the margin (2026-11-28): each game's log-odds drops
+  the composite's home-field (`site`) term, using the coefficient of the fit
+  that produced it. The composite, its frozen recipe and its own ledger are
+  unchanged, and the export checks that adding the term back reproduces the
+  composite's probability. On 2023-2026 through the map this covered 53.4%
+  against 52.7% with home field, a gain that came mostly from 2026, at the
+  cost of slightly worse log loss.
+- Margin: the probability without home field, p, becomes `12.37 * probit(p)`,
+  the inverse of the market conversion `P(home) = Phi(spread_line / 12.37)`
+  the composite is benchmarked against.
 - Fixed map: margins under 3, 3-7, 7-10 and 10+ map to 3, 5, 7 and 13
   (keeping the favourite), then the mapped margin is compared with nflverse's
   `spread_line`; a tie goes to the favourite. These values were chosen on
@@ -202,6 +209,9 @@ betting advice**; the page leads with that and with its record.
   once to `site/data/ats/ledger.jsonl` and graded from nflverse final scores.
   The rows the retired Sleeper points model published (week 12 of 2026) are
   kept in `site/data/ats/ledger_sleeper_points_2026.jsonl`.
+- Headline: one record pooling every graded game with a pick, held-out
+  seasons, this season's replay and live rows, each game once (a live row
+  replaces its replay). The live-only record is shown beside it.
 - The backtest covers the composite's held-out seasons (2023-2025, recipe
   chosen on earlier seasons) and this season's earlier weeks: the composite
   through the map, the composite against the line with no map, and the spread

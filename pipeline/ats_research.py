@@ -13,9 +13,14 @@ tools/build_boxscore_composite.py, which exports site/data/boxscore/latest.json.
    player availability (projected QB vs the recent QB mix, and each unit's
    snaps lost to injury reports or roster moves). Its recipe (feature family,
    half-life, ridge) was frozen for 2026 from 2021-2025 walk-forward results.
-2. Its home win probability p becomes a margin on the spread's scale:
-   margin = 12.37 * probit(p), the inverse of the market conversion
-   P(home) = Phi(spread_line / 12.37) the composite uses as its benchmark.
+2. Home field removed (2026-11-28): the page drops the composite's home-field
+   ('site') term from each game's log-odds, using the coefficient of the very
+   fit that produced the game, so the composite and its frozen recipe are
+   unchanged (tools/build_boxscore_composite.py checks that adding the term
+   back reproduces the composite's probability). The probability without home
+   field, p, becomes a margin on the spread's scale: margin = 12.37 *
+   probit(p), the inverse of the market conversion P(home) =
+   Phi(spread_line / 12.37) the composite uses as its benchmark.
 3. Fixed map: bands of |margin| (<3, 3-7, 7-10, 10+) map to 3, 5, 7 and 13
    points, keeping the sign. These values were chosen on replays of the
    earlier Sleeper model, before this model was attached.
@@ -46,6 +51,7 @@ COMPOSITE_PATH = ROOT / "site" / "data" / "boxscore" / "latest.json"
 
 SCHEMA = 2
 MODEL_NAME = "NFL box-score composite"
+MARGIN_WP = "model_wp_no_home"   # the margin's probability: the composite without its home-field term
 MARKET_SIGMA = 12.37
 BANDS = (3.0, 7.0, 10.0)
 BAND_LABELS = ("under 3", "3 to 7", "7 to 10", "10 or more")
@@ -108,6 +114,11 @@ def record(results) -> dict:
         "cover_rate_ci95": (1.96 * math.sqrt(rate * (1 - rate) / decided)) if decided else None,
         "roi_at_minus_110": ((wins * 100 / 110 - losses) / (decided + pushes)) if decided + pushes else None,
     }
+
+
+def _round(value, digits=4):
+    value = _finite(value)
+    return round(value, digits) if value is not None else None
 
 
 def _finite(value):
@@ -173,9 +184,10 @@ def pick(raw: float, line):
 
 def replay_row(game: dict) -> dict:
     """One walk-forward composite prediction as a page row, graded when final."""
-    line, wp = _finite(game.get("spread_line")), _finite(game.get("model_wp"))
+    line, wp = _finite(game.get("spread_line")), _finite(game.get(MARGIN_WP))
     row = {"week": int(game["week"]), "game_id": game["game_id"], "home": game["home"],
-           "away": game["away"], "model_wp": wp, "line": line, "raw_margin": None,
+           "away": game["away"], "model_wp": _finite(game.get("model_wp")),
+           "model_wp_no_home": wp, "line": line, "raw_margin": None,
            "mapped_margin": None, "model_side": None, "result": None,
            "home_score": game.get("home_score"), "away_score": game.get("away_score")}
     if wp is None or not game.get("ready", True):
@@ -210,7 +222,7 @@ def backtest(composite: dict, long_run: dict | None = None) -> dict:
     for season, rows in sorted(_season_of(games).items()):
         for g in rows:
             line, margin, wp = (_finite(g.get("spread_line")), _finite(g.get("result")),
-                                _finite(g.get("model_wp")))
+                                _finite(g.get(MARGIN_WP)))
             if line is None or margin is None:
                 continue
             per["spread_map_control"].setdefault(season, []).append(
@@ -224,8 +236,8 @@ def backtest(composite: dict, long_run: dict | None = None) -> dict:
         out[key] = {"seasons": {str(s): record(r) for s, r in sorted(seasons.items())},
                     "all": record(r for rs in seasons.values() for r in rs),
                     "first_season": min(seasons) if seasons else None}
-    out["projection_map"]["label"] = "Composite margin through the fixed map, closing lines"
-    out["raw_margin"]["label"] = "Composite margin vs the line, no map"
+    out["projection_map"]["label"] = "Composite margin (no home field) through the fixed map, closing lines"
+    out["raw_margin"]["label"] = "Composite margin (no home field) vs the line, no map"
     out["spread_map_control"]["label"] = "Closing spread through the same map (no model)"
     if long_run:
         out["spread_map_control"]["long_run"] = long_run
@@ -268,12 +280,13 @@ def build_payload(composite, schedule, previous=None, ledger=(), now=None, snaps
         if kickoff is None or kickoff <= now:
             continue  # started with no pregame row: no model side, never repaired
         line = _finite(match.get("spread_line"))
-        wp = _finite(game.get("model_wp"))
+        wp = _finite(game.get(MARGIN_WP))
         entry = {
             "game_id": game_id, "nflverse_game_id": game_id, "model": MODEL_NAME,
             "season": int(game["season"]), "week": int(game["week"]),
             "kickoff_utc": kickoff.isoformat(), "home": match["home_team"], "away": match["away_team"],
-            "model_wp": round(wp, 4) if wp is not None else None,
+            "model_wp": _round(game.get("model_wp")),
+            "model_wp_no_home": round(wp, 4) if wp is not None else None,
             "homefield_wp": _finite(game.get("homefield_wp")),
             "market_wp": round(market_wp(line), 4) if line is not None else None,
             "ready": bool(game.get("ready", True)),
@@ -312,6 +325,7 @@ def build_payload(composite, schedule, previous=None, ledger=(), now=None, snaps
             r["home_margin"] = graded[r["game_id"]].get("home_margin")
 
     weeks = season_results(season, composite.get("season_predictions", []), graded_all)
+    headline = pooled_results(composite, graded_all)
     payload = {
         "schema": SCHEMA, "snapshot_id": snapshot_id,
         "generated_utc": now.isoformat(), "season": season, "week": week,
@@ -322,7 +336,8 @@ def build_payload(composite, schedule, previous=None, ledger=(), now=None, snaps
             "coefficients": composite.get("coefficients"),
             "composite_generated_utc": composite.get("generated_utc"),
             "market_sigma": MARKET_SIGMA,
-            "margin": "12.37 x probit(model home win probability)",
+            "margin": "12.37 x probit(home win probability without the composite's home-field term)",
+            "home_field": "removed from the margin on 2026-11-28; the composite's own probability keeps it",
             "outer_scorecard": composite.get("outer_scorecard"),
             "outer_scorecard_by_season": composite.get("outer_scorecard_by_season"),
             "market_blend_verdict": composite.get("market_blend_verdict"),
@@ -333,6 +348,7 @@ def build_payload(composite, schedule, previous=None, ledger=(), now=None, snaps
         },
         "games": current,
         "forward_record": record(r["result"] for r in graded_all if r.get("result")),
+        "headline": headline,
         "season_results": weeks,
         "season_record": season_record(weeks),
         "backtest": backtest(composite, composite.get("control_long_run")),
@@ -359,6 +375,26 @@ def _grade_ledger(ledger, schedule):
     return out
 
 
+def pooled_results(composite, forward_rows) -> dict:
+    """Every graded game the model has a pick for, pooled: held-out seasons and
+    this season's walk-forward replay, with a game the page published live
+    counted from its frozen row instead of its replay."""
+    games = {}
+    for game in list(composite.get("outer_predictions", [])) + list(composite.get("season_predictions", [])):
+        row = replay_row(game)
+        if row.get("result"):
+            games[str(game["game_id"])] = (int(game["season"]), row["result"], "replay")
+    for row in forward_rows:
+        if row.get("result"):
+            games[str(row.get("nflverse_game_id"))] = (int(row["season"]), row["result"], "live")
+    seasons = [s for s, _, _ in games.values()]
+    return {**record(r for _, r, _ in games.values()),
+            "live_games": sum(1 for *_, src in games.values() if src == "live"),
+            "replay_games": sum(1 for *_, src in games.values() if src == "replay"),
+            "first_season": min(seasons) if seasons else None,
+            "last_season": max(seasons) if seasons else None}
+
+
 def season_record(weeks) -> dict:
     """Every graded game of the season pooled, replayed and live games together."""
     return record(g["result"] for w in weeks for g in w["games"] if g.get("result"))
@@ -369,7 +405,7 @@ def season_results(season, predictions, forward_rows) -> list[dict]:
     frozen ledger row; every other game uses the composite's walk-forward
     prediction (replay). Only games already final or locked are listed."""
     keep = ("week", "home", "away", "raw_margin", "line", "mapped_margin", "model_side",
-            "home_score", "away_score", "result", "model_wp")
+            "home_score", "away_score", "result", "model_wp", "model_wp_no_home")
     games = {}
     for game in predictions:
         if int(game.get("season", season)) != season or game.get("result") is None:
@@ -397,7 +433,7 @@ def write_outputs(payload, new_ledger, directory) -> None:
     append_ledger(directory / "ledger.jsonl", new_ledger)
     (directory / "latest.json").write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n")
     with (directory / "latest.csv").open("w", newline="") as handle:
-        fields = ["kickoff_utc", "away", "home", "model_wp", "market_wp", "raw_margin",
+        fields = ["kickoff_utc", "away", "home", "model_wp", "model_wp_no_home", "market_wp", "raw_margin",
                   "line", "band", "mapped_margin", "edge", "model_side", "locked", "result"]
         writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()

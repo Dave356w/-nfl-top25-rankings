@@ -192,14 +192,14 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
   <div class="card"><div class="scroll">
     <table>
       <thead><tr>
-        <th>Kickoff</th><th>Game</th><th class="num">Home win: model · market</th><th>Model margin</th>
+        <th>Kickoff</th><th>Game</th><th class="num">Home win: composite · market</th><th>Margin, no home field</th>
         <th>Market line</th><th>Band</th><th class="num">Mapped</th><th>Model side</th><th>Status</th>
       </tr></thead>
       <tbody id="games"><tr><td colspan="9" class="muted">Loading…</td></tr></tbody>
     </table>
   </div></div>
 
-  <h2>The map <span class="note">fixed: each band of model margin maps to a key margin</span></h2>
+  <h2>The map <span class="note">fixed: each band of the margin without home field maps to a key margin</span></h2>
   <div class="card"><div class="scroll">
     <table><thead><tr id="rule-head"></tr></thead><tbody><tr id="rule-row"></tr></tbody></table>
   </div></div>
@@ -225,7 +225,8 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
       <li><b>Team profiles</b> from earlier games only: eight box-score rates rebuilt from nflverse play-by-play (plays per game, net yards per dropback, yards per rush, first downs per 100 plays, fumbles lost, interception %, sack %, penalty yards), for each offense and as allowed by each defense, decayed by games played and shrunk toward the league.</li>
       <li><b>Availability</b> from information published before kickoff: the projected QB against the team's recent QB mix, and each unit's recent snaps lost to the final injury report or roster moves.</li>
       <li><b>Composite</b>: a ridge logistic regression of home win on the home-minus-away differences, refit every week on earlier games. <span id="fit-note"></span></li>
-      <li><b>Margin</b>: the home win probability p becomes a margin on the spread's scale, 12.37 × probit(p), the inverse of the market conversion the composite is benchmarked against.</li>
+      <li><b>Home field removed</b> (28 Nov 2026): the composite's home-field term is dropped from each game's log-odds, using that week's fitted coefficient. The composite and its frozen recipe are unchanged; the win chance shown in the table still includes home field.</li>
+      <li><b>Margin</b>: the home win probability without home field, p, becomes a margin on the spread's scale, 12.37 × probit(p), the inverse of the market conversion the composite is benchmarked against.</li>
       <li><b>Map</b> (fixed): a model margin under 3 maps to 3, 3–7 to 5, 7–10 to 7 and 10 or more to 13, keeping the favourite. These values were chosen on replays of the Sleeper projection model this page used until 28 Nov 2026, not on this model.</li>
       <li><b>Model side</b>: the mapped margin against the nflverse market line; a tie goes to the favourite.</li>
       <li><b>Freezing</b>: each game's row freezes at the last update before kickoff and is graded from nflverse final scores.</li>
@@ -328,7 +329,7 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
       return '<details class="card week"' + (i === 0 ? " open" : "") + "><summary>Week " + w.week +
         ' <span class="pill ' + (w.source === "forward" ? "forward" : "replay") + '">' + ({forward: "live", replay: "replay", mixed: "live + replay"}[w.source] || w.source) + "</span>" +
         ' <span class="note">' + esc(rec(r)) + (r.wins + r.losses ? " · cover " + pct(r.cover_rate) : "") + "</span></summary>" +
-        '<div class="scroll"><table><thead><tr><th>Game</th><th>Model margin</th><th>Line</th><th class="num">Mapped</th>' +
+        '<div class="scroll"><table><thead><tr><th>Game</th><th>Margin, no home field</th><th>Line</th><th class="num">Mapped</th>' +
         '<th>Model side</th><th class="num">Final</th><th>Result</th></tr></thead><tbody>' + rows + "</tbody></table></div></details>";
     }).join("") : '<p class="muted">No games this season yet.</p>';
   }
@@ -343,9 +344,11 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     var lr = (bt.spread_map_control || {}).long_run;
     var span = bt.shown_from ? bt.shown_from + "–" + d.season : "";
     var f = d.forward_record || {};
+    var hl = d.headline;
     var cards = [
-      ["Forward record", rec(f), f.wins + f.losses ? "cover " + pct(f.cover_rate) + " since 28 Nov 2026" : "no finished live games yet"],
-      ["Backtest " + span + ": composite + map", pm ? pct(pm.cover_rate) : "—", pm ? rec(pm) + ", ±" + pct(pm.cover_rate_ci95) : ""],
+      ["All results " + (hl ? hl.first_season + "–" + hl.last_season : ""), hl ? pct(hl.cover_rate) : "—",
+        hl ? rec(hl) + ", ±" + pct(hl.cover_rate_ci95) + "; " + hl.live_games + " live, " + hl.replay_games + " walk-forward replay" : ""],
+      ["Live since 28 Nov 2026", rec(f), f.wins + f.losses ? "cover " + pct(f.cover_rate) : "no finished live games yet"],
       ["Map alone, long run", lr ? pct(lr.cover_rate) : "—", lr ? rec(lr) + ", " + lr.first_season + "–" + lr.last_season : ""],
       ["Break-even at −110", "52.4%", "needed just to not lose"]
     ];
