@@ -10,7 +10,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pipeline import ats_research as ats  # noqa: E402
 
-MODEL = {"schema": 1, "coefficients": {"const": 24.0, "off": 0.17, "opp_def": -2.0, "home": 0.86},
+MODEL = {"schema": 1, "coefficients": {"const": 24.0, "off": 0.17, "opp_def": -2.0},
          "backtest": {"note": "test"}}
 
 
@@ -111,9 +111,9 @@ class PayloadTests(unittest.TestCase):
         payload, new = ats.build_payload(self.slate(), self.sched(), MODEL, history(),
                                          now="2026-11-25T12:00:00Z", snapshot_id="s1")
         det = next(g for g in payload["games"] if g["home"] == "DET")
-        self.assertAlmostEqual(det["home_points"], round(24 + .17 * 60 - 2 * 6 + .86, 1))
+        self.assertAlmostEqual(det["home_points"], round(24 + .17 * 60 - 2 * 6, 1))
         self.assertEqual(det["line"], -2.5)
-        self.assertEqual(det["mapped_margin"], 5.0)   # raw 5.7: the 3-7 band
+        self.assertEqual(det["mapped_margin"], 5.0)   # raw 4.85: the 3-7 band
         self.assertEqual(det["model_side"], "DET")
         self.assertFalse(det["locked"])
         self.assertEqual(new, [])
@@ -224,10 +224,40 @@ class PayloadTests(unittest.TestCase):
 
     def test_committed_artifacts_load(self):
         model = ats.load_model()
-        self.assertEqual(set(model["coefficients"]), {"const", "off", "opp_def", "home"})
+        self.assertEqual(set(model["coefficients"]), {"const", "off", "opp_def"})
         self.assertLess(model["coefficients"]["opp_def"], 0)
         self.assertGreater(len(ats.load_history()), 300)
 
+
+
+class RescoreTests(unittest.TestCase):
+    ROW = {"game_id": "y1", "season": 2026, "week": 12, "home": "DET", "away": "CHI",
+           "home_offense_fp": 60.0, "away_offense_fp": 55.0, "home_def_fp": 8.0, "away_def_fp": 6.0,
+           "line": 3.0, "home_points": 0.0, "away_points": 0.0, "raw_margin": 0.0,
+           "mapped_margin": 3.0, "model_side": "CHI", "model_side_sign": -1, "snapshot_id": "s1"}
+
+    def test_rescore_recomputes_outputs_keeps_inputs_and_stamps(self):
+        from tools import rescore_ats_ledger as tool
+        new, changed = tool.rescore_row(self.ROW, MODEL["coefficients"], ats.FIXED_RULE, "t", "why")
+        self.assertTrue(changed)
+        # home 24 + .17*60 - 2*6 = 22.2, away 24 + .17*55 - 2*8 = 17.35: raw 4.85, the 3-7 band
+        self.assertAlmostEqual(new["raw_margin"], 4.85)
+        self.assertEqual((new["mapped_margin"], new["model_side"], new["model_side_sign"]), (5.0, "DET", 1))
+        self.assertEqual((new["rescored_utc"], new["rescore_note"]), ("t", "why"))
+        self.assertEqual((new["snapshot_id"], new["line"]), ("s1", 3.0))
+
+    def test_rescore_is_idempotent(self):
+        from tools import rescore_ats_ledger as tool
+        once, _ = tool.rescore_row(self.ROW, MODEL["coefficients"], ats.FIXED_RULE, "t1", "why")
+        twice, changed = tool.rescore_row(once, MODEL["coefficients"], ats.FIXED_RULE, "t2", "again")
+        self.assertFalse(changed)
+        self.assertEqual(twice["rescored_utc"], "t1")
+
+    def test_committed_ledger_matches_the_committed_model(self):
+        from tools import rescore_ats_ledger as tool
+        coef = ats.load_model()["coefficients"]
+        for row in ats.read_ledger(ats.ROOT / "site" / "data" / "ats" / "ledger.jsonl"):
+            self.assertFalse(tool.rescore_row(row, coef, ats.fit_map(), "t", "n")[1], row["game_id"])
 
 if __name__ == "__main__":
     unittest.main()

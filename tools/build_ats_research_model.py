@@ -131,16 +131,14 @@ def blend_team_games(schedule, season):
 
 
 def stack(games):
-    home = pd.DataFrame(dict(off=games.home_off, opp_def=games.away_def,
-                             home=(~games.neutral).astype(float), pts=games.home_score))
-    away = pd.DataFrame(dict(off=games.away_off, opp_def=games.home_def,
-                             home=0.0, pts=games.away_score))
+    home = pd.DataFrame(dict(off=games.home_off, opp_def=games.away_def, pts=games.home_score))
+    away = pd.DataFrame(dict(off=games.away_off, opp_def=games.home_def, pts=games.away_score))
     return pd.concat([home, away], ignore_index=True)
 
 
 def raw_margins(games, coef):
-    home = ats.predict_points(coef, games.home_off, games.away_def, (~games.neutral).astype(float))
-    away = ats.predict_points(coef, games.away_off, games.home_def, 0.0)
+    home = ats.predict_points(coef, games.home_off, games.away_def)
+    away = ats.predict_points(coef, games.away_off, games.home_def)
     return home - away
 
 

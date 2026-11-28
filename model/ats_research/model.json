@@ -1,11 +1,10 @@
 {
   "schema": 1,
-  "built_utc": "2026-11-25T00:00:28+00:00",
+  "built_utc": "2026-11-28T07:14:53+00:00",
   "coefficients": {
-    "const": 21.443833564217304,
-    "off": 0.2092357794957668,
-    "opp_def": -2.068447469878052,
-    "home": -0.30301879365800183
+    "const": 18.991367719428606,
+    "off": 0.23119588964320664,
+    "opp_def": -1.9313971686729239
   },
   "fit": {
     "team_games": 326,
@@ -21,29 +20,29 @@
     "projection_map": {
       "seasons": {
         "2025": {
-          "wins": 143,
-          "losses": 128,
+          "wins": 138,
+          "losses": 133,
           "pushes": 1,
-          "cover_rate": 0.5276752767527675,
-          "cover_rate_ci95": 0.059439498779381705,
-          "roi_at_minus_110": 0.007352941176470588
+          "cover_rate": 0.5092250922509225,
+          "cover_rate_ci95": 0.05952062716969009,
+          "roi_at_minus_110": -0.02774064171122995
         },
         "2026": {
           "wins": 84,
-          "losses": 73,
-          "pushes": 6,
-          "cover_rate": 0.535031847133758,
-          "cover_rate_ci95": 0.0780203089691307,
-          "roi_at_minus_110": 0.020635805911879506
+          "losses": 77,
+          "pushes": 7,
+          "cover_rate": 0.5217391304347826,
+          "cover_rate_ci95": 0.0771617845044951,
+          "roi_at_minus_110": -0.003787878787878811
         }
       },
       "all": {
-        "wins": 227,
-        "losses": 201,
-        "pushes": 7,
-        "cover_rate": 0.530373831775701,
-        "cover_rate_ci95": 0.04728260276586576,
-        "roi_at_minus_110": 0.012330198537095112
+        "wins": 222,
+        "losses": 210,
+        "pushes": 8,
+        "cover_rate": 0.5138888888888888,
+        "cover_rate_ci95": 0.0471320777821064,
+        "roi_at_minus_110": -0.01859504132231406
       },
       "first_season": 2025,
       "label": "Projection margin through the weekly median map, closing lines"
@@ -59,30 +58,30 @@
           "roi_at_minus_110": 0.014371657754010685
         },
         "2026": {
-          "wins": 81,
-          "losses": 76,
-          "pushes": 6,
-          "cover_rate": 0.5159235668789809,
-          "cover_rate_ci95": 0.07817284148809056,
-          "roi_at_minus_110": -0.014500836586726134
+          "wins": 84,
+          "losses": 77,
+          "pushes": 7,
+          "cover_rate": 0.5217391304347826,
+          "cover_rate_ci95": 0.0771617845044951,
+          "roi_at_minus_110": -0.003787878787878811
         }
       },
       "all": {
-        "wins": 225,
-        "losses": 203,
-        "pushes": 7,
-        "cover_rate": 0.5257009345794392,
-        "cover_rate_ci95": 0.04730746708245491,
-        "roi_at_minus_110": 0.0035527690700104197
+        "wins": 228,
+        "losses": 204,
+        "pushes": 8,
+        "cover_rate": 0.5277777777777778,
+        "cover_rate_ci95": 0.04707745298749356,
+        "roi_at_minus_110": 0.007438016528925637
       },
       "first_season": 2025,
       "long_run": {
-        "wins": 3243,
-        "losses": 3191,
-        "pushes": 179,
-        "cover_rate": 0.5040410320174076,
-        "cover_rate_ci95": 0.012217190982486454,
-        "roi_at_minus_110": -0.036718309665534854,
+        "wins": 3246,
+        "losses": 3192,
+        "pushes": 180,
+        "cover_rate": 0.5041938490214353,
+        "cover_rate_ci95": 0.01221336431396715,
+        "roi_at_minus_110": -0.03642957224099562,
         "first_season": 2001,
         "last_season": 2026
       },

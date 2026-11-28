@@ -12,8 +12,12 @@ Steps, all from the shared projection snapshot:
    TE1) and the team's DEF projection.
 2. Points model (fitted offline by tools/build_ats_research_model.py on
    2021+ Sleeper weekly projections and nflverse scores):
-   points = const + b_off * offense + b_def * opponent DEF + b_home * home.
-   The raw margin is home points minus away points (+ = home favoured).
+   points = const + b_off * offense + b_def * opponent DEF.
+   The raw margin is home points minus away points (+ = home favoured), so the
+   constant cancels. There is no home-field term (dropped 2026-11-28): the
+   projections already price venue, the fitted edge was small (+0.5 to +1.1
+   on Sleeper history, -0.3 on this season's blend) and dropping it left margin
+   error unchanged in walk-forward replays.
 3. Fixed median map: bands of |raw| (<3, 3-7, 7-10, 10+) map to 3, 5, 7 and
    13 points. Mapped margin = sign(raw) * band value. It replaced a weekly-
    refit map (2026-11-24): the refit moved most weeks without covering more
@@ -25,7 +29,8 @@ Steps, all from the shared projection snapshot:
    the favourite.
 5. A game's row freezes at the last publish before its kickoff. Frozen rows
    are appended once to an append-only ledger and graded from nflverse
-   final scores.
+   final scores. The one exception: tools/rescore_ats_ledger.py rescores
+   frozen rows after a model change and stamps each changed row.
 """
 from __future__ import annotations
 
@@ -83,17 +88,20 @@ def team_strength(players: pd.DataFrame, team_col="team", pos_col="pos", fp_col=
     return out
 
 
+FEATURES = ("off", "opp_def")
+
+
 def fit_points_model(team_games: pd.DataFrame, ridge: float = 1.0) -> dict:
-    """Ridge fit of team points on own offense, opponent DEF and home field."""
-    x = np.column_stack([np.ones(len(team_games)), team_games[["off", "opp_def", "home"]]])
-    penalty = np.eye(4) * ridge
+    """Ridge fit of team points on own offense and opponent DEF (no home field)."""
+    x = np.column_stack([np.ones(len(team_games)), team_games[list(FEATURES)]])
+    penalty = np.eye(len(FEATURES) + 1) * ridge
     penalty[0, 0] = 0.0
     beta = np.linalg.solve(x.T @ x + penalty, x.T @ team_games["pts"].to_numpy(float))
-    return dict(zip(("const", "off", "opp_def", "home"), map(float, beta)))
+    return dict(zip(("const",) + FEATURES, map(float, beta)))
 
 
-def predict_points(coef: dict, off: float, opp_def: float, home: float) -> float:
-    return coef["const"] + coef["off"] * off + coef["opp_def"] * opp_def + coef["home"] * home
+def predict_points(coef: dict, off: float, opp_def: float) -> float:
+    return coef["const"] + coef["off"] * off + coef["opp_def"] * opp_def
 
 
 # ---------------------------------------------------------------- median map
@@ -304,9 +312,8 @@ def build_payload(players, schedule, model, history, previous=None, ledger=(),
             season, week = int(match["season"]), int(match["week"])
             rule = fit_map(train, season, week)
         h, a = strength[home], strength[away]
-        neutral = str(match.get("location") or "").lower() == "neutral"
-        home_pts = predict_points(coef, h["off"], a["def"], 0.0 if neutral else 1.0)
-        away_pts = predict_points(coef, a["off"], h["def"], 0.0)
+        home_pts = predict_points(coef, h["off"], a["def"])
+        away_pts = predict_points(coef, a["off"], h["def"])
         raw = home_pts - away_pts
         entry = {
             "game_id": game_id, "nflverse_game_id": str(match["game_id"]),

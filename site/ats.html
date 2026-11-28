@@ -278,8 +278,9 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     return g.model_side + " " + (h === 0 ? "PK" : (h > 0 ? "+" : "−") + Math.abs(h));
   }
   function status(g) {
-    if (g.result) return '<span class="pill ' + g.result + '">' + {W: "Covered", L: "Missed", P: "Push"}[g.result] + "</span>";
-    if (g.locked) return '<span class="pill">Frozen</span>';
+    var re = g.rescored_utc ? '<sup class="muted" title="Rescored after kickoff: ' + esc(g.rescore_note || "") + '">*</sup>' : "";
+    if (g.result) return '<span class="pill ' + g.result + '">' + {W: "Covered", L: "Missed", P: "Push"}[g.result] + "</span>" + re;
+    if (g.locked) return '<span class="pill">Frozen</span>' + re;
     return '<span class="pill open">Open</span>';
   }
 
@@ -339,8 +340,10 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     var lr = (bt.spread_map_control || {}).long_run;
     var span = bt.shown_from ? bt.shown_from + "–" + d.season : "";
     var f = d.forward_record || {};
+    var rescored = (d.games || []).filter(function (g) { return g.rescored_utc; }).length;
     var cards = [
-      ["Forward record", rec(f), f.wins + f.losses ? "cover " + pct(f.cover_rate) + " since launch" : "no finished games yet"],
+      ["Forward record", rec(f), (f.wins + f.losses ? "cover " + pct(f.cover_rate) + " since launch" : "no finished games yet") +
+        (rescored ? "; " + rescored + " row(s) rescored after kickoff" : "")],
       ["Backtest " + span + ": projection + map", pm ? pct(pm.cover_rate) : "—", pm ? rec(pm) + ", ±" + pct(pm.cover_rate_ci95) : ""],
       ["Map alone, long run", lr ? pct(lr.cover_rate) : "—", lr ? rec(lr) + ", " + lr.first_season + "–" + lr.last_season : ""],
       ["Break-even at −110", "52.4%", "needed just to not lose"]
@@ -352,7 +355,8 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
     el("stats").hidden = false;
 
     var games = d.games || [];
-    el("week-note").textContent = games.length + " game(s); frozen rows show their pre-kickoff values";
+    el("week-note").textContent = games.length + " game(s); frozen rows show their pre-kickoff values" +
+      (rescored ? ", except " + rescored + " marked * (rescored after kickoff with the current points model)" : "");
     el("games").innerHTML = games.length ? games.map(function (g) {
       return "<tr><td>" + esc(kick(g.kickoff_utc)) + "</td><td><b>" + esc(g.away) + " @ " + esc(g.home) + "</b></td>" +
         '<td class="num">' + esc(g.away + " " + g.away_points.toFixed(1) + " – " + g.home + " " + g.home_points.toFixed(1)) + "</td>" +
@@ -368,8 +372,8 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
 
     var c = (d.method || {}).points_model || {};
     if (num(c.const)) el("formula").textContent = "points = " + c.const.toFixed(2) + " + " + c.off.toFixed(3) +
-      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP " + (c.home < 0 ? "− " : "+ ") +
-      Math.abs(c.home).toFixed(2) + " (home)";
+      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP" +
+      (num(c.home) ? " " + (c.home < 0 ? "− " : "+ ") + Math.abs(c.home).toFixed(2) + " (home)" : "");
     var fit = (d.method || {}).points_model_fit;
     if (fit) el("fit-note").textContent = "Fitted on " + fit.team_games + " team-games (" +
       (fit.seasons[0] === fit.seasons[1] ? fit.seasons[0] : fit.seasons[0] + "–" + fit.seasons[1]) +

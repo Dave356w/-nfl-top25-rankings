@@ -171,12 +171,18 @@ advice**; the page leads with that and with its record.
 
 - Team strength: starters' projected points (QB1, RB1-2, WR1-3, TE1) and the
   DEF projection, from the same snapshot as every other page.
-- Points model: `points = const + b*offense - c*opponent DEF + d*home`, fitted
+- Points model: `points = const + b*offense - c*opponent DEF`, fitted
   by `tools/build_ats_research_model.py` on this season's completed weeks of the
   site's own blend (each player the mean of Sleeper, ESPN and CBS, CBS rescaled
   as the site does) and nflverse scores, so it is fitted on the same inputs the
   page applies it to. Until 100 blend games exist it falls back to Sleeper
-  weekly projections from 2021 (`model/ats_research/`).
+  weekly projections from 2021 (`model/ats_research/`). There is no home-field
+  term (removed 2026-11-28): the fitted edge was small (+0.5 to +1.1 points on
+  Sleeper history, -0.3 on this season's blend), the projections already price
+  venue, and dropping it left walk-forward margin error unchanged. Its cover
+  rate through the fixed map fell about 1.4 points on 2022-2026 Sleeper
+  replays, within noise; the margin history, replay and backtest were rebuilt
+  with the new model.
 - The median map's history and the replayed weeks stay Sleeper-only walk-forward
   margins from 2021: only Sleeper has that much history.
 - Fixed map: projected margins under 3, 3-7, 7-10 and 10+ map to 3, 5, 7 and
@@ -187,6 +193,14 @@ advice**; the page leads with that and with its record.
   10-13 are taken rather than faded.
 - Each game's row freezes at the last publish before kickoff and is appended
   once to `site/data/ats/ledger.jsonl` and graded from nflverse final scores.
+- When the points model changes, `tools/rescore_ats_ledger.py --season <year>
+  --note "<why>"` rescores the season's frozen rows from their stored team
+  strength and line, regrades them and refreshes `latest.json`/`latest.csv`.
+  Changed rows carry `rescored_utc` and `rescore_note`, and the page marks
+  them `*`. Done once, on 2026-11-28, for the home-field removal: of week 12's
+  five frozen rows only PHI @ DAL changed side (raw margin 9.90 -> 10.03 crossed
+  into the 10+ band; PHI, a win, became DAL, a loss), so the forward record
+  went from 3-1-1 to 2-2-1.
 - The page shows backtests for last season and this one only (projection +
   map 51.4% over 2025-2026), plus one line with the map's long-run record on
   the spread alone (50.2%, 2001-2026). Break-even at -110 is 52.4%.
