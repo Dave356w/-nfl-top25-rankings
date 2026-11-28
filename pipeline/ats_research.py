@@ -29,7 +29,8 @@ Steps, all from the shared projection snapshot:
    the favourite.
 5. A game's row freezes at the last publish before its kickoff. Frozen rows
    are appended once to an append-only ledger and graded from nflverse
-   final scores.
+   final scores. The one exception: tools/rescore_ats_ledger.py rescores
+   frozen rows after a model change and stamps each changed row.
 """
 from __future__ import annotations
 
