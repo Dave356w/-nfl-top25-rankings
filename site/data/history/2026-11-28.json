@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "status": "ok",
-  "generated_utc": "2026-11-28T06:30:48Z",
-  "snapshot_id": "2026-11-28T06:30:48Z",
+  "generated_utc": "2026-11-28T07:25:49Z",
+  "snapshot_id": "2026-11-28T07:25:49Z",
   "run_date": "2026-11-28",
   "top_n": 50,
   "positions": [
@@ -146,9 +146,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 23.54,
+        "market_fp": 23.53,
         "market_quality": "good",
-        "market_props": "Pa 283.5 \u00b7 PaTD 2.5 \u00b7 INT 0.5 \u00b7 Ru 6.5 \u00b7 TD 24%"
+        "market_props": "Pa 283 \u00b7 PaTD 2.5 \u00b7 INT 0.5 \u00b7 Ru 6.5 \u00b7 TD 24%"
       },
       {
         "rank": 2,
@@ -163,9 +163,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 22.03,
+        "market_fp": 21.9,
         "market_quality": "good",
-        "market_props": "Pa 254 \u00b7 PaTD 2.5 \u00b7 INT 0.5 \u00b7 Ru 9.5 \u00b7 TD 27%"
+        "market_props": "Pa 254 \u00b7 PaTD 2.5 \u00b7 INT 0.5 \u00b7 Ru 9 \u00b7 TD 26%"
       },
       {
         "rank": 3,
@@ -180,7 +180,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 20.98,
+        "market_fp": 20.99,
         "market_quality": "good",
         "market_props": "Pa 223.5 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 31.5 \u00b7 TD 24%"
       },
@@ -197,7 +197,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 21.27,
+        "market_fp": 21.28,
         "market_quality": "good",
         "market_props": "Pa 258 \u00b7 PaTD 2.5 \u00b7 INT 0.5 \u00b7 Ru 11 \u00b7 TD 16%"
       },
@@ -248,9 +248,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 18.25,
+        "market_fp": 18.22,
         "market_quality": "good",
-        "market_props": "Pa 211 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 26 \u00b7 TD 25%"
+        "market_props": "Pa 211 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 25.5 \u00b7 TD 25%"
       },
       {
         "rank": 8,
@@ -316,7 +316,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 14.76,
+        "market_fp": 14.81,
         "market_quality": "good",
         "market_props": "Pa 203 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 3.5 \u00b7 TD 18%"
       },
@@ -333,7 +333,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 17.28,
+        "market_fp": 17.3,
         "market_quality": "good",
         "market_props": "Pa 230 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 20.5 \u00b7 TD 23%"
       },
@@ -350,9 +350,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 17.67,
+        "market_fp": 17.7,
         "market_quality": "good",
-        "market_props": "Pa 215.5 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 16.5 \u00b7 TD 23%"
+        "market_props": "Pa 216 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 17 \u00b7 TD 24%"
       },
       {
         "rank": 14,
@@ -435,7 +435,7 @@
         "depth": 1,
         "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 16.99,
+        "market_fp": 17.0,
         "market_quality": "good",
         "market_props": "Pa 201.5 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 15.5 \u00b7 TD 20%"
       },
@@ -452,7 +452,7 @@
         "depth": 1,
         "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 16.65,
+        "market_fp": 16.69,
         "market_quality": "good",
         "market_props": "Pa 234 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 5.5 \u00b7 TD 19%"
       },
@@ -469,9 +469,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 14.81,
+        "market_fp": 14.67,
         "market_quality": "good",
-        "market_props": "Pa 192.5 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 15.5 \u00b7 TD 20%"
+        "market_props": "Pa 193.5 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 14.5 \u00b7 TD 21%"
       },
       {
         "rank": 21,
@@ -486,9 +486,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 15.26,
+        "market_fp": 15.22,
         "market_quality": "good",
-        "market_props": "Pa 164.5 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 37.5 \u00b7 TD 26%"
+        "market_props": "Pa 164 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 38 \u00b7 TD 27%"
       },
       {
         "rank": 22,
@@ -503,9 +503,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 14.54,
+        "market_fp": 14.78,
         "market_quality": "good",
-        "market_props": "Pa 225 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 4.5 \u00b7 TD 7%"
+        "market_props": "Pa 226.5 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 4.5 \u00b7 TD 7%"
       },
       {
         "rank": 23,
@@ -520,7 +520,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 12.08,
+        "market_fp": 12.05,
         "market_quality": "good",
         "market_props": "Pa 169.5 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 7.5 \u00b7 TD 17%"
       },
@@ -554,9 +554,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 14.84,
+        "market_fp": 14.45,
         "market_quality": "good",
-        "market_props": "Pa 176 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 21 \u00b7 TD 22%"
+        "market_props": "Pa 176.5 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 21.5 \u00b7 TD 22%"
       },
       {
         "rank": 26,
@@ -571,7 +571,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 15.61,
+        "market_fp": 15.67,
         "market_quality": "good",
         "market_props": "Pa 235.5 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 4 \u00b7 TD 19%"
       },
@@ -588,9 +588,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 13.27,
+        "market_fp": 13.14,
         "market_quality": "good",
-        "market_props": "Pa 167.5 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 13.5 \u00b7 TD 21%"
+        "market_props": "Pa 166 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 13.5 \u00b7 TD 21%"
       },
       {
         "rank": 28,
@@ -605,9 +605,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 14.24,
+        "market_fp": 14.21,
         "market_quality": "good",
-        "market_props": "Pa 208.5 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 8.5 \u00b7 TD 13%"
+        "market_props": "Pa 208 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 8.5 \u00b7 TD 13%"
       },
       {
         "rank": 29,
@@ -656,7 +656,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 12.48,
+        "market_fp": 12.47,
         "market_quality": "good",
         "market_props": "Pa 197.5 \u00b7 PaTD 0.5 \u00b7 INT 0.5 \u00b7 Ru 7.5 \u00b7 TD 8%"
       },
@@ -673,9 +673,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 15.3,
+        "market_fp": 14.05,
         "market_quality": "good",
-        "market_props": "Pa 212.5 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 8 \u00b7 TD 20%"
+        "market_props": "Pa 212.5 \u00b7 PaTD 1.5 \u00b7 INT 0.5 \u00b7 Ru 8.5 \u00b7 TD 13%"
       }
     ],
     "RB": [
@@ -709,7 +709,7 @@
         "depth": 1,
         "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 17.41,
+        "market_fp": 17.37,
         "market_quality": "good",
         "market_props": "Ru 81.5 \u00b7 Rec 2.5 \u00b7 RecYd 18.5 \u00b7 TD 50%"
       },
@@ -743,9 +743,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 16.72,
+        "market_fp": 16.81,
         "market_quality": "good",
-        "market_props": "Ru 75.5 \u00b7 Rec 2.5 \u00b7 RecYd 20.5 \u00b7 TD 47%"
+        "market_props": "Ru 75.5 \u00b7 Rec 2.5 \u00b7 RecYd 21 \u00b7 TD 48%"
       },
       {
         "rank": 5,
@@ -777,9 +777,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 17.11,
+        "market_fp": 16.23,
         "market_quality": "good",
-        "market_props": "Ru 57 \u00b7 Rec 3.5 \u00b7 RecYd 31 \u00b7 TD 55%"
+        "market_props": "Ru 57.5 \u00b7 Rec 3.5 \u00b7 RecYd 30.5 \u00b7 TD 57%"
       },
       {
         "rank": 7,
@@ -794,9 +794,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 15.89,
+        "market_fp": 15.4,
         "market_quality": "good",
-        "market_props": "Ru 79 \u00b7 Rec 1.5 \u00b7 RecYd 9 \u00b7 TD 59%"
+        "market_props": "Ru 77.5 \u00b7 Rec 1.5 \u00b7 RecYd 9.5 \u00b7 TD 60%"
       },
       {
         "rank": 8,
@@ -845,9 +845,9 @@
         "depth": 1,
         "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 15.39,
+        "market_fp": 15.4,
         "market_quality": "good",
-        "market_props": "Ru 63.5 \u00b7 Rec 2.5 \u00b7 RecYd 18.5 \u00b7 TD 50%"
+        "market_props": "Ru 63.5 \u00b7 Rec 2.5 \u00b7 RecYd 19 \u00b7 TD 50%"
       },
       {
         "rank": 11,
@@ -862,9 +862,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 16.42,
+        "market_fp": 16.47,
         "market_quality": "good",
-        "market_props": "Ru 74 \u00b7 Rec 2.5 \u00b7 RecYd 15.5 \u00b7 TD 55%"
+        "market_props": "Ru 74 \u00b7 Rec 2.5 \u00b7 RecYd 16 \u00b7 TD 55%"
       },
       {
         "rank": 12,
@@ -896,9 +896,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 14.96,
+        "market_fp": 14.86,
         "market_quality": "good",
-        "market_props": "Ru 70.5 \u00b7 Rec 2.5 \u00b7 RecYd 13.5 \u00b7 TD 47%"
+        "market_props": "Ru 69.5 \u00b7 Rec 2.5 \u00b7 RecYd 13.5 \u00b7 TD 47%"
       },
       {
         "rank": 14,
@@ -930,9 +930,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 14.41,
+        "market_fp": 14.21,
         "market_quality": "good",
-        "market_props": "Ru 41 \u00b7 Rec 4.5 \u00b7 RecYd 25 \u00b7 TD 50%"
+        "market_props": "Ru 41.5 \u00b7 Rec 4.5 \u00b7 RecYd 25 \u00b7 TD 48%"
       },
       {
         "rank": 16,
@@ -947,9 +947,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 12.98,
+        "market_fp": 12.97,
         "market_quality": "good",
-        "market_props": "Ru 55.5 \u00b7 Rec 2 \u00b7 RecYd 8.5 \u00b7 TD 55%"
+        "market_props": "Ru 55.5 \u00b7 Rec 1.5 \u00b7 RecYd 8.5 \u00b7 TD 55%"
       },
       {
         "rank": 17,
@@ -964,9 +964,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 12.49,
+        "market_fp": 12.39,
         "market_quality": "good",
-        "market_props": "Ru 60 \u00b7 Rec 1.5 \u00b7 RecYd 7 \u00b7 TD 44%"
+        "market_props": "Ru 60 \u00b7 Rec 1.5 \u00b7 RecYd 7 \u00b7 TD 43%"
       },
       {
         "rank": 18,
@@ -998,9 +998,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 13.39,
+        "market_fp": 13.51,
         "market_quality": "good",
-        "market_props": "Ru 53 \u00b7 Rec 2.5 \u00b7 RecYd 14.5 \u00b7 TD 44%"
+        "market_props": "Ru 53 \u00b7 Rec 2.5 \u00b7 RecYd 14.5 \u00b7 TD 45%"
       },
       {
         "rank": 20,
@@ -1049,9 +1049,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 13.49,
+        "market_fp": 13.26,
         "market_quality": "good",
-        "market_props": "Ru 44 \u00b7 Rec 3.5 \u00b7 RecYd 29.5 \u00b7 TD 36%"
+        "market_props": "Ru 43.5 \u00b7 Rec 3.5 \u00b7 RecYd 30 \u00b7 TD 34%"
       },
       {
         "rank": 23,
@@ -1066,9 +1066,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 12.42,
+        "market_fp": 11.11,
         "market_quality": "good",
-        "market_props": "Ru 49 \u00b7 Rec 2.5 \u00b7 RecYd 14.5 \u00b7 TD 43%"
+        "market_props": "Ru 48.5 \u00b7 Rec 2.5 \u00b7 RecYd 13.5 \u00b7 TD 43%"
       },
       {
         "rank": 24,
@@ -1083,9 +1083,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 13.31,
+        "market_fp": 13.1,
         "market_quality": "good",
-        "market_props": "Ru 67.5 \u00b7 Rec 2.5 \u00b7 RecYd 11 \u00b7 TD 44%"
+        "market_props": "Ru 67.5 \u00b7 Rec 2.5 \u00b7 RecYd 11 \u00b7 TD 41%"
       },
       {
         "rank": 25,
@@ -1117,9 +1117,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 11.36,
+        "market_fp": 11.48,
         "market_quality": "good",
-        "market_props": "Ru 63.5 \u00b7 Rec 1.5 \u00b7 RecYd 7.5 \u00b7 TD 39%"
+        "market_props": "Ru 63.5 \u00b7 Rec 1.5 \u00b7 RecYd 7.5 \u00b7 TD 41%"
       },
       {
         "rank": 27,
@@ -1134,9 +1134,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 11.52,
+        "market_fp": 11.5,
         "market_quality": "good",
-        "market_props": "Ru 47.5 \u00b7 Rec 2.5 \u00b7 RecYd 12.5 \u00b7 TD 36%"
+        "market_props": "Ru 47.5 \u00b7 Rec 2.5 \u00b7 RecYd 13 \u00b7 TD 36%"
       },
       {
         "rank": 28,
@@ -1151,9 +1151,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 10.24,
+        "market_fp": 10.14,
         "market_quality": "good",
-        "market_props": "Ru 53 \u00b7 Rec 1.5 \u00b7 RecYd 5.5 \u00b7 TD 41%"
+        "market_props": "Ru 53 \u00b7 Rec 1.5 \u00b7 RecYd 5.5 \u00b7 TD 40%"
       },
       {
         "rank": 29,
@@ -1168,9 +1168,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 9.5,
+        "market_fp": 9.39,
         "market_quality": "good",
-        "market_props": "Ru 57.5 \u00b7 Rec 0.5 \u00b7 RecYd 3.5 \u00b7 TD 33%"
+        "market_props": "Ru 57.5 \u00b7 Rec 0.5 \u00b7 RecYd 2.5 \u00b7 TD 33%"
       },
       {
         "rank": 30,
@@ -1202,9 +1202,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 12.29,
+        "market_fp": 12.3,
         "market_quality": "good",
-        "market_props": "Ru 56.5 \u00b7 Rec 1.5 \u00b7 RecYd 8 \u00b7 TD 42%"
+        "market_props": "Ru 57 \u00b7 Rec 1.5 \u00b7 RecYd 8 \u00b7 TD 42%"
       },
       {
         "rank": 32,
@@ -1219,9 +1219,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 9.94,
+        "market_fp": 10.02,
         "market_quality": "good",
-        "market_props": "Ru 37 \u00b7 Rec 1.5 \u00b7 RecYd 8 \u00b7 TD 38%"
+        "market_props": "Ru 37 \u00b7 Rec 1.5 \u00b7 RecYd 8 \u00b7 TD 39%"
       },
       {
         "rank": 33,
@@ -1236,7 +1236,7 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 9.37,
+        "market_fp": 9.42,
         "market_quality": "good",
         "market_props": "Ru 45.5 \u00b7 Rec 1.5 \u00b7 RecYd 8.5 \u00b7 TD 35%"
       },
@@ -1253,9 +1253,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 8.85,
+        "market_fp": 8.89,
         "market_quality": "good",
-        "market_props": "Ru 18.5 \u00b7 Rec 2.5 \u00b7 RecYd 23 \u00b7 TD 23%"
+        "market_props": "Ru 19 \u00b7 Rec 2.5 \u00b7 RecYd 23 \u00b7 TD 23%"
       },
       {
         "rank": 35,
@@ -1270,9 +1270,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 6.83,
+        "market_fp": 6.89,
         "market_quality": "good",
-        "market_props": "Ru 27 \u00b7 Rec 1.5 \u00b7 RecYd 5.5 \u00b7 TD 31%"
+        "market_props": "Ru 27.5 \u00b7 Rec 1.5 \u00b7 RecYd 5.5 \u00b7 TD 31%"
       },
       {
         "rank": 36,
@@ -1287,7 +1287,7 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 8.68,
+        "market_fp": 8.67,
         "market_quality": "good",
         "market_props": "Ru 29 \u00b7 Rec 1.5 \u00b7 RecYd 9 \u00b7 TD 31%"
       },
@@ -1304,9 +1304,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 8.19,
+        "market_fp": 8.14,
         "market_quality": "good",
-        "market_props": "Ru 29.5 \u00b7 Rec 1.5 \u00b7 RecYd 9 \u00b7 TD 37%"
+        "market_props": "Ru 28.5 \u00b7 Rec 1.5 \u00b7 RecYd 9 \u00b7 TD 37%"
       },
       {
         "rank": 38,
@@ -1321,7 +1321,7 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 8.06,
+        "market_fp": 7.55,
         "market_quality": "good",
         "market_props": "Ru 12.5 \u00b7 Rec 3.5 \u00b7 RecYd 19 \u00b7 TD 25%"
       },
@@ -1372,9 +1372,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 7.21,
+        "market_fp": 8.16,
         "market_quality": "good",
-        "market_props": "Ru 25 \u00b7 Rec 1.5 \u00b7 RecYd 9.5 \u00b7 TD 27%"
+        "market_props": "Ru 25 \u00b7 Rec 1.5 \u00b7 RecYd 10 \u00b7 TD 25%"
       },
       {
         "rank": 42,
@@ -1406,9 +1406,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 5.5,
+        "market_fp": 5.56,
         "market_quality": "good",
-        "market_props": "Ru 21.5 \u00b7 Rec 1.5 \u00b7 RecYd 8.5 \u00b7 TD 22%"
+        "market_props": "Ru 21.5 \u00b7 Rec 1.5 \u00b7 RecYd 8.5 \u00b7 TD 23%"
       },
       {
         "rank": 44,
@@ -1425,7 +1425,7 @@
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
         "market_fp": null,
         "market_quality": "partial",
-        "market_props": "Ru 27 \u00b7 TD 26%"
+        "market_props": "Ru 27.5 \u00b7 TD 26%"
       },
       {
         "rank": 45,
@@ -1440,9 +1440,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 7.67,
+        "market_fp": 6.49,
         "market_quality": "good",
-        "market_props": "Ru 22.5 \u00b7 Rec 1.5 \u00b7 RecYd 9 \u00b7 TD 25%"
+        "market_props": "Ru 22.5 \u00b7 Rec 1.5 \u00b7 RecYd 9.5 \u00b7 TD 25%"
       },
       {
         "rank": 46,
@@ -1457,9 +1457,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 5.69,
+        "market_fp": 5.75,
         "market_quality": "good",
-        "market_props": "Ru 33.5 \u00b7 Rec 0.5 \u00b7 RecYd 0.5 \u00b7 TD 22%"
+        "market_props": "Ru 33.5 \u00b7 Rec 0.5 \u00b7 RecYd 0.5 \u00b7 TD 23%"
       },
       {
         "rank": 47,
@@ -1491,9 +1491,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 4.33,
+        "market_fp": 3.5,
         "market_quality": "good",
-        "market_props": "Ru 19 \u00b7 Rec 0.5 \u00b7 RecYd 0.5 \u00b7 TD 22%"
+        "market_props": "Ru 18.5 \u00b7 Rec 0.5 \u00b7 RecYd 0.5 \u00b7 TD 19%"
       },
       {
         "rank": 49,
@@ -1525,9 +1525,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 3.97,
+        "market_fp": 4.04,
         "market_quality": "good",
-        "market_props": "Ru 12 \u00b7 Rec 0.5 \u00b7 RecYd 2.5 \u00b7 TD 21%"
+        "market_props": "Ru 13 \u00b7 Rec 0.5 \u00b7 RecYd 2.5 \u00b7 TD 21%"
       }
     ],
     "WR": [
@@ -1536,7 +1536,7 @@
         "player": "Jaxon Smith-Njigba",
         "team": "SEA",
         "opponent": "SF",
-        "fp": 18.95,
+        "fp": 18.98,
         "salary": 43,
         "fp_per_salary": 0.441,
         "role": "starter",
@@ -1544,33 +1544,33 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 17.66,
+        "market_fp": 18.12,
         "market_quality": "good",
-        "market_props": "Rec 7.5 \u00b7 RecYd 96 \u00b7 TD 43%"
+        "market_props": "Rec 7.5 \u00b7 RecYd 97.5 \u00b7 TD 44%"
       },
       {
         "rank": 2,
         "player": "Ja'Marr Chase",
         "team": "CIN",
         "opponent": "NO",
-        "fp": 17.75,
+        "fp": 17.78,
         "salary": 44,
-        "fp_per_salary": 0.403,
+        "fp_per_salary": 0.404,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 18.75,
+        "market_fp": 18.7,
         "market_quality": "good",
-        "market_props": "Rec 7.5 \u00b7 RecYd 92 \u00b7 TD 54%"
+        "market_props": "Rec 7.5 \u00b7 RecYd 91.5 \u00b7 TD 54%"
       },
       {
         "rank": 3,
         "player": "CeeDee Lamb",
         "team": "DAL",
         "opponent": "PHI",
-        "fp": 16.95,
+        "fp": 16.98,
         "salary": 40,
         "fp_per_salary": 0.424,
         "role": "starter",
@@ -1587,9 +1587,9 @@
         "player": "Amon-Ra St. Brown",
         "team": "DET",
         "opponent": "CHI",
-        "fp": 15.66,
+        "fp": 15.68,
         "salary": 37,
-        "fp_per_salary": 0.423,
+        "fp_per_salary": 0.424,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 1,
@@ -1604,9 +1604,9 @@
         "player": "Justin Jefferson",
         "team": "MIN",
         "opponent": "ATL",
-        "fp": 14.91,
+        "fp": 14.93,
         "salary": 29,
-        "fp_per_salary": 0.514,
+        "fp_per_salary": 0.515,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
@@ -1621,15 +1621,15 @@
         "player": "Nico Collins",
         "team": "HOU",
         "opponent": "BAL",
-        "fp": 13.83,
+        "fp": 13.85,
         "salary": 30,
-        "fp_per_salary": 0.461,
+        "fp_per_salary": 0.462,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 12.69,
+        "market_fp": 12.75,
         "market_quality": "good",
         "market_props": "Rec 4.5 \u00b7 RecYd 62.5 \u00b7 TD 41%"
       },
@@ -1638,26 +1638,26 @@
         "player": "Tee Higgins",
         "team": "CIN",
         "opponent": "NO",
-        "fp": 13.67,
+        "fp": 13.7,
         "salary": 36,
-        "fp_per_salary": 0.38,
+        "fp_per_salary": 0.381,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 13.52,
+        "market_fp": 13.33,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 68 \u00b7 TD 45%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 67.5 \u00b7 TD 43%"
       },
       {
         "rank": 8,
         "player": "Matthew Golden",
         "team": "GB",
         "opponent": "LAR",
-        "fp": 13.14,
+        "fp": 13.16,
         "salary": 29,
-        "fp_per_salary": 0.453,
+        "fp_per_salary": 0.454,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 1,
@@ -1672,9 +1672,9 @@
         "player": "Malik Nabers",
         "team": "NYG",
         "opponent": "IND",
-        "fp": 13.02,
+        "fp": 13.04,
         "salary": 28,
-        "fp_per_salary": 0.465,
+        "fp_per_salary": 0.466,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
@@ -1689,9 +1689,9 @@
         "player": "George Pickens",
         "team": "DAL",
         "opponent": "PHI",
-        "fp": 12.92,
+        "fp": 12.94,
         "salary": 34,
-        "fp_per_salary": 0.38,
+        "fp_per_salary": 0.381,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
@@ -1706,9 +1706,9 @@
         "player": "Christian Watson",
         "team": "GB",
         "opponent": "LAR",
-        "fp": 12.85,
+        "fp": 12.88,
         "salary": 30,
-        "fp_per_salary": 0.428,
+        "fp_per_salary": 0.429,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 2,
@@ -1723,41 +1723,41 @@
         "player": "Chris Olave",
         "team": "NO",
         "opponent": "CIN",
-        "fp": 12.68,
+        "fp": 12.7,
         "salary": 28,
-        "fp_per_salary": 0.453,
+        "fp_per_salary": 0.454,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 13.08,
+        "market_fp": 13.11,
         "market_quality": "good",
-        "market_props": "Rec 5.5 \u00b7 RecYd 70 \u00b7 TD 31%"
+        "market_props": "Rec 5.5 \u00b7 RecYd 70 \u00b7 TD 32%"
       },
       {
         "rank": 13,
         "player": "Garrett Wilson",
         "team": "NYJ",
         "opponent": "MIA",
-        "fp": 11.93,
+        "fp": 11.95,
         "salary": 25,
-        "fp_per_salary": 0.477,
+        "fp_per_salary": 0.478,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 11.78,
+        "market_fp": 11.86,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 57 \u00b7 TD 36%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 57.5 \u00b7 TD 36%"
       },
       {
         "rank": 14,
         "player": "Zay Flowers",
         "team": "BAL",
         "opponent": "HOU",
-        "fp": 11.89,
+        "fp": 11.91,
         "salary": 28,
         "fp_per_salary": 0.425,
         "role": "starter",
@@ -1765,7 +1765,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 13.66,
+        "market_fp": 13.65,
         "market_quality": "good",
         "market_props": "Rec 6.5 \u00b7 RecYd 74 \u00b7 TD 32%"
       },
@@ -1774,7 +1774,7 @@
         "player": "DeVonta Smith",
         "team": "PHI",
         "opponent": "DAL",
-        "fp": 11.84,
+        "fp": 11.86,
         "salary": 25,
         "fp_per_salary": 0.474,
         "role": "starter",
@@ -1791,9 +1791,9 @@
         "player": "Luther Burden III",
         "team": "CHI",
         "opponent": "DET",
-        "fp": 11.7,
+        "fp": 11.72,
         "salary": 27,
-        "fp_per_salary": 0.433,
+        "fp_per_salary": 0.434,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 1,
@@ -1808,7 +1808,7 @@
         "player": "Jakobi Meyers",
         "team": "JAX",
         "opponent": "TEN",
-        "fp": 11.4,
+        "fp": 11.41,
         "salary": 17,
         "fp_per_salary": 0.671,
         "role": "starter",
@@ -1816,16 +1816,16 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 14.18,
+        "market_fp": 14.14,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 70.5 \u00b7 TD 44%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 70.5 \u00b7 TD 45%"
       },
       {
         "rank": 18,
         "player": "Drake London",
         "team": "ATL",
         "opponent": "MIN",
-        "fp": 11.19,
+        "fp": 11.2,
         "salary": 29,
         "fp_per_salary": 0.386,
         "role": "starter",
@@ -1833,18 +1833,18 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 13.18,
+        "market_fp": 13.02,
         "market_quality": "good",
-        "market_props": "Rec 5.5 \u00b7 RecYd 71.5 \u00b7 TD 32%"
+        "market_props": "Rec 5.5 \u00b7 RecYd 71 \u00b7 TD 32%"
       },
       {
         "rank": 19,
         "player": "Jameson Williams",
         "team": "DET",
         "opponent": "CHI",
-        "fp": 10.98,
+        "fp": 11.0,
         "salary": 26,
-        "fp_per_salary": 0.422,
+        "fp_per_salary": 0.423,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
@@ -1859,24 +1859,24 @@
         "player": "Tetairoa McMillan",
         "team": "CAR",
         "opponent": "TB",
-        "fp": 10.89,
+        "fp": 10.91,
         "salary": 27,
-        "fp_per_salary": 0.403,
+        "fp_per_salary": 0.404,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 11.32,
+        "market_fp": 11.34,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 54.5 \u00b7 TD 36%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 54 \u00b7 TD 36%"
       },
       {
         "rank": 21,
         "player": "Stefon Diggs",
         "team": "WAS",
         "opponent": "ARI",
-        "fp": 10.65,
+        "fp": 10.67,
         "salary": 26,
         "fp_per_salary": 0.41,
         "role": "starter",
@@ -1884,7 +1884,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 10.43,
+        "market_fp": 10.37,
         "market_quality": "good",
         "market_props": "Rec 4.5 \u00b7 RecYd 43.5 \u00b7 TD 38%"
       },
@@ -1893,24 +1893,24 @@
         "player": "Mike Evans",
         "team": "SF",
         "opponent": "SEA",
-        "fp": 10.31,
+        "fp": 10.33,
         "salary": 28,
-        "fp_per_salary": 0.368,
+        "fp_per_salary": 0.369,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 10.96,
+        "market_fp": 10.2,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 56.5 \u00b7 TD 30%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 56.5 \u00b7 TD 28%"
       },
       {
         "rank": 23,
         "player": "DJ Moore",
         "team": "BUF",
         "opponent": "KC",
-        "fp": 9.52,
+        "fp": 9.53,
         "salary": 27,
         "fp_per_salary": 0.353,
         "role": "starter",
@@ -1927,15 +1927,15 @@
         "player": "KC Concepcion Jr.",
         "team": "CLE",
         "opponent": "LV",
-        "fp": 9.3,
+        "fp": 9.31,
         "salary": 19,
-        "fp_per_salary": 0.489,
+        "fp_per_salary": 0.49,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 1,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 10.98,
+        "market_fp": 11.01,
         "market_quality": "good",
         "market_props": "Rec 4.5 \u00b7 RecYd 52 \u00b7 TD 34%"
       },
@@ -1944,9 +1944,9 @@
         "player": "Rashee Rice",
         "team": "KC",
         "opponent": "BUF",
-        "fp": 9.26,
+        "fp": 9.28,
         "salary": 24,
-        "fp_per_salary": 0.386,
+        "fp_per_salary": 0.387,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 1,
@@ -1961,9 +1961,9 @@
         "player": "Rome Odunze",
         "team": "CHI",
         "opponent": "DET",
-        "fp": 9.24,
+        "fp": 9.26,
         "salary": 19,
-        "fp_per_salary": 0.486,
+        "fp_per_salary": 0.487,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 2,
@@ -1978,7 +1978,7 @@
         "player": "Ladd McConkey",
         "team": "LAC",
         "opponent": "NE",
-        "fp": 9.19,
+        "fp": 9.2,
         "salary": 21,
         "fp_per_salary": 0.438,
         "role": "starter",
@@ -1986,16 +1986,16 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 5.87,
+        "market_fp": 5.44,
         "market_quality": "td-estimate",
-        "market_props": "TD 23%"
+        "market_props": "TD 21%"
       },
       {
         "rank": 28,
         "player": "Carnell Tate",
         "team": "TEN",
         "opponent": "JAX",
-        "fp": 9.19,
+        "fp": 9.2,
         "salary": 19,
         "fp_per_salary": 0.484,
         "role": "starter",
@@ -2003,16 +2003,16 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 10.73,
+        "market_fp": 10.62,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 53 \u00b7 TD 30%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 52.5 \u00b7 TD 29%"
       },
       {
         "rank": 29,
         "player": "Caleb Douglas",
         "team": "MIA",
         "opponent": "NYJ",
-        "fp": 8.92,
+        "fp": 8.93,
         "salary": 16,
         "fp_per_salary": 0.558,
         "role": "starter",
@@ -2029,49 +2029,49 @@
         "player": "Antonio Williams",
         "team": "WAS",
         "opponent": "ARI",
-        "fp": 8.84,
+        "fp": 8.85,
         "salary": 18,
-        "fp_per_salary": 0.491,
+        "fp_per_salary": 0.492,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 9.05,
+        "market_fp": 9.24,
         "market_quality": "good",
-        "market_props": "Rec 3.5 \u00b7 RecYd 41 \u00b7 TD 28%"
+        "market_props": "Rec 4 \u00b7 RecYd 41.5 \u00b7 TD 30%"
       },
       {
         "rank": 31,
         "player": "Jordyn Tyson",
         "team": "NO",
         "opponent": "CIN",
-        "fp": 8.66,
+        "fp": 8.68,
         "salary": 14,
-        "fp_per_salary": 0.619,
+        "fp_per_salary": 0.62,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 9.81,
+        "market_fp": 9.72,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 43.5 \u00b7 TD 32%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 43.5 \u00b7 TD 31%"
       },
       {
         "rank": 32,
         "player": "Emeka Egbuka",
         "team": "TB",
         "opponent": "CAR",
-        "fp": 8.22,
+        "fp": 8.23,
         "salary": 20,
-        "fp_per_salary": 0.411,
+        "fp_per_salary": 0.412,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 9.24,
+        "market_fp": 9.23,
         "market_quality": "good",
         "market_props": "Rec 3.5 \u00b7 RecYd 37.5 \u00b7 TD 35%"
       },
@@ -2080,26 +2080,26 @@
         "player": "Adonai Mitchell",
         "team": "NYJ",
         "opponent": "MIA",
-        "fp": 8.14,
+        "fp": 8.15,
         "salary": 13,
-        "fp_per_salary": 0.626,
+        "fp_per_salary": 0.627,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 8.58,
+        "market_fp": 8.44,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 38 \u00b7 TD 30%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 38 \u00b7 TD 28%"
       },
       {
         "rank": 34,
         "player": "Jalen Coker",
         "team": "CAR",
         "opponent": "TB",
-        "fp": 8.1,
+        "fp": 8.11,
         "salary": 16,
-        "fp_per_salary": 0.506,
+        "fp_per_salary": 0.507,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 2,
@@ -2114,26 +2114,26 @@
         "player": "Josh Cameron",
         "team": "JAX",
         "opponent": "TEN",
-        "fp": 8.1,
+        "fp": 8.11,
         "salary": 10,
-        "fp_per_salary": 0.81,
+        "fp_per_salary": 0.811,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 9.58,
+        "market_fp": 9.73,
         "market_quality": "good",
-        "market_props": "Rec 3.5 \u00b7 RecYd 43 \u00b7 TD 33%"
+        "market_props": "Rec 3.5 \u00b7 RecYd 43 \u00b7 TD 35%"
       },
       {
         "rank": 36,
         "player": "Jaylen Waddle",
         "team": "DEN",
         "opponent": "PIT",
-        "fp": 7.91,
+        "fp": 7.92,
         "salary": 18,
-        "fp_per_salary": 0.439,
+        "fp_per_salary": 0.44,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 1,
@@ -2148,9 +2148,9 @@
         "player": "Malik Washington",
         "team": "MIA",
         "opponent": "NYJ",
-        "fp": 7.5,
+        "fp": 7.51,
         "salary": 17,
-        "fp_per_salary": 0.441,
+        "fp_per_salary": 0.442,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 2,
@@ -2165,15 +2165,15 @@
         "player": "Tank Dell",
         "team": "HOU",
         "opponent": "BAL",
-        "fp": 7.48,
+        "fp": 7.49,
         "salary": 14,
-        "fp_per_salary": 0.534,
+        "fp_per_salary": 0.535,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 7.66,
+        "market_fp": 7.65,
         "market_quality": "good",
         "market_props": "Rec 2.5 \u00b7 RecYd 29.5 \u00b7 TD 30%"
       },
@@ -2182,41 +2182,41 @@
         "player": "Deebo Samuel Sr.",
         "team": "SF",
         "opponent": "SEA",
-        "fp": 7.46,
+        "fp": 7.47,
         "salary": 21,
-        "fp_per_salary": 0.355,
+        "fp_per_salary": 0.356,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 7.61,
+        "market_fp": 4.83,
         "market_quality": "good",
-        "market_props": "Ru 8.5 \u00b7 Rec 2.5 \u00b7 RecYd 21 \u00b7 TD 24%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 21.5 \u00b7 TD 20%"
       },
       {
         "rank": 40,
         "player": "Xavier Hutchinson",
         "team": "HOU",
         "opponent": "BAL",
-        "fp": 7.31,
+        "fp": 7.32,
         "salary": 13,
-        "fp_per_salary": 0.562,
+        "fp_per_salary": 0.563,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 3,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 8.04,
+        "market_fp": 8.05,
         "market_quality": "good",
-        "market_props": "Rec 3 \u00b7 RecYd 30.5 \u00b7 TD 31%"
+        "market_props": "Rec 3.5 \u00b7 RecYd 30.5 \u00b7 TD 31%"
       },
       {
         "rank": 41,
         "player": "Khalil Shakir",
         "team": "BUF",
         "opponent": "KC",
-        "fp": 7.21,
+        "fp": 7.22,
         "salary": 18,
         "fp_per_salary": 0.401,
         "role": "starter",
@@ -2233,24 +2233,24 @@
         "player": "Brian Thomas Jr.",
         "team": "JAX",
         "opponent": "TEN",
-        "fp": 7.21,
+        "fp": 7.22,
         "salary": 11,
-        "fp_per_salary": 0.655,
+        "fp_per_salary": 0.656,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 3,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 8.06,
+        "market_fp": 8.24,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 31.5 \u00b7 TD 31%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 31.5 \u00b7 TD 34%"
       },
       {
         "rank": 43,
         "player": "DK Metcalf",
         "team": "PIT",
         "opponent": "DEN",
-        "fp": 7.0,
+        "fp": 7.01,
         "salary": 17,
         "fp_per_salary": 0.412,
         "role": "starter",
@@ -2267,9 +2267,9 @@
         "player": "Konata Mumpfield",
         "team": "LAR",
         "opponent": "GB",
-        "fp": 6.83,
+        "fp": 6.84,
         "salary": 13,
-        "fp_per_salary": 0.525,
+        "fp_per_salary": 0.526,
         "role": "starter",
         "role_slot": "WR SWR",
         "depth": 1,
@@ -2284,7 +2284,7 @@
         "player": "Ryan Flournoy",
         "team": "DAL",
         "opponent": "PHI",
-        "fp": 6.81,
+        "fp": 6.82,
         "salary": 17,
         "fp_per_salary": 0.401,
         "role": "starter",
@@ -2301,7 +2301,7 @@
         "player": "Josh Downs",
         "team": "KC",
         "opponent": "BUF",
-        "fp": 6.78,
+        "fp": 6.79,
         "salary": 18,
         "fp_per_salary": 0.377,
         "role": "starter",
@@ -2318,24 +2318,24 @@
         "player": "Tre Tucker",
         "team": "LV",
         "opponent": "CLE",
-        "fp": 6.77,
+        "fp": 6.79,
         "salary": 16,
-        "fp_per_salary": 0.423,
+        "fp_per_salary": 0.424,
         "role": "starter",
         "role_slot": "WR LWR",
         "depth": 1,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 6.89,
+        "market_fp": 6.96,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 30 \u00b7 TD 23%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 30 \u00b7 TD 24%"
       },
       {
         "rank": 48,
         "player": "DeMario Douglas",
         "team": "NE",
         "opponent": "LAC",
-        "fp": 6.69,
+        "fp": 6.7,
         "salary": 17,
         "fp_per_salary": 0.394,
         "role": "starter",
@@ -2343,41 +2343,41 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 6.59,
+        "market_fp": 5.41,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 24.5 \u00b7 TD 23%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 23.5 \u00b7 TD 22%"
       },
       {
         "rank": 49,
         "player": "Mack Hollins",
         "team": "NE",
         "opponent": "LAC",
-        "fp": 6.65,
+        "fp": 6.66,
         "salary": 15,
-        "fp_per_salary": 0.443,
+        "fp_per_salary": 0.444,
         "role": "starter",
         "role_slot": "WR RWR",
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 6.78,
+        "market_fp": 5.81,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 27 \u00b7 TD 23%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 26.5 \u00b7 TD 23%"
       },
       {
         "rank": 50,
         "player": "Marvin Harrison Jr.",
         "team": "HOU",
         "opponent": "BAL",
-        "fp": 6.39,
+        "fp": 6.4,
         "salary": 15,
-        "fp_per_salary": 0.426,
+        "fp_per_salary": 0.427,
         "role": "rotation",
         "role_slot": "WR LWR",
         "depth": 4,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 7.15,
+        "market_fp": 7.14,
         "market_quality": "good",
         "market_props": "Rec 2.5 \u00b7 RecYd 28.5 \u00b7 TD 27%"
       }
@@ -2396,9 +2396,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 12.71,
+        "market_fp": 12.66,
         "market_quality": "good",
-        "market_props": "Rec 7 \u00b7 RecYd 61.5 \u00b7 TD 31%"
+        "market_props": "Rec 6.5 \u00b7 RecYd 61.5 \u00b7 TD 31%"
       },
       {
         "rank": 2,
@@ -2430,9 +2430,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 10.87,
+        "market_fp": 10.82,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 50.5 \u00b7 TD 33%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 51 \u00b7 TD 32%"
       },
       {
         "rank": 4,
@@ -2447,7 +2447,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 10.94,
+        "market_fp": 10.98,
         "market_quality": "good",
         "market_props": "Rec 4.5 \u00b7 RecYd 50 \u00b7 TD 35%"
       },
@@ -2464,9 +2464,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 10.02,
+        "market_fp": 9.15,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 44.5 \u00b7 TD 33%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 44.5 \u00b7 TD 31%"
       },
       {
         "rank": 6,
@@ -2532,9 +2532,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 9.39,
+        "market_fp": 9.5,
         "market_quality": "good",
-        "market_props": "Rec 3.5 \u00b7 RecYd 39.5 \u00b7 TD 34%"
+        "market_props": "Rec 3.5 \u00b7 RecYd 39.5 \u00b7 TD 35%"
       },
       {
         "rank": 10,
@@ -2549,9 +2549,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 10.46,
+        "market_fp": 10.51,
         "market_quality": "good",
-        "market_props": "Rec 4.5 \u00b7 RecYd 44.5 \u00b7 TD 35%"
+        "market_props": "Rec 4.5 \u00b7 RecYd 44 \u00b7 TD 35%"
       },
       {
         "rank": 11,
@@ -2583,9 +2583,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 9.06,
+        "market_fp": 9.05,
         "market_quality": "good",
-        "market_props": "Rec 3.5 \u00b7 RecYd 38 \u00b7 TD 31%"
+        "market_props": "Rec 3.5 \u00b7 RecYd 38 \u00b7 TD 30%"
       },
       {
         "rank": 13,
@@ -2617,9 +2617,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 7.9,
+        "market_fp": 8.01,
         "market_quality": "good",
-        "market_props": "Rec 3.5 \u00b7 RecYd 30.5 \u00b7 TD 26%"
+        "market_props": "Rec 3.5 \u00b7 RecYd 31 \u00b7 TD 26%"
       },
       {
         "rank": 15,
@@ -2634,9 +2634,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 7.38,
+        "market_fp": 7.47,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 23.5 \u00b7 TD 36%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 24 \u00b7 TD 36%"
       },
       {
         "rank": 16,
@@ -2668,9 +2668,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 6.5,
+        "market_fp": 5.4,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 23.5 \u00b7 TD 23%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 22.5 \u00b7 TD 23%"
       },
       {
         "rank": 18,
@@ -2685,7 +2685,7 @@
         "depth": 1,
         "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 6.94,
+        "market_fp": 6.95,
         "market_quality": "good",
         "market_props": "Rec 2.5 \u00b7 RecYd 26.5 \u00b7 TD 27%"
       },
@@ -2702,7 +2702,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 7.78,
+        "market_fp": 7.8,
         "market_quality": "good",
         "market_props": "Rec 3.5 \u00b7 RecYd 30.5 \u00b7 TD 27%"
       },
@@ -2753,9 +2753,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 6.58,
+        "market_fp": 6.56,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 24 \u00b7 TD 24%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 23.5 \u00b7 TD 24%"
       },
       {
         "rank": 23,
@@ -2787,9 +2787,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 6.93,
+        "market_fp": 6.67,
         "market_quality": "good",
-        "market_props": "Rec 3 \u00b7 RecYd 23.5 \u00b7 TD 27%"
+        "market_props": "Rec 3 \u00b7 RecYd 23.5 \u00b7 TD 23%"
       },
       {
         "rank": 25,
@@ -2804,9 +2804,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 5.68,
+        "market_fp": 5.65,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 17 \u00b7 TD 25%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 17 \u00b7 TD 24%"
       },
       {
         "rank": 26,
@@ -2838,9 +2838,9 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 5.07,
+        "market_fp": 5.15,
         "market_quality": "good",
-        "market_props": "Rec 2.5 \u00b7 RecYd 20.5 \u00b7 TD 23%"
+        "market_props": "Rec 2.5 \u00b7 RecYd 20.5 \u00b7 TD 24%"
       },
       {
         "rank": 28,
@@ -2855,9 +2855,9 @@
         "depth": 1,
         "kickoff_utc": "2026-12-01 01:15",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 7.32,
+        "market_fp": 7.44,
         "market_quality": "good",
-        "market_props": "Rec 3 \u00b7 RecYd 28.5 \u00b7 TD 25%"
+        "market_props": "Rec 3 \u00b7 RecYd 28.5 \u00b7 TD 26%"
       },
       {
         "rank": 29,
@@ -2889,9 +2889,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 5.18,
+        "market_fp": 4.14,
         "market_quality": "good",
-        "market_props": "Rec 1.5 \u00b7 RecYd 17 \u00b7 TD 21%"
+        "market_props": "Rec 1.5 \u00b7 RecYd 16.5 \u00b7 TD 20%"
       },
       {
         "rank": 31,
@@ -2906,7 +2906,7 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 5.89,
+        "market_fp": 5.88,
         "market_quality": "good",
         "market_props": "Rec 2 \u00b7 RecYd 20.5 \u00b7 TD 23%"
       },
@@ -2923,9 +2923,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-30 01:20",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 5.71,
+        "market_fp": 5.89,
         "market_quality": "td-estimate",
-        "market_props": "TD 22%"
+        "market_props": "TD 23%"
       },
       {
         "rank": 33,
@@ -2991,7 +2991,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 6.51,
+        "market_fp": 6.49,
         "market_quality": "good",
         "market_props": "Rec 3 \u00b7 RecYd 22 \u00b7 TD 23%"
       },
@@ -3008,9 +3008,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:25",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 2.83,
+        "market_fp": 3.32,
         "market_quality": "good",
-        "market_props": "Rec 1.5 \u00b7 RecYd 11.5 \u00b7 TD 11%"
+        "market_props": "Rec 1.5 \u00b7 RecYd 11.5 \u00b7 TD 18%"
       },
       {
         "rank": 38,
@@ -3025,9 +3025,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 3.48,
+        "market_fp": 0.57,
         "market_quality": "td-estimate",
-        "market_props": "TD 17%"
+        "market_props": "TD 9%"
       },
       {
         "rank": 39,
@@ -3076,9 +3076,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 3.76,
+        "market_fp": 3.63,
         "market_quality": "good",
-        "market_props": "Rec 1.5 \u00b7 RecYd 10.5 \u00b7 TD 25%"
+        "market_props": "Rec 1.5 \u00b7 RecYd 10.5 \u00b7 TD 24%"
       },
       {
         "rank": 42,
@@ -3093,7 +3093,7 @@
         "depth": 1,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 0.63,
+        "market_fp": 0.57,
         "market_quality": "td-estimate",
         "market_props": "TD 9%"
       },
@@ -3127,9 +3127,9 @@
         "depth": 3,
         "kickoff_utc": "2026-11-29 21:05",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 2.61,
+        "market_fp": 4.88,
         "market_quality": "td-estimate",
-        "market_props": "TD 11%"
+        "market_props": "TD 19%"
       },
       {
         "rank": 45,
@@ -3144,9 +3144,9 @@
         "depth": 3,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 3.34,
+        "market_fp": 3.41,
         "market_quality": "good",
-        "market_props": "Rec 1.5 \u00b7 RecYd 9.5 \u00b7 TD 20%"
+        "market_props": "Rec 1.5 \u00b7 RecYd 9.5 \u00b7 TD 21%"
       },
       {
         "rank": 46,
@@ -3161,9 +3161,9 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 0.46,
+        "market_fp": 0.47,
         "market_quality": "td-estimate",
-        "market_props": "TD 7%"
+        "market_props": "TD 8%"
       },
       {
         "rank": 47,
@@ -3195,7 +3195,7 @@
         "depth": 2,
         "kickoff_utc": "2026-11-29 18:00",
         "method": "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)",
-        "market_fp": 1.1,
+        "market_fp": 1.0,
         "market_quality": "td-estimate",
         "market_props": "TD 10%"
       },
@@ -3794,24 +3794,24 @@
     "Sleeper + ESPN + CBS half-PPR mean (2026 week 12)": 437
   },
   "log": [
-    "Yahoo slate: 16 game(s), 643 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-28T06:30:48Z)",
+    "Yahoo slate: 16 game(s), 643 priced player(s); publishing rankings, lineup and Showdown (snapshot 2026-11-28T07:25:49Z)",
     "  Sleeper: 2026 regular week 12 projections; player dump fetched 2026-11-28T03:29:41.805178+00:00.",
     "  ESPN: matched 476 of 481 projected players; blend weight 0.50.",
     "    ESPN only (starter out): 1 -- Sam Roush (CHI) S=2.43 E=1.18",
     "    ESPN: out: 4 -- Jalen McMillan (TB) S=2.74 E=0.0, Andrei Iosivas (CIN) S=3.81 E=3.64, Jonathon Brooks (CAR) S=2.93 E=3.77, Raheim Sanders (CLE) S=0.99 E=0.0",
     "    ESPN only: 6 -- Tyler Higbee (LAR) S=nan E=6.01, Jameis Winston (NYG) S=nan E=1.67, CJ Williams (JAX) S=nan E=1.66, Nate Carter (KC) S=nan E=1.54, Ryan Izzo () S=nan E=0.88, Dareke Young (LV) S=nan E=0.01",
     "    sources disagree: 13 -- Jauan Jennings (MIN) S=3.74 E=6.94, Devin Singletary (NYG) S=6.93 E=3.14, Jerry Jeudy (CLE) S=2.97 E=6.88, Darius Cooper (PHI) S=2.54 E=7.09, Isaiah Williams (NYJ) S=2.82 E=6.05, Roman Wilson (PIT) S=3.13 E=5.51, Baltimore Ravens (BAL) S=5.6 E=3.01, Denzel Boston (CLE) S=8.42 E=0.0, Elijah Higgins (ARI) S=5.5 E=2.67, Tez Johnson (TB) S=2.7 E=5.46, Darnell Mooney (NYG) S=2.48 E=5.28, Jaylen Wright (MIA) S=2.23 E=5.51",
-    "  Three-source mean: 473 projected players (357 on all three, 104 on two, 12 on one). CBS review: 18 flagged player(s), 17 found on CBS; CBS scaled to Sleeper DEF x0.70, K x0.94, QB x0.88, RB x1.06, TE x0.91, WR x0.95.",
-    "    Denzel Boston (CLE WR): S=8.42 E=0.0 C=9.5 -> 5.97 [CBS sides with Sleeper]",
-    "    Jerry Jeudy (CLE WR): S=2.97 E=6.88 C=5.63 -> 5.16 [CBS sides with ESPN]",
-    "    Darius Cooper (PHI WR): S=2.54 E=7.09 C=5.44 -> 5.02 [CBS sides with ESPN]",
+    "  Three-source mean: 473 projected players (357 on all three, 104 on two, 12 on one). CBS review: 18 flagged player(s), 17 found on CBS; CBS scaled to Sleeper DEF x0.70, K x0.94, QB x0.88, RB x1.06, TE x0.91, WR x0.96.",
+    "    Denzel Boston (CLE WR): S=8.42 E=0.0 C=9.54 -> 5.99 [CBS sides with Sleeper]",
+    "    Jerry Jeudy (CLE WR): S=2.97 E=6.88 C=5.66 -> 5.17 [CBS sides with ESPN]",
+    "    Darius Cooper (PHI WR): S=2.54 E=7.09 C=5.47 -> 5.03 [CBS sides with ESPN]",
     "    Devin Singletary (NYG RB): S=6.93 E=3.14 C=4.5 -> 4.86 [CBS sides with ESPN]",
-    "    Jauan Jennings (MIN WR): S=3.74 E=6.94 C=3.77 -> 4.82 [CBS sides with Sleeper]",
-    "    Harrison Wallace III (ARI WR): S=1.67 E=6.04 C=6.44 -> 4.72 [CBS sides with ESPN]",
-    "    Isaiah Williams (NYJ WR): S=2.82 E=6.05 C=5.01 -> 4.63 [CBS sides with ESPN]",
-    "    Roman Wilson (PIT WR): S=3.13 E=5.51 C=4.87 -> 4.5 [CBS sides with ESPN]",
-    "    Tez Johnson (TB WR): S=2.7 E=5.46 C=3.91 -> 4.02 [CBS sides with Sleeper]",
-    "    Darnell Mooney (NYG WR): S=2.48 E=5.28 C=4.25 -> 4.0 [CBS sides with ESPN]",
+    "    Jauan Jennings (MIN WR): S=3.74 E=6.94 C=3.79 -> 4.82 [CBS sides with Sleeper]",
+    "    Harrison Wallace III (ARI WR): S=1.67 E=6.04 C=6.47 -> 4.73 [CBS sides with ESPN]",
+    "    Isaiah Williams (NYJ WR): S=2.82 E=6.05 C=5.04 -> 4.64 [CBS sides with ESPN]",
+    "    Roman Wilson (PIT WR): S=3.13 E=5.51 C=4.89 -> 4.51 [CBS sides with ESPN]",
+    "    Tez Johnson (TB WR): S=2.7 E=5.46 C=3.93 -> 4.03 [CBS sides with Sleeper]",
+    "    Darnell Mooney (NYG WR): S=2.48 E=5.28 C=4.27 -> 4.01 [CBS sides with ESPN]",
     "    Baltimore Ravens (BAL DEF): S=5.6 E=3.01 C=3.13 -> 3.91 [CBS sides with ESPN]",
     "    Elijah Higgins (ARI TE): S=5.5 E=2.67 C=3.19 -> 3.79 [CBS sides with ESPN]",
     "    Jaylen Wright (MIA RB): S=2.23 E=5.51 C=2.97 -> 3.57 [CBS sides with Sleeper]",
