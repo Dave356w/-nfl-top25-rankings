@@ -34,8 +34,8 @@ MODEL_DIR = ROOT / "site" / "data" / "boxscore"
 EXPORT = MODEL_DIR / "latest.json"
 LEDGER = "forward_predictions.jsonl"
 GAME_COLS = ["game_id", "season", "week", "home", "away", "gameday", "gametime", "site",
-             "ready", "model_wp", "market_wp", "homefield_wp", "spread_line", "result",
-             "home_score", "away_score"]
+             "ready", "model_wp", "model_wp_no_home", "market_wp", "homefield_wp", "spread_line",
+             "result", "home_score", "away_score"]
 
 
 def _clean(value):
@@ -67,6 +67,36 @@ def seed(root: Path):
         shutil.copy2(ledger, root / LEDGER)
 
 
+def add_no_home(frame, outdir, recipe_for_season, bc):
+    """Add model_wp_no_home: each game's composite log-odds without the home-field
+    ('site') term of the fit that produced it. The composite itself is untouched;
+    adding the term back must reproduce model_wp, which is checked."""
+    from scipy.special import expit
+    features, fits = {}, {}
+    frame = frame.copy()
+    frame["model_wp_no_home"] = np.nan
+    for (season, week), rows in frame.groupby(["season", "week"], sort=True):
+        recipe = recipe_for_season(int(season))
+        half = float(recipe["half_life"])
+        if half not in features:
+            features[half] = pd.read_csv(outdir / f"pregame_features_half_life_{half:g}.csv", low_memory=False)
+        f = features[half]
+        key = (int(season), int(week), bc.recipe_key(recipe))
+        if key not in fits:
+            fits[key] = bc.fit_composite(f[bc.before(f, int(season), int(week))], recipe, int(season), int(week))
+        fit = fits[key]
+        test = f.set_index("game_id").loc[rows.game_id, fit["names"]].copy()
+        _, score, parts = bc.apply_fit(test, fit, contributions=True)
+        site = fit["names"].index("site")
+        ready = (rows["ready"].astype(bool).to_numpy() if "ready" in rows
+                 else np.ones(len(rows), bool))  # held-out rows are all ready
+        check = expit(score)[ready] - rows.model_wp.to_numpy(float)[ready]
+        if check.size and np.nanmax(np.abs(check)) > 1e-6:
+            raise ValueError(f"Refit does not reproduce model_wp for {season} week {week}")
+        frame.loc[rows.index, "model_wp_no_home"] = np.where(ready, expit(score - parts[:, site]), np.nan)
+    return frame
+
+
 def export(outdir: Path, root: Path) -> dict:
     manifest = json.loads((outdir / "run_manifest.json").read_text())
     season, week = int(manifest["season"]), int(manifest["week"])
@@ -75,6 +105,12 @@ def export(outdir: Path, root: Path) -> dict:
     fit = json.loads((outdir / "current_coefficient_fit.json").read_text())
     weights = pd.read_csv(outdir / "current_composite_weights.csv")
     by_season = pd.read_csv(outdir / "outer_scorecard_by_season.csv")
+    from pipeline import boxscore_composite as bc
+    frozen = manifest["recipe"]
+    folds = {int(x["test_season"]): x["recipe"]
+             for x in json.loads((outdir / "outer_recipe_choices.json").read_text())}
+    current = add_no_home(current, outdir, lambda s: frozen, bc)
+    outer = add_no_home(outer, outdir, lambda s: folds[s], bc)
     pooled = pd.read_csv(outdir / "outer_chronological_scorecard.csv")
     payload = {
         "schema": 1,
@@ -112,20 +148,28 @@ def control_long_run(first=2001, last=None):
     return {**ats.record(results), "first_season": int(s.season.min()), "last_season": int(s.season.max())}
 
 
-def main():
+def main(argv=None):
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--export-only", type=Path, metavar="RUN_DIR",
+                        help="skip the composite run; re-export an existing run folder")
+    args = parser.parse_args(argv)
     root = Path(os.environ.setdefault(
         "BOXSCORE_OUTPUT_ROOT", str(ROOT / "boxscore_cache" / "nfl_boxscore_output_v1_7")))
-    seed(root)
     sys.path.insert(0, str(ROOT))
-    from pipeline import boxscore_composite as bc
-    bc.OUTPUT_NAME = str(root)
-    bc.USE_GOOGLE_DRIVE = False
-    outdir = bc.main()
-    if (root / LEDGER).exists():
-        shutil.copy2(root / LEDGER, MODEL_DIR / LEDGER)
-    for path in root.glob("frozen_recipe_*.json"):
-        if not (MODEL_DIR / path.name).exists():
-            shutil.copy2(path, MODEL_DIR / path.name)
+    if args.export_only:
+        outdir = args.export_only
+    else:
+        seed(root)
+        from pipeline import boxscore_composite as bc
+        bc.OUTPUT_NAME = str(root)
+        bc.USE_GOOGLE_DRIVE = False
+        outdir = bc.main()
+        if (root / LEDGER).exists():
+            shutil.copy2(root / LEDGER, MODEL_DIR / LEDGER)
+        for path in root.glob("frozen_recipe_*.json"):
+            if not (MODEL_DIR / path.name).exists():
+                shutil.copy2(path, MODEL_DIR / path.name)
     payload = export(Path(outdir), root)
     payload["control_long_run"] = control_long_run(last=payload["season"])
     EXPORT.write_text(json.dumps(payload, indent=1, allow_nan=False) + "\n")

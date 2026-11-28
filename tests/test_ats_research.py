@@ -25,8 +25,10 @@ def composite(board, season_predictions=(), outer=()):
             "season_predictions": list(season_predictions), "outer_predictions": list(outer)}
 
 
-def game(gid, home, away, wp, week=12, season=2026, line=None, result=None, ready=True):
-    return dict(game_id=gid, season=season, week=week, home=home, away=away, model_wp=wp,
+def game(gid, home, away, wp, week=12, season=2026, line=None, result=None, ready=True, with_home=None):
+    """wp is the probability without home field (the margin's input); with_home the composite's own."""
+    return dict(game_id=gid, season=season, week=week, home=home, away=away,
+                model_wp=with_home if with_home is not None else wp, model_wp_no_home=wp,
                 ready=ready, spread_line=line, result=result, homefield_wp=0.55)
 
 
@@ -101,6 +103,14 @@ class PayloadTests(unittest.TestCase):
         det = next(g for g in third["games"] if g["home"] == "DET")
         self.assertEqual((det["result"], third["forward_record"]["wins"]), ("W", 1))
 
+    def test_the_margin_comes_from_the_probability_without_home_field(self):
+        board = composite([game("g1", "DET", "CHI", 0.52, with_home=0.70)])
+        payload, _ = ats.build_payload(board, self.sched(), now="2026-11-25T12:00:00Z")
+        det = payload["games"][0]
+        self.assertEqual((det["model_wp"], det["model_wp_no_home"]), (0.7, 0.52))
+        self.assertAlmostEqual(det["raw_margin"], round(ats.implied_margin(0.52), 2))   # 0.62, not 6.49
+        self.assertEqual((det["mapped_margin"], det["model_side"]), (3.0, "DET"))   # 3 vs CHI -2.5
+
     def test_a_game_first_seen_after_kickoff_gets_no_row(self):
         payload, new = ats.build_payload(self.board(), self.sched(), now="2026-11-27T12:00:00Z")
         self.assertEqual([g["home"] for g in payload["games"]], ["BUF"])
@@ -157,11 +167,25 @@ class SeasonTests(unittest.TestCase):
         self.assertEqual(bt["shown_from"], 2024)
         self.assertEqual(bt["spread_map_control"]["long_run"], {"cover_rate": 0.5})
 
+    def test_headline_pools_held_out_replay_and_live_once_per_game(self):
+        outer = [game("o1", "DET", "CHI", 0.70, season=2024, line=-2.5, result=10.0),   # W
+                 game("o2", "BUF", "KC", 0.40, season=2025, line=2.5, result=7.0)]      # L
+        current = [game("c1", "NYJ", "MIA", 0.70, week=11, line=-2.5, result=10.0),     # replay W
+                   game("c2", "LV", "DEN", 0.70, week=12, line=-2.5, result=-7.0),      # replay L, live W
+                   game("c3", "SF", "SEA", 0.70, week=12, line=-2.5, result=None)]      # not final
+        live = [dict(season=2026, week=12, nflverse_game_id="c2", result="W")]
+        hl = ats.pooled_results(composite([], season_predictions=current, outer=outer), live)
+        self.assertEqual((hl["wins"], hl["losses"]), (3, 1))
+        self.assertEqual((hl["live_games"], hl["replay_games"]), (1, 3))
+        self.assertEqual((hl["first_season"], hl["last_season"]), (2024, 2026))
+
     def test_committed_composite_export_loads(self):
         export = ats.load_composite()
         self.assertTrue(export["board"])
         self.assertGreater(len(export["outer_predictions"]), 500)
-        self.assertTrue({"game_id", "home", "away", "model_wp", "spread_line", "ready"} <= set(export["board"][0]))
+        self.assertTrue({"game_id", "home", "away", "model_wp", "model_wp_no_home", "spread_line", "ready"}
+                        <= set(export["board"][0]))
+        self.assertTrue(all(g.get("model_wp_no_home") is not None for g in export["outer_predictions"]))
         self.assertEqual(export["recipe"]["family"], "rates_core_avail_cs")
 
 
