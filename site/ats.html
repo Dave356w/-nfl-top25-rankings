@@ -368,8 +368,8 @@ details summary{cursor:pointer; color:var(--ink-2); font-size:14px; padding:12px
 
     var c = (d.method || {}).points_model || {};
     if (num(c.const)) el("formula").textContent = "points = " + c.const.toFixed(2) + " + " + c.off.toFixed(3) +
-      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP " + (c.home < 0 ? "− " : "+ ") +
-      Math.abs(c.home).toFixed(2) + " (home)";
+      " × offense FP − " + Math.abs(c.opp_def).toFixed(2) + " × opponent DEF FP" +
+      (num(c.home) ? " " + (c.home < 0 ? "− " : "+ ") + Math.abs(c.home).toFixed(2) + " (home)" : "");
     var fit = (d.method || {}).points_model_fit;
     if (fit) el("fit-note").textContent = "Fitted on " + fit.team_games + " team-games (" +
       (fit.seasons[0] === fit.seasons[1] ? fit.seasons[0] : fit.seasons[0] + "–" + fit.seasons[1]) +

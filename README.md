@@ -171,12 +171,18 @@ advice**; the page leads with that and with its record.
 
 - Team strength: starters' projected points (QB1, RB1-2, WR1-3, TE1) and the
   DEF projection, from the same snapshot as every other page.
-- Points model: `points = const + b*offense - c*opponent DEF + d*home`, fitted
+- Points model: `points = const + b*offense - c*opponent DEF`, fitted
   by `tools/build_ats_research_model.py` on this season's completed weeks of the
   site's own blend (each player the mean of Sleeper, ESPN and CBS, CBS rescaled
   as the site does) and nflverse scores, so it is fitted on the same inputs the
   page applies it to. Until 100 blend games exist it falls back to Sleeper
-  weekly projections from 2021 (`model/ats_research/`).
+  weekly projections from 2021 (`model/ats_research/`). There is no home-field
+  term (removed 2026-11-28): the fitted edge was small (+0.5 to +1.1 points on
+  Sleeper history, -0.3 on this season's blend), the projections already price
+  venue, and dropping it left walk-forward margin error unchanged. Its cover
+  rate through the fixed map fell about 1.4 points on 2022-2026 Sleeper
+  replays, within noise; the margin history, replay and backtest were rebuilt
+  with the new model.
 - The median map's history and the replayed weeks stay Sleeper-only walk-forward
   margins from 2021: only Sleeper has that much history.
 - Fixed map: projected margins under 3, 3-7, 7-10 and 10+ map to 3, 5, 7 and

@@ -10,7 +10,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pipeline import ats_research as ats  # noqa: E402
 
-MODEL = {"schema": 1, "coefficients": {"const": 24.0, "off": 0.17, "opp_def": -2.0, "home": 0.86},
+MODEL = {"schema": 1, "coefficients": {"const": 24.0, "off": 0.17, "opp_def": -2.0},
          "backtest": {"note": "test"}}
 
 
@@ -111,9 +111,9 @@ class PayloadTests(unittest.TestCase):
         payload, new = ats.build_payload(self.slate(), self.sched(), MODEL, history(),
                                          now="2026-11-25T12:00:00Z", snapshot_id="s1")
         det = next(g for g in payload["games"] if g["home"] == "DET")
-        self.assertAlmostEqual(det["home_points"], round(24 + .17 * 60 - 2 * 6 + .86, 1))
+        self.assertAlmostEqual(det["home_points"], round(24 + .17 * 60 - 2 * 6, 1))
         self.assertEqual(det["line"], -2.5)
-        self.assertEqual(det["mapped_margin"], 5.0)   # raw 5.7: the 3-7 band
+        self.assertEqual(det["mapped_margin"], 5.0)   # raw 4.85: the 3-7 band
         self.assertEqual(det["model_side"], "DET")
         self.assertFalse(det["locked"])
         self.assertEqual(new, [])
@@ -224,7 +224,7 @@ class PayloadTests(unittest.TestCase):
 
     def test_committed_artifacts_load(self):
         model = ats.load_model()
-        self.assertEqual(set(model["coefficients"]), {"const", "off", "opp_def", "home"})
+        self.assertEqual(set(model["coefficients"]), {"const", "off", "opp_def"})
         self.assertLess(model["coefficients"]["opp_def"], 0)
         self.assertGreater(len(ats.load_history()), 300)
 
