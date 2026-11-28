@@ -50,6 +50,20 @@ FIELDS = {
     "Projection method": "method",
 }
 
+# Display-only market columns, filled by `attach_market_columns` when the
+# synchronized build fetched the prop feeds (MARKET_DISPLAY=1). Absent columns
+# publish as null, so a run without the market still has the same row shape.
+MARKET_FIELDS = {
+    "Market FP": "market_fp",
+    "Market quality": "market_quality",
+    "Market props": "market_props",
+}
+MARKET_SOURCE_COLUMNS = {
+    "Market_FP": "Market FP",
+    "Market_Quality": "Market quality",
+    "Market_Props": "Market props",
+}
+
 
 class _Tee(io.TextIOBase):
     """Echo the run's own progress output while keeping a copy for the page."""
@@ -95,8 +109,44 @@ def _clean(value):
 def _rows(view):
     out = []
     for record in view.to_dict("records"):
-        out.append({key: _clean(record.get(column)) for column, key in FIELDS.items()})
+        out.append({key: _clean(record.get(column))
+                    for column, key in {**FIELDS, **MARKET_FIELDS}.items()})
     return out
+
+
+def attach_market_columns(results, priced):
+    """Copy the market reference from ``priced`` onto the ranking views in place.
+
+    ``priced`` is a player frame (Yahoo ``Name``/``Team`` columns) that
+    `run_lineup.attach_market` already matched to the prop feeds by name, team
+    and kickoff. Display only: projections, ranks and order never change. A
+    player whose name and team appear twice is left blank rather than guessed.
+    Returns the number of ranked players given a market projection.
+    """
+    if not isinstance(priced, pd.DataFrame) or "Market_FP" not in priced:
+        return 0
+    source = priced.drop_duplicates(["Name", "Team"], keep=False).set_index(["Name", "Team"])
+    filled = 0
+    for group in ("rankings", "pool"):
+        for position, view in (results.get(group) or {}).items():
+            if not isinstance(view, pd.DataFrame) or view.empty:
+                continue
+            idx = pd.MultiIndex.from_arrays([view["Player"], view["Team"]])
+            for column, label in MARKET_SOURCE_COLUMNS.items():
+                values = (source[column].reindex(idx).to_numpy()
+                          if column in source else [None] * len(view))
+                view[label] = pd.Series(values, index=view.index, dtype=object)
+            if group == "rankings":
+                filled += int(view["Market FP"].notna().sum())
+    combined = results.get("combined")
+    if isinstance(combined, pd.DataFrame) and not combined.empty:
+        tables = results.get("rankings") or {}
+        results["combined"] = pd.concat(
+            [tables[p].assign(Position=p) for p in combined["Position"].unique() if p in tables],
+            ignore_index=True,
+        )[["Position"] + [c for c in combined.columns if c != "Position"]
+          + list(MARKET_FIELDS)]
+    return filled
 
 
 def _games(frame):

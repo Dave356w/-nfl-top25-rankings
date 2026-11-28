@@ -114,3 +114,51 @@ class ReviewFixesTest(unittest.TestCase):
         self.assertTrue(pd.isna(fp[normalize_name("Ja'Marr Chase")]))
         self.assertEqual(fp[normalize_name("Tee Higgins")], 14.9)
         self.assertTrue(frame["Market_Props"].notna().all())
+
+
+class RankingsMarketColumnTest(unittest.TestCase):
+    """The rankings page reuses the lineup step's kickoff-matched market join."""
+
+    def _results(self):
+        import run_daily
+        view = pd.DataFrame({
+            "Rank": [1, 2], "Player": ["Brock Bowers", "Trey McBride"], "Team": ["LV", "ARI"],
+            "Estimated FP": [11.76, 11.5],
+        })
+        pool = pd.concat([view, pd.DataFrame({
+            "Rank": [3], "Player": ["Sam Roush"], "Team": ["CHI"], "Estimated FP": [1.0]})],
+            ignore_index=True)
+        return run_daily, {
+            "rankings": {"TE": view}, "pool": {"TE": pool},
+            "combined": view.assign(Position="TE")[["Position", *view.columns]],
+        }
+
+    def test_copies_market_onto_rankings_pool_and_csv(self):
+        run_daily, results = self._results()
+        priced = pd.DataFrame({
+            "Name": ["Brock Bowers", "Sam Roush"], "Team": ["LV", "CHI"],
+            "Market_FP": [11.05, 1.4], "Market_Quality": ["good", "fair"],
+            "Market_Props": ["Rec 4.5 · RecYd 59.5 · TD 31%", "Rec 0.5"],
+        })
+        self.assertEqual(run_daily.attach_market_columns(results, priced), 1)
+        rows = run_daily._rows(results["rankings"]["TE"])
+        self.assertEqual((rows[0]["market_fp"], rows[0]["market_quality"]), (11.05, "good"))
+        self.assertIsNone(rows[1]["market_fp"])                       # unpriced -> null
+        self.assertEqual(rows[0]["fp"], 11.76)                        # display only
+        self.assertEqual(run_daily._rows(results["pool"]["TE"])[2]["market_fp"], 1.4)
+        self.assertEqual(list(results["combined"].columns[-3:]), list(run_daily.MARKET_FIELDS))
+        self.assertEqual(results["combined"].loc[0, "Market FP"], 11.05)
+
+    def test_no_market_leaves_rows_null(self):
+        run_daily, results = self._results()
+        self.assertEqual(run_daily.attach_market_columns(results, pd.DataFrame({"Name": []})), 0)
+        row = run_daily._rows(results["rankings"]["TE"])[0]
+        self.assertIsNone(row["market_fp"])
+        self.assertIn("market_props", row)
+
+    def test_ambiguous_name_team_is_not_guessed(self):
+        run_daily, results = self._results()
+        priced = pd.DataFrame({"Name": ["Brock Bowers"] * 2, "Team": ["LV"] * 2,
+                               "Market_FP": [11.0, 4.0], "Market_Quality": ["good"] * 2})
+        run_daily.attach_market_columns(results, priced)
+        self.assertIsNone(run_daily._rows(results["rankings"]["TE"])[0]["market_fp"])
