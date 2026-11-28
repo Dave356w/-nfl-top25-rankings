@@ -78,6 +78,12 @@ counts), and the means are summed with Yahoo weights. `~` marks a stat priced
 only by alternates or a TD-only estimate; amber marks a gap of at least 2.5
 points and 25% from the projection; `—` means the books do not price him.
 
+The rankings page carries the same reference as a Market column beside Proj FP
+(`market_fp`, `market_quality`, `market_props` in each ranking and pool row,
+and `Market FP`/`Market quality`/`Market props` in the CSV). `run_synced.py`
+copies it from the lineup step's kickoff-matched join, so the feeds are fetched
+once per build; it is sortable but never changes a projection or a rank.
+
 It never feeds the optimizer. On 2026 week 1 (142 player-weeks) adding it to
 the three-source mean changed MAE by +0.018 (95% CI -0.035 to +0.071): the
 market agrees with Sleeper and ESPN too closely to add information, though it

@@ -297,6 +297,11 @@ footer{
   .meta-line span{white-space:nowrap}
 }
 @media (min-width:761px){ td[data-cell="meta"]{display:none} }
+.mkt.none{opacity:.45}
+.mkt.td{opacity:.7; font-style:italic}
+.mkt.dev{color:var(--warn); font-weight:650}
+.mkt-cell{min-width:150px}
+.mkt-cell .props{display:block; font-size:10.5px; line-height:1.25; opacity:.65; white-space:normal; max-width:150px; margin-left:auto; text-align:right}
   .sources{margin:4px 0 10px 18px;padding:0}
   .sources li{margin:3px 0}
   .sq-table{border-collapse:collapse;margin:6px 0;font-size:13px}
@@ -372,6 +377,7 @@ footer{
         <option value="fp">Projected FP</option>
         <option value="salary">Salary</option>
         <option value="fp_per_salary">FP per $</option>
+        <option value="market_fp">Market FP</option>
         <option value="player">Player name</option>
         <option value="role">Role</option>
         <option value="kickoff_utc">Kickoff</option>
@@ -401,6 +407,7 @@ footer{
             <th data-sort="rank" class="num" style="width:64px">#</th>
             <th data-sort="player">Player</th>
             <th data-sort="fp" class="num">Proj FP</th>
+            <th data-sort="market_fp" class="num" title="Market-implied half-PPR points from Bovada and Underdog props. Display only: it never changes the projection or rank. — means the books do not price him.">Market</th>
             <th data-sort="salary" class="num">Salary</th>
             <th data-sort="fp_per_salary" class="num">FP / $</th>
             <th data-sort="role">Role</th>
@@ -768,6 +775,24 @@ footer{
     el("empty").hidden = true;
     table.hidden = false;
 
+    // Display only: "—" = no prop lines this week; "~" = touchdown-only
+    // estimate; amber = at least 2.5 points and 25% away from the projection.
+    function marketCell(r) {
+      if (!num(r.market_fp)) {
+        var why = r.market_props ? "Incomplete lines: not a full-game estimate"
+                                 : "No market lines for this player";
+        return '<span class="mkt none" title="' + why + '">—</span>';
+      }
+      var td = r.market_quality === "td-estimate";
+      var gap = num(r.fp) ? r.market_fp - r.fp : 0;
+      var dev = !td && num(r.fp) && Math.abs(gap) >= 2.5 &&
+        Math.abs(gap) >= 0.25 * Math.max(r.fp, 1);
+      var title = "Market " + fmt(r.market_fp) + " (" + escapeHtml(r.market_quality || "") + ")" +
+        (num(r.fp) ? ", " + (gap >= 0 ? "+" : "") + fmt(gap) + " vs projection" : "");
+      return '<span class="mkt' + (dev ? " dev" : "") + (td ? " td" : "") + '" title="' + title + '">' +
+        (td ? "~" : "") + fmt(r.market_fp) + "</span>";
+    }
+
     var top = list.reduce(function (m, r) { return num(r.fp) && r.fp > m ? r.fp : m; }, 0);
     var html = list.map(function (r) {
       var pct = top > 0 && num(r.fp) ? Math.max(3, (r.fp / top) * 100) : 0;
@@ -775,6 +800,8 @@ footer{
         '<span class="badge ' + methodClass(r.method) + '">' +
           escapeHtml(r.method || "—") + "</span>",
         "<span>" + money(r.salary) + "</span>",
+        "<span>Market " + marketCell(r) +
+          (r.market_props ? " · " + escapeHtml(r.market_props) : "") + "</span>",
         "<span>" + fmt(r.fp_per_salary, 3) + " FP/$</span>",
         "<span>" + escapeHtml(r.role || "role unknown") +
           (r.role_slot ? " · " + escapeHtml(r.role_slot) : "") + "</span>",
@@ -795,6 +822,9 @@ footer{
           (num(r.published_fp) && r.published_fp !== r.fp
             ? '<span class="was" title="Published projection">' + fmt(r.published_fp) + "</span>"
             : "") + "</span></td>" +
+        '<td class="num mono mkt-cell">' + marketCell(r) +
+          (r.market_props ? '<span class="props">' + escapeHtml(r.market_props) + "</span>" : "") +
+          "</td>" +
         '<td class="num mono">' + money(r.salary) + "</td>" +
         '<td class="num mono">' + fmt(r.fp_per_salary, 3) + "</td>" +
         '<td><span class="role" title="' + escapeHtml(r.role_slot || "") + '">' +

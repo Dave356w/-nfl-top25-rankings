@@ -157,6 +157,14 @@ def build_synced_payloads(
             showdown_players=showdown_players,
         )
 
+    # The lineup step fetched the prop feeds once and matched them onto
+    # showdown_players by name, team and kickoff; the rankings reuse that match.
+    if os.environ.get(run_lineup.MARKET_ENV) == "1":
+        priced = run_daily.attach_market_columns(ranking_results, showdown_players)
+        ranking_tee.lines.append(
+            f"Market (display only): {priced} ranked player(s) priced by Bovada/Underdog props."
+        )
+
     rankings_payload = run_daily.build_payload(
         ranking_results,
         top_n,
